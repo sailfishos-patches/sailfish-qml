@@ -1,0 +1,33 @@
+name: Make Patch
+
+on: pull_request
+
+jobs:
+  make_patch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create diff
+        run: |
+          git fetch origin
+          git diff origin/${{ github.base_ref }}  -- . ':!.github' > .github/patch_data/unified_diff.patch
+        
+      - name: Upload build result
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.head_ref }}
+          path: .github/patch_data
+
+      - name: 'Comment PR'
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Hello @${{ github.event.pull_request.user.login }}\nYour patch is ready as Artifact inside of [Checks](https://github.com/sailfishos-patches/sailfish-qml/pull/${{ github.event.pull_request.number }}/checks)\n\nTrying to get direct download link in couple of seconds...'
+            })

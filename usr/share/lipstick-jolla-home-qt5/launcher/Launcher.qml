@@ -19,11 +19,22 @@ import com.jolla.lipstick 0.1
 SilicaListView {
     id: launcherPager
 
+    ConfigurationGroup {
+        id: launcherSettings
+        path: "/apps/lipstick-jolla-home-qt5/launcher"
+        property bool freeScroll: true
+        property bool useScroll: true
+        onFreeScrollChanged: launcher.manageDummyPages()
+    }
+
     property bool launcherActive: Lipstick.compositor.launcherLayer.active
     onLauncherActiveChanged: if (!launcherActive) { resetPosition(400) }
 
     property bool editMode: launcher.launcherEditMode
     onEditModeChanged: {
+        if (launcherSettings.freeScroll) {
+            return
+        }
         if (editMode) {
             snapMode = ListView.NoSnap
             highlightRangeMode = ListView.NoHighlightRange
@@ -33,13 +44,18 @@ SilicaListView {
         }
     }
 
+    VerticalScrollDecorator {
+        flickable: launcherPager
+        visible: launcherSettings.freeScroll && launcherSettings.useScroll && launcherPager.contentHeight > launcherPager.height
+    }
+
     model: ListModel {}
     delegate: Item {
         width: launcherPager.width
-        height: launcherPager.height
+        height: launcherSettings.freeScroll ? launcher.cellHeight : launcherPager.height
     }
-    snapMode: ListView.SnapOneItem
-    highlightRangeMode: ListView.StrictlyEnforceRange
+    snapMode: launcherSettings.freeScroll ? ListView.NoSnap : ListView.SnapOneItem
+    highlightRangeMode: launcherSettings.freeScroll ? ListView.NoHighlightRange : ListView.StrictlyEnforceRange
     cacheBuffer: height*model.count
 
     // Match velocity with EdgeLayer transition's 300ms (0.3s below) duration
@@ -150,8 +166,6 @@ SilicaListView {
 
         LauncherGrid {
             id: launcher
-            property Item remorse
-            property bool removeApplicationEnabled
 
             launcherEditMode: removeApplicationEnabled && !openedChildFolder
 
@@ -228,11 +242,13 @@ SilicaListView {
             Component.onCompleted: manageDummyPages()
             onContentHeightChanged: manageDummyPages()
             onLauncherEditModeChanged: manageDummyPages()
+            onColumnsChanged: manageDummyPages()
+            onCountChanged: manageDummyPages()
 
             function manageDummyPages() {
                 if (launcherPager.height > 0) {
                     // Create dummy pages to allow paging
-                    var pageCount = Math.ceil(contentHeight/launcherPager.height)
+                    var pageCount = launcherSettings.freeScroll ? Math.ceil(count / columns) : Math.ceil(contentHeight/launcherPager.height)
                     while (launcherPager.model.count < pageCount) {
                         launcherPager.model.append({ "name": "dummy" })
                     }
@@ -247,50 +263,10 @@ SilicaListView {
                 target: launcher.contentItem
             }
 
-            function removeApplication(desktopFile, title) {
-                if (!remorse) {
-                    remorse = remorseComponent.createObject(launcherPager)
-                } else if (remorse.desktopFile !== "" && remorse.desktopFile !== desktopFile) {
-                    remorse.removePackageByDesktopFile()
-                    remorse.cancel()
-                }
-                remorse.desktopFile = desktopFile
-
-                //: Notification indicating that an application will be removed, %1 will be replaced by application name
-                //% "Uninstalling %1"
-                remorse.execute(qsTrId("lipstick-jolla-home-no-uninstalling").arg(title))
-            }
-
             ConfigurationValue {
                 id: developerModeEnabled
                 defaultValue: false
                 key: "/sailfish/developermode/enabled"
-            }
-
-            Component {
-                id: remorseComponent
-
-                RemorsePopup {
-                    property string desktopFile
-
-                    function removePackageByDesktopFile() {
-                        if (desktopFile !== "") {
-                            installationHandler.call("removePackageByDesktopFile", desktopFile)
-                            desktopFile = ""
-                        }
-                    }
-
-                    z: 100
-                    onTriggered: removePackageByDesktopFile()
-                    onCanceled: desktopFile = ""
-
-                    DBusInterface {
-                        id: installationHandler
-                        service: "org.sailfishos.installationhandler"
-                        path: "/org/sailfishos/installationhandler"
-                        iface: "org.sailfishos.installationhandler"
-                    }
-                }
             }
         }
     }

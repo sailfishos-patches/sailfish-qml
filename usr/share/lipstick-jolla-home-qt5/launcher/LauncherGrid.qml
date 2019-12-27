@@ -14,19 +14,68 @@ import Sailfish.Policy 1.0
 import Sailfish.AccessControl 1.0
 import Sailfish.Lipstick 1.0
 import "../main"
+import org.nemomobile.configuration 1.0
 
 IconGridViewBase {
     id: gridview
+
+    ConfigurationGroup {
+        id: launcherGridSettings
+        path: "/apps/lipstick-jolla-home-qt5/launcherGrid"
+        property int columns: 4 // Math.floor(launcherPager.width / minimumCellWidth)
+        property int rows: 6 // Math.floor(launcherPager.height / minimumCellHeight)
+        property int lcolumns: 4
+        property int lrows: 4
+        property bool editLabelVisible: true
+        property bool zoomIcons: false
+        property bool zoomFonts: false
+        property real zoomValue: 1.0
+    }
+
+    property bool isPortrait: launcherPager.height > launcherPager.width
+
+    add: Transition {
+        SequentialAnimation {
+            NumberAnimation { properties: "z"; to: -1; duration: 1 }
+            NumberAnimation { properties: "opacity"; to: 0.0; duration: 1 }
+            NumberAnimation { properties: "x,y"; duration: 1 }
+            NumberAnimation { properties: "z"; to: 0; duration: 200 }
+            NumberAnimation { properties: "opacity"; from: 0.0; to: 1.0; duration: 100 }
+        }
+    }
+    remove: Transition {
+        ParallelAnimation {
+            NumberAnimation { properties: "z"; to: -1; duration: 1 }
+            NumberAnimation { properties: "x"; to: 0; duration: 100 }
+            NumberAnimation { properties: "opacity"; to: 0.0; duration: 100 }
+        }
+    }
+    move: Transition {
+        NumberAnimation { properties: "x,y"; duration: 200 }
+    }
+    displaced: Transition {
+        NumberAnimation { properties: "x,y"; duration: 200 }
+    }
 
     property bool launcherEditMode: removeApplicationEnabled
     property var launcherModel: model
     property bool rootFolder
     property QtObject folderComponent
-    property Item openedChildFolder
+    property Dialog openedChildFolder
+    rows: isPortrait ? launcherGridSettings.rows : launcherGridSettings.lrows
+    columns: isPortrait ? launcherGridSettings.columns : launcherGridSettings.lcolumns
+    initialCellWidth: (launcherPager.width - 2*horizontalMargin) / (columns + (isPortrait ? 0 : 1))
     property alias reorderItem: gridManager.reorderItem
     property alias gridManager: gridManager
     property bool canUninstall: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")
     signal itemLaunched
+
+    onCellHeightChanged: updateHintHeight()
+    Component.onCompleted: updateHintHeight()
+
+    function updateHintHeight() {
+        Lipstick.compositor.launcherLayer.hintHeight = cellHeight
+    }
 
     function categoryQsTrIds() {
         //% "AudioVideo"
@@ -63,14 +112,7 @@ IconGridViewBase {
             openedChildFolder.close()
         }
 
-        if (!folderComponent) {
-            folderComponent = Qt.createComponent("LauncherFolder.qml")
-            if (folderComponent.status == Component.Error) {
-                console.log("Error opening folder", folderComponent.errorString())
-                return
-            }
-        }
-        openedChildFolder = folderComponent.createObject(launcherPager, { 'model': folder })
+        openedChildFolder = pageStack.push(Qt.resolvedUrl("LauncherFolder.qml"), { 'model': folder, 'launcherPager': launcherPager })
     }
 
     function setEditMode(enabled) {
@@ -261,28 +303,30 @@ IconGridViewBase {
             }
         }
         onReleased: {
-            if (!rootFolder && gridview.mapFromItem(wrapper.contentItem, 0, 0).y + wrapper.height/2 > gridview.height) {
+            if (!rootFolder && gridview.mapFromItem(wrapper.contentItem, 0, 0).y + launcherIcon.size < 0) {
                 var parentFolderIndex = launcherModel.parentFolder.indexOf(launcherModel)
                 launcherModel.parentFolder.moveToFolder(model.object, launcherModel.parentFolder, parentFolderIndex+1)
             }
         }
 
-        LauncherIcon {
+        FolderIconLoader {
             id: launcherIcon
             anchors {
                 centerIn: parent
                 verticalCenterOffset: Math.floor(-launcherText.height/2)
             }
             icon: model.object.iconId
+            folder: model.object
             pressed: down
             opacity: isUpdating && folderItemCount == 0 ? Theme.opacityFaint : 1.0
+            size: Theme.iconSizeLauncher * (launcherGridSettings.zoomIcons ? launcherGridSettings.zoomValue : 1.0)
             Text {
-                font.pixelSize: Theme.fontSizeExtraLarge
+                font.pixelSize: Theme.fontSizeExtraLarge * (launcherGridSettings.zoomIcons ? launcherGridSettings.zoomValue : 1.0)
                 font.family: Theme.fontFamilyHeading
                 text: folderItemCount > 0 ? folderItemCount : ""
                 color: Theme.lightPrimaryColor
                 anchors.centerIn: parent
-                visible: !isUpdating || model.object.updatingProgress < 0 || model.object.updatingProgress > 100
+                visible: launcherIcon.index < 16 && (!launcherEditMode || isFolder || launcherGridSettings.editLabelVisible)
                 opacity: reorderItem && folderItemCount >= 99 ? Theme.opacityLow : 1.0
             }
         }
@@ -337,7 +381,7 @@ IconGridViewBase {
                             && !object.isUpdating
                             && object.readValue("X-apkd-apkfile").indexOf("/vendor/app/") != 0
                             && object.readValue("X-apkd-apkfile").indexOf("/home/.android/vendor/app/") != 0
-                onClicked: launcher.removeApplication(object.filePath, object.title)
+                onClicked: removeApplication(object.filePath, object.title)
             }
         }
     }
