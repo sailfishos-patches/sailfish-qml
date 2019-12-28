@@ -12,7 +12,6 @@ import Sailfish.Silica.private 1.0 as SilicaPrivate
 import Sailfish.Policy 1.0
 import org.nemomobile.configuration 1.0
 import Sailfish.Lipstick 1.0
-import org.nemomobile.configuration 1.0
 import com.jolla.lipstick 0.1
 
 SilicaListView {
