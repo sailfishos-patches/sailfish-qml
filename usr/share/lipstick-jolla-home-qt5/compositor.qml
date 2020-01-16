@@ -35,6 +35,13 @@ Compositor {
     property Item exposedWindow
     property Item previousWindow
 
+    function notificationsChanged(appName, totalCount) {
+        notificationsData[appName] = totalCount
+        notificationsDataChanged()
+    }
+
+    property var notificationsData: ({})
+
     color: wallpaper.exposed && !incomingAlarm ? "transparent" : "black"
 
     readonly property Item obscuredWindow: {
