@@ -1,0 +1,276 @@
+The following changes since commit d62239e2d04ffc952c790de8a7dc0d463455bef1:
+
+  Readme.md (2019-12-27 12:55:33 +0300)
+
+are available in the Git repository at:
+
+  https://github.com/peterleinchen/sailfish-qml switcher-notifications
+
+for you to fetch changes up to 9163ae5c2e7ec0dc30938f8746c3f7af1bde9a1f:
+
+  peterleinchen: adapted to SFOS3 (2020-01-17 00:26:45 +0100)
+
+----------------------------------------------------------------
+Peter Leinchen (1):
+      peterleinchen: adapted to SFOS3
+
+ usr/share/lipstick-jolla-home-qt5/compositor.qml   |   7 +
+ .../notifications/NotificationListView.qml         |  18 +-
+ .../lipstick-jolla-home-qt5/switcher/Switcher.qml  | 185 +++++++++++++++++++++
+ 3 files changed, 208 insertions(+), 2 deletions(-)
+
+diff --git a/usr/share/lipstick-jolla-home-qt5/compositor.qml b/usr/share/lipstick-jolla-home-qt5/compositor.qml
+index 943ec9c..ffdda19 100644
+--- a/usr/share/lipstick-jolla-home-qt5/compositor.qml
++++ b/usr/share/lipstick-jolla-home-qt5/compositor.qml
+@@ -35,6 +35,13 @@ Compositor {
+     property Item exposedWindow
+     property Item previousWindow
+ 
++    function notificationsChanged(appName, totalCount) {
++        notificationsData[appName] = totalCount
++        notificationsDataChanged()
++    }
++
++    property var notificationsData: ({})
++
+     color: wallpaper.exposed && !incomingAlarm ? "transparent" : "black"
+ 
+     readonly property Item obscuredWindow: {
+diff --git a/usr/share/lipstick-jolla-home-qt5/notifications/NotificationListView.qml b/usr/share/lipstick-jolla-home-qt5/notifications/NotificationListView.qml
+index edf9ff6..3006013 100644
+--- a/usr/share/lipstick-jolla-home-qt5/notifications/NotificationListView.qml
++++ b/usr/share/lipstick-jolla-home-qt5/notifications/NotificationListView.qml
+@@ -119,7 +119,17 @@ ListView {
+             property int pauseBeforeRemoval
+             property alias childNotifications: notificationItem.notificationListView
+ 
+-            Component.onCompleted: notificationList.displayed(modelData.id)
++            property string mAppName
++            Component.onCompleted: {
++                notificationList.displayed(modelData.replacesId)
++                mAppName = modelData.appName
++            }
++            property int mItemCount: modelData.itemCount
++            onMItemCountChanged: {
++                if (!removeAnimation.running) {
++                    Lipstick.compositor.notificationsChanged(mAppName || modelData.appName, mItemCount)
++                }
++            }
+ 
+             width: notificationList.width
+             height: _height
+@@ -199,12 +209,16 @@ ListView {
+             }
+ 
+             ListView.delayRemove: true
+-            ListView.onAdd: addAnimation.start()
++            ListView.onAdd: {
++                addAnimation.start()
++                Lipstick.compositor.notificationsChanged(mAppName, mItemCount)
++            }
+             ListView.onRemove: {
+                 notificationDelegate.animatedOpacity = 1
+                 notificationDelegate.animatedHeight = notificationDelegate._height
+                 removeAnimation.start()
+                 notificationList._updateHasRemovable(notificationDelegate, false)
++                Lipstick.compositor.notificationsChanged(mAppName, 0)
+             }
+ 
+             property real animatedHeight
+diff --git a/usr/share/lipstick-jolla-home-qt5/switcher/Switcher.qml b/usr/share/lipstick-jolla-home-qt5/switcher/Switcher.qml
+index 8dbc6bd..abae57e 100644
+--- a/usr/share/lipstick-jolla-home-qt5/switcher/Switcher.qml
++++ b/usr/share/lipstick-jolla-home-qt5/switcher/Switcher.qml
+@@ -498,6 +498,191 @@ SilicaFlickable {
+                     width: switcherGrid.coverSize.width
+                     height: switcherGrid.coverSize.height
+ 
++                    Rectangle {
++                        id: notificationBadge
++                        anchors.top: parent.top
++                        anchors.right: parent.right
++                        anchors.margins: -width / 4
++                        width: Math.max(height, notificationLabel.paintedWidth)
++                        height: Theme.iconSizeSmallPlus
++                        radius: height / 2
++                        property int count: { return Lipstick.compositor.notificationsData[model.title] || 0 }
++                        border.width: 2
++                        border.color: Theme.highlightColor
++                        color: Theme.highlightBackgroundColor
++                        visible: count > 0 && !switcherDelegate.editMode
++
++                        Label {
++                            id: notificationLabel
++                            anchors.centerIn: parent
++                            font.pixelSize: Theme.iconSizeSmall
++                            text: notificationBadge.count > 9 ? "9+" : notificationBadge.count
++                        }
++
++                        property var configuration: Qt.createQmlObject('import org.nemomobile.configuration 1.0; ConfigurationGroup { path: "/desktop/lipstick-jolla-home"; property string switcher_notifications_position: "topRight"; property int switcher_notifications_verticalOffset: 0; property int switcher_notifications_horizontalOffset: 0; }', notificationBadge, "configuration")
++
++                        state: configuration.switcher_notifications_position
++                        states: [
++                            State {
++                                name: ""
++                                extend: "topRight"
++                            },
++                            State {
++                                name: "topRight"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.top: parent.top
++                                    anchors.right: parent.right
++                                    anchors.left: undefined
++                                    anchors.bottom: undefined
++                                    anchors.verticalCenter: undefined
++                                    anchors.horizontalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.topMargin: -configuration.switcher_notifications_verticalOffset
++                                    anchors.rightMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "topLeft"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.top: parent.top
++                                    anchors.left: parent.left
++                                    anchors.right: undefined
++                                    anchors.bottom: undefined
++                                    anchors.verticalCenter: undefined
++                                    anchors.horizontalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.topMargin: -configuration.switcher_notifications_verticalOffset
++                                    anchors.leftMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "bottomRight"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.bottom: parent.bottom
++                                    anchors.right: parent.right
++                                    anchors.left: undefined
++                                    anchors.top: undefined
++                                    anchors.verticalCenter: undefined
++                                    anchors.horizontalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.bottomMargin: -configuration.switcher_notifications_verticalOffset
++                                    anchors.rightMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "bottomLeft"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.bottom: parent.bottom
++                                    anchors.left: parent.left
++                                    anchors.right: undefined
++                                    anchors.top: undefined
++                                    anchors.verticalCenter: undefined
++                                    anchors.horizontalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.bottomMargin: -configuration.switcher_notifications_verticalOffset
++                                    anchors.leftMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "top"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.top: parent.top
++                                    anchors.horizontalCenter: parent.horizontalCenter
++                                    anchors.left: undefined
++                                    anchors.right: undefined
++                                    anchors.bottom: undefined
++                                    anchors.verticalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.horizontalCenterOffset: configuration.switcher_notifications_horizontalOffset
++                                    anchors.topMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "bottom"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.bottom: parent.bottom
++                                    anchors.horizontalCenter: parent.horizontalCenter
++                                    anchors.left: undefined
++                                    anchors.right: undefined
++                                    anchors.top: undefined
++                                    anchors.verticalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.horizontalCenterOffset: configuration.switcher_notifications_horizontalOffset
++                                    anchors.bottomMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "left"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.left: parent.left
++                                    anchors.verticalCenter: parent.verticalCenter
++                                    anchors.right: undefined
++                                    anchors.bottom: undefined
++                                    anchors.top: undefined
++                                    anchors.horizontalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.verticalCenterOffset: configuration.switcher_notifications_verticalOffset
++                                    anchors.leftMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "right"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.right: parent.right
++                                    anchors.verticalCenter: parent.verticalCenter
++                                    anchors.left: undefined
++                                    anchors.bottom: undefined
++                                    anchors.top: undefined
++                                    anchors.horizontalCenter: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.verticalCenterOffset: configuration.switcher_notifications_verticalOffset
++                                    anchors.rightMargin: -configuration.switcher_notifications_horizontalOffset
++                                }
++                            },
++                            State {
++                                name: "center"
++                                AnchorChanges {
++                                    target: notificationBadge
++                                    anchors.verticalCenter: parent.verticalCenter
++                                    anchors.horizontalCenter: parent.horizontalCenter
++                                    anchors.left: undefined
++                                    anchors.right: undefined
++                                    anchors.bottom: undefined
++                                    anchors.top: undefined
++                                }
++                                PropertyChanges {
++                                    target: notificationBadge
++                                    anchors.verticalCenterOffset: configuration.switcher_notifications_verticalOffset
++                                    anchors.horizontalCenterOffset: configuration.switcher_notifications_horizontalOffset
++                                }
++                            }
++                        ]
++                    }
++
+                     windowId: (model.window ? applicationWindowId.value : undefined) || model.window || 0
+                     onWindowIdChanged: {
+                         if (windowId != 0) {
