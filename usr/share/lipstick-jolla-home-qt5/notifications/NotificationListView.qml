@@ -119,17 +119,7 @@ ListView {
             property int pauseBeforeRemoval
             property alias childNotifications: notificationItem.notificationListView
 
-            property string mAppName
-            Component.onCompleted: {
-                notificationList.displayed(modelData.replacesId)
-                mAppName = modelData.appName
-            }
-            property int mItemCount: modelData.itemCount
-            onMItemCountChanged: {
-                if (!removeAnimation.running) {
-                    Lipstick.compositor.notificationsChanged(mAppName || modelData.appName, mItemCount)
-                }
-            }
+            Component.onCompleted: notificationList.displayed(modelData.id)
 
             width: notificationList.width
             height: _height
@@ -209,16 +199,12 @@ ListView {
             }
 
             ListView.delayRemove: true
-            ListView.onAdd: {
-                addAnimation.start()
-                Lipstick.compositor.notificationsChanged(mAppName, mItemCount)
-            }
+            ListView.onAdd: addAnimation.start()
             ListView.onRemove: {
                 notificationDelegate.animatedOpacity = 1
                 notificationDelegate.animatedHeight = notificationDelegate._height
                 removeAnimation.start()
                 notificationList._updateHasRemovable(notificationDelegate, false)
-                Lipstick.compositor.notificationsChanged(mAppName, 0)
             }
 
             property real animatedHeight
