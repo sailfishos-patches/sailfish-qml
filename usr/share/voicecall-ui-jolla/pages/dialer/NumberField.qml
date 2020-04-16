@@ -40,7 +40,7 @@ MouseArea {
 
     AsYouTypeFormatter {
         id: asYouTypeFormatter
-        regionCode: telephony.country || PhoneNumberUtil.localeRegionCode // Fallback to the current locale if there is no network
+        regionCode: telephony.country
     }
 
     TextField {

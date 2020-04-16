@@ -96,6 +96,7 @@ AccountCreationAgent {
         onError: {
             console.log("Jabber creation error:", message)
             initialPage.acceptDestinationInstance.state = "info"
+            initialPage.acceptDestinationInstance.infoExtraDescription = message
             root.accountCreationError(message)
         }
 

@@ -12,12 +12,11 @@ Column {
         x: truncate ? Theme.paddingSmall : parent.width/2 - width/2
         width: truncate ? parent.width - Theme.paddingSmall : implicitWidth
         truncationMode: truncate ? TruncationMode.Fade : TruncationMode.None
-        text: model.index === 0 ?
-                  //% "Today"
-                  qsTrId("weather-la-today")
-                :
-                  //% "ddd"
-                  Qt.formatDateTime(timestamp, qsTrId("weather-la-date_pattern_shortweekdays"))
+        text: model.index === 0
+              ? //% "Today"
+                qsTrId("weather-la-today")
+              : //% "ddd"
+                Qt.formatDateTime(timestamp, qsTrId("weather-la-date_pattern_shortweekdays"))
         color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
         font.pixelSize: Theme.fontSizeSmall
     }
@@ -27,7 +26,7 @@ Column {
         color: highlighted ? Theme.highlightColor : Theme.primaryColor
     }
     Image {
-        property string prefix: "image://theme/graphic-" + (Screen.sizeCategory >= Screen.Large ? "l" : "m")
+        property string prefix: "image://theme/icon-" + (Screen.sizeCategory >= Screen.Large ? "l" : "m")
         anchors.horizontalCenter: parent.horizontalCenter
         source: model.weatherType.length > 0 ? prefix + "-weather-" + model.weatherType
                                                + (highlighted ? "?" + Theme.highlightColor : "")

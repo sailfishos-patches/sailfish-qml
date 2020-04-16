@@ -4,17 +4,45 @@ import org.nemomobile.configuration 1.0
 import com.jolla.keyboard 1.0
 import com.jolla.keyboard.translations 1.0
 import org.nemomobile.notifications 1.0 as SystemNotifications
-import org.nemomobile.dbus 2.0
-
 
 Page {
     id: root
 
-    property bool pinyinEnabled
     property bool emojisEnabled
 
     LayoutModel {
         id: layoutModel
+    }
+
+    ListModel {
+        id: pluginSettingsModel
+
+        function refresh() {
+            var layoutSettings = new Array
+
+            for (var i = 0; i < layoutModel.count; ++i) {
+                var item = layoutModel.get(i)
+
+                if (item.enabled && item.settings &&
+                        layoutSettings.indexOf(item.settings) === -1) {
+                    layoutSettings.push(item.settings)
+                }
+            }
+
+            for (i = 0; i < layoutSettings.length; ++i) {
+                var value = {"settingsSource": layoutSettings[i]}
+
+                if (i < count) {
+                    set(i, value)
+                } else {
+                    append(value)
+                }
+            }
+
+            if (layoutSettings.length < count) {
+                remove(layoutSettings.length, count - layoutSettings.length)
+            }
+        }
     }
 
     ListModel {
@@ -34,16 +62,12 @@ Page {
         function refresh() {
             updating = true
             var enabledLayouts = new Array
-            var pinyinFound = false
             var emojisFound = false
 
             for (var i = 0; i < layoutModel.count; ++i) {
                 var item = layoutModel.get(i)
                 if (item.enabled) {
                     enabledLayouts.push({"name": item.name, "layout": item.layout})
-                    if (item.type === "china_pinyin") {
-                        pinyinFound = true
-                    }
                     if (item.type === "emojis") {
                         emojisFound = true
                     }
@@ -63,7 +87,6 @@ Page {
                 }
             }
 
-            root.pinyinEnabled = pinyinFound
             root.emojisEnabled = emojisFound
 
             // wait until ComboBox has updated its internal state
@@ -228,13 +251,6 @@ Page {
         }
     }
 
-    DBusInterface {
-        id: keyboardDbus
-        service: "com.jolla.keyboard"
-        path: "/com/jolla/keyboard"
-        iface: "com.jolla.keyboard"
-    }
-
     SilicaFlickable {
         id: listView
 
@@ -249,6 +265,29 @@ Page {
             PageHeader {
                 //% "Text input"
                 title: qsTrId("settings_text_input-he-text_input")
+            }
+
+            ValueButton {
+                //% "Keyboards"
+                label: qsTrId("settings_text_input-bt-enabled_keyboards")
+                value: {
+                    var result = []
+                    var max = 5
+                    for (var i = 0; i < layoutModel.count; i++) {
+                        var layout = layoutModel.get(i)
+                        if (layout.enabled) {
+                            if (result.length < max) {
+                                result.push(qsTrId(layout.name))
+                            } else {
+                                result.push("…")
+                                break
+                            }
+                        }
+                    }
+                    return result.join(", ")
+                }
+
+                onClicked: pageStack.animatorPush(enabledKeyboardsPage)
             }
 
             ComboBox {
@@ -293,54 +332,14 @@ Page {
                 onClicked: splitConfig.value = !splitConfig.value
             }
 
-            Item {
-                width: 1
-                height: Theme.paddingLarge
-            }
-
-            ButtonLayout {
-                preferredWidth: Theme.buttonWidthMedium
-                Button {
-                    //: Shows list view for selecting active keyboards
-                    //% "Keyboards"
-                    text: qsTrId("settings_text_input-bt-enabled_keyboards")
-                    onClicked: pageStack.animatorPush(enabledKeyboardsPage)
-                }
-
-                Button {
-                    ButtonLayout.newLine: true
-
-                    //% "Clear learned words"
-                    text: qsTrId("settings_text_input-bt-clear_words")
-                    onClicked: {
-                        //% "Cleared learned words"
-                        Remorse.popupAction(root, qsTrId("settings_text_input-la-cleared_words_remorse_banner"),
-                                        function() {
-                                            keyboardDbus.call("clearData", undefined)
-                                        })
+            Repeater {
+                model: pluginSettingsModel
+                delegate: Component {
+                    Loader {
+                        width: parent.width
+                        source: settingsSource
                     }
                 }
-            }
-
-            Item {
-                width: 1
-                height: Theme.paddingMedium
-            }
-
-            SectionHeader {
-                visible: root.pinyinEnabled
-                //% "Chinese virtual keyboard"
-                text: qsTrId("settings_text_input-la-chinese_virtual_keyboard_section")
-            }
-
-            TextSwitch {
-                visible: root.pinyinEnabled
-                automaticCheck: false
-                checked: mohuConfig.value
-                //: Aka "mohu"
-                //% "Fuzzy pinyin"
-                text: qsTrId("settings_text_input-la-fuzzy_pinyin")
-                onClicked: mohuConfig.value = !mohuConfig.value
             }
 
             SectionHeader {
@@ -388,14 +387,10 @@ Page {
     ConfigurationValue {
         id: activeLayoutsConfig
         key: "/sailfish/text_input/enabled_layouts"
-        onValueChanged: enabledLayoutModel.refresh()
-    }
-
-    ConfigurationValue {
-        id: mohuConfig
-
-        key: "/sailfish/text_input/mohu_enabled"
-        defaultValue: false
+        onValueChanged: {
+            pluginSettingsModel.refresh()
+            enabledLayoutModel.refresh()
+        }
     }
 
     ConfigurationValue {
@@ -411,5 +406,8 @@ Page {
         defaultValue: "us"
     }
 
-    Component.onCompleted: enabledLayoutModel.refresh()
+    Component.onCompleted: {
+        pluginSettingsModel.refresh()
+        enabledLayoutModel.refresh()
+    }
 }

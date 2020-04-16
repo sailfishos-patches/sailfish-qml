@@ -1,22 +1,26 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
+import Sailfish.Contacts 1.0
+import Sailfish.Telephony 1.0
 import "../../common"
 
 Column {
-    readonly property int modemIndex: simManager.simNames ? simManager.indexOfModemFromImsi(subscriberIdentity)
-                                                          : -1
+    id: root
+
+    readonly property var _simManager: simManager
+
     width: parent ? parent.width : Screen.width
 
     Item {
         width: parent.width
-        height: nameLabel.height
+        height: companyLabel.y + companyLabel.height
 
         CallDirectionIcon {
             id: icon
 
             x: Theme.paddingMedium
             call: historyItem.call
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenter: nameLabel.verticalCenter
         }
 
         NameLabel {
@@ -24,8 +28,24 @@ Column {
 
             x: leftMargin
             width: parent.width - x
-            anchors.verticalCenter: parent.verticalCenter
             secondaryLabel.color: secondaryLabel.highlighted ? palette.highlightColor : palette.primaryColor
+        }
+
+        Label {
+            id: companyLabel
+
+            anchors {
+                left: nameLabel.left
+                right: nameLabel.right
+                top: nameLabel.bottom
+            }
+            visible: text !== numberTypeLabel.text
+            height: visible && text.length > 0 ? implicitHeight : 0
+            truncationMode: TruncationMode.Fade
+
+            text: person ? person.companyName : ""
+            font.pixelSize: Theme.fontSizeSmall
+            color: highlighted ? palette.secondaryHighlightColor : palette.secondaryColor
         }
     }
 
@@ -35,7 +55,11 @@ Column {
         x: leftMargin
 
         Label {
-            text: numberDetail
+            id: numberTypeLabel
+
+            text: numberDetail !== defaultNumberDetail || companyLabel.text.length === 0
+                  ? numberDetail
+                  : companyLabel.text
             width: parent.width - (timeLabel.visible ? timeLabel.width + parent.spacing : 0)
             truncationMode: TruncationMode.Fade
             anchors.verticalCenter: parent.verticalCenter
@@ -52,53 +76,37 @@ Column {
 
     Item {
         width: parent.width - x
-        height: Theme.iconSizeSmall
+        height: Math.max(callDurationItem.height, simIndicator.height, dateLabel.height)
         x: leftMargin
 
         CallDurationItem {
             id: callDurationItem
-            height: parent.height
+
+            anchors.verticalCenter: parent.verticalCenter
         }
 
-        HighlightImage {
-            id: simIcon
+        ContactActivitySimIndicator {
+            id: simIndicator
 
             x: callDurationItem.x + callDurationItem.width + Theme.paddingSmall
-            color: palette.secondaryColor
-            highlightColor: palette.secondaryHighlightColor
-            visible: status === Image.Ready
             anchors.verticalCenter: parent.verticalCenter
-            source: {
-                if (!multipleSimCards) return ""
-                switch (modemIndex) {
-                    case 0: return "image://theme/icon-s-sim-1"
-                    case 1: return "image://theme/icon-s-sim-2"
-                    default: return ""
-                }
-            }
-        }
+            maximumWidth: reminderIcon.x - Theme.paddingSmall - x
 
-        Label {
-            id: simLabel
-
-            x: simIcon.x + simIcon.width + Theme.paddingSmall
-
-            text: modemIndex >= 0 ? simManager.modemSimModel.get(modemIndex).operatorDescription : ""
-            truncationMode: TruncationMode.Fade
-            anchors.verticalCenter: parent.verticalCenter
-            font.pixelSize: Theme.fontSizeSmall
-            opacity: simIcon.visible ? 1 : 0
-            color: highlighted ? palette.secondaryHighlightColor : palette.secondaryColor
-            width: reminderIcon.x - Theme.paddingSmall - x
+            visible: simManager.simCount > 1
+            simManager: _simManager
+            imsi: subscriberIdentity
+            showSimOperator: Telephony.voiceSimUsageMode === Telephony.AlwaysAskSim
+                             && (simManager.simNames.length > 1 && simManager.simNames[0] !== simManager.simNames[1])
         }
 
         HighlightImage {
             id: reminderIcon
 
             readonly property real elidedX: dateLabel.x - reminderLabel.width - width - (2 * Theme.paddingSmall)
-            readonly property real unelidedX: simLabel.x + simLabel.implicitWidth + Theme.paddingSmall
+            readonly property real unelidedX: simIndicator.x + (simIndicator.visible ? simIndicator.implicitWidth : 0) + Theme.paddingSmall
 
             x: visible && unelidedX < elidedX ? unelidedX : elidedX
+            anchors.verticalCenter: parent.verticalCenter
 
             source: "image://theme/icon-s-alarm"
             visible: reminder.exists

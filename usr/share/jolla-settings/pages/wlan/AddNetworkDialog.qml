@@ -7,10 +7,29 @@ import MeeGo.Connman 0.2
 Dialog {
     id: root
 
+    readonly property var _focusItems: [
+        ssidField,
+        caCertChooser.domainField,
+        clientCertChooser.passphraseField,
+        identityField,
+        passphraseField
+    ]
+
     property NetworkManager networkManager
     canAccept: network.ssid.length > 0 &&
                (!passphraseField.required || network.passphrase.length > 0) &&
-               (!identityField.required   || network.identity.length > 0)
+               (!identityField.required   || (network.identity.length > 3 && network.identity.length <= 63)) &&
+               clientCertChooser.canAccept
+
+    function _nextFocus(from) {
+        var i = _focusItems.indexOf(from)
+        if (i === -1)
+            return null
+        for (i++; i < _focusItems.length; i++)
+            if (_focusItems[i].visible)
+                return _focusItems[i]
+        return null
+    }
 
     function setup(ssid, securityType, identity, passphrase) {
         network.ssid = ssid
@@ -30,14 +49,31 @@ Dialog {
         identityRequired: identityField.required
     }
 
-    onStatusChanged: if (status == PageStatus.Active && network.caCert === 'custom') network.caCert = ''
+    onStatusChanged: if (status == PageStatus.Active) {
+        caCertChooser.cancel()
+        clientCertChooser.cancel()
+    }
 
     Connections {
         target: network
 
         onCaCertChanged: {
-            if (network.caCert === 'custom' && status === PageStatus.Active)
+            if (network.caCert === 'custom' && status === PageStatus.Active) {
                 caCertChooser.fromFileSelected()
+                network.caCert = ''
+            }
+        }
+        onClientCertFileChanged: {
+            if (network.clientCertFile === 'custom' && status === PageStatus.Active) {
+                clientCertChooser.certFromFileSelected()
+                network.clientCertFile = ''
+            }
+        }
+        onPrivateKeyFileChanged: {
+            if (network.privateKeyFile === 'custom' && status === PageStatus.Active) {
+                clientCertChooser.keyFromFileSelected()
+                network.privateKeyFile = ''
+            }
         }
     }
 
@@ -60,20 +96,10 @@ Dialog {
                 id: ssidField
                 network: root.network
 
-                property bool moveFocus: identityField.required || passphraseField.required
-                EnterKey.iconSource: moveFocus ? "image://theme/icon-m-enter-next"
+                property Item nextFocusItem: _nextFocus(this)
+                EnterKey.iconSource: nextFocusItem ? "image://theme/icon-m-enter-next"
                                                : "image://theme/icon-m-enter-close"
-                EnterKey.onClicked: {
-                    if (moveFocus) {
-                        if (identityField.required) {
-                            identityField.focus = true
-                        } else if (passphraseField.required) {
-                            passphraseField.focus = true
-                        }
-                    } else {
-                        focus = false
-                    }
-                }
+                EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
             }
 
             HiddenSwitch {
@@ -100,7 +126,27 @@ Dialog {
                 id: caCertChooser
                 network: root.network
 
-                onFromFileSelected: pageStack.push(filePickerPage)
+                onFromFileSelected: pageStack.push(fileLoaderPage, { fieldName: 'caCert' })
+                immediateUpdate: true
+
+                property Item nextFocusItem: _nextFocus(this.domainField)
+                EnterKey.iconSource: nextFocusItem ? "image://theme/icon-m-enter-next"
+                                               : "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
+            }
+
+            ClientCertChooser {
+                id: clientCertChooser
+                network: root.network
+                immediateUpdate: true
+
+                onKeyFromFileSelected: pageStack.push(filePickerPage, { fieldName: 'privateKeyFile', nameFilters: ['*.pem', '*.key', '*.p12', '*.pfx'] })
+                onCertFromFileSelected: pageStack.push(filePickerPage, { fieldName: 'clientCertFile', nameFilters: ['*.pem', '*.crt'] })
+
+                property Item nextFocusItem: _nextFocus(this.passphraseField)
+                EnterKey.iconSource: nextFocusItem ? "image://theme/icon-m-enter-next"
+                                               : "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
             }
 
             IdentityField {
@@ -139,12 +185,22 @@ Dialog {
     }
 
     Component {
+        id: fileLoaderPage
+
+        FilePickerPage {
+            nameFilters: [ '*.crt', '*.pem' ]
+            property string fieldName
+            onSelectedContentPropertiesChanged: network[fieldName] = CertHelper.readCert(selectedContentProperties.filePath, 'CERTIFICATE')
+        }
+    }
+
+    Component {
         id: filePickerPage
 
         FilePickerPage {
             nameFilters: [ '*.crt', '*.pem' ]
-            onSelectedContentPropertiesChanged:
-                network.caCert = CertHelper.readCert(selectedContentProperties.filePath)
+            property string fieldName
+            onSelectedContentPropertiesChanged: network[fieldName] = selectedContentProperties.filePath
         }
     }
 }

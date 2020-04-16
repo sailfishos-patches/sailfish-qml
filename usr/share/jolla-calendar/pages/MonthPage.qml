@@ -183,18 +183,15 @@ Page {
 
             Item {
                 width: parent.width
-                height: placeholderText.height + 2*Theme.paddingLarge
+                height: root.isPortrait ? root.height - (view.headerItem ? view.headerItem.height : 0) - dateHeader.height
+                                        : root.height - dateHeader.height
+
                 visible: view.count === 0 && root.initialLoadDone
 
-                Label {
-                    id: placeholderText
-                    x: Theme.horizontalPageMargin
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 2*Theme.horizontalPageMargin
+                InfoLabel {
+                    y: Math.round(parent.height / 4)
                     //% "Your schedule is free"
                     text: qsTrId("calendar-me-schedule_is_free")
-                    wrapMode: Text.WordWrap
-                    horizontalAlignment: Text.AlignHCenter
                     font.pixelSize: Theme.fontSizeHuge
                     color: Theme.secondaryHighlightColor
                 }

@@ -193,14 +193,12 @@ Page {
             }
         }
 
-        BusyIndicator {
+        PageBusyIndicator {
             id: pageBusyIndicator
-            anchors.centerIn: parent
             running: jollaStore.isOnline
                      && storeModel.loading
                      && !pageStack.busy
                      && storeModel.count === 0
-            size: BusyIndicatorSize.Large
         }
 
         OfflinePlaceholder {

@@ -37,19 +37,25 @@ import Sailfish.Silica 1.0
 
 Loader {
     id: root
-    property QtObject _counter
-    active: _counter && _counter.value === 1
+    property QtObject _counters
+    active: _counters && _counters.hints_enabled.value && _counters.coordination_state.value === 1
     anchors.fill: parent
     source: "ReturnToHomeHint.qml"
 
     Component.onCompleted: {
         // Avoid hard dependency to Configuration module
-        _counter = Qt.createQmlObject("import Nemo.Configuration 1.0;
-                                       import QtQuick 2.0;
+        _counters = Qt.createQmlObject("import Nemo.Configuration 1.0;
+                                        import QtQuick 2.0;
 
-                                       ConfigurationValue {
-                                           key: '/desktop/sailfish/hints/coordination_state'
-                                           defaultValue: 3 // no system hints for existing users
-                                       }", root, 'ConfigurationValue')
+                                        QtObject {
+                                            property ConfigurationValue coordination_state: ConfigurationValue {
+                                                key: '/desktop/sailfish/hints/coordination_state'
+                                                defaultValue: 3 // no system hints for existing users
+                                            }
+                                            property ConfigurationValue hints_enabled: ConfigurationValue {
+                                                key: '/desktop/sailfish/silica/hints_enabled'
+                                                defaultValue: true
+                                            }
+                                        }", root, 'ConfigurationValues')
     }
 }

@@ -47,7 +47,7 @@ Page {
             for (var ii = 0; ii < excluded.length; ++ii) {
                 if (excluded[ii] == notebook) {
                     excluded.splice(ii, 1)
-                    return;
+                    return
                 }
             }
         }

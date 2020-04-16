@@ -1,8 +1,17 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.settings.accounts 1.0
 
 Column {
+    id: root
+
     property bool editMode
     property bool hideIncoming
     property bool hideOutgoing
@@ -55,15 +64,9 @@ Column {
         }
     }
 
-    TextField {
+    GeneralEmailAddressField {
         id: emailaddress
         width: parent.width
-        inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhEmailCharactersOnly
-        //: Placeholder text for account email address
-        //% "Enter email address"
-        placeholderText: qsTrId("components_accounts-ph-genericemail_email_address")
-        //% "Email address"
-        label: qsTrId("components_accounts-la-genericemail_email_address")
         onTextChanged: {
             if (!incomingUsernameEdited && !editMode) {
                 incomingUsernameField.text = text
@@ -315,6 +318,8 @@ Column {
             if (focus)
                outgoingPasswordEdited = true
         }
+        EnterKey.iconSource: "image://theme/icon-m-enter-accept"
+        EnterKey.onClicked: root.focus = true
     }
 
     SectionHeader {

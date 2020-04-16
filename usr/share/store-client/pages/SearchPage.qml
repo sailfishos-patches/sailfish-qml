@@ -145,17 +145,12 @@ Page {
             }
         }
 
-        BusyIndicator {
+        PageBusyIndicator {
             id: pageBusyIndicator
-            // Keep ViewPlaceholder and BusyIndicator positions in sync.
-            anchors.centerIn: offlinePlaceholder
-            // Need to reparent because ViewPlaceholder reparents itself.
-            parent: offlinePlaceholder.parent
             running: jollaStore.isOnline
                      && searchModel.filter !== ""
                      && searchModel.loading
                      && searchModel.count === 0
-            size: BusyIndicatorSize.Large
         }
 
         OfflinePlaceholder {

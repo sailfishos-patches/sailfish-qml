@@ -107,7 +107,7 @@ SilicaListView {
 
         delegate: SectionHeader {
             text: _sectionDelegateText(section)
-            height: text === "" ? 0 : Theme.itemSizeExtraSmall
+            height: text === "" ? 0 : Theme.itemSizeSmall
             horizontalAlignment: Text.AlignHCenter
             font.capitalization: (messageListView.model.sortBy == EmailMessageListModel.Sender
                                   || messageListView.model.sortBy == EmailMessageListModel.Subject)

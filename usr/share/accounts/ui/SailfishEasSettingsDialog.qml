@@ -1,9 +1,11 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 
 Dialog {
-    property alias isNewAccount: settingsDisplay.isNewAccount
+    id: root
+
     property alias accountId: settingsDisplay.accountId
+    property Item connectionSettings
 
     acceptDestination: accountCreationAgent.busyPageInstance
     acceptDestinationAction: PageStackAction.Push
@@ -29,10 +31,11 @@ Dialog {
         SailfishEasSettingsDisplay {
             id: settingsDisplay
             anchors.top: header.bottom
+            isNewAccount: true
             accountManager: accountCreationAgent.accountManager
             accountProvider: accountCreationAgent.accountProvider
             autoEnableAccount: true
-            connectionSettings: settings
+            connectionSettings: root.connectionSettings
             busyPage: accountCreationAgent.busyPageInstance
 
             onAccountSaveCompleted: {

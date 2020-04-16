@@ -275,7 +275,7 @@ IconGridViewBase {
             }
         }
 
-        Text {
+        Label {
             id: launcherText
 
             anchors {
@@ -286,8 +286,8 @@ IconGridViewBase {
                 leftMargin: Theme.paddingSmall/2
                 rightMargin: Theme.paddingSmall/2
             }
-            horizontalAlignment: Text.AlignHCenter
-            elide: Text.ElideRight
+            horizontalAlignment: implicitWidth > width ? Text.AlignLeft : Text.AlignHCenter
+            truncationMode: TruncationMode.Fade
 
             color: down ? Theme.highlightColor : Theme.primaryColor
             font.pixelSize: gridview.launcherLabelFontSize

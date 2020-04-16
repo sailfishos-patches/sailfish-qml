@@ -16,8 +16,6 @@ Item {
         PropertyChanges {
             target: slider
 
-            //% "Brightness"
-            label: qsTrId("settings_display-la-brightness")
             maximumValue: displaySettings.maximumBrightness
             minimumValue: 1
             value: displaySettings.brightness

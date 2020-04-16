@@ -37,23 +37,9 @@ Page {
         onStandardFoldersCreated: tryReplaceWithMessagePage()
     }
 
-    Column {
-        x: Theme.horizontalPageMargin
-        width: parent.width - 2*x
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: Theme.paddingMedium
-
-        Label {
-            //% "Synchronizing account"
-            text: qsTrId("jolla-email-la-synchronizing_account")
-            anchors.horizontalCenter: parent.horizontalCenter
-            font.pixelSize: Theme.fontSizeLarge
-            color: Theme.highlightColor
-        }
-        BusyIndicator {
-            running: parent.visible
-            size: BusyIndicatorSize.Large
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+    BusyLabel {
+        //% "Synchronizing account"
+        text: qsTrId("jolla-email-la-synchronizing_account")
+        running: true
     }
 }

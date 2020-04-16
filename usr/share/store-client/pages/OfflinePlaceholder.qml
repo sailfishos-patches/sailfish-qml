@@ -7,8 +7,7 @@ import Sailfish.Silica 1.0
 ViewPlaceholder {
     property bool condition: true
 
-    visible: !jollaStore.isOnline && condition
-    enabled: visible
+    enabled: !jollaStore.isOnline && condition
     //: View placeholder when being offline
     //% "Sorry, cannot connect to store right now. Please try again later."
     text: qsTrId("jolla-store-li-being_offline")

@@ -135,29 +135,11 @@ Page {
         }
     }
 
-    Column {
-        anchors.centerIn: parent
-        visible: busyIndicator.running
-        spacing: Theme.paddingLarge
-
-        Label {
-            width: root.width - Theme.horizontalPageMargin*2
-            wrapMode: Text.Wrap
-            horizontalAlignment: Text.AlignHCenter
-            font.pixelSize: Theme.fontSizeLarge
-            color: Theme.highlightColor
-
-            //: Displayed while the page is in the process of loading links (i.e. associated contacts with similar details)
-            //% "Finding links..."
-            text: qsTrId("components_contacts-la-finding_links")
-        }
-
-        BusyIndicator {
-            id: busyIndicator
-            anchors.horizontalCenter: parent.horizontalCenter
-            size: BusyIndicatorSize.Large
-            running: !root._fetchedConstituents && !root._fetchedMergeCandidates
-        }
+    BusyLabel {
+        //: Displayed while the page is in the process of loading links (i.e. associated contacts with similar details)
+        //% "Finding links..."
+        text: qsTrId("components_contacts-la-finding_links")
+        running: !root._fetchedConstituents && !root._fetchedMergeCandidates
     }
 
     SilicaListView {

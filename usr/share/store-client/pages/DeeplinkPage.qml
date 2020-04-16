@@ -41,10 +41,8 @@ Page {
         title: qsTrId("jolla-store-he-welcome")
     }
 
-    BusyIndicator {
-        anchors.centerIn: parent
+    PageBusyIndicator {
         running: ! placeholder.enabled
-        size: BusyIndicatorSize.Large
     }
 
     Timer {

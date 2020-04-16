@@ -79,11 +79,54 @@ Column {
                         {
                             "ssid": network.ssid,
                             "securityType": network.securityType,
-                            "eapType": network.eapType,
+                            "eapMethod": network.eapMethod,
                             "phase2": network.phase2,
                             "identity": network.identity,
                             "passphrase": network.passphrase,
                             "caCert": "custom",
+                            "privateKeyFile": network.privateKeyFile,
+                            "clientCertFile": network.clientCertFile,
+                            "hidden": network.hidden
+                        })
+            settingsDBus.call("showAddNetworkDialog");
+            root.closeDialog()
+        }
+    }
+
+    ClientCertChooser {
+        network: network
+
+        onKeyFromFileSelected: {
+            networkHelper.writeSettings(
+                        {
+                            "ssid": network.ssid,
+                            "securityType": network.securityType,
+                            "eapMethod": network.eapMethod,
+                            "phase2": network.phase2,
+                            "identity": network.identity,
+                            "passphrase": network.passphrase,
+                            "caCert": network.caCert,
+                            "privateKeyFile": "custom",
+                            "clientCertFile": network.clientCertFile,
+                            "hidden": network.hidden
+                        })
+            settingsDBus.call("showAddNetworkDialog");
+            root.closeDialog()
+        }
+
+        onCertFromFileSelected: {
+            networkHelper.writeSettings(
+                        {
+                            "ssid": network.ssid,
+                            "securityType": network.securityType,
+                            "eapMethod": network.eapMethod,
+                            "phase2": network.phase2,
+                            "identity": network.identity,
+                            "passphrase": network.passphrase,
+                            "caCert": network.caCert,
+                            "caCertFile": network.caCertFile,
+                            "privateKeyFile": network.privateKeyFile,
+                            "clientCertFile": "custom",
                             "hidden": network.hidden
                         })
             settingsDBus.call("showAddNetworkDialog");

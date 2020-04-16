@@ -124,6 +124,26 @@ ApplicationWindow {
             pageStack.push("com.jolla.gallery.ambience.AmbienceSettingsPage", { "contentId": ambienceContentId }, PageStackAction.Immediate)
         }
 
+        function importWebcal(path) {
+            var comp = Qt.createComponent("/usr/share/accounts/ui/webcal.qml")
+            if (comp.status !== Component.Ready) {
+                console.warn("Cannot load webcal.qml: " + comp.errorString())
+                return
+            }
+            var agent = comp.createObject(window, {'remoteUrl': path})
+            if (agent === null) {
+                console.warn("Unable to instantiate webcal.qml")
+                return
+            }
+            showAccounts()
+            if (pageStack.currentPage.backNavigation) {
+                // We're not busy and can show the account page.
+                agent.endDestination = pageStack.currentPage
+                agent.endDestinationAction = PageStackAction.Pop
+                pageStack.push(agent.initialPage, {}, PageStackAction.Immediate)
+            }
+        }
+
         function showPage(page) {
             var obj = _frontPage.model.objectForPath(page)
             if (obj && obj.type == "page") {

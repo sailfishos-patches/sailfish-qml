@@ -1,3 +1,10 @@
+/****************************************************************************
+**
+** Copyright (c) 2013-2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+** License: Proprietary
+**
+****************************************************************************/
 import QtQuick 2.3
 import QtQml.Models 2.1
 import Sailfish.Silica 1.0
@@ -5,9 +12,7 @@ import Sailfish.Silica.private 1.0 as SilicaPrivate
 import Sailfish.Gallery 1.0
 import Sailfish.Ambience 1.0
 import com.jolla.gallery.ambience 1.0
-import org.nemomobile.thumbnailer 1.0
-import org.freedesktop.contextkit 1.0
-import org.nemomobile.configuration 1.0
+import org.nemomobile.ofono 1.0
 
 SilicaFlickable {
     id: root
@@ -23,8 +28,6 @@ SilicaFlickable {
     property color _originalSecondaryHighlightColor
     property bool _colorChanged
     property bool _completed
-    property bool _hasDataCapability: capabilityDataContextProperty.value || capabilityDataContextProperty.value === undefined
-    property bool _hasVoiceCapability: capabilityVoiceContextProperty.value || capabilityVoiceContextProperty.value === undefined
     property bool fadeAmbiencePicture
     readonly property real backgroundHeight: colorSchemeCombo.visible ? colorSchemeCombo.y : highlightSlider.y
     property alias enableColorSchemeSelection: colorSchemeCombo.visible
@@ -48,31 +51,21 @@ SilicaFlickable {
         }
     }
 
-    on_HasDataCapabilityChanged: {
-        ambience.changed()
-    }
-
-    on_HasVoiceCapabilityChanged: {
-        ambience.changed()
-    }
-
     function _unSupportedAction(prop) {
-        if (prop == "ringerTone" && !_hasVoiceCapability) {
+        if (prop == "ringerTone" && modemManager.availableModems.length === 0) {
             return true
-        } else if (prop == "messageTone" && !_hasDataCapability) {
+        } else if (prop == "messageTone" && modemManager.availableModems.length === 0) {
             return true
         }
         return false
     }
 
-    ContextProperty {
-        id: capabilityVoiceContextProperty
-        key: "Cellular.CapabilityVoice"
-    }
+    OfonoModemManager {
+        id: modemManager
 
-    ContextProperty {
-        id: capabilityDataContextProperty
-        key: "Cellular.CapabilityData"
+        onAvailableModemsChanged: {
+            ambience.changed()
+        }
     }
 
     AmbienceActions {

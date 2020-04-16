@@ -181,9 +181,14 @@ Page {
 
     function setStored() {
         passwordField.storedByManager = true
+        passwordField.changingPassword = false
     }
 
     function savePassword() {
+        // do not set passwordField.changingPassword = true
+        // we are about to save  user edited which will not be visible
+        // in the UI.
+
         authenticate(function() {
             passwordField.storedByManager = false
             passwordManager.call('setPassword', [passwordField.text], setStored, setStored)
@@ -192,6 +197,8 @@ Page {
     }
 
     function clearPassword() {
+        passwordField.changingPassword = true
+
         authenticate(function() {
             passwordField.storedByManager = false
             passwordField.text = ''
@@ -223,6 +230,7 @@ Page {
                 passwordIsGenerated = password != ''
                 passwordField.text = password
                 passwordField.storedByManager = true
+                passwordField.changingPassword = false
             })
         }
 
@@ -514,16 +522,20 @@ Page {
                     SystemPasswordField {
                         id: passwordField
 
+                        // True when password change is being processed
+                        property bool changingPassword
+
                         // Is current value saved by passwordManager
                         property bool storedByManager
                         // Use dotted password as placeholder instead of help text
-                        readonly property bool usePlaceholderPassword: storedByManager && passwordManager.passwordLoginEnabled && !activeFocus
+                        readonly property bool usePlaceholderPassword: passwordManager.passwordLoginEnabled && !activeFocus
 
                         // Note: according to qt documention, enabled value should inherit, but currently it doesn't
                         // change property value, thus duplicating it
                         enabled: policy.value
 
-                        placeholderText: (!usePlaceholderPassword
+                        placeholderAnimationEnabled: false
+                        placeholderText: (!usePlaceholderPassword || changingPassword
                             //% "Set password"
                             ? qsTrId("settings_developermode-ph-enter_password")
                             : "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022")
@@ -553,10 +565,13 @@ Page {
                             //% "Generate"
                             text: qsTrId("settings_developermode-bu-generate_password")
                             onClicked: {
+                                passwordField.changingPassword = true
                                 root.authenticate(function() {
                                     passwordManager.typedCall('generatePassword', [], function() {
                                         // Show the password once it has been generated
                                         passwordField._usePasswordEchoMode = false
+                                    }, function() {
+                                        passwordField.changingPassword = false
                                     })
                                 })
                             }

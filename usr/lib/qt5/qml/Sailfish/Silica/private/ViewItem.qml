@@ -57,15 +57,6 @@ BackgroundItem {
         }
     }
 
-    function remorseDelete(action, timeout) {
-        //% "Deleted"
-        return remorseAction(qsTrId("components-la-deleted"), action, timeout)
-    }
-
-    function remorseAction(text, action, timeout) {
-        return Remorse.itemAction(contentItem, text, action, timeout)
-    }
-
     function openMenu(properties) {
         if (menu == null) {
             return null

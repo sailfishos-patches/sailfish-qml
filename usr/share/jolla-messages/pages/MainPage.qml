@@ -53,17 +53,11 @@ Page {
         Component {
             id: sectionHeader
 
-            Label {
+            SectionHeader {
                 property string section: parent.ListView.section
 
-                width: parent.width - (2 * Theme.horizontalPageMargin)
-                height: text.length ? implicitHeight : 0
-                x: Theme.horizontalPageMargin
-
-                horizontalAlignment: Text.AlignRight
-                color: Theme.highlightColor
-
                 text: Format.formatDate(section, Formatter.TimepointSectionRelative)
+                height: text.length > 0 ? Theme.itemSizeSmall : 0
             }
         }
 

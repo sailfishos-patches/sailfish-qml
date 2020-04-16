@@ -52,7 +52,8 @@ Page {
         }
         BusyIndicator {
             running: !error && loading && locationsModel.filter.length > 0 && locationsModel.count === 0
-            anchors.centerIn: placeHolder
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: placeHolder.y + Math.round(height/2)
             parent: placeHolder.parent
             size: BusyIndicatorSize.Large
         }
@@ -86,8 +87,7 @@ Page {
 
             enabled: error || (locationListView.count == 0 && !loading) || locationsModel.filter.length < 1
 
-            // TODO: add offset property to ViewPlaceholder
-            y: locationListView.originY + Theme.itemSizeExtraSmall
+            y: locationListView.originY + Math.round(parent.height/14)
                + (locationListView.headerItem ? locationListView.headerItem.height : 0)
             Button {
                 //% "Try again"

@@ -83,17 +83,16 @@ Page {
                 title: qsTrId("settings_display-he-display")
             }
 
-            BrightnessSlider {
-                width: parent.width
-            }
-
             TextSwitch {
                 id: adaptiveDimmingSwitch
                 visible: deviceInfo.hasFeature(DeviceInfo.FeatureLightSensor)
                 automaticCheck: false
                 checked: displaySettings.ambientLightSensorEnabled && displaySettings.autoBrightnessEnabled
-                //% "Adaptive Brightness"
-                text: qsTrId("settings_display-la-adaptive_brightness")
+                //% "Adjust brightness automatically"
+                text: qsTrId("settings_display-la-adjust_brightness_automatically")
+                //% "Optimise brightness level for available light. When this feature is on, "
+                //% "you can manually adjust the desired base brightness level."
+                description: qsTrId("settings_display-la-adaptive_brightness_description")
                 onClicked: {
                     if (checked) {
                         displaySettings.autoBrightnessEnabled = false
@@ -102,6 +101,15 @@ Page {
                         displaySettings.ambientLightSensorEnabled = true
                     }
                 }
+            }
+
+            BrightnessSlider {
+                width: parent.width
+                label: adaptiveDimmingSwitch.checked
+                       ? //% "Brightness base level"
+                         qsTrId("settings_display-la-brightness_base_level")
+                       : //% "Brightness"
+                         qsTrId("settings_display-la-brightness")
             }
 
             /*
@@ -184,7 +192,8 @@ Page {
                         }
                     }
                 }
-                //% "If you want to disable orientation switching temporarily, select the Dynamic option and keep your finger on the screen while turning the device."
+                //% "If you want to disable orientation switching temporarily, select the Dynamic option and "
+                //% "keep your finger on the screen while turning the device."
                 description: qsTrId("settings_display-la-orientation_dynamic")
 
                 function applyChange() {

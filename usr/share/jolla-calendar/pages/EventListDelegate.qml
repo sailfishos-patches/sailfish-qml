@@ -7,7 +7,7 @@ ListItem {
     property date activeDay
     property bool menuOpen
 
-    contentHeight: Math.max(Theme.itemSizeMedium, column.height + Theme.paddingSmall*2)
+    contentHeight: Math.max(Theme.itemSizeMedium, column.height + 2*Theme.paddingMedium)
 
     Row {
         height: column.height

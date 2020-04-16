@@ -34,7 +34,7 @@ CoverBackground {
         //% "Get music"
         text: qsTrId("mediaplayer-la-get-music")
         icon.source: "image://theme/icon-launcher-mediaplayer"
-        visible: !allSongModel.count && !visualAudioModel.active
+        visible: allSongModel.count === 0 && !visualAudioModel.active
     }
 
     IdleCover {
@@ -72,11 +72,11 @@ CoverBackground {
         x: Theme.paddingMedium
         y: Theme.paddingMedium
         spacing: Theme.paddingSmall
+        visible: allSongModel.count > 0
         width: parent.width - 2*Theme.paddingMedium
 
         Label {
             id: durationLabel
-            visible: visualAudioModel.active
             anchors.horizontalCenter: parent.horizontalCenter
             text: visualAudioModel.duration >= 3600000 ?
                       Format.formatDuration(visualAudioModel.position / 1000, Formatter.DurationLong) :
@@ -85,7 +85,8 @@ CoverBackground {
                    ? Theme.highlightFromColor(Theme.highlightColor, Theme.LightOnDark)
                    : Theme.highlightColor
             font.pixelSize: visualAudioModel.duration >= 3600000 ? Theme.fontSizeExtraLarge : Theme.fontSizeHuge
-            opacity: visualAudioModel.state === Audio.Paused ? Theme.opacityHigh : 1.0
+            opacity: visualAudioModel.active ? (visualAudioModel.state === Audio.Paused ? Theme.opacityHigh : 1.0)
+                                             : 0.0
         }
 
         Label {
@@ -171,24 +172,24 @@ CoverBackground {
     GriloTrackerModel {
         id: allSongModel
 
+        //: placeholder string for albums without a known name
+        //% "Unknown album"
+        readonly property string unknownAlbum: qsTrId("mediaplayer-la-unknown-album")
+
+        //: placeholder string to be shown for media without a known artist
+        //% "Unknown artist"
+        readonly property string unknownArtist: qsTrId("mediaplayer-la-unknown-artist")
+
         query: {
-            //: placeholder string for albums without a known name
-            //% "Unknown album"
-            var unknownAlbum = qsTrId("mediaplayer-la-unknown-album")
-
-            //: placeholder string to be shown for media without a known artist
-            //% "Unknown artist"
-            var unknownArtist = qsTrId("mediaplayer-la-unknown-artist")
-
             return AudioTrackerHelpers.getSongsQuery("", {"unknownArtist": unknownArtist, "unknownAlbum": unknownAlbum})
         }
 
         onFinished: {
             var artList = fetchAlbumArts(3)
-            if (artList[0]) {
+            if (artList.length > 0) {
                 if (!artList[0].url || artList[0].url == "") {
-                    root.idleArtist = artList[0].author ? artList[0].author : ""
-                    root.idleSong = artList[0].title ? artList[0].title : ""
+                    root.idleArtist = artList[0].author ? artList[0].author : unknownArtist
+                    root.idleSong = artList[0].title ? artList[0].title : unknownAlbum
                 } else {
                     root.idle.largeAlbumArt = artList[0].url
                     root.idle.leftSmallAlbumArt = artList[1] && artList[1].url ? artList[1].url : ""

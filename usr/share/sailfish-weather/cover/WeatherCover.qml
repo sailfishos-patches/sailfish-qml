@@ -75,7 +75,7 @@ CoverBackground {
         enabled: ready && savedWeathersModel.count > 0
         CoverAction {
             iconSource: current ? "image://theme/icon-cover-previous"
-                                    : "image://theme/icon-cover-next"
+                                : "image://theme/icon-cover-next"
             onTriggered: {
                 current = !current
             }

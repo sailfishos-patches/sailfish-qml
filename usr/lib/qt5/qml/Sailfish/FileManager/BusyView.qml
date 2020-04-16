@@ -42,20 +42,9 @@ Loader {
             }
         }
 
-        Column {
-            anchors.centerIn: parent
-            spacing: Theme.paddingLarge
-
-            InfoLabel {
-                text: root.text
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-
-            BusyIndicator {
-                anchors.horizontalCenter: parent.horizontalCenter
-                size: BusyIndicatorSize.Large
-                running: busyView.enabled
-            }
+        BusyLabel {
+            text: root.text
+            running: busyView.enabled
         }
     }
 }

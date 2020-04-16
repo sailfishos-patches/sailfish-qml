@@ -13,7 +13,6 @@ import com.jolla.settings.system 1.0
 import org.nemomobile.contacts 1.0
 import org.nemomobile.systemsettings 1.0
 import Nemo.Configuration 1.0
-import "calling"
 
 Page {
     id: root

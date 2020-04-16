@@ -2,6 +2,7 @@ import QtQuick 2.2
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import org.nemomobile.systemsettings 1.0
+import com.jolla.settings.system 1.0
 
 ListModel {
     id: root
@@ -10,11 +11,16 @@ ListModel {
     readonly property int storageTypeMemoryCard: 1
     readonly property int storageTypeCloud: 2
     readonly property bool ready: partitions.externalStoragesPopulated
+    readonly property int storageMounted: PartitionModel.Mounted
+    readonly property int storageLocked: PartitionModel.Locked
+    property bool busy
 
     property AccountModel cloudAccountModel: AccountModel {
         filterType: AccountModel.ServiceTypeFilter
         filter: "storage"
     }
+
+    signal memoryCardMounted
 
     function refresh() {
         clear()
@@ -22,12 +28,27 @@ ListModel {
         _addDrives()
     }
 
+    function mount(devicePath) {
+        busy = true
+        partitions.mount(devicePath)
+    }
+
+    function unlock(devicePath) {
+        busy = true
+        var objectPath = partitions.objectPath(devicePath)
+        encryptionUnlocker.unlock(root, objectPath)
+    }
+
+    property EncryptionUnlocker encryptionUnlocker: EncryptionUnlocker {}
+
     property Instantiator _externalPartitions: Instantiator {
         model: PartitionModel {
             id: partitions
 
             storageTypes: PartitionModel.External | PartitionModel.ExcludeParents
             onExternalStoragesPopulatedChanged: root.refresh()
+            onMountError: busy = false
+            onUnlockError: busy = false
 
             Component.onCompleted: if (externalStoragesPopulated) root.refresh()
         }
@@ -35,6 +56,9 @@ ListModel {
         QtObject {
             property int type: storageTypeMemoryCard
             property int accountId: 0
+            property string devPath: devicePath
+            property int deviceStatus: status
+
             property string name: bytesAvailable > 0
                                  //: the parameter is the capacity of the memory card, e.g. "4.2 GB"
                                  //% "Memory card %1"
@@ -42,6 +66,11 @@ ListModel {
                                  //% "Memory card"
                                : qsTrId("vault-la-memory_card")
             property string path: mountPath
+            onPathChanged: {
+                refresh()
+                busy = false
+                if (path) memoryCardMounted()
+            }
         }
     }
 
@@ -67,8 +96,7 @@ ListModel {
     function _addDrives() {
         for (var i = 0; i < _externalPartitions.count; ++i) {
             var storageData = _externalPartitions.objectAt(i)
-            if (storageData.path)
-                append(storageData)
+            append(storageData)
         }
     }
 }

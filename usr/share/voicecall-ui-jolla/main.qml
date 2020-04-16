@@ -13,7 +13,7 @@ import org.nemomobile.voicecall 1.0 as VoiceCall
 import "common/CallHistory.js" as CallHistory
 
 import "pages/dialer"
-import "pages/calling"
+import "calling"
 import "common"
 import "pages"
 import "ota"
@@ -180,7 +180,7 @@ ApplicationWindow {
         id: callingDialogLoader
         active: false
         asynchronous: true
-        source: "pages/CallDialog.qml"
+        source: "calling/CallDialog.qml"
         onLoaded: {
             callingView = item
             callingView.closing.connect(function(closeEvent) {
@@ -210,7 +210,7 @@ ApplicationWindow {
 
     function showCallPrompt(number) {
         if (!callPromptDialog) {
-            var callPromptComponent = Qt.createComponent("pages/CallPromptDialog.qml")
+            var callPromptComponent = Qt.createComponent("calling/CallPromptDialog.qml")
             if (callPromptComponent.status === Component.Ready) {
                 callPromptDialog = callPromptComponent.createObject(main)
             } else {
@@ -233,7 +233,7 @@ ApplicationWindow {
 
     function showCellularErrorDialog() {
         if (!cellularErrorDialog) {
-            var cellularErrorComponent = Qt.createComponent("pages/CellularErrorDialog.qml")
+            var cellularErrorComponent = Qt.createComponent("calling/CellularErrorDialog.qml")
             if (cellularErrorComponent.status === Component.Ready) {
                 cellularErrorDialog = cellularErrorComponent.createObject(main)
             } else {
@@ -574,7 +574,7 @@ ApplicationWindow {
             // In an ideal world all uses of dial() without providing a sim will be
             // replaced with in-place sim selectors. This is here in case anyone hasn't
             // yet switched to their own sim selector.
-            var simSelectorComponent = Qt.createComponent(Qt.resolvedUrl("pages/SimSelectPrompt.qml"))
+            var simSelectorComponent = Qt.createComponent(Qt.resolvedUrl("calling/SimSelectPrompt.qml"))
             if (simSelectorComponent.status == Component.Error) {
                 console.warn(simSelectorComponent.errorString())
                 return

@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 – 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as Contacts
@@ -17,6 +24,8 @@ Item {
     property alias labelVisible: inputField.labelVisible
     property bool expanded
     readonly property bool canExpand: model.formattedNameText.length > 0 && inputField.readOnly
+    property QtObject onlineSearchModel
+    property string onlineSearchDisplayName
 
     signal nextField()
     signal backspacePressed()
@@ -99,6 +108,14 @@ Item {
                                             address.property, address.propertyType,
                                             contact ? contact.displayLabel : '', contact)
             text = model.formattedNameText
+            recipientsModel.nextRecipient(model.index)
+        }
+
+        function updateFromKnownContact(item, name, email) {
+            recipientsModel.updateRecipient(model.index,
+                                            { "address": email }, "emailAddress",
+                                            name, undefined, item)
+            text = name
             recipientsModel.nextRecipient(model.index)
         }
 
@@ -230,13 +247,23 @@ Item {
         id: autoComplete
         property string searchText
         width: parent.width
-        height: autoCompleteList.height
+        height: contactHeader.height + autoCompleteList.height + onlineSearchLoader.height
         anchors.top: inputField.bottom
         opacity: editing && !inputField.readOnly ? 1.0 : 0.0
         Behavior on opacity { FadeAnimation { id: autoCompleteAnim } }
 
+        SectionHeader {
+            id: contactHeader
+            visible: onlineSearchLoader.active && autoCompleteList.model && autoCompleteList.model.count > 0
+            height: visible ? implicitHeight : 0
+            //: Shown as a section header for local contacts when there are multiple address books
+            //% "Contacts"
+            text: qsTrId("components_contacts-he-contacts")
+        }
+
         ColumnView {
             id: autoCompleteList
+            anchors.top: contactHeader.bottom
             width: parent.width
             itemHeight: Theme.itemSizeSmall
             model: ((editing || animating) && addressesModel.count)
@@ -300,6 +327,31 @@ Item {
                     if (contact) {
                         inputField.updateFromContact(contact, addressIndex)
                     }
+                }
+            }
+
+            Loader {
+                id: onlineSearchLoader
+
+                active: onlineSearchModel !== null && (autoCompleteList.model && autoCompleteList.model.count < 9)
+                height: active ? implicitHeight : 0
+                sourceComponent: Component {
+                    OnlineSearchItem {
+                        active: root.editing && autoComplete.searchText.length >= 1
+                        onlineSearchModel: root.onlineSearchModel
+                        onlineSearchDisplayName: root.onlineSearchDisplayName
+                        searchText: autoComplete.searchText
+                        width: parent ? parent.width : 0
+
+                        function updateFromKnownContact(contact, name, email) {
+                            inputField.updateFromKnownContact(contact, name, email)
+                        }
+                    }
+                }
+                anchors {
+                    left: autoCompleteList.left
+                    top: autoCompleteList.bottom
+                    right: autoCompleteList.right
                 }
             }
         }

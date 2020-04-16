@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Contacts 1.0
 
 Item {
     property bool showDetails
@@ -7,6 +8,7 @@ Item {
     readonly property int contentWidth: remoteUidLabel.implicitWidth + columnSpacing + detailsRow.implicitWidth
     readonly property int columnSpacing: Theme.paddingSmall
     readonly property bool hasVisibleContent: !privateNumber || showDetails
+    property var _simManager: simManager
 
     readonly property bool occurredToday: {
         var date = model.startTime
@@ -61,6 +63,13 @@ Item {
             visible: !model.isMissedCall && showDetails
             anchors.verticalCenter: parent.verticalCenter
             highlighted: true
+        }
+
+        ContactActivitySimIndicator {
+            anchors.verticalCenter: parent.verticalCenter
+            simManager: _simManager
+            imsi: model.subscriberIdentity
+            color: palette.secondaryHighlightColor
         }
     }
 }

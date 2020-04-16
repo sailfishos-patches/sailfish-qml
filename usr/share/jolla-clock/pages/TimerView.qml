@@ -39,7 +39,8 @@ TabItem {
         ViewPlaceholder {
             //% "Pull down to save some timers"
             text: qsTrId("clock-la-pull_down_to_save_timers")
-            enabled: alarmsModel.populated && timersModel.populated && timers.count === 0
+            enabled: timersModel.populated && timers.count === 0
+            y: flickable.originY + topMargin + mainPage.placeholderY
         }
 
         Column {

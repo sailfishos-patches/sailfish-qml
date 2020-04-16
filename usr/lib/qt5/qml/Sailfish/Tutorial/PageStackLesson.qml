@@ -63,8 +63,7 @@ Lesson {
     CoverItem {
         id: galleryApp
 
-        row: 1
-        column: 2
+        name: "gallery"
 
         onClicked: {
             timeline.complete()
@@ -90,17 +89,16 @@ Lesson {
         Behavior on opacity { FadeAnimation { duration: 500 } }
     }
 
-    Image {
-        fillMode: Screen.sizeCategory >= Screen.Large ? null : Image.PreserveAspectFit
+    BackgroundImage {
         parent: applicationBackground
-        width: parent.width
+
 
         // Centering vertically
         y: (parent.height - height)/2
 
         opacity: galleryMainPageWrapper.opacity
         source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.png")
+                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.jpg")
                 : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-app-background.jpg")
     }
 
@@ -190,7 +188,7 @@ Lesson {
         id: closeAnimation
         PauseAnimation { duration: 200 }
         FadeAnimation {
-            target: galleryMainPage
+            target: galleryMainPageWrapper
             to: 0.0
             duration: 2000
         }

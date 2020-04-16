@@ -1,7 +1,14 @@
+/****************************************************************************
+**
+** Copyright (c) 2015 - 2020 Jolla Ltd.
+** Copyright (c) 2020 Open Mobile Platform LLC.
+** License: Proprietary
+**
+****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.settings.system 1.0
-import Nemo.DBus 2.0
 import org.nemomobile.systemsettings 1.0
 import Qt.labs.folderlistmodel 2.1
 
@@ -207,7 +214,7 @@ Page {
 
             function unlock() {
                 var objPath = externalPartitions.objectPath(model.devicePath)
-                unlockerComponent.createObject(cardItem, {"objectPath": objPath})
+                encryptionUnlocker.unlock(cardItem, objPath)
             }
 
             function lock() {
@@ -323,55 +330,8 @@ Page {
         VerticalScrollDecorator {}
     }
 
-    Component {
-        id: unlockerComponent
-
-        DBusInterface {
-            id: unlocker
-
-            property string objectPath
-            property var blockData
-            property var driveData
-
-            function _showUnlockUi(driveData) {
-                var deviceData = {
-                    "label": blockData.IdLabel,
-                    "size": blockData.Size,
-                    "mountable": false,
-                    "encrypted": true,
-                    "vendor": driveData.Vendor,
-                    "model": driveData.Model,
-                    "connectionBus": driveData.ConnectionBus,
-                    "objectPath": objectPath
-                }
-
-                bus = DBus.SessionBus
-                service = "com.jolla.windowprompt"
-                iface = "com.jolla.windowprompt"
-                path = "/com/jolla/windowprompt"
-
-                call("showStorageDevicePrompt", [deviceData], unlocker.destroy, unlocker.destroy)
-            }
-
-            function _unlock() {
-                bus = DBus.SystemBus
-                service = "org.freedesktop.UDisks2"
-                iface = "org.freedesktop.DBus.Properties"
-                path = objectPath
-
-                blockData = null
-                driveData = null
-
-                call("GetAll", ["org.freedesktop.UDisks2.Block"],
-                     function(conf) {
-                         blockData = conf
-                         path = blockData.Drive
-                         unlocker.call("GetAll", ["org.freedesktop.UDisks2.Drive"], _showUnlockUi, unlocker.destroy)
-                     }, unlocker.destroy)
-            }
-
-            Component.onCompleted: _unlock()
-        }
+    EncryptionUnlocker {
+        id: encryptionUnlocker
     }
 
     Component {

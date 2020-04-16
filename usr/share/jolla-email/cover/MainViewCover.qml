@@ -95,7 +95,7 @@ Item {
         CoverAction {
             iconSource: "image://theme/icon-cover-sync"
             onTriggered: {
-                emailAgent.accountsSync(true)
+                emailAgent.accountsSyncInbox()
             }
         }
     }

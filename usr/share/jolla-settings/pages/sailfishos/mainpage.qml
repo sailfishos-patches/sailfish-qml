@@ -97,7 +97,7 @@ Page {
         contentHeight: content.height
         Column {
             id: content
-            enabled: AccessPolicy.osUpdatesEnabled
+            enabled: AccessPolicy.osUpdatesEnabled && !storeIf.accessDenied
 
             anchors.horizontalCenter: parent.horizontalCenter
             width: Math.min(Screen.width, Screen.height)
@@ -107,19 +107,24 @@ Page {
             }
 
             MdmBanner.DisabledByMdmBanner {
-                active: !content.enabled
+                id: mdmBanner
+                active: !AccessPolicy.osUpdatesEnabled
             }
 
             Item { width: 1; height: Theme.paddingLarge }
 
             UpgradePlaceholder {
-                horizontalMargin: contentMargin
-                visible: !storeIf.accountsOk
+                id: placeholder
+
+                verticalOffset: Math.round(page.height/6 + (mdmBanner.active ? mdmBanner.height/2 : 0))
+                leftMargin: contentMargin
+                rightMargin: contentMargin
+                enabled: !storeIf.accountsOk || storeIf.accessDenied
             }
 
             Loader {
                 id: balancingUiLoader
-                visible: storeIf.accountsOk && storeIf.balancingRequired && !storeIf.pending
+                visible: !placeholder.enabled && storeIf.balancingRequired && !storeIf.pending
                 anchors {
                     left: parent.left
                     right: parent.right
@@ -130,7 +135,7 @@ Page {
             UpgradeDetails {
                 id: upgradeDetails
                 horizontalMargin: contentMargin
-                visible: storeIf.accountsOk && !storeIf.balancingRequired && !storeIf.pending
+                visible: !placeholder.enabled && !storeIf.balancingRequired && !storeIf.pending
             }
 
             UpgradeSettings {
@@ -145,7 +150,7 @@ Page {
             busy: storeIf.updateStatus === StoreInterface.Checking ||
                   storeIf.updateStatus === StoreInterface.WaitingForConnection
             visible: AccessPolicy.osUpdatesEnabled
-                     && storeIf.accountsOk
+                     && !placeholder.enabled
                      && !storeIf.downloading
                      && !storeIf.balancingRequired
 
@@ -219,9 +224,7 @@ Page {
         }
     }
 
-    BusyIndicator {
-        anchors.centerIn: parent
+    PageBusyIndicator {
         running: storeIf.accountsOk && storeIf.pending
-        size: BusyIndicatorSize.Large
     }
 }

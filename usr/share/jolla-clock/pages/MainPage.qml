@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import com.jolla.settings.system 1.0
@@ -15,18 +15,20 @@ import "../common/DateUtils.js" as DateUtils
 Page {
     id: root
 
+    property int placeholderY: Math.round(height/4)
+
     function reset(index, operationType) {
         tabs.moveTo(1, TabViewAction.Immediate)
     }
 
     function newTimer(operationType) {
         pageStack.animatorPush(Qt.resolvedUrl("ClockEditDialog.qml"),
-                       { alarmObject: timersModel.createAlarm(), alarmMode: false }, operationType)
+                       { alarmObject: timersModel.createAlarm(), alarmMode: false, editExisting: false }, operationType)
     }
 
     function newAlarm(operationType) {
         pageStack.animatorPush(Qt.resolvedUrl("ClockEditDialog.qml"),
-                       { alarmObject: alarmsModel.createAlarm(), alarmMode: true }, operationType)
+                       { alarmObject: alarmsModel.createAlarm(), alarmMode: true, editExisting: false }, operationType)
     }
 
     function publishRemainingTime(hour, minute, weekDays) {

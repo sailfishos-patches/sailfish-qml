@@ -107,7 +107,7 @@ Lesson {
         parent: applicationBackground
         width: parent.width
         opacity: root.opacity
-        source: Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-incoming-call.png")
+        source: Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-incoming-call.jpg")
     }
 
     SilicaFlickable {
@@ -127,11 +127,76 @@ Lesson {
             }
         }
 
+        SequentialAnimation {
+            id: pulleyAnimationHint
+
+            property real distance: Theme.paddingMedium
+
+            running: !flickable.dragging
+            loops: Animation.Infinite
+            alwaysRunToEnd: true
+            PauseAnimation { duration: 800 }
+            NumberAnimation {
+                target: content
+                property: "y"
+                from: 0
+                to: -pulleyAnimationHint.distance
+                duration: 200
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: content
+                property: "y"
+                from: -pulleyAnimationHint.distance
+                to: pulleyAnimationHint.distance
+                duration: 400
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: content
+                property: "y"
+                from: pulleyAnimationHint.distance
+                to: 0
+                duration: 200
+                easing.type: Easing.InOutQuad
+            }
+        }
+
         Item {
             id: content
+            width: root.width
+            height: root.height
 
-            width: flickable.width
-            height: flickable.height
+            Column {
+
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    bottom: rejectLabel.top
+                    bottomMargin: Theme.itemSizeSmall
+                    leftMargin: Theme.horizontalPageMargin
+                    rightMargin: Theme.horizontalPageMargin
+                }
+
+                Label {
+                    //: The name of the caller
+                    //% "Friend"
+                    text: qsTrId("tutorial-la-friend")
+                    horizontalAlignment: Text.AlignHCenter
+                    font { family: Theme.fontFamilyHeading; pixelSize: Theme.fontSizeHuge }
+                    width: parent.width
+                }
+
+                Label {
+                    id: callingLabel
+                    //: Needs to match with voicecall-la-calling
+                    //% "calling"
+                    text: qsTrId("tutorial-la-calling")
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    font { family: Theme.fontFamilyHeading; pixelSize: Theme.fontSizeLarge }
+                }
+            }
 
             Image {
                 id: answerIcon
@@ -149,6 +214,7 @@ Lesson {
                 }
                 source: "image://theme/icon-l-reject?#CC0000"
             }
+
 
             Label {
                 anchors {
@@ -169,6 +235,7 @@ Lesson {
             }
 
             Label {
+                id: rejectLabel
                 anchors {
                     left: parent.left
                     leftMargin: Theme.horizontalPageMargin
@@ -184,11 +251,12 @@ Lesson {
                 color: rejectMenu.highlightColor
                 font.pixelSize: Theme.fontSizeExtraSmall
             }
+        }
 
-            HintLabel {
-                id: hintLabel
-                opacity: 0.0
-            }
+
+        HintLabel {
+            id: hintLabel
+            opacity: 0.0
         }
 
         PullDownMenu {
@@ -235,6 +303,7 @@ Lesson {
                 height: Theme.itemSizeExtraSmall
                 width: parent.width
             }
+
             MenuItem {
                 color: "#ff8080"
                 //: Action to silence the incoming call
@@ -242,6 +311,7 @@ Lesson {
                 text: qsTrId("voicecall-me-pull_up_to_silence")
                 onClicked: {
                     if (rejectMenu.acceptAction) {
+                        pulleyAnimationHint.paused = true
                         rejectMenu.acceptAction = false
                         touchBlocker.enabled = true
                         closeAnimation.restart()

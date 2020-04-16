@@ -75,6 +75,7 @@ AccountCreationAgent {
             onFailed: {
                 console.log("failed to create account:", errorMessage)
                 authDialog.acceptDestinationInstance.state = "info"
+                authDialog.acceptDestinationInstance.infoExtraDescription = errorMessage
                 root.accountCreationError(errorMessage)
             }
             onUpdateCreationStatus: {

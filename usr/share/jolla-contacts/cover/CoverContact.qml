@@ -3,16 +3,17 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 
 Image {
-    id: root
+    id: coverContact
+
     fillMode: Image.PreserveAspectCrop
     clip: true // otherwise paintedWidth/Height can vary.
     asynchronous: true
 
-    property variant contact
-    property bool center: false
+    property var contact
+    property bool center
     property bool enableAvatar: true
     property color backgroundColor
-    property real backgroundOpacity: 0.0
+    property real backgroundOpacity
     property string firstText
     property string secondText
 
@@ -28,10 +29,12 @@ Image {
             source = contact.avatarUrl
             firstText = ""
             secondText = ""
+            backgroundOpacity = 0.0
         } else {
             source = ""
             firstText = contact.primaryName
             secondText = contact.secondaryName
+            backgroundOpacity = 0.0
         }
     }
 
@@ -39,10 +42,10 @@ Image {
     onContactChanged: displayData()
 
     Rectangle {
-        visible: backgroundColor !== "" && backgroundOpacity > 0
+        visible: color !== "" && opacity > 0
         anchors.fill: parent
-        color: root.backgroundColor
-        opacity: root.backgroundOpacity
+        color: coverContact.backgroundColor
+        opacity: coverContact.backgroundOpacity
     }
 
     Loader {
@@ -51,7 +54,6 @@ Image {
     }
 
     ContactPresenceIndicator {
-        id: presence
         visible: !offline
         anchors {
             left: parent.left

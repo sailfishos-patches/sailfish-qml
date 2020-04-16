@@ -206,27 +206,10 @@ Page {
         }
     }
 
-    Column {
-        anchors.verticalCenter: parent.verticalCenter
-        width: parent.width
-        opacity: usageCounter.calculating && pageReady ? 1 : 0
-        spacing: Theme.paddingLarge
-
-        Behavior on opacity { FadeAnimator { } }
-
-        Label {
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: Theme.highlightColor
-            font.pixelSize: Theme.fontSizeLarge
-            //% "Calculating"
-            text: qsTrId("settings_network-he-calculating")
-        }
-
-        BusyIndicator {
-            anchors.horizontalCenter: parent.horizontalCenter
-            running: usageCounter.calculating
-            size: BusyIndicatorSize.Large
-        }
+    BusyLabel {
+        //% "Calculating"
+        text: qsTrId("settings_network-he-calculating")
+        running: usageCounter.calculating && pageReady
     }
 
     NetworkCounter {

@@ -26,10 +26,10 @@ AccountSettingsAgent {
             contentHeight: header.height + settingsDisplay.height + Theme.paddingLarge
 
             StandardAccountSettingsPullDownMenu {
-                onCredentialsUpdateRequested: {
-                    credentialsUpdater.replaceWithCredentialsUpdatePage(root.accountId)
-                }
                 allowSync: false
+                allowCredentialsUpdate: root.accountNotSignedIn
+
+                onCredentialsUpdateRequested: credentialsUpdater.replaceWithCredentialsUpdatePage(root.accountId)
                 onAccountDeletionRequested: {
                     root.accountDeletionRequested()
                     pageStack.pop()

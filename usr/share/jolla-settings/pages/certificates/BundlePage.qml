@@ -28,6 +28,7 @@ Page {
     }
 
     SilicaListView {
+        id: view
         anchors.fill: parent
 
         header: Column {
@@ -37,10 +38,17 @@ Page {
                 title: root.title
             }
 
+            ViewPlaceholder {
+                //% "No certificates found"
+                text: qsTrId("settings_system-no_certificates_found")
+                enabled: view.count === 0
+            }
+
             SearchField {
                 id: searchField
                 width: parent.width
                 onTextChanged: searchModel.pattern = text
+                visible: view.count !== 0 || searchField.length > 0
             }
         }
 

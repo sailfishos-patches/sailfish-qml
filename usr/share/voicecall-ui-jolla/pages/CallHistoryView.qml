@@ -15,7 +15,6 @@ SilicaListView {
 
     property Item contextMenu
     property alias showDetails: showDetailsConfig.value
-    readonly property bool multipleSimCards: simManager.valid && simManager.enabledModems.length > 1
 
     // Declared this way to enable mocking in tests
     property var commCallModel: CommCallModel {

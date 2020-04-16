@@ -38,8 +38,8 @@ Page {
         }
     }
 
-    function vCalendarName(calendarEntry) {
-        // Return a name for this vcalendar that can be used as a filename
+    function iCalendarName(calendarEntry) {
+        // Return a name for this icalendar that can be used as a filename
 
         // Remove any whitespace
         var noWhitespace = calendarEntry.displayLabel.replace(/\s/g, '')
@@ -48,13 +48,11 @@ Page {
         var sevenBit = Format.formatText(noWhitespace, Formatter.Ascii7Bit)
         if (sevenBit.length < noWhitespace.length) {
             // This event's name is not representable in ASCII
-            //: Placeholder name for calendar event filename
-            //% "calendarevent"
-            sevenBit = qsTrId("jolla-calendar-ph-vcalendar_default_name")
+            sevenBit = "calendarevent"
         }
 
         // Remove any characters that are not part of the portable filename character set
-        return Format.formatText(sevenBit, Formatter.PortableFilename) + '.vcs'
+        return Format.formatText(sevenBit, Formatter.PortableFilename) + '.ics'
     }
 
     objectName: "EventViewPage"
@@ -118,9 +116,9 @@ Page {
                 text: qsTrId("calendar-event-share")
                 onClicked: {
                     var content = {
-                        "data": query.event.vCalendar(),
-                        "name": root.vCalendarName(query.event),
-                        "type": "text/x-vcalendar"
+                        "data": query.event.iCalendar(),
+                        "name": root.iCalendarName(query.event),
+                        "type": "text/calendar"
                     }
 
                     pageStack.animatorPush("Sailfish.TransferEngine.SharePage",
@@ -128,7 +126,7 @@ Page {
                                                //% "Share event"
                                                "header": qsTrId("jolla-calendar-he-share-event"),
                                                "content": content,
-                                               "mimeType": "text/x-vcalendar",
+                                               "mimeType": "text/calendar",
                                                "serviceFilter": ["sharing", "e-mail"]
                                            })
                 }

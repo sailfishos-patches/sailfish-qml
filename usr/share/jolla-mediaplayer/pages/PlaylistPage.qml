@@ -55,10 +55,11 @@ Page {
                 //% "Clear playlist"
                 text: qsTrId("mediaplayer-me-playlist-clear-playlist")
                 visible: isEditable
+
                 onClicked: {
                     //: Clearing the playlist
                     //% "Clearing"
-                    clearRemorse.execute(qsTrId("mediaplayer-la-clearing"), function() {
+                    Remorse.popupAction(page, qsTrId("mediaplayer-la-clearing"), function() {
                         originalPlaylistModel.clear()
                         if (playlists.clearPlaylist(media, originalPlaylistModel)) {
                             pageStack.pop()
@@ -112,9 +113,7 @@ Page {
             formatFilter: playlistHeader.searchText
 
             function remove() {
-                //: Delete a playlist item
-                //% "Deleting"
-                remorseAction( qsTrId("mediaplayer-la-deleting"), function() {
+                remorseDelete(function() {
                     if (realIndex >= 0 ) {
                         originalPlaylistModel.remove(realIndex)
                         playlists.savePlaylist(page.media, originalPlaylistModel)
@@ -142,6 +141,4 @@ Page {
             }
         }
     }
-
-    RemorsePopup { id: clearRemorse }
 }

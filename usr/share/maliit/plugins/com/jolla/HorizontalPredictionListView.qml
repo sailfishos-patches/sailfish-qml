@@ -15,7 +15,7 @@ PredictionListView {
     Behavior on _buttonMargin { NumberAnimation { id: marginAnimation; duration: 100 } }
 
     onPredictionsChanged: {
-        predictionList.positionViewAtBeginning()
+        view.positionViewAtBeginning()
     }
 
     header: PasteButton {
@@ -100,6 +100,6 @@ PredictionListView {
     Timer {
         id: positionerTimer
         interval: 10
-        onTriggered: predictionList.positionViewAtBeginning()
+        onTriggered: view.positionViewAtBeginning()
     }
 }

@@ -1,12 +1,23 @@
-import QtQuick 2.0
+/****************************************************************************
+**
+** Copyright (c) 2013-2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+** License: Proprietary
+**
+****************************************************************************/
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import com.jolla.settings.system 1.0
 import com.jolla.settings 1.0
-import org.freedesktop.contextkit 1.0
+import org.nemomobile.ofono 1.0
 import Sailfish.Policy 1.0
 
 Page {
     id: root
+
+    property int effectiveMode: locationSettings.pendingAgreements.length > 0 && !transitionTimer.running
+                                ? LocationConfiguration.CustomMode
+                                : locationSettings.locationMode
 
     function checkFlightMode() {
         // Until we have explicit UI to exit flight mode here, best just to do that when turning on gps or main location.
@@ -15,24 +26,52 @@ Page {
         }
     }
 
+    function setMode(mode) {
+        if (locationSettings.locationMode == LocationConfiguration.CustomMode) {
+            locationSettings.saveCustomSettings()
+        }
+
+        transitionTimer.start()
+        locationSettings.locationMode = mode
+
+        if (locationSettings.pendingAgreements.length > 0) {
+            pageStack.animatorPush(usageTermsComponent, {
+                                       providers: locationSettings.pendingAgreements
+                                   })
+        }
+    }
+
+    LocationConfiguration { id: locationSettings }
+
+    Timer {
+        // this timer exists to ensure that after pressing a switch,
+        // that switch is lit up even while the user may need to
+        // accept an agreement prior to being able to enable it.
+        id: transitionTimer
+
+        interval: 600 // long enough for page transition duration
+    }
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: content.height
 
         PullDownMenu {
             id: pdm
-            property bool hereAgreementCanBeRevoked: locationSettings.hereAvailable && locationSettings.hereState !== LocationConfiguration.OnlineAGpsAgreementNotAccepted
-            property bool mlsAgreementCanBeRevoked: locationSettings.mlsAvailable && locationSettings.mlsOnlineState !== LocationConfiguration.OnlineAGpsAgreementNotAccepted
+
+            property bool hereAgreementCanBeRevoked: locationSettings.hereAvailable
+                                                     && locationSettings.hereState !== LocationConfiguration.OnlineAGpsAgreementNotAccepted
+            property bool mlsAgreementCanBeRevoked: locationSettings.mlsAvailable
+                                                    && locationSettings.mlsOnlineState !== LocationConfiguration.OnlineAGpsAgreementNotAccepted
             visible: hereAgreementCanBeRevoked || mlsAgreementCanBeRevoked
+
             MenuItem {
-                id: hereAgreement
                 //% "Show HERE agreement"
                 text: qsTrId("settings_location-me-show_here_agreement")
                 onClicked: pageStack.animatorPush(agreementPageComponent, { providerName: "here" })
                 visible: pdm.hereAgreementCanBeRevoked
             }
             MenuItem {
-                id: mozillaAgreement
                 //% "Show Mozilla agreement"
                 text: qsTrId("settings_location-me-show_mls_agreement")
                 onClicked: pageStack.animatorPush(agreementPageComponent, { providerName: "mls" })
@@ -42,8 +81,10 @@ Page {
 
         Column {
             id: content
+
             width: parent.width
             enabled: AccessPolicy.locationSettingsEnabled
+            bottomPadding: Theme.paddingLarge
 
             PageHeader {
                 //% "Location"
@@ -54,150 +95,89 @@ Page {
                 active: !content.enabled
             }
 
-            ListItem {
-                id: switchContainer
+            TextSwitch {
+                automaticCheck: false
+                checked: locationSettings.locationEnabled
+                enabled: AccessPolicy.locationSettingsEnabled
 
-                contentHeight: locationSwitch.height
-                openMenuOnPressAndHold: false
+                //% "Location"
+                text: qsTrId("settings_location-la-location")
+                //% "Allow applications to pinpoint your location. This feature consumes some battery power."
+                description: qsTrId("settings_location-la-location_switch_description")
 
-                TextSwitch {
-                    id: locationSwitch
-                    automaticCheck: false
-                    checked: locationSettings.locationEnabled
-                    enabled: AccessPolicy.locationSettingsEnabled
-
-                    //% "Location"
-                    text: qsTrId("settings_location-la-location")
-                    //% "Allow applications to pinpoint your location. This feature consumes some battery power."
-                    description: qsTrId("settings_location-la-location_switch_description")
-                    highlighted: down || switchContainer.menuOpen
-
-                    onClicked: {
-                        var newState = !checked
-                        locationSettings.locationEnabled = newState
-                        root.checkFlightMode()
-                    }
+                onClicked: {
+                    var newState = !checked
+                    locationSettings.locationEnabled = newState
+                    root.checkFlightMode()
                 }
-            }
-
-            SectionHeader {
-                //: Title of the accuracy settings section
-                //% "Accuracy"
-                text: qsTrId("settings_location-la-simple_settings_section")
             }
 
             Column {
-                id: simpleSettingsSection
                 width: parent.width
+                visible: locationSettings.locationProviders.length > 0
 
-                Timer {
-                    // this timer exists to ensure that after pressing a switch,
-                    // that switch is lit up even while the user may need to
-                    // accept an agreement prior to being able to enable it.
-                    id: transitionTimer
-                    interval: 600 // long enough for page transition duration
-                    property bool highAccuracyTransition
-                    property bool batterySavingTransition
-                    property bool deviceOnlyTransition
-                    onTriggered: {
-                        highAccuracyTransition = false
-                        batterySavingTransition = false
-                        deviceOnlyTransition = false
-                    }
+                SectionHeader {
+                    //: Title of the accuracy settings section
+                    //% "Accuracy"
+                    text: qsTrId("settings_location-la-simple_settings_section")
                 }
 
-                // note: assuming either online service installed
-                property bool highAccuracySwitchChecked:  !transitionTimer.batterySavingTransition && !transitionTimer.deviceOnlyTransition &&
-                                                          (transitionTimer.highAccuracyTransition ||
-                                                                locationSettings.locationMode == LocationConfiguration.HighAccuracyMode)
-                property bool batterySavingSwitchChecked: !transitionTimer.highAccuracyTransition && !transitionTimer.deviceOnlyTransition &&
-                                                          (transitionTimer.batterySavingTransition ||
-                                                                locationSettings.locationMode == LocationConfiguration.BatterySavingMode)
-                property bool deviceOnlySwitchChecked:    !transitionTimer.highAccuracyTransition && !transitionTimer.batterySavingTransition &&
-                                                          (transitionTimer.deviceOnlyTransition ||
-                                                                locationSettings.locationMode == LocationConfiguration.DeviceOnlyMode)
-                property bool customSwitchChecked: locationSettings.locationMode == LocationConfiguration.CustomMode
-
                 TextSwitch {
-                    id: highAccuracySwitch
-
                     automaticCheck: false
-                    checked: simpleSettingsSection.highAccuracySwitchChecked
+                    checked: effectiveMode == LocationConfiguration.HighAccuracyMode
                     enabled: locationSettings.locationEnabled && AccessPolicy.locationSettingsEnabled
 
                     //% "High-accuracy positioning"
                     text: qsTrId("settings_location-la-high_accuracy_positioning")
 
                     //: Description of the high accuracy positioning mode
-                    //% "Use online services to assist device GPS to calculate highly accurate positioning information. Data costs may apply."
+                    //% "Use online services to assist device GPS to calculate highly accurate positioning information. "
+                    //% "Data costs may apply."
                     description: qsTrId("settings_location-la-high_accuracy_positioning_description")
 
                     onClicked: {
-                        if (locationSettings.locationMode == LocationConfiguration.CustomMode) {
-                            locationSettings.saveCustomSettings()
-                        }
-
-                        transitionTimer.highAccuracyTransition = true
-                        transitionTimer.start()
-                        enableOnlineAgps(LocationConfiguration.HighAccuracyMode)
+                        setMode(LocationConfiguration.HighAccuracyMode)
                         root.checkFlightMode()
                     }
                 }
                 TextSwitch {
-                    id: batterySavingSwitch
-
                     automaticCheck: false
-                    checked: simpleSettingsSection.batterySavingSwitchChecked
+                    checked: effectiveMode == LocationConfiguration.BatterySavingMode
                     enabled: locationSettings.locationEnabled && AccessPolicy.locationSettingsEnabled
 
                     //% "Battery-saving mode"
                     text: qsTrId("settings_location-la-battery_saving_positioning")
 
                     //: Description of the battery-saving positioning mode
-                    //% "Use online services instead of the GPS to calculate positioning information. Data costs may apply, but this mode uses less battery power."
+                    //% "Use online services instead of the GPS to calculate positioning information. "
+                    //% "Data costs may apply, but this mode uses less battery power."
                     description: qsTrId("settings_location-la-battery_saving_positioning_description")
 
                     onClicked: {
-                        if (locationSettings.locationMode == LocationConfiguration.CustomMode) {
-                            locationSettings.saveCustomSettings()
-                        }
-
-                        transitionTimer.batterySavingTransition = true
-                        transitionTimer.start()
-                        enableOnlineAgps(LocationConfiguration.BatterySavingMode)
+                        setMode(LocationConfiguration.BatterySavingMode)
                     }
                 }
                 TextSwitch {
-                    id: deviceOnlySwitch
-
                     automaticCheck: false
-                    checked: simpleSettingsSection.deviceOnlySwitchChecked
+                    checked: effectiveMode == LocationConfiguration.DeviceOnlyMode
                     enabled: locationSettings.locationEnabled && AccessPolicy.locationSettingsEnabled
 
                     //% "Device-only mode"
                     text: qsTrId("settings_location-la-device_positioning")
 
                     //: Description of the device-only positioning mode
-                    //% "Use the device GPS plus cell-tower information to calculate positioning information. This mode doesn't use any data."
+                    //% "Use the device GPS to calculate positioning information. This mode doesn't use any data."
                     description: qsTrId("settings_location-la-device_positioning_description")
 
                     onClicked: {
-                        if (locationSettings.locationMode == LocationConfiguration.CustomMode) {
-                            locationSettings.saveCustomSettings()
-                        }
-
-                        transitionTimer.deviceOnlyTransition = true
-                        transitionTimer.start()
-                        locationSettings.locationMode = LocationConfiguration.DeviceOnlyMode
+                        setMode(LocationConfiguration.DeviceOnlyMode)
                         root.checkFlightMode()
                     }
                 }
 
                 TextSwitch {
-                    id: customSwitch
-
                     automaticCheck: false
-                    checked: simpleSettingsSection.customSwitchChecked
+                    checked: effectiveMode == LocationConfiguration.CustomMode
                     enabled: locationSettings.locationEnabled && AccessPolicy.locationSettingsEnabled
 
                     //% "Custom settings"
@@ -218,68 +198,30 @@ Page {
 
                 Item {
                     width: parent.width
-                    height: selectCustomSettingsBtn.height + (2 * Theme.paddingLarge)
-                    Button {
-                        id: selectCustomSettingsBtn
-                        enabled: locationSettings.locationEnabled
-                                && locationSettings.locationMode == LocationConfiguration.CustomMode
-                                && AccessPolicy.locationSettingsEnabled
-                        anchors.centerIn: parent
-                        //% "Select custom settings"
-                        text: qsTrId("settings_location-bt-select_custom_positioning_settings")
-                        onClicked: {
-                            var obj = pageStack.animatorPush(advancedSettingsPageComponent)
-                            obj.pageCompleted.connect(function(page) {
-                                page.onStatusChanged.connect(function() { if (page.status == PageStatus.Deactivating) locationSettings.saveCustomSettings() })
-                            })
+                    height: Theme.paddingLarge
+                }
+
+                Button {
+                    enabled: locationSettings.locationEnabled
+                             && AccessPolicy.locationSettingsEnabled
+                             && effectiveMode == LocationConfiguration.CustomMode
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    //% "Select custom settings"
+                    text: qsTrId("settings_location-bt-select_custom_positioning_settings")
+                    onClicked: {
+                        if (locationSettings.locationMode != LocationConfiguration.CustomMode) {
+                            locationSettings.locationMode = LocationConfiguration.CustomMode
+                            locationSettings.restoreCustomSettings()
                         }
+
+                        var obj = pageStack.animatorPush(advancedSettingsPageComponent)
+                        obj.pageCompleted.connect(function(page) {
+                            page.onStatusChanged.connect(function() {
+                                if (page.status == PageStatus.Deactivating) locationSettings.saveCustomSettings() }
+                            )})
                     }
                 }
             }
-        }
-    }
-
-    LocationConfiguration { id: locationSettings }
-
-    function enableOnlineAgps(locationMode) {
-        if (locationSettings.hereAvailable && locationSettings.mlsAvailable
-                && locationSettings.hereState === LocationConfiguration.OnlineAGpsAgreementNotAccepted
-                && locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsAgreementNotAccepted) {
-            pageStack.animatorPush(usageTermsComponent, {
-                                       providerName: "here",
-                                       locationMode: locationMode,
-                                       acceptDestination: usageTermsComponent,
-                                       acceptDestinationProperties: { providerName: "mls", locationMode: locationMode },
-                                       acceptDestinationAction: PageStackAction.Replace
-                                   })
-        } else if (locationSettings.hereAvailable
-                   && locationSettings.hereState === LocationConfiguration.OnlineAGpsAgreementNotAccepted) {
-            pageStack.animatorPush(usageTermsComponent, { providerName: "here", locationMode: locationMode })
-        } else if (locationSettings.mlsAvailable
-                   && locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsAgreementNotAccepted) {
-            pageStack.animatorPush(usageTermsComponent, { providerName: "mls", locationMode: locationMode })
-        } else {
-            locationSettings.hereState = LocationConfiguration.OnlineAGpsEnabled
-            locationSettings.mlsOnlineState = LocationConfiguration.OnlineAGpsEnabled
-            // Set location mode directly as terms have been already agreed
-            locationSettings.locationMode = locationMode
-        }
-    }
-
-    function enableHereAgps() {
-        if (locationSettings.hereState === LocationConfiguration.OnlineAGpsAgreementNotAccepted) {
-            pageStack.animatorPush(usageTermsComponent, { providerName: "here" })
-        } else {
-            locationSettings.hereState = LocationConfiguration.OnlineAGpsEnabled
-        }
-    }
-
-    function enableMlsOnlineAgps() {
-        if (locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsAgreementNotAccepted) {
-            pageStack.animatorPush(usageTermsComponent, { providerName: "mls" })
-        } else {
-            locationSettings.mlsEnabled = true
-            locationSettings.mlsOnlineState = LocationConfiguration.OnlineAGpsEnabled
         }
     }
 
@@ -289,21 +231,22 @@ Page {
         Dialog {
             id: usageTermsDialog
 
-            property string providerName
-            property int locationMode: -1
+            readonly property string providerName: providers.length > 0 ? providers[0] : ""
+            property var providers: []
+
+            acceptDestination: providers.length > 1 ? usageTermsComponent : undefined
+            acceptDestinationProperties: providers.length > 1
+                                         ? { providers: usageTermsDialog.providers.slice(1) }  : {}
+            acceptDestinationAction: providers.length > 1 ? PageStackAction.Replace : PageStackAction.Push
 
             onAccepted: {
                 if (providerName == "here") {
                     locationSettings.hereState = LocationConfiguration.OnlineAGpsEnabled
-                } else {
+                } else if (providerName == "mls") {
                     locationSettings.mlsEnabled = true
                     locationSettings.mlsOnlineState = LocationConfiguration.OnlineAGpsEnabled
-                }
-                if (!acceptDestination && locationMode !== -1) {
-                    // Delay setting the requested location mode until all terms have been agreed
-                    // to, as changing the here/mls agreement states may have temporarily
-                    // recalculated the locationMode beforehand.
-                    locationSettings.locationMode = locationMode
+                } else {
+                    console.warn("Accepting unknown provider", providerName)
                 }
             }
 
@@ -343,11 +286,20 @@ Page {
                         font.pixelSize: Theme.fontSizeExtraSmall
                         textFormat: Text.StyledText
                         wrapMode: Text.Wrap
-                        text: usageTermsDialog.providerName == "here" ? locationSettings.hereAgreementText : locationSettings.mlsOnlineAgreementText
+                        text: {
+                            if (usageTermsDialog.providerName == "here") {
+                                return locationSettings.hereAgreementText
+                            } else if (usageTermsDialog.providerName == "mls") {
+                                return locationSettings.mlsOnlineAgreementText
+                            }
+
+                            console.warn("Unknown provider for agreement text", usageTermsDialog.providerName)
+                            //% "No text available!"
+                            return qsTrId("settings_location-unknown_agreement")
+                        }
                         onLinkActivated: {
                             Qt.openUrlExternally(link)
                         }
-
                     }
                 }
 
@@ -386,11 +338,11 @@ Page {
                         onClicked: {
                             if (providerName == "here") {
                                 locationSettings.hereState = LocationConfiguration.OnlineAGpsAgreementNotAccepted
-                                locationSettings.locationMode = LocationConfiguration.CustomMode
                             } else {
                                 locationSettings.mlsOnlineState = LocationConfiguration.OnlineAGpsAgreementNotAccepted
-                                locationSettings.locationMode = LocationConfiguration.CustomMode
                             }
+
+                            locationSettings.locationMode = LocationConfiguration.CustomMode
                             pageStack.pop()
                         }
                     }
@@ -402,7 +354,8 @@ Page {
                     width: parent.width
 
                     PageHeader {
-                        title: providerName == "here" ? agreementPage._herePageHeaderText : agreementPage._mlsPageHeaderText
+                        title: providerName == "here" ? agreementPage._herePageHeaderText
+                                                      : agreementPage._mlsPageHeaderText
                     }
 
                     Text {
@@ -413,7 +366,8 @@ Page {
                         font.pixelSize: Theme.fontSizeExtraSmall
                         wrapMode: Text.Wrap
                         textFormat: Text.StyledText
-                        text: providerName == "here" ? locationSettings.hereAgreementText : locationSettings.mlsOnlineAgreementText
+                        text: providerName == "here" ? locationSettings.hereAgreementText
+                                                     : locationSettings.mlsOnlineAgreementText
                         onLinkActivated: {
                             Qt.openUrlExternally(link)
                         }
@@ -429,23 +383,22 @@ Page {
     Component {
         id: advancedSettingsPageComponent
         Page {
-            id: advancedSettingsPage
-            canNavigateForward: false
             SilicaFlickable {
                 anchors.fill: parent
                 contentHeight: content.height
 
                 Column {
                     id: content
+
                     width: parent.width
+                    bottomPadding: Theme.paddingLarge
+
                     PageHeader {
-                        id: header
                         //: Title of the "advanced" settings section
                         //% "Advanced settings"
                         title: qsTrId("settings_location-la-advanced_settings_section")
                     }
                     Column {
-                        id: gpsColumn
                         visible: locationSettings.gpsAvailable
                         width: parent.width
                         SectionHeader {
@@ -453,8 +406,6 @@ Page {
                             text: qsTrId("settings_location-la-gps_section_header")
                         }
                         IconTextSwitch {
-                            id: gpsSwitch
-
                             automaticCheck: false
                             checked: locationSettings.gpsEnabled
                             enabled: locationSettings.locationEnabled
@@ -465,7 +416,8 @@ Page {
                             text: qsTrId("settings_location-la-gps_positioning")
 
                             //: Description of GPS positioning
-                            //% "Enable GPS-positioning to pinpoint the device location to a high level of accuracy.  Extra battery usage will be incurred."
+                            //% "Enable GPS-positioning to pinpoint the device location to a high level of accuracy. "
+                            //% "Extra battery usage will be incurred."
                             description: qsTrId("settings_location-gps_positioning_description")
 
                             onClicked: {
@@ -477,7 +429,6 @@ Page {
                     }
 
                     Column {
-                        id: hereColumn
                         visible: locationSettings.hereAvailable
                         width: parent.width
                         SectionHeader {
@@ -485,8 +436,6 @@ Page {
                             text: qsTrId("settings_location-la-here_section_header")
                         }
                         TextSwitch {
-                            id: hereSwitch
-
                             automaticCheck: false
                             checked: locationSettings.hereState === LocationConfiguration.OnlineAGpsEnabled
                             enabled: locationSettings.locationEnabled
@@ -494,26 +443,29 @@ Page {
                             //% "Faster position lock"
                             text: qsTrId("settings_location-la-here_positioning")
 
-                            description: capabilityDataContextProperty.value || capabilityDataContextProperty.value === undefined
-                                           // Description for devices with mobile data capability
-                                           //% "Assist the main GPS with additional information available on the device and via the HERE service to allow faster location lock. Data cost may apply."
-                                         ? qsTrId("settings_location-la-here_positioning_description")
-                                           // Description for devices without mobile data capability
-                                           //% "Assist the main GPS with additional information available on the device and via the HERE service to allow faster location lock."
-                                         : qsTrId("settings_location-la-here_positioning_description_non-mobile-data")
+                            description: modemManager.availableModems.length > 0
+                                         ? // Description for devices with mobile data capability
+                                           //% "Assist the main GPS with additional information available on the device "
+                                           //% "and via the HERE service to allow faster location lock. Data cost may apply."
+                                           qsTrId("settings_location-la-here_positioning_description")
+                                         : // Description for devices without mobile data capability
+                                           //% "Assist the main GPS with additional information available on the device "
+                                           //% "and via the HERE service to allow faster location lock."
+                                           qsTrId("settings_location-la-here_positioning_description_non-mobile-data")
 
                             onClicked: {
                                 if (locationSettings.hereState === LocationConfiguration.OnlineAGpsEnabled) {
                                     locationSettings.hereState = LocationConfiguration.OnlineAGpsDisabled
+                                } else if (locationSettings.hereState === LocationConfiguration.OnlineAGpsAgreementNotAccepted) {
+                                    pageStack.animatorPush(usageTermsComponent, { providers: ["here"] })
                                 } else {
-                                    enableHereAgps()
+                                    locationSettings.hereState = LocationConfiguration.OnlineAGpsEnabled
                                 }
                             }
                         }
                     }
 
                     Column {
-                        id: mlsColumn
                         visible: locationSettings.mlsAvailable
                         width: parent.width
                         SectionHeader {
@@ -521,8 +473,6 @@ Page {
                             text: qsTrId("settings_location-la-mls_section_header")
                         }
                         TextSwitch {
-                            id: mlsSwitch
-
                             automaticCheck: false
                             checked: locationSettings.mlsEnabled
                             enabled: locationSettings.locationEnabled
@@ -531,7 +481,8 @@ Page {
                             text: qsTrId("settings_location-la-mls_positioning")
 
                             //: Description of the offline (cell-tower) position lock
-                            //% "Calculate low-accuracy, cell-tower-based, offline positioning information. Some extra battery usage will be incurred."
+                            //% "Calculate low-accuracy, cell-tower-based, offline positioning information. "
+                            //% "Some extra battery usage will be incurred."
                             description: qsTrId("settings_location-la-mls_positioning_description")
 
                             onClicked: {
@@ -540,28 +491,34 @@ Page {
                             }
                         }
                         TextSwitch {
-                            id: mlsOnlineSwitch
-
                             automaticCheck: false
-                            checked: locationSettings.mlsEnabled && locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsEnabled
+                            checked: locationSettings.mlsEnabled
+                                     && locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsEnabled
                             enabled: locationSettings.locationEnabled && locationSettings.mlsEnabled
 
                             //% "Online position lock from Mozilla Location Services cell-tower plus wireless network information"
                             text: qsTrId("settings_location-la-mls_online_positioning")
 
-                            description: capabilityDataContextProperty.value || capabilityDataContextProperty.value === undefined
-                                           //: Description of the online (cell-tower plus wlan) Mozilla Location Services position lock for devices with mobile data capability
-                                           //% "Calculate medium-accuracy, cell-tower plus wireless-network-based positioning information via online request. Data costs may apply."
-                                         ? qsTrId("settings_location-la-mls_online_positioning_description")
-                                           //: Description of the online (cell-tower plus wlan) Mozilla Location Services position lock for devices without mobile data capability
+                            description: modemManager.availableModems.length > 0
+                                         ? //: Description of the online (cell-tower plus wlan) Mozilla Location Services
+                                           //: position lock for devices with mobile data capability
+                                           //% "Calculate medium-accuracy, cell-tower plus wireless-network-based positioning "
+                                           //% "information via online request. Data costs may apply."
+                                           qsTrId("settings_location-la-mls_online_positioning_description")
+                                         : //: Description of the online (cell-tower plus wlan) Mozilla Location Services
+                                           //: position lock for devices without mobile data capability
                                            //% "Calculate low-accuracy, wireless-network-based positioning information via online request."
-                                         : qsTrId("settings_location-la-mls_online_positioning_description_non_mobile_data")
+                                           qsTrId("settings_location-la-mls_online_positioning_description_non_mobile_data")
 
                             onClicked: {
-                                if (locationSettings.mlsEnabled && locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsEnabled) {
+                                if (locationSettings.mlsEnabled
+                                        && locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsEnabled) {
                                     locationSettings.mlsOnlineState = LocationConfiguration.OnlineAGpsDisabled
+                                } else if (locationSettings.mlsOnlineState === LocationConfiguration.OnlineAGpsAgreementNotAccepted) {
+                                    pageStack.animatorPush(usageTermsComponent, { providers: ["mls"] })
                                 } else {
-                                    enableMlsOnlineAgps()
+                                    locationSettings.mlsEnabled = true
+                                    locationSettings.mlsOnlineState = LocationConfiguration.OnlineAGpsEnabled
                                 }
                             }
                         }
@@ -571,8 +528,7 @@ Page {
         }
     }
 
-    ContextProperty {
-        id: capabilityDataContextProperty
-        key: "Cellular.CapabilityData"
+    OfonoModemManager {
+        id: modemManager
     }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2014 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
@@ -11,6 +18,9 @@ StandardAccountSettingsDisplay {
     property QtObject _settingsLoader
     property QtObject _contactSyncOptionsToLoad
     property bool _emailAvailable
+    property bool _calendarOrContactServiceEnabled
+    property bool _gmailServiceEnabled
+    property bool isNewAccount
 
     // email settings
     property bool _signatureEnabled
@@ -27,6 +37,10 @@ StandardAccountSettingsDisplay {
         if (_pushCapable) {
             account.setConfigurationValue("google-gmail", "imap4/pushFolders", "INBOX")
         }
+
+        if (folderSyncSettings.item) {
+            account.setConfigurationValue("", "folderSyncPolicy", folderSyncSettings.item.policy)
+        }
     }
 
     settingsModified: true
@@ -37,6 +51,11 @@ StandardAccountSettingsDisplay {
         if (settingsLoader.anySyncOptionsModified()
                 || (emailSchedule.syncOptions && emailSchedule.syncOptions.modified)) {
             settingsLoader.updateAllSyncProfiles()
+        }
+    }
+    onAccountSaveSynced: {
+        if (folderSyncSettings.item) {
+            folderSyncSettings.item.applyFolderSyncPolicy()
         }
     }
 
@@ -50,6 +69,7 @@ StandardAccountSettingsDisplay {
 
     function _populateEmailDetails() {
         var serviceSettings = account.configurationValues("google-gmail")
+        var accountGeneralSettings = account.configurationValues("")
         var signature = serviceSettings["signature"]
         if (signature) {
             signatureField.text = signature
@@ -62,6 +82,10 @@ StandardAccountSettingsDisplay {
             yourNameField.text = fullName
         }
         _pushCapable = parseInt(serviceSettings["imap4/pushCapable"])
+
+        if (!root.isNewAccount && folderSyncSettings.item) {
+            folderSyncSettings.item.setPolicy(accountGeneralSettings["folderSyncPolicy"])
+        }
     }
 
     function _removeGmailEntry(srcModel) {
@@ -169,6 +193,8 @@ StandardAccountSettingsDisplay {
                 property QtObject syncOptions: model.serviceName === "google-contacts"
                                                ? root._contactSyncOptionsToLoad
                                                : null
+                readonly property alias switchChecked: serviceSwitch.checked
+                readonly property string serviceName: model.serviceName
 
                 width: syncServicesDisplay.width
                 height: serviceSwitch.height + (syncOptionCombo.visible ? syncOptionCombo.height : 0)
@@ -176,14 +202,28 @@ StandardAccountSettingsDisplay {
 
                 TextSwitch {
                     id: serviceSwitch
+
                     checked: model.enabled
                     text: model.displayName
+
                     onCheckedChanged: {
                         if (checked) {
                             root.account.enableWithService(model.serviceName)
                         } else {
                             root.account.disableWithService(model.serviceName)
                         }
+
+                        var calendarOrContactServiceEnabled = false
+                        for (var i = 0; i < syncServicesRepeater.count; ++i) {
+                            var delegateItem = syncServicesRepeater.itemAt(i)
+                            if (delegateItem.serviceName === "google-contacts"
+                                    || delegateItem.serviceName === "google-calendars") {
+                                calendarOrContactServiceEnabled |= delegateItem.switchChecked
+                            } else if (delegateItem.serviceName === "google-gmail") {
+                                root._gmailServiceEnabled = delegateItem.switchChecked
+                            }
+                        }
+                        root._calendarOrContactServiceEnabled = calendarOrContactServiceEnabled
                     }
                 }
 
@@ -191,6 +231,7 @@ StandardAccountSettingsDisplay {
                     id: syncOptionCombo
                     visible: syncOptions != null
                     anchors.top: serviceSwitch.bottom
+                    enabled: serviceSwitch.checked
 
                     //% "Sync"
                     label: qsTrId("settings-accounts-la-sync")
@@ -312,6 +353,7 @@ StandardAccountSettingsDisplay {
             isAlwaysOn: syncOptions ? syncOptions.syncExternallyEnabled : false
             showAlwaysOn: root._pushCapable
             intervalModel: EmailIntervalListModel {}
+            enabled: root._gmailServiceEnabled
 
             onAlwaysOnChanged: {
                 syncOptions.syncExternallyEnabled = state
@@ -334,6 +376,19 @@ StandardAccountSettingsDisplay {
                 }
             }
         }
+
+        Loader {
+            // FolderSyncSettings availability depends on email packages being installed
+            id: folderSyncSettings
+            width: parent.width
+            active: root._emailAvailable
+            source: "FolderSyncSettings.qml"
+            onLoaded: {
+                item.accountId = Qt.binding(function() { return root.accountId })
+                item.active = Qt.binding(function() { return !root.isNewAccount })
+                item.enabled = Qt.binding(function() { return root._gmailServiceEnabled })
+            }
+        }
     }
 
     SectionHeader {
@@ -349,6 +404,7 @@ StandardAccountSettingsDisplay {
         id: syncContentCombo
         //% "Sync content"
         label: qsTrId("settings-accounts-la-sync_content")
+        enabled: root._calendarOrContactServiceEnabled
 
         menu: ContextMenu {
             MenuItem {

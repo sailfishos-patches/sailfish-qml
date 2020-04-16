@@ -191,11 +191,9 @@ ApplicationWindow {
                 z: 1
             }
 
-            BusyIndicator {
+            PageBusyIndicator {
                 id: waitingSystemStart
                 running: !systemStarted.value
-                size: BusyIndicatorSize.Large
-                anchors.centerIn: parent
 
                 onRunningChanged: {
                     if (!running) {
@@ -573,7 +571,7 @@ ApplicationWindow {
                         LockItem {
                             id: lockItem
                             anchors.fill: parent
-                            contentTopMargin: Math.round(Screen.width/8) + statusBarHeight
+                            contentTopMargin: Math.round(parent.height / 8)
                             statusBarHeight: statusBar.height
 
                             visible: systemStarted.value

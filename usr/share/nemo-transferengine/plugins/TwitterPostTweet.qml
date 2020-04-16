@@ -19,8 +19,6 @@ ShareDialog {
         spacing: Theme.paddingSmall
 
         DialogHeader {
-            id: header
-            //: Share to twitter dialog header
             //% "Share"
             acceptText: qsTrId("twittershare-he-share_heading")
         }

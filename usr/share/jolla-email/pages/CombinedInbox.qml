@@ -75,7 +75,7 @@ Page {
                 //% "Synchronize all"
                 text: qsTrId("jolla-email-me-sync_all")
                 onClicked: {
-                    emailAgent.accountsSync(true)
+                    emailAgent.accountsSyncAllFolders()
                 }
             }
 

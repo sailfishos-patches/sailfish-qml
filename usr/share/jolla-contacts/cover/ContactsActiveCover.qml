@@ -5,7 +5,7 @@ import org.nemomobile.contacts 1.0
 import "../pages/common/PageCache.js" as PageCache
 
 CoverBackground {
-    id: root
+    id: coverRoot
 
     property PeopleModel favoritesModel: PageCache.favoritesModel
     property PeopleModel allContactsModel: PageCache.allContactsModel

@@ -1,13 +1,17 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Petri M. Gerdt <petri.gerdt@jollamobile.com>
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQml 2.2
+import QtQuick 2.6
 import Sailfish.Silica 1.0
-import org.freedesktop.contextkit 1.0
+import Sailfish.Lipstick 1.0
+import MeeGo.QOfono 0.2
 import Nemo.DBus 2.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
@@ -15,8 +19,16 @@ import com.jolla.lipstick 0.1
 BackgroundItem
 {
     id: root
-    property int callCount: Number(cellular1Calls.value) + Number(cellular2Calls.value)
+    property int callCount
     property bool ongoingCall: callCount > 0
+
+    function _refreshCallCount() {
+        var _callCount = 0
+        for (var i = 0; i < voiceCallManagers.count; ++i) {
+            _callCount += voiceCallManagers.objectAt(i).calls.length
+        }
+        callCount = _callCount
+    }
 
     enabled: ongoingCall && voicecallPingTimer.ok
     height: Theme.itemSizeLarge
@@ -75,13 +87,27 @@ BackgroundItem
         running: ongoingCall && !voicecallPingTimer.ok
     }
 
-    ContextProperty {
-        id: cellular1Calls
-        key: Desktop.cellularContext(1) + ".CallCount"
-    }
-    ContextProperty {
-        id: cellular2Calls
-        key: Desktop.cellularContext(2) + ".CallCount"
+    Instantiator {
+        id: voiceCallManagers
+
+        model: Desktop.simManager.availableModems
+
+        delegate: OfonoVoiceCallManager {
+            id: callManager
+
+            property var calls: []
+
+            modemPath: modelData
+
+            onCallAdded: {
+                callManager.calls.push(call)
+                root._refreshCallCount()
+            }
+            onCallRemoved: {
+                callManager.calls.pop(callManager.calls.indexOf(call))
+                root._refreshCallCount()
+            }
+        }
     }
 
     DBusInterface {

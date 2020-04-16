@@ -1,10 +1,18 @@
+/****************************************************************************
+**
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
+**
+****************************************************************************/
+
 import QtQuick 2.5
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import Nemo.Notifications 1.0 as SystemNotifications
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
-import org.freedesktop.contextkit 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.devicelock 1.0
 import "../compositor"

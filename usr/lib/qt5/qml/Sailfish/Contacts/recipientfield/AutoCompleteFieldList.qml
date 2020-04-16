@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 – 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
@@ -13,6 +20,8 @@ Item {
     property string fullSummary
     property int focusedChildCount
     property alias recipientsModel: recipientsModel
+    property QtObject onlineSearchModel
+    property string onlineSearchDisplayName
     property bool editing
     property int animatingCount
     property Item lastEdited
@@ -27,6 +36,25 @@ Item {
         for (var i = 0; i < entriesRepeater.count; ++i) {
             var item = entriesRepeater.itemAt(i)
             item.updateModelText()
+        }
+    }
+
+    function saveNewContacts() {
+        var newContacts = []
+        for (var i = 0; i < recipientsModel.count; ++i) {
+            if (recipientsModel.get(i).propertyType != "emailAddress") {
+                continue
+            }
+            var email = recipientsModel.get(i).property
+            if (email == undefined || contactSearchModel.personByEmailAddress(email)) {
+                continue
+            }
+            if (recipientsModel.get(i).temporary != undefined) {
+                newContacts[newContacts.length] = recipientsModel.get(i).temporary
+            }
+        }
+        if (newContacts.length) {
+            KnownContacts.storeContacts(newContacts)
         }
     }
 
@@ -53,7 +81,7 @@ Item {
 
     function forceActiveFocus() {
         if (!entriesRepeater.count) {
-            recipientsModel.append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "" })
+            recipientsModel.append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "", "temporary": undefined })
         }
         for (var index = entriesRepeater.count - 1; index >= 0; index--) {
              if (entriesRepeater.itemAt(index).editable) {
@@ -105,11 +133,11 @@ Item {
                 var name = contact ? contact.displayLabel : ""
                 var emailAddress = {'address': addresses[i]}
                 recipientsModel.insert(recipientsModel.count > 0 ? recipientsModel.count - 1 : 0, {"property": emailAddress,
-                                           "propertyType": "emailAddress", "formattedNameText": name, "person": contact})
+                                           "propertyType": "emailAddress", "formattedNameText": name, "person": contact, "temporary": undefined})
             }
         }
         // Need to add one empty field in the end because "forceActiveFocus" assumes there's one.
-        recipientsModel.append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "" })
+        recipientsModel.append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "", "temporary": undefined })
         recipientsModel.updateSummary()
     }
 
@@ -130,7 +158,7 @@ Item {
 
         Component.onCompleted: {
             if (entriesRepeater.count == 0) {
-                append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "" })
+                append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "", "temporary": undefined })
             }
         }
 
@@ -171,7 +199,7 @@ Item {
             var lastRecipient = count > 0 ? get(count-1) : undefined
             if (!lastRecipient || lastRecipient.property != {} || lastRecipient.formattedNameText != ""
                     || lastRecipient.person) {
-                append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "" })
+                append({ "person": undefined, "formattedNameText": "", "property": {}, "propertyType": "", "temporary": undefined })
                 updateSummary()
                 entriesRepeater.itemAt(count-1).forceActiveFocus()
             }
@@ -179,7 +207,7 @@ Item {
 
         function removeRecipient(index, moveFocus) {
             if (count === 1) {
-                updateRecipient(0, {}, "", "", null)
+                updateRecipient(0, {}, "", "", null, undefined)
                 entriesRepeater.itemAt(0).clearText()
                 updateSummary()
                 entriesRepeater.itemAt(0).focus = false
@@ -198,13 +226,16 @@ Item {
             }
         }
 
-        function updateRecipient(index, property, propertyType, name, contact) {
+        function updateRecipient(index, property, propertyType, name, contact, temporary) {
             set(index, {"property": property, "propertyType": propertyType})
             if (name != undefined) {
                 set(index, {"formattedNameText": name})
             }
             if (contact != undefined) {
                 set(index, {"person": contact})
+            }
+            if (temporary != undefined) {
+                set(index, {"temporary": temporary})
             }
             updateSummary()
         }
@@ -263,7 +294,7 @@ Item {
                 if (j == count) {
                     var props = { "property": property, "propertyType": propertyType,
                                   "formattedNameText": contact ? contact.displayLabel : '',
-                                  "person": contact }
+                                  "person": contact, "temporary": undefined }
                     if (multipleAllowed) {
                         insert(count - 1, props)
                     } else {
@@ -357,6 +388,8 @@ Item {
             AutoCompleteField {
                 id: autoCompleteField
                 recipientsModel: entriesRepeater.model
+                onlineSearchModel: root.onlineSearchModel
+                onlineSearchDisplayName: root.onlineSearchDisplayName
                 width: root.width
                 placeholderText: root.placeholderText
                 inFocusedList: focusedChildCount > 0

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013 – 2019 Jolla Ltd.
- * Copyright (c) 2019 Open Mobile Platform LLC.
+ * Copyright (c) 2019 – 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -16,6 +16,8 @@ CompressibleItem {
     property alias summaryPlaceholderText: recipientField.summaryPlaceholderText
     property alias summary: recipientField.summary
     property alias contactSearchModel: recipientField.contactSearchModel
+    property alias onlineSearchModel: recipientField.onlineSearchModel
+    property alias onlineSearchDisplayName: recipientField.onlineSearchDisplayName
     property alias empty: recipientField.empty
     property alias showLabel: recipientField.showLabel
 
@@ -35,6 +37,10 @@ CompressibleItem {
 
     function updateSummary() {
         recipientField.updateSummary()
+    }
+
+    function saveNewContacts() {
+        recipientField.saveNewContacts()
     }
 
     width: parent.width

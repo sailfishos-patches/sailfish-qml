@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2014 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
@@ -140,10 +147,15 @@ Column {
         } else {
             account.setConfigurationValue(_defaultServiceName, "crypto/signByDefault", false)
         }
+
+        if (settings.serverTypeIndex === 0) {
+            account.setConfigurationValue("", "folderSyncPolicy", folderSyncSettings.policy)
+        }
     }
 
     function populateServiceSettings() {
         var serviceSettings = account.configurationValues(_defaultServiceName)
+        var accountGeneralSettings = account.configurationValues("")
         settings.emailAddress = serviceSettings["emailaddress"]
         settings.serverTypeIndex = parseInt(serviceSettings["incomingServerType"])
         if (settings.serverTypeIndex == 0) {
@@ -154,6 +166,7 @@ Column {
             settings.acceptUntrustedCertificates = serviceSettings["imap4/acceptUntrustedCertificates"]
                     ? serviceSettings["imap4/acceptUntrustedCertificates"] : 0
             pushCapable = parseInt(serviceSettings["imap4/pushCapable"])
+            folderSyncSettings.setPolicy(accountGeneralSettings["folderSyncPolicy"])
         } else {
             settings.incomingUsername = serviceSettings["pop3/username"]
             settings.incomingServer = serviceSettings["pop3/server"]
@@ -349,6 +362,11 @@ Column {
             }
         }
 
+        SectionHeader {
+            //% "Synchronization"
+            text: qsTrId("settings-accounts-la-sync_email_section")
+        }
+
         SyncScheduleOptions {
             //: Click to show options on how often emails should be fetched from the server
             //% "Sync emails"
@@ -378,6 +396,13 @@ Column {
                     offPeakIntervalModel: EmailOffPeakIntervalListModel {}
                 }
             }
+        }
+
+        FolderSyncSettings {
+            id: folderSyncSettings
+            width: parent.width
+            accountId: root.accountId
+            active: !root.isNewAccount && settings.serverTypeIndex === 0 // This is IMAP
         }
 
         Loader {
@@ -439,6 +464,8 @@ Column {
                     populateServiceSettings()
                 }
             } else if (status === Account.Synced) {
+                // success
+                folderSyncSettings.applyFolderSyncPolicy()
                 if (!root.isNewAccount && settings) {
                     if (incomingUsername != settings.incomingUsername || settings.incomingPasswordEdited) {
                         needToUpdateIncoming = true

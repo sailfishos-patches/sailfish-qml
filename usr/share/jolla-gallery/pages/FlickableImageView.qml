@@ -4,6 +4,7 @@ import Sailfish.Silica.private 1.0 as Private
 import QtMultimedia 5.0
 import Sailfish.Gallery 1.0
 import com.jolla.gallery 1.0
+import Nemo.Notifications 1.0
 
 SlideshowView {
     id: root
@@ -26,6 +27,13 @@ SlideshowView {
         } else if (player && previousItem != currentItem) {
             player.reset()
         }
+    }
+
+    Notification {
+        id: errorNotification
+        isTransient: true
+        urgency: Notification.Critical
+        icon: "icon-system-warning"
     }
 
     delegate: Loader {
@@ -114,6 +122,14 @@ SlideshowView {
                     if (playing && overlay.active) {
                         // go fullscreen for playback if triggered via Play icon.
                         overlay.active = false
+                    }
+                }
+                onHasErrorChanged: {
+                    if (error === MediaPlayer.FormatError) {
+                        //: %1 is replaced with specific codec
+                        //% "Unsupported codec: %1"
+                        errorNotification.previewBody = qsTrId("gallery-la-unsupported-codec").arg(errorString)
+                        errorNotification.publish()
                     }
                 }
                 onLoadedChanged: if (loaded) playerLoader.anchors.centerIn = currentItem

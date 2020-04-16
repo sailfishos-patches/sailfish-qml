@@ -7,7 +7,7 @@ import Sailfish.Messages 1.0
 
 ListItem {
     id: delegate
-    contentHeight: textColumn.height + Theme.paddingMedium + textColumn.y
+    contentHeight: textColumn.height + Theme.paddingMedium + Theme.paddingSmall + textColumn.y
     menu: contextMenuComponent
     property CommContactGroupModel groupModel
 
@@ -40,7 +40,7 @@ ListItem {
         id: textColumn
         anchors {
             top: parent.top
-            topMargin: Theme.paddingSmall
+            topMargin: Theme.paddingMedium
             left: parent.left
             leftMargin: Theme.horizontalPageMargin
             right: parent.right
@@ -134,7 +134,7 @@ ListItem {
 
             text: {
                 if (model.lastMessageText !== '') {
-                    return model.lastMessageText
+                    return model.lastMessageText.replace(/^\s*\n/gm, "") // remove empty lines
                 } else if (model.lastEventType === CommHistory.MMSEvent) {
                     //% "Multimedia message"
                     return qsTrId("messages-ph-mms_empty_text")

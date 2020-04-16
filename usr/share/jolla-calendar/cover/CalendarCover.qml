@@ -12,11 +12,10 @@ CoverBackground {
         width: parent.width - 2*Theme.paddingLarge
         color: Theme.secondaryColor
         horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
         wrapMode: Text.Wrap
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: Theme.itemSizeLarge
-        }
+        y: dateLabel.height
+        height: parent.height - y - coverActionArea.height
     }
 
     CoverActionList {

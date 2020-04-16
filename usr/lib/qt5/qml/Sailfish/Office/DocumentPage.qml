@@ -26,19 +26,27 @@ Page {
     property url source
     property bool error
     property string mimeType
-    property Item documentItem: page
     property alias busy: busyIndicator.running
     property QtObject provider
-
-    Component.onDestruction: window.documentItem = null
-    onStatusChanged: {
-        if (status == PageStatus.Active) {
-            window.documentItem = documentItem
-        }
-    }
+    property Component preview: defaultPreview
+    property alias placeholderPreview: defaultPreview
+    property url icon: "image://theme/icon-m-file-other"
+    property alias busyIndicator: busyIndicator
 
     allowedOrientations: Orientation.All
     clip: status !== PageStatus.Active || pageStack.dragInProgress
 
-    BusyIndicator { id: busyIndicator; anchors.centerIn: parent; size: BusyIndicatorSize.Large; z: 101 }
+    PageBusyIndicator {
+        id: busyIndicator
+        z: 101
+    }
+
+    Component {
+        id: defaultPreview
+
+        CoverPlaceholder {
+            icon.source: page.icon
+            text: page.title
+        }
+    }
 }

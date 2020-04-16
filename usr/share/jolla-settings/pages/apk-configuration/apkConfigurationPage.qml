@@ -37,10 +37,8 @@ Page {
         }
     }
 
-    BusyIndicator {
-        anchors.centerIn: parent
+    BusyLabel {
         running: !(root.appSizeReady && root.autoStartReady) && !root.error
-        size: BusyIndicatorSize.Large
     }
 
     Label {
@@ -100,7 +98,9 @@ Page {
             id: content
 
             anchors.top: header.bottom
-            visible: root.appSizeReady && root.autoStartReady
+            enabled: root.appSizeReady && root.autoStartReady
+            opacity: enabled ? 1.0 : 0.0
+            Behavior on opacity { FadeAnimator {} }
             width: parent.width
 
             TextSwitch {

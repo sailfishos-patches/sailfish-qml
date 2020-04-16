@@ -1,8 +1,7 @@
 import QtQuick 2.5
 import Sailfish.Silica 1.0
 
-// BackgroundItem is also a MouseArea
-BackgroundItem {
+GridItem {
     id: noteitem
 
     property int pageNumber
@@ -19,7 +18,6 @@ BackgroundItem {
         // doesn't have to clip (which would interfere with context menus)
         anchors.fill: parent
         clip: true
-
         Rectangle {
             rotation: 45 // diagonal gradient
             // Use square root of 2, rounded up a little bit, to make the
@@ -27,7 +25,6 @@ BackgroundItem {
             width: parent.width * 1.412136
             height: parent.height * 1.412136
             x: parent.width - width
-
             gradient: Gradient {
                 GradientStop { position: 0.0; color: Theme.rgba(Theme.primaryColor, 0) }
                 GradientStop { position: 1.0; color: Theme.rgba(Theme.primaryColor, Theme.opacityFaint) }

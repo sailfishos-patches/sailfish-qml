@@ -7,7 +7,7 @@ ClockItem {
     property alias enabled: wallClock.enabled
     anchors.horizontalCenter: parent.horizontalCenter
     time: wallClock.time
-    primaryPixelSize: Theme.fontSizeHugeBase * 2.25
+    primaryPixelSize: Screen.width/4
 
     WallClock {
         id: wallClock

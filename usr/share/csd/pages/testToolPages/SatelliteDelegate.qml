@@ -22,7 +22,7 @@ Item {
             return "QZSS"
         } else if (modelData.identifier >= 201 && modelData.identifier <= 235) {
             return "BeiDou"
-        } else if (modelData.identifier >= 301 && modelData.identifier <= 330) {
+        } else if (modelData.identifier >= 301 && modelData.identifier <= 336) {
             return "Galileo"
         }
     }

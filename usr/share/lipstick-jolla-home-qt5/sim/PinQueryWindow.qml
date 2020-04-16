@@ -100,10 +100,8 @@ SimPinBackground {
                 onTriggered: waitForPinActivation._finish()
             }
 
-            BusyIndicator {
+            PageBusyIndicator {
                 id: busyIndicator
-                anchors.centerIn: parent
-                size: BusyIndicatorSize.Large
             }
         }
     }

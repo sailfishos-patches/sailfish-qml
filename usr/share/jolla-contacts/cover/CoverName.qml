@@ -7,8 +7,8 @@ Item {
     CoverNameLabel {
         id: firstNameLabel
 
-        text: firstText
-        center: root.center
+        text: coverContact.firstText
+        center: coverContact.center
         anchors {
             bottom: parent.verticalCenter
             left: parent.left
@@ -20,10 +20,8 @@ Item {
     }
 
     CoverNameLabel {
-        id: lastNameLabel
-
-        text: secondText
-        center: root.center
+        text: coverContact.secondText
+        center: coverContact.center
         opacity: Theme.opacityHigh
         anchors {
             top: firstNameLabel.bottom

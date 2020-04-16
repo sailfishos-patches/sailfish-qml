@@ -33,7 +33,8 @@ TabItem {
         ViewPlaceholder {
             //% "Pull down to save some alarms"
             text: qsTrId("clock-la-pull_down_to_save_alarms")
-            enabled: alarmsModel.populated && timersModel.populated && alarms.count === 0
+            enabled: alarmsModel.populated && alarms.count === 0
+            y: flickable.originY + topMargin + Math.max(mainPage.placeholderY, clock.height + dateContainer.height)
         }
 
         Column {
@@ -50,6 +51,7 @@ TabItem {
                          && mainWindow.applicationActive && root.isCurrentItem
             }
             Item {
+                id: dateContainer
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: dateText.width
                 height: dateText.height + (Screen.sizeCategory > Screen.Medium ? Theme.itemSizeExtraSmall : Theme.paddingLarge)

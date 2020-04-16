@@ -124,6 +124,8 @@ Page {
                 EnterKey.onClicked: {
                     if (password.enabled) {
                         password.focus = true
+                    } else {
+                        focus = false
                     }
                 }
             }
@@ -201,6 +203,7 @@ Page {
                     errorHighlight: !password.match
 
                     EnterKey.iconSource: "image://theme/icon-m-enter-close"
+                    EnterKey.onClicked: focus = false
                 }
             }
 
@@ -241,28 +244,10 @@ Page {
         }
     }
 
-    Column {
-        anchors.verticalCenter: parent.verticalCenter
-        width: parent.width
-        spacing: Theme.paddingLarge
-
-        opacity: _formatting ? 1 : 0
-        Behavior on opacity { FadeAnimator { } }
-
-        BusyIndicator {
-            anchors.horizontalCenter: parent.horizontalCenter
-            size: BusyIndicatorSize.Large
-            running: _formatting
-        }
-
-        Label {
-            anchors.horizontalCenter: parent.horizontalCenter
-            color: Theme.highlightColor
-            font.pixelSize: Theme.fontSizeLarge
-
-            //% "Formatting..."
-            text: qsTrId("settings_storage-la-formatting_ongoing")
-        }
+    BusyLabel {
+        running: _formatting
+        //% "Formatting..."
+        text: qsTrId("settings_storage-la-formatting_ongoing")
     }
 
     StorageNotification {

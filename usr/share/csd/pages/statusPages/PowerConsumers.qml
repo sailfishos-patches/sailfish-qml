@@ -8,17 +8,19 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
+import Sailfish.Lipstick 1.0
 import Csd 1.0
 import org.nemomobile.time 1.0
 import org.nemomobile.dbus 2.0
 import org.nemomobile.systemsettings 1.0
 import com.jolla.settings.system 1.0
 import MeeGo.Connman 0.2
-import org.freedesktop.contextkit 1.0
 import Nemo.Mce 1.0
 
 Page {
     id: page
+
+    property alias _simManager: simManager
 
     SilicaFlickable {
         anchors.fill: parent
@@ -173,18 +175,19 @@ Page {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2*x
 
-                CellularStatus {
-                    modemContext: "Cellular"
-                }
-                CellularStatus {
-                    visible: Telephony.multiSimSupported
-                    modemContext: "Cellular_1"
+                Repeater {
+                    model: simManager.availableModems
+
+                    CellularStatus {
+                        modemPath: modelData
+                        simManager: page._simManager
+                    }
                 }
 
                 Row {
                     spacing: Theme.paddingLarge
                     CheckLabel {
-                        checked: tethering.on
+                        checked: wlanNetworkTechnology.tethering
                         //% "Tethering"
                         text: qsTrId("csd-la-tethering")
                     }
@@ -199,12 +202,12 @@ Page {
                 Row {
                     spacing: Theme.paddingMedium
                     CheckLabel {
-                        checked: !!bluetoothEnabled.value
+                        checked: bluetoothStatus.enabled
                         //% "Enabled"
                         text: qsTrId("csd-la-enabled")
                     }
                     CheckLabel {
-                        checked: !!bluetoothConnected.value
+                        checked: bluetoothStatus.connected
                         //% "Connected"
                         text: qsTrId("csd-la-connected")
                     }
@@ -403,19 +406,12 @@ Page {
         property bool downloading: false
     }
 
-    ContextProperty {
-        id: tethering
-        key: "Internet.Tethering"
-        property bool on: value !== undefined && value !== null && value !== ""
+    BluetoothStatus {
+        id: bluetoothStatus
     }
 
-    ContextProperty {
-        id: bluetoothEnabled
-        key: "Bluetooth.Enabled"
-    }
-    ContextProperty {
-        id: bluetoothConnected
-        key: "Bluetooth.Connected"
+    SimManager {
+        id: simManager
     }
 
     LocationSettings { id: locationSettings }

@@ -14,7 +14,6 @@ import "utils.js" as Utils
 ListItem {
     id: messageItem
 
-    property color labelColor: highlighted ? Theme.highlightColor : Theme.primaryColor
     property bool selectMode
     property bool showRecipientsName
     property alias primaryLine: senderName.text
@@ -47,6 +46,7 @@ ListItem {
             if (isDraftsFolder) {
                 pageStack.animatorPush(Qt.resolvedUrl("ComposerPage.qml"),
                                        { messageId: model.messageId,
+                                         originalMessageId: model.messageId,
                                          draft: true,
                                          draftRemoveCallback: remove })
             } else {
@@ -72,7 +72,7 @@ ListItem {
 
     Column {
         id: content
-        y: Theme.paddingSmall
+        y: Theme.paddingMedium
         spacing: -Math.round(Theme.paddingSmall/2)
         anchors {
             left: parent.left
@@ -95,8 +95,6 @@ ListItem {
                            qsTrId("jolla-email-la-no_recipient"))
                       : Theme.highlightText(model.senderDisplayName, (highlightSender ? searchString : ""), Theme.highlightColor)
                 textFormat: Text.StyledText
-                font.pixelSize: Theme.fontSizeMedium
-                color: labelColor
                 anchors {
                     left: parent.left
                     right: msgDateTime.left
@@ -109,7 +107,6 @@ ListItem {
                 id: msgDateTime
                 text: Format.formatDate(model.qDateTime, Formatter.TimepointRelative)
                 font.pixelSize: Theme.fontSizeExtraSmall
-                color: labelColor
                 anchors {
                     right: parent.right
                     baseline: senderName.baseline
@@ -123,27 +120,22 @@ ListItem {
                     topMargin: Theme.paddingSmall
                     right: parent.right
                 }
-                Image {
+                HighlightImage {
                     visible: model.priority != EmailMessageListModel.NormalPriority
-                    source: visible ? Utils.priorityIcon(model.priority) : ""
+                    source: Utils.priorityIcon(model.priority)
                 }
 
-                Image {
+                HighlightImage {
                     visible: model.hasAttachments
-                    source: visible ? "image://theme/icon-s-attach?"
-                                      + (highlighted ? Theme.highlightColor : Theme.primaryColor)
-                                    : ""
+                    source: "image://theme/icon-s-attach?"
                 }
-                Image {
+                HighlightImage {
                     visible: model.hasCalendarInvitation
-                    source: visible ? "image://theme/icon-s-date?"
-                                      + (highlighted ? Theme.highlightColor : Theme.primaryColor)
-                                    : ""
+                    source: "image://theme/icon-s-date?"
                 }
-                Image {
+                HighlightImage {
                     visible: model.hasSignature
-                    source: "image://theme/icon-s-certificates?"
-                            + (highlighted ? Theme.highlightColor : Theme.primaryColor)
+                    source: "image://theme/icon-s-certificates"
                 }
             }
         }
@@ -157,7 +149,6 @@ ListItem {
                     qsTrId("jolla-email-la-no_subject")
             textFormat: Text.StyledText
             font.pixelSize: Theme.fontSizeSmall
-            color: messageItem.labelColor
             opacity: model.readStatus ? Theme.opacityHigh : 1.0
             width: parent.width - icons.width
             anchors {
@@ -172,17 +163,17 @@ ListItem {
 
         Label {
             text: model.preview != "" ? Theme.highlightText(model.preview, (highlightBody ? searchString : ""),
-                                                            Theme.highlightColor)
+                                                            Theme.primaryColor)
                                       : // it should not show empty preview when preview is not retrived yet, first sync for e.g
                                         //: Empty preview
                                         //% "(Empty preview)"
                                         qsTrId("jolla-email-la-no_preview")
             textFormat: Text.StyledText
             font.pixelSize: Theme.fontSizeSmall
-            color: messageItem.labelColor
+            color: Theme.highlightColor
             opacity: model.readStatus ? Theme.opacityHigh : 1.0
 
-            maximumLineCount: Screen.sizeCategory >= Screen.Large ? 1 : 2
+            maximumLineCount: Screen.sizeCategory >= Screen.Large ? 1 : ( model.readStatus ? 2 : 3)
             lineHeight: subjectText.height - Math.round(Theme.paddingSmall/2)
             lineHeightMode: Text.FixedHeight
             width: parent.width

@@ -1,7 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Petri M. Gerdt <petri.gerdt@jollamobile.com>
+** Copyright (c) 2013 - 2020 Jolla Ltd.
+** Copyright (c) 2020 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
@@ -215,12 +217,16 @@ Compositor {
     PeekFilter.boundaryWidth: peekFilterConfigs.boundaryWidth
     PeekFilter.boundaryHeight: peekFilterConfigs.boundaryHeight
     PeekFilter.orientation: topmostWindowOrientation
+    PeekFilter.keyboardBoundaryWidth: peekFilterConfigs.keyboardBoundaryWidth
+    PeekFilter.keyboardBoundaryHeight: peekFilterConfigs.keyboardBoundaryHeight
 
     ConfigurationGroup {
         id: peekFilterConfigs
         path: "/desktop/lipstick-jolla-home/peekfilter"
         property int boundaryWidth: Theme.paddingLarge
         property int boundaryHeight: Theme.paddingLarge
+        property int keyboardBoundaryWidth: boundaryWidth / 2
+        property int keyboardBoundaryHeight: boundaryHeight / 2
         property int pressDelay: 400
     }
 
@@ -1694,6 +1700,18 @@ Compositor {
         property string layout: "us"
         property string variant: ""
         property string options: ""
+    }
+
+    NemoDBus.DBusInterface {
+        service: 'com.jolla.keyboard'
+        path: '/com/jolla/keyboard'
+        iface: 'com.jolla.keyboard'
+        signalsEnabled: true
+        watchServiceStatus: true
+
+        function keyboardHeightChanged(keyboardHeight) {
+            root.PeekFilter.keyboardHeight = keyboardHeight
+        }
     }
 
     NemoDBus.DBusInterface {

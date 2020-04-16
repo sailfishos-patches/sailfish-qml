@@ -3,7 +3,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-ListItem {
+GridItem {
     id: playlistItem
 
     property color color: Theme.overlayBackgroundColor

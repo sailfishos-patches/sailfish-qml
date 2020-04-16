@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import "stopwatch" as StopWatch
@@ -14,18 +14,26 @@ TabItem {
         mainWindow.stopwatchMode = Qt.binding(function() { return isCurrentItem })
         mainWindow.stopwatch = stopwatch
     }
+
+    InfoLabel {
+        //% "Tap below to start stopwatch"
+        text: qsTrId("clock-la-tap_below_to_start_stopwatch")
+        Behavior on opacity {  FadeAnimator {}}
+        opacity: stopwatch.totalTime > 0 ? 0.0 : 1.0
+        y: mainPage.placeholderY
+    }
+
     SilicaListView {
         id: lapTimes
 
-        height: parent.height
         clip: true
         rotation: 180
         model: stopwatch
-        width: parent.width
         quickScroll: false
         currentIndex: 0
         onCurrentItemChanged: if (currentItem) labelHeight = currentItem.height
         remove: Transition { FadeAnimation { to: 0 } }
+        anchors.fill: parent
 
         delegate: StopWatch.StopwatchItem {
             id: stopwatchItem
@@ -60,10 +68,13 @@ TabItem {
                 }
             }
         }
+
         header: Column {
             rotation: 180
             anchors.horizontalCenter: parent.horizontalCenter
-            Item { width: parent.width; height: Screen.sizeCategory > Screen.Medium ? Theme.paddingLarge : 0 }
+            topPadding: Screen.sizeCategory > Screen.Medium ? Theme.paddingLarge : 0
+            bottomPadding: 2 * Theme.paddingLarge
+
             StopWatch.StopwatchItem {
                 hourMode: stopwatch.hourMode
                 color: mouseArea.down ? Theme.highlightColor : Theme.primaryColor
@@ -76,8 +87,8 @@ TabItem {
                 pixelSize: Screen.sizeCategory > Screen.Medium ? Theme.fontSizeHuge*2.25
                                                                 : (hourMode ? Theme.fontSizeExtraLarge : Theme.fontSizeHuge)
             }
-            Item { width: parent.width; height: Theme.paddingLarge }
         }
+
         MouseArea {
             id: mouseArea
 
@@ -102,6 +113,7 @@ TabItem {
         id: themeEffect
         effect: ThemeEffect.PressWeak
     }
+
     IconButton {
         id: startLapButton
         x: Theme.horizontalPageMargin-Theme.paddingLarge
@@ -121,6 +133,7 @@ TabItem {
         width: icon.width + Theme.paddingLarge * 2
         height: icon.height + Theme.paddingLarge * 2
     }
+
     IconButton {
         anchors {
             right: parent.right
@@ -128,6 +141,7 @@ TabItem {
             bottom: parent.bottom
             bottomMargin: startLapButton.anchors.bottomMargin
         }
+        enabled: stopwatch.totalTime > 0
         icon.source: stopwatch.running ? "image://theme/icon-l-pause" : "image://theme/icon-l-clear"
         icon.sourceSize: startLapButton.icon.sourceSize
         onPressed: themeEffect.play()

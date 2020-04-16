@@ -1,7 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Vesa Halttunen <vesa.halttunen@jollamobile.com>
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
@@ -17,9 +19,10 @@ Row {
 
     readonly property int dataSimIndex: Desktop.simManager.indexOfModem(Desktop.simManager.defaultDataModem)
 
-    property alias cellularGPRSAttached: ofonoConnectionManager.attachedValue
-    property alias cellularRegistrationStatus: ofonoNetworkRegistration.statusValue
-    property alias cellularDataTechnology: ofonoNetworkRegistration.technologyValue
+    // for testing
+    property bool _cellularGPRSAttached: ofonoConnectionManager.attachedValue
+    property string _cellularRegistrationStatus: ofonoNetworkRegistration.statusValue
+    property string _cellularDataTechnology: ofonoNetworkRegistration.technologyValue
 
     visible: dataSimIndex >= 0 && width > 0
     spacing: Math.round(Theme.paddingSmall/6)
@@ -50,8 +53,8 @@ Row {
             var onlineIds = {registered: true, roaming: true}
 
             return (fakeOperator === ""
-                    ? ((cellularGPRSAttached && onlineIds[cellularRegistrationStatus])
-                       ? (techToG[cellularDataTechnology] || "")
+                    ? ((_cellularGPRSAttached && onlineIds[_cellularRegistrationStatus])
+                       ? (techToG[_cellularDataTechnology] || "")
                        : "")
                     : "3.5");
         }

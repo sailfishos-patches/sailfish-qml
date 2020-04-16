@@ -57,39 +57,21 @@ Page {
                 value: if (pageStack.currentPage === mainPage) mainPageHeader.searchText
             }
 
-            Item {
+            Column {
                 id: playlistsItem
 
                 width: parent.width
                 height: {
                     var height = playlistsCategory.shouldBeVisible ? playlistsCategory.height : 0
                     if (playlists.populated && playlistRow.count === 0) {
-                        // It really shouldn't be possible to do this, but opening a content
-                        // menu already animates the overall height and we don't want a second
-                        // animation making that lag, so we disable the behavior when a menu
-                        // is opened. If something else causes the height to animate we want to
-                        // restore that before the value is written.
-                        playlistHeightBehavior.enabled = true
-                    } else if (remorseContainer.__silica_remorse_item) {
-                        playlistHeightBehavior.enabled = true
-                        height += Theme.itemSizeExtraLarge + Theme.itemSizeSmall
+                        return height
                     } else {
-                        height += playlistRow.height
-                    }
-                    return height
-                }
-
-                clip: playlistRow.count > playlistRow.maxCount || playlistHeightAnimation.running
-
-                Behavior on height {
-                    id: playlistHeightBehavior
-                    NumberAnimation {
-                        id: playlistHeightAnimation
-
-                        duration: 150
-                        easing.type: Easing.InOutQuad
+                        return height + playlistRow.height
                     }
                 }
+
+                clip: playlistRow.count > playlistRow.maxCount
+                Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
                 MediaContainerIconDelegate {
                     id: playlistsCategory
@@ -114,8 +96,8 @@ Page {
 
                     //: Number of playlists
                     //% "%n playlists"
-                    subtitle: populated && !createNew ? qsTrId("mediaplayer-la-number-of-playlists", playlists.count)
-                                                 : " "
+                    subtitle: populated ? (!createNew ? qsTrId("mediaplayer-la-number-of-playlists", playlists.count) : "")
+                                        : " "
                     onClicked: {
                         if (createNew) {
                             pageStack.animatorPush("com.jolla.mediaplayer.NewPlaylistDialog")
@@ -125,20 +107,21 @@ Page {
                     }
                 }
 
-                ListView {
+                SilicaGridView {
                     id: playlistRow
 
                     readonly property int maxCount: Math.floor(parent.width / Theme.itemSizeExtraLarge)
 
-                    anchors.top: playlistsCategory.bottom
                     width: parent.width
-                    height: Theme.itemSizeExtraLarge
+                    height: Theme.itemSizeExtraLarge + __silica_menu_height
+                    cellHeight: Theme.itemSizeExtraLarge
+                    cellWidth: width / Math.max(maxCount, 1)
+                    flow: GridView.FlowTopToBottom
 
                     opacity: count > 0 ? 1.0 : 0.0
                     Behavior on opacity { FadeAnimator {} }
-                    visible: !playlists.populated || count > 0 || playlistHeightAnimation.running
+                    visible: !playlists.populated || count > 0
 
-                    orientation: ListView.Horizontal
                     interactive: false
                     model: GriloTrackerModel {
                         id: playlistModel
@@ -153,82 +136,31 @@ Page {
                     delegate: PlaylistItem {
                         id: playlistItem
 
-                        property Item remorse
+                        width: playlistRow.cellWidth
+                        contentHeight: playlistRow.cellHeight
 
-                        width: playlistRow.width / Math.max(playlistRow.maxCount, 1)
-                        menu: menuComponent
                         highlighted: down || menuOpen
                         color: model.title != "" ? PlaylistColors.nameToColor(model.title)
                                                  : "transparent"
                         highlightColor: model.title != "" ? PlaylistColors.nameToHighlightColor(model.title)
                                                           : "transparent"
-                        enabled: !remorse
 
-                        onMenuOpenChanged: {
-                            if (menuOpen)
-                                playlistHeightBehavior.enabled = false
-                        }
-
-                        function remove() {
-                            if (remorseContainer.__silica_remorse_item) {
-                                remorseContainer.__silica_remorse_item.trigger()
-                            }
-
-                            remorse = remorseComponent.createObject(playlistItem)
-                            //: Deleting in n seconds
-                            //% "Deleting"
-                            remorse.execute(remorseContent,
-                                            qsTrId("mediaplayer-la-deleting"),
-                                            function() {
-                                                playlists.removePlaylist(media)
-                                            })
-                        }
-
-                        Component {
-                            id: menuComponent
+                        menu: Component {
                             ContextMenu {
-                                id: menu
-                                width: playlistRow.width
-                                x: {
-                                    if (!parent) return 0
-
-                                    var offset = 0
-                                    var p = parent
-                                    do {
-                                        offset += p.x
-                                        p = p.parent
-                                    } while (p !== playlistRow)
-
-                                    return -offset
-                                }
-
                                 MenuItem {
-                                    //: Remove playlist context menu entry in playlists page
-                                    //% "Remove playlist"
-                                    text: qsTrId("mediaplayer-me-playlists-remove-playlist")
+                                    //% "Delete"
+                                    text: qsTrId("mediaplayer-me-delete")
                                     onClicked: remove()
                                 }
                             }
                         }
+
+                        function remove() {
+                            remorseDelete(function() {
+                                playlists.removePlaylist(media)
+                            })
+                        }
                     }
-                }
-                Item {
-                    id: remorseContainer
-
-                    property Item __silica_remorse_item
-
-                    y: playlistRow.y + playlistRow.height
-                    width: playlistRow.width
-                    height: playlistsItem.height - y
-                    z: 1
-                    clip: true
-
-                    Item {
-                        id: remorseContent
-                        width: playlistRow.width
-                        height: Theme.itemSizeSmall
-                    }
-
                 }
             }
         }
@@ -257,19 +189,6 @@ Page {
             //% "No items found"
             text: qsTrId("mediaplayer-la-empty-search")
             enabled: mainListView.count === 0 && !playlistRow.visible && !playlistsCategory.visible
-        }
-    }
-
-    Component {
-        id: remorseComponent
-        RemorseItem {
-            horizontalAlignment: Text.AlignHCenter
-
-            //: RemorseItem cancel help text
-            //% "Cancel"
-            cancelText: qsTrId("mediaplayer-la-cancel-deletion")
-
-            onCanceled: destroy()
         }
     }
 }

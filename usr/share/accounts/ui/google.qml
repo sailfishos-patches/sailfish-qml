@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2016 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
@@ -35,7 +42,7 @@ AccountCreationAgent {
         if (_settingsDialog != null) {
             _settingsDialog.destroy()
         }
-        _settingsDialog = settingsComponent.createObject(root, {"accountId": accountId})
+        _settingsDialog = settingsComponent.createObject(root, {"accountId": accountId, "isNewAccount": true})
         pageStack.animatorReplace(_settingsDialog)
     }
 
@@ -154,6 +161,7 @@ AccountCreationAgent {
         id: settingsComponent
         Dialog {
             property alias accountId: settingsDisplay.accountId
+            property alias isNewAccount: settingsDisplay.isNewAccount
 
             acceptDestination: root.endDestination
             acceptDestinationAction: root.endDestinationAction

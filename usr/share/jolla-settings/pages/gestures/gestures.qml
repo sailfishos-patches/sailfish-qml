@@ -122,6 +122,7 @@ Page {
                         "/desktop/sailfish/hints/close_app_hint_count",
                         "/desktop/sailfish/hints/coordination_state",
                         "/desktop/sailfish/hints/return_to_home_hint_count",
+                        "/desktop/sailfish/hints/remorse_swipe_hint_count",
                         "/desktop/sailfish/hints/remorse_disappear_hint_count",
                         "/sailfish/accounts/settings_autosave_hint_count",
                         "/sailfish/calculator/scientific_calculator_hint_count",

@@ -160,16 +160,14 @@ Page {
             }
         }
 
-        BusyIndicator {
+        PageBusyIndicator {
             id: busyIndicator
-            anchors.centerIn: parent
             running: jollaStore.connectionState === JollaStore.Connecting ||
                      (installedModel.loading && installedModel.count === 0)
-            size: BusyIndicatorSize.Large
         }
 
         ViewPlaceholder {
-            enabled: !busyIndicator.visible &&
+            enabled: !busyIndicator.running &&
                      installedModel.count === 0 &&
                      !pageStack.busy
             //: View placeholder when there are no installed applications

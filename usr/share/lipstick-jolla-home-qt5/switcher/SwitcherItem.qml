@@ -11,6 +11,7 @@ import org.nemomobile.lipstick 0.1
 import org.nemomobile.ngf 1.0
 import com.jolla.coveractions 0.1
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 import Sailfish.Lipstick 1.0
 import "../compositor"
 import "../main"
@@ -166,7 +167,7 @@ EditableGridDelegate {
         width: rotation % 180 == 0 ? wrapper.width : wrapper.height
         height: rotation % 180 == 0 ? wrapper.height : wrapper.width
         windowId: wrapper.coverId?wrapper.coverId:wrapper.windowId
-        radius: Theme.paddingSmall
+        radius: Theme.paddingMedium
         smooth: true
         anchors.centerIn: parent
         xScale: Math.min(1.0, (windowSize.height / windowSize.width) / (height / width))
@@ -242,7 +243,6 @@ EditableGridDelegate {
         }
     }
 
-    //TODO could be created when needed
     BusyIndicator {
         id: busyIndicator
         anchors.centerIn: parent
@@ -306,7 +306,17 @@ EditableGridDelegate {
                         enabled: !switcherRoot.housekeeping
                         propagateComposedEvents: true
 
-                        Rectangle {
+                        BubbleBackground {
+                            roundedCorners: {
+                                if (coverActionModel.count == 1) {
+                                    return BubbleBackground.BottomLeft | BubbleBackground.BottomRight
+                                } else if (model.index == 0) {
+                                    return BubbleBackground.BottomLeft
+                                } else {
+                                    return BubbleBackground.BottomRight
+                                }
+                            }
+
                             color: Theme.highlightBackgroundColor
                             anchors.fill: parent
                             visible: wrapperItem.pressed && wrapperItem.containsMouse && wrapperItem.enabled

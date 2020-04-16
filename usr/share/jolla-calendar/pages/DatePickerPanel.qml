@@ -96,6 +96,8 @@ Column {
             rightMargin: 0
 
             width: _largeScreen ? (isPortrait ? parent.width*0.6 : parent.width) : parent.width
+            cellHeight: isPortrait ? cellWidth
+                                   : Math.min(cellWidth, ((Screen.width - dayRowHeight - 2*anchors.topMargin) / 6))
             daysVisible: true
             monthYearVisible: !_largeScreen
             delegate: Component {
@@ -164,6 +166,7 @@ Column {
         ContextMenu {
             id: contextMenu
             width: datePicker.width
+            x: datePicker.x
             MenuItem {
                 //% "Change year"
                 text: qsTrId("calendar-me-change_year")

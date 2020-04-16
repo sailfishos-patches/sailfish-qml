@@ -16,10 +16,18 @@ SettingsControl {
         id: slider
 
         width: root.width
-
+        label: displaySettings.ambientLightSensorEnabled && displaySettings.autoBrightnessEnabled
+               ? //% "Adaptive brightness"
+                 qsTrId("brightness_settings-la-adaptive_brightness")
+               : //% "Brightness"
+                 qsTrId("brightness_settings-la-brightness")
         onPressAndHold: {
             slider.cancel()
             root.openMenu()
         }
+    }
+
+    DisplaySettings {
+        id: displaySettings
     }
 }

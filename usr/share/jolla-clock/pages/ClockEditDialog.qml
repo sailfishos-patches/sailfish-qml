@@ -8,6 +8,7 @@ Dialog {
     id: dialog
 
     property bool alarmMode: true
+    property bool editExisting
     property QtObject alarmObject
     property alias time: timePicker.time
     property alias second: timePicker._second
@@ -94,6 +95,25 @@ Dialog {
                 //: Dialog accept text
                 //% "Save"
                 acceptText: qsTrId("clock-he-save")
+                title: {
+                    if (alarmMode) {
+                        if (editExisting) {
+                            //% "Edit alarm"
+                            return qsTrId("clock-he-edit_alarm")
+                        } else {
+                            //% "New alarm"
+                            return qsTrId("clock-he-new-alarm")
+                        }
+                    } else {
+                        if (editExisting) {
+                            //% "Edit timer"
+                            return qsTrId("clock-he-edit_timer")
+                        } else {
+                            //% "New timer"
+                            return qsTrId("clock-he-new_timer")
+                        }
+                    }
+                }
             }
             Item {
                 height: childrenRect.height

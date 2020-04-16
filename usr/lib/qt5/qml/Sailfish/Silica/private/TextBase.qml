@@ -103,6 +103,9 @@ TextBaseItem {
     property color cursorColor: palette.primaryColor
     property alias placeholderText: placeholderTextLabel.text
     property alias placeholderColor: placeholderTextLabel.color
+
+    // internal
+    property alias placeholderAnimationEnabled: placeholderBehavior.enabled
     property bool softwareInputPanelEnabled: true
     property bool errorHighlight: false
     property real textMargin: Theme.horizontalPageMargin
@@ -301,7 +304,10 @@ TextBaseItem {
                : (textBase.highlighted ? palette.secondaryHighlightColor : palette.secondaryColor)
 
         opacity: (textBase.text.length === 0 && !_editor.inputMethodComposing) ? 1.0 : 0.0
-        Behavior on opacity { FadeAnimation {} }
+        Behavior on opacity {
+            id: placeholderBehavior
+            FadeAnimation {}
+        }
         truncationMode: TruncationMode.Fade
         anchors {
             left: parent.left; top: parent.top; right: parent.right

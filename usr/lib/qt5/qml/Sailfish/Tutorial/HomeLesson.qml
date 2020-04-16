@@ -37,7 +37,7 @@ Lesson {
             visible: false
 
             Image {
-                fillMode: Screen.sizeCategory >= Screen.Large ? null : Image.PreserveAspectFit
+                fillMode: Image.PreserveAspectFit
                 width: parent.width
 
                 source: Screen.sizeCategory >= Screen.Large
@@ -120,7 +120,7 @@ Lesson {
                 duration: 700
                 velocity: 1000 / duration
                 from: 0
-                to: 2*Theme.paddingLarge
+                to: clock.offsetDistance
             }
         }
         PauseAnimation { duration: 1000 }
@@ -149,7 +149,7 @@ Lesson {
 
     SequentialAnimation {
         id: timeline
-        PauseAnimation { duration: 400 }
+        PauseAnimation { duration: 300 }
         ScriptAction  {
             script: {
                 hintLabel.atBottom = false
@@ -350,12 +350,14 @@ Lesson {
         property real hintOffset: 0
         property real offset: progress * hiddenOffset * 0.5 - (cannotCenter ? Theme.paddingLarge : 0)
 
+        property int offsetDistance: parent.height / 16
+
         anchors {
             top: cannotCenter ? parent.top : undefined
             horizontalCenter: parent.horizontalCenter
             centerIn: cannotCenter ? undefined : parent
-            topMargin: Theme.paddingMedium + Theme.paddingLarge + hintOffset - (progress * 2 * Theme.paddingLarge)
-            verticalCenterOffset: hintOffset - (progress * 2 * Theme.paddingLarge)
+            topMargin: Theme.paddingMedium + offsetDistance + hintOffset - (progress * offsetDistance)
+            verticalCenterOffset: hintOffset - (progress * offsetDistance)
         }
 
         width: Math.max(timeText.width, weekday.width, month.width)
@@ -373,7 +375,8 @@ Lesson {
             }
 
             time: tutorialDate
-            primaryPixelSize: Theme.fontSizeHuge * 2.0
+
+            primaryPixelSize: Theme.fontSizeHuge * 2.2
         }
 
         Text {

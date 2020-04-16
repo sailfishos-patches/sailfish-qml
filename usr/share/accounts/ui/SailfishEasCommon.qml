@@ -19,10 +19,23 @@ Column {
     property alias signatureEnabled: signatureEnabledSwitch.checked
     property alias signature: signatureField.text
     property bool isNewAccount
+    property string syncPolicy
 
     property QtObject syncScheduleOptions
 
     property bool _changing2WaySync
+
+    function setSyncPolicy(newPolicy) {
+        if (folderSyncSettings.item) {
+            folderSyncSettings.item.setPolicy(newPolicy)
+        }
+    }
+
+    function applyFolderSyncPolicy() {
+        if (folderSyncSettings.item) {
+            folderSyncSettings.item.applyFolderSyncPolicy()
+        }
+    }
 
     width: parent.width
 
@@ -321,6 +334,25 @@ Column {
             }
         }
     }
+
+    Loader {
+        // FolderSyncSettings availability depends on email packages being installed
+        id: folderSyncSettings
+        width: parent.width
+        source: "FolderSyncSettings.qml"
+        onLoaded: {
+            item.accountId = Qt.binding(function() { return root.accountId })
+            item.active = Qt.binding(function() { return !root.isNewAccount && mailSwitch.checked })
+            item.setPolicy(commonSettings.syncPolicy)
+        }
+
+        Connections {
+            target: folderSyncSettings.item
+            onPolicyChanged: commonSettings.syncPolicy = folderSyncSettings.item.policy
+        }
+    }
+
+
 
     SectionHeader {
         //% "Advanced settings"

@@ -1,7 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 Jolla Ltd.
-** Contact: Raine Makelainen <raine.makelainen@jolla.com>
+** Copyright (c) 2015 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
@@ -12,7 +14,6 @@ import com.jolla.settings.system 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.devicelock 1.0
 import org.nemomobile.ngf 1.0
-import org.freedesktop.contextkit 1.0
 import org.nemomobile.lipstick 0.1
 
 DeviceLockInput {
@@ -28,7 +29,7 @@ DeviceLockInput {
 
     // Don't show emergency call button if device has no voice capability, in case something happen and
     // the value is undefined show it since this is critical functionality
-    showEmergencyButton: capabilityVoiceContextProperty.value || capabilityVoiceContextProperty.value === undefined
+    showEmergencyButton: Desktop.simManager.enabledModems.length > 0 || !Desktop.simManager.ready
     focus: !Desktop.startupWizardRunning
 
     Timer {
@@ -98,10 +99,5 @@ DeviceLockInput {
     NonGraphicalFeedback {
         id: unlockFailedEvent
         event: "unlock_failed"
-    }
-
-    ContextProperty {
-        id: capabilityVoiceContextProperty
-        key: "Cellular.CapabilityVoice"
     }
 }

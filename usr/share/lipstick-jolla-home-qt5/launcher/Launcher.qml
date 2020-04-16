@@ -10,6 +10,7 @@ import org.nemomobile.lipstick 0.1
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0 as SilicaPrivate
 import Sailfish.Policy 1.0
+import Sailfish.AccessControl 1.0
 import org.nemomobile.configuration 1.0
 import Sailfish.Lipstick 1.0
 import Nemo.DBus 2.0
@@ -40,7 +41,9 @@ SilicaListView {
     snapMode: ListView.SnapOneItem
     highlightRangeMode: ListView.StrictlyEnforceRange
     cacheBuffer: height*model.count
-    maximumFlickVelocity: 4000*Theme.pixelRatio
+
+    // Match velocity with EdgeLayer transition's 300ms (0.3s below) duration
+    maximumFlickVelocity: Math.max(Theme.maximumFlickVelocity, height / 0.3)
     highlightMoveDuration: 300
     pressDelay: 0
     quickScroll: false
@@ -132,13 +135,20 @@ SilicaListView {
             gridManager.onStopScrolling: launcherPager.stopScrolling()
 
             model: LauncherFolderModel {
+                property bool completed
+                Component.onCompleted: completed = true
+
                 iconDirectories: Theme.launcherIconDirectories
                 blacklistedApplications: {
+                    if (!completed)
+                        return []
+
                     // Currently desktop-file path is good app grid item
                     // identifier. However, this is a subject to change in future.
                     var blacklist = []
                     var path = "/usr/share/applications"
-                    if (!developerModeEnabled.value) {
+                    if (!developerModeEnabled.value ||
+                        !AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")) {
                         blacklist.push(path + "/fingerterm.desktop")
                     }
 
@@ -149,6 +159,20 @@ SilicaListView {
                     
                     if (!AccessPolicy.browserEnabled) {
                         blacklist.push(path + "/sailfish-browser.desktop")
+
+                        // Blacklist links after LauncherFolderModel is populated.
+                        // The model is initialized (loaded) upon component completed.
+                        // Avoid binding loop to the itemCount as blacklisting alters count.
+                        var i = 0
+                        var item = get(i)
+                        while (item) {
+                            if (item.entryType === "Link") {
+                                blacklist.push(item.filePath)
+                            }
+
+                            ++i
+                            item = get(i)
+                        }
                     }
 
                     return blacklist

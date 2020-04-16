@@ -42,20 +42,14 @@ Column {
         EnterKey.onClicked: passwordField.focus = true
     }
 
-    TextField {
+    PasswordField {
         id: passwordField
         visible: !editMode
-        width: parent.width
-        inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        echoMode: TextInput.Password
         errorHighlight: !text && acceptAttempted
 
         //: Placeholder text for password
         //% "Enter password"
         placeholderText: qsTrId("components_accounts-ph-jabber_password_placeholder")
-        //: XMPP password
-        //% "Password"
-        label: qsTrId("components_accounts-la-jabber_password")
         onTextChanged: {
             if (focus && !passwordEdited) {
                 passwordEdited = true

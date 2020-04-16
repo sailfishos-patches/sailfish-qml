@@ -58,7 +58,8 @@ Page {
             Column {
                 width: parent.width
                 spacing: Theme.paddingSmall
-                opacity: 1.0 - busyIndicator.opacity
+                opacity: busyIndicator.running ? 0.0 : 1.0
+                Behavior on opacity { FadeAnimator {}}
                 ButtonGroup {
                     width: parent.width
                     Column {
@@ -145,9 +146,10 @@ Page {
         }
     }
 
-    BusyRetrieving {
+    BusyLabel {
         id: busyIndicator
-        anchors.centerIn: parent
+        //% "Retrieving settings"
+        text: qsTrId("settings_voicecall-la-retrieving_settings")
         running: !ofonoCallBarring.ready && !ofonoCallBarring.failed
     }
 

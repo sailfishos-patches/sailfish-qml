@@ -14,7 +14,6 @@ import org.nemomobile.systemsettings 1.0
 
 Item {
     id: vpnStatusIndicator
-    property bool updatesEnabled: true
 
     width: icon.width
     height: icon.height

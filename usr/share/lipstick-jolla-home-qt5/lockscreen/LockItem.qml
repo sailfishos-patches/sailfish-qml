@@ -1,7 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 Jolla Ltd.
-** Contact: Raine Makelainen <raine.makelainen@jolla.com>
+** Copyright (c) 2015 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
@@ -312,17 +314,19 @@ SilicaFlickable {
                     // Pressable coloring doesn't make sense here rather active modem should get emphasized (more prominent)
                     // => higher contrast should indicate the selected sim.
                     // => on always ask mode, keep sim indicator in highlight color
-                    function color(modem) {
-                        return (!Telephony.promptForVoiceSim && Desktop.activeSim === modem) ? lockScreen.textColor
-                                                                                             : Theme.highlightColor
+                    function color(modemPath) {
+                        return (!Telephony.promptForVoiceSim && Desktop.simManager.activeModem === modemPath)
+                                ? lockScreen.textColor
+                                : Theme.highlightColor
                     }
 
                     CellularNetworkNameStatusIndicator {
                         id: cellName1
+                        modemPath: Desktop.simManager.enabledModems[0] || ""
                         maxWidth: Desktop.showDualSim
                                   ? contentItem.width/2 - Theme.horizontalPageMargin - Theme.paddingMedium
                                   : contentItem.width - 2*Theme.horizontalPageMargin
-                        color: cellInfoContainer.color(modem)
+                        color: cellInfoContainer.color(modemPath)
                     }
                     Label {
                         id: separator
@@ -335,9 +339,9 @@ SilicaFlickable {
                         active: Desktop.showDualSim
                         visible: item && item.textVisible
                         sourceComponent: CellularNetworkNameStatusIndicator {
-                            modem: 2
+                            modemPath: Desktop.simManager.enabledModems[1] || ""
                             maxWidth: contentItem.width/2 - Theme.horizontalPageMargin - Theme.paddingMedium
-                            color: cellInfoContainer.color(modem)
+                            color: cellInfoContainer.color(modemPath)
                         }
                     }
                 }

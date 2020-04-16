@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
@@ -150,16 +157,12 @@ AccountCreationAgent {
             id: flickable
 
             anchors.fill: parent
-
-            function resetFlickableContentHeight() {
-                flickable.contentHeight = Math.max(contentColumn.height + (manualSetupButton.visible ? manualSetupButton.height : 0), parent.height)
-            }
+            contentHeight: Math.max(contentColumn.height + (manualSetupButton.visible ? manualSetupButton.height : 0), parent.height)
 
             Column {
                 id: contentColumn
 
                 width: parent.width
-                onHeightChanged: flickable.resetFlickableContentHeight()
 
                 DialogHeader {
                     dialog: accountCreationDialog
@@ -222,16 +225,9 @@ AccountCreationAgent {
 
                     width: parent.width
 
-                    TextField {
+                    GeneralEmailAddressField {
                         id: emailAddress
                         width: parent.width
-                        inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhEmailCharactersOnly
-                        //: Placeholder text for account email address
-                        //% "Enter email address"
-                        placeholderText: qsTrId("components_accounts-ph-genericemail_email_address")
-                        //: Email address
-                        //% "Email address"
-                        label: qsTrId("components_accounts-la-genericemail_email_address")
                         errorHighlight: !text && accountCreationDialog.checkMandatoryFields
                         EnterKey.iconSource: "image://theme/icon-m-enter-next"
                         EnterKey.onClicked: password.focus = true
@@ -241,7 +237,7 @@ AccountCreationAgent {
                         id: password
                         errorHighlight: !text && accountCreationDialog.checkMandatoryFields
                         EnterKey.iconSource: "image://theme/icon-m-enter-accept"
-                        EnterKey.onClicked: accountCreationDialog.focus = true
+                        EnterKey.onClicked: autoDiscoverySettings.focus = true
                     }
                 }
 
@@ -258,13 +254,11 @@ AccountCreationAgent {
 
             Button {
                 id: manualSetupButton
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: Math.max(contentColumn.height + Theme.paddingLarge, flickable.height - height - Theme.paddingLarge)
+                        + pageStack.panelSize   // don't move button when vkb is open
                 visible: !accountCreationDialog.showSettings
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    bottom: parent.bottom
-                    bottomMargin: Theme.paddingLarge *2
-                    topMargin: Theme.paddingLarge *2
-                }
+
                 //: Manual configuration button
                 //% "Manual setup"
                 text: qsTrId("components_accounts-la-manual_setup")
@@ -278,8 +272,6 @@ AccountCreationAgent {
             }
 
             VerticalScrollDecorator {}
-
-            Component.onCompleted: resetFlickableContentHeight()
         }
     }
 

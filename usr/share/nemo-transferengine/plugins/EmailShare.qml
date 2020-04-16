@@ -6,7 +6,7 @@ import Sailfish.Gallery 1.0
 EmailComposerPage {
     id: sharePage
 
-    property string source
+    property url source
     property var sources: [source]
     property variant content
     readonly property bool isPlainText: !!content && ('type' in content) && content.type === "text/plain"
@@ -41,13 +41,14 @@ EmailComposerPage {
                 } else {
                     var fnIndex = url.lastIndexOf('/')
                     if (fnIndex >= 0) {
-                        title = url.slice(fnIndex+1)
+                        title = decodeURIComponent(url.slice(fnIndex+1))
                     }
                 }
                 attachmentsModel.append({
                     "url": url,
                     "title": title || fileName,
-                    "mimeType": mimeType
+                    "mimeType": mimeType,
+                    "fileSize": size
                 })
             }
         }

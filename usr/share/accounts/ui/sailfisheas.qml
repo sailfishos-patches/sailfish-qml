@@ -61,6 +61,8 @@ AccountCreationAgent {
             }
         }
 
+        onAcceptBlocked: settings.checkMandatoryFields = true
+
         onShowManualSettingsChanged: {
             if (status === PageStatus.Active) {
                 accountCreationAgent.busyPageInstance.currentTask = showManualSettings ? "checkCredentials" : "autodiscovery"
@@ -102,12 +104,6 @@ AccountCreationAgent {
             }
         }
 
-        onAcceptPendingChanged: {
-            if (acceptPending === true) {
-                settings.checkMandatoryFields = true
-            }
-        }
-
         SilicaFlickable {
             anchors.fill: parent
             contentHeight: contentColumn.height + detailsButton.height + 2*Theme.paddingLarge
@@ -118,16 +114,6 @@ AccountCreationAgent {
 
                 DialogHeader {
                     dialog: accountCreationDialog
-
-                    // Ensure checkMandatoryFields is set if 'accept' is tapped and some fields
-                    // are not valid
-                    Item {
-                        id: headerChild
-                        Connections {
-                            target: headerChild.parent
-                            onClicked: settings.checkMandatoryFields = true
-                        }
-                    }
                 }
 
                 Item {
@@ -190,6 +176,12 @@ AccountCreationAgent {
                 SailfishEasConnectionSettings {
                     id: settings
                     editMode: accountCreationDialog.showManualSettings
+                    onCertificateDataSaved: {
+                        ServiceSettings.saveConnectionSettings(settings)
+                        console.log("certificate data saved with id", sslCredentialsId)
+                        account.finishCheckCredentials = true
+                        account.sync()
+                    }
                 }
             }
 
@@ -251,22 +243,29 @@ AccountCreationAgent {
 
     CheckCredentials {
         id: checkCredentialsService
-        onCheckCredentialsDone: {
-            console.log("[jsa-eas] Credentials OK!")
-            // create the settings dialog here
 
+        function finishCredentials() {
             var component = Qt.createComponent(Qt.resolvedUrl("SailfishEasSettingsDialog.qml"))
-
             if (component.status === Component.Ready) {
                 accountCreationAgent.settingsDialog = component.createObject(accountCreationAgent,
-                                                                             {"accountId": account.identifier, "isNewAccount": true})
-
+                                                                             {
+                                                                                 "accountId": account.identifier,
+                                                                                 "connectionSettings": settings
+                                                                             })
+                accountCreationAgent.busyPageInstance.operationSucceeded()
             } else {
                 console.log(component.errorString())
-                return
             }
+        }
 
-            accountCreationAgent.busyPageInstance.operationSucceeded()
+        onCheckCredentialsDone: {
+            console.log("[jsa-eas] Credentials OK!")
+            // create the settings dialog after certificate data is handled too
+            if (settings.hasSslCertificate) {
+                settings.storeCertificateData()
+            } else {
+                finishCredentials()
+            }
         }
         onCheckCredentialsFailed: {
             console.log("[jsa-eas] Credentials check FAILED: error == " + error)
@@ -370,18 +369,23 @@ AccountCreationAgent {
     Account {
         id: account
 
+        property bool finishCheckCredentials
         property bool incomingCredentialsCreated
 
         onStatusChanged: {
             if (status === Account.Synced) {
-                if (!incomingCredentialsCreated) {
+                if (finishCheckCredentials) {
+                    console.log("finishing credentials from account")
+                    finishCheckCredentials = false
+                    checkCredentialsService.finishCredentials()
+                } else if (!incomingCredentialsCreated) {
                     incomingCredentialsCreated = true
                     account.createSignInCredentials( "Jolla", "ActiveSync",
                                 account.signInParameters(accountCreationDialog.defaultServiceName, settings.username, settings.password))
                 } else {
-                    accountSyncManager.createProfile("sailfisheas.Email", identifier,"sailfisheas-email")
-                    accountSyncManager.createProfile("sailfisheas.Calendars", identifier,"sailfisheas-calendars")
-                    accountSyncManager.createProfile("sailfisheas.Contacts", identifier,"sailfisheas-contacts")
+                    accountSyncManager.createProfile("sailfisheas.Email", identifier, "sailfisheas-email")
+                    accountSyncManager.createProfile("sailfisheas.Calendars", identifier, "sailfisheas-calendars")
+                    accountSyncManager.createProfile("sailfisheas.Contacts", identifier, "sailfisheas-contacts")
                 }
             } else if (status === Account.Error) {
                 console.log("ActiveSync provider account error:", errorMessage)
@@ -393,7 +397,15 @@ AccountCreationAgent {
             accountCreationAgent.accountCreated(account.identifier)
             var uname = data["UserName"]
             var pwd = data["Secret"]
-            checkCredentialsService.checkCredentials(uname, pwd, settings.server, settings.port, settings.secureConnection, settings.domain, settings.acceptSSLCertificates)
+
+            if (settings.hasSslCertificate) {
+                checkCredentialsService.checkCredentials(uname, pwd, settings.server, settings.port, settings.secureConnection,
+                                                         settings.domain, settings.acceptSSLCertificates,
+                                                         settings.sslCertificatePath, settings.sslCertificatePassword)
+            } else {
+                checkCredentialsService.checkCredentials(uname, pwd, settings.server, settings.port, settings.secureConnection,
+                                                         settings.domain, settings.acceptSSLCertificates)
+            }
         }
 
         onSignInError: {

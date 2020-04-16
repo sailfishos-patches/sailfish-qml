@@ -131,31 +131,11 @@ Page {
         VerticalScrollDecorator { }
     }
 
-    Column {
-        id: progress
-
-        anchors.verticalCenter: parent.verticalCenter
-        width: root.width
-        visible: opacity > 0
-        opacity: _scanning ? 1 : 0
-        spacing: Theme.paddingLarge
-
-        Behavior on opacity { FadeAnimation { } }
-
-        Label {
-            anchors.horizontalCenter: progress.horizontalCenter
-            color: Theme.highlightColor
-            font.pixelSize: Theme.fontSizeLarge
-            //: Searching networks busy indicator title
-            //% "Searching"
-            text: qsTrId("settings_network-he-network_searching_networks")
-        }
-
-        BusyIndicator {
-            anchors.horizontalCenter: parent.horizontalCenter
-            running: progress.visible
-            size: BusyIndicatorSize.Large
-        }
+    BusyLabel {
+        running: _scanning
+        //: Searching networks busy indicator title
+        //% "Searching"
+        text: qsTrId("settings_network-he-network_searching_networks")
     }
 
     Timer {

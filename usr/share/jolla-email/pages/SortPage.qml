@@ -29,7 +29,7 @@ Page {
         model: sortModel
 
         header: PageHeader {
-            //% "Sort by:"
+            //% "Sort by"
             title: qsTrId("jolla-email-he-sort_by")
         }
 
@@ -38,9 +38,7 @@ Page {
                 x: Theme.horizontalPageMargin
                 anchors.verticalCenter: parent.verticalCenter
                 text: Utils.sortTypeText(sortType)
-                font.pixelSize: Theme.fontSizeMedium
                 color: highlighted ? Theme.highlightColor : Theme.primaryColor
-                elide: Text.ElideRight
             }
 
             onClicked: root.sortSelected(sortType)

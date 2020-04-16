@@ -1,4 +1,4 @@
-import QtQuick 2.2
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
 import org.nemomobile.notifications 1.0
@@ -6,6 +6,7 @@ import Nemo.Configuration 1.0
 import MeeGo.QOfono 0.2
 import org.nemomobile.dbus 2.0
 import org.nemomobile.contacts 1.0
+import "../common"
 import "dialer"
 
 Item {
@@ -181,7 +182,7 @@ Item {
         id: flickable
 
         property int singlePaneHeight: header.height + numberField.height + extraSpacer.height
-                                       + keypad.height + callButton.height
+                                       + keypad.height + callButton.height + callButton.bottomMargin
         property bool splitView: isLandscape && singlePaneHeight > parent.height
 
         PullDownMenu {
@@ -221,6 +222,7 @@ Item {
         Column {
             id: column
 
+            bottomPadding: callButton.bottomMargin
             width: flickable.splitView ? (parent.width / 2) : parent.width
 
             Item {
@@ -322,15 +324,13 @@ Item {
                 }
             }
 
-            Button {
+            FooterButton {
                 id: callButton
                 enabled: telephony.effectiveCallCount < 2 && numberField.text.length > 0
                 //% "Call"
                 text: qsTrId("voicecall-bt-call")
-                height: Theme.itemSizeLarge
                 objectName: "callButton"
                 onClicked: root.startCallClicked()
-                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }

@@ -6,6 +6,13 @@ Transition {
     property QtObject applicationWindow
     to: 'Portrait,Landscape,PortraitInverted,LandscapeInverted'
     from: 'Portrait,Landscape,PortraitInverted,LandscapeInverted'
+
+    onRunningChanged: {
+        if (!running) {
+            applicationWindow.contentItem.opacity = 1
+        }
+    }
+
     SequentialAnimation {
         PropertyAction {
             target: page
@@ -18,15 +25,7 @@ Transition {
             duration: 250
         }
         PropertyAction {
-            target: page
             properties: 'width,height,rotation,orientation'
-        }
-        ScriptAction {
-            script: {
-                // Restores the Bindings to width, height and rotation
-                _defaultTransition = false
-                _defaultTransition = true
-            }
         }
         FadeAnimation {
             target: applicationWindow.contentItem

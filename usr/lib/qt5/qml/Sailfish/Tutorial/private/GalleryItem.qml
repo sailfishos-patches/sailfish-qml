@@ -15,7 +15,7 @@ BackgroundItem {
     property alias title: titleLabel.text
 
     width: parent.width
-    height: (Screen.sizeCategory >= Screen.Large ? 275 : 123) * yScale
+    height: Theme.itemSizeExtraLarge
 
     Label {
         anchors {
@@ -31,12 +31,12 @@ BackgroundItem {
     Image {
         id: thumb
         x: Theme.itemSizeExtraLarge + Theme.horizontalPageMargin - Theme.paddingLarge
-        width: parent.height
-        height: parent.height
+        width: Theme.itemSizeExtraLarge
+        height: width
         opacity: delegateItem.down ? Theme.opacityHigh : 1
         source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-gallery-thumb-" + thumbnail + ".png")
-                : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-gallery-thumb-" + thumbnail + ".png")
+                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-gallery-thumb-" + thumbnail + ".jpg")
+                : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-gallery-thumb-" + thumbnail + ".jpg")
     }
 
     Label {

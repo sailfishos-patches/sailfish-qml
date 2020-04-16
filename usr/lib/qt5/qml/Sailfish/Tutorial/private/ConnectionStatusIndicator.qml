@@ -7,7 +7,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import MeeGo.Connman 0.2
-import org.freedesktop.contextkit 1.0
 import org.nemomobile.lipstick 0.1
 
 Item {
@@ -20,18 +19,13 @@ Item {
 
     visible: primaryIcon.status == Image.Ready || secondaryIcon.status == Image.Ready
 
-    ContextProperty {
-        id: tetheringInterface
-        key: "Internet.Tethering"
-    }
-
     property string _wlanIconId: {
         // WLAN off
         if (!wlanNetworkTechnology.powered)
             return "";
 
         // WLAN tethering
-        if (tetheringInterface.value === "wifi")
+        if (wlanNetworkTechnology.tethering)
             return "";
 
         // WLAN connected
@@ -93,13 +87,13 @@ Item {
         height: iconWidth
         sourceSize: iconSize
         source: {
-            if (internetNetworkType.value === "WLAN" && _wlanIconId !== "")
+            if (wlanNetworkTechnology.connected && _wlanIconId !== "")
                 return "image://theme/" + _wlanIconId + iconSuffix
-            else if (internetNetworkType.value === "GPRS" && _cellularIconId !== "")
+            else if (mobileNetworkTechnology.connected && _cellularIconId !== "")
                 return "image://theme/" + _cellularIconId + iconSuffix
-            else if (internetNetworkType.value === "" && _cellularIconId !== "")
+            else if (_cellularIconId !== "")
                 return "image://theme/" + _cellularIconId + iconSuffix
-            else if (internetNetworkType.value === "" && _wlanIconId !== "")
+            else if (_wlanIconId !== "")
                 return "image://theme/" + _wlanIconId + iconSuffix
             else
                 return ""
@@ -115,9 +109,9 @@ Item {
         height: iconWidth
         sourceSize: iconSize
         source: {
-            if (internetNetworkType.value === "WLAN" && _cellularIconId !== "")
+            if (wlanNetworkTechnology.connected && _cellularIconId !== "")
                 return "image://theme/" + _cellularIconId + iconSuffix
-            else if (internetNetworkType.value === "GPRS" && _wlanIconId !== "")
+            else if (mobileNetworkTechnology.connected && _wlanIconId !== "")
                 return "image://theme/" + _wlanIconId + iconSuffix
             else
                 return ""
@@ -133,7 +127,7 @@ Item {
         height: iconWidth
         sourceSize: iconSize
         source: "image://theme/icon-status-data-share" + iconSuffix
-        visible: tetheringInterface.value === "wifi"
+        visible: wlanNetworkTechnology.tethering
         anchors.bottom: parent.bottom
     }
 
@@ -184,11 +178,6 @@ Item {
 
         property bool uploading: false
         property bool downloading: false
-    }
-
-    ContextProperty {
-        id: internetNetworkType
-        key: "Internet.NetworkType"
     }
 
     Timer {

@@ -19,7 +19,7 @@ Page {
     onStatusChanged: {
         if (status === PageStatus.Deactivating && downloadInProgress) {
             email.cancelMessageDownload()
-            busyIndicator.running = false
+            busyLabel.running = false
         } else if (status === PageStatus.Deactivating && !composerItem.discardUndownloadedAttachments) {
             composerItem.removeUndownloadedAttachments()
             composerItem.discardUndownloadedAttachments = true
@@ -32,7 +32,8 @@ Page {
         anchors.topMargin: Theme.itemSizeLarge // Page header size
         width: parent.width - x*2
         spacing: Theme.paddingLarge
-        visible: !busyIndicator.running
+        opacity: busyLabel.running ? 0.0 : 1.0
+        Behavior on opacity { FadeAnimator {} }
 
         Label {
             width: parent.width
@@ -66,18 +67,18 @@ Page {
 
         Button {
             id: downloadAttachButton
-            visible: !busyIndicator.running
+            visible: !busyLabel.running
             //: Download attachments button
             //% "Download"
             text: qsTrId("jolla-email-la-download_attachments_forward")
             onClicked: {
-                busyIndicator.running = true
+                busyLabel.running = true
                 downloadInProgress = true
                 email.downloadMessage()
             }
         }
         Button {
-            visible: !busyIndicator.running
+            visible: !busyLabel.running
             //: Discard not downloaded attachments button
             //% "Discard"
             text: qsTrId("jolla-email-la-discard_not_downloaded_attachments")
@@ -89,29 +90,11 @@ Page {
         }
     }
 
-    Column {
-        anchors.centerIn: parent
-        x: Theme.horizontalPageMargin
-        width: parent.width - x*2
-        spacing: Theme.paddingLarge
-        visible: busyIndicator.running
-
-        Label {
-            width: parent.width
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-            color: Theme.secondaryHighlightColor
-            //: When singular "Downloading attachment", when plural "Downloading attachments
-            //% "Downloading attachment..."
-            text: qsTrId("jolla-email-la-downloading-attachments", undownloadedAttachmentsCount)
-        }
-
-        BusyIndicator {
-            id: busyIndicator
-            anchors.horizontalCenter: parent.horizontalCenter
-            size: BusyIndicatorSize.Large
-            running: false
-        }
+    BusyLabel {
+        id: busyLabel
+        //: When singular "Downloading attachment", when plural "Downloading attachments"
+        //% "Downloading attachment..."
+        text: qsTrId("jolla-email-la-downloading-attachments", undownloadedAttachmentsCount)
     }
 
     Connections {
@@ -131,7 +114,7 @@ Page {
             //: Try again button
             //% "Try again"
             downloadAttachButton.text = qsTrId("jolla-email-la-download-attachments_try_again")
-            busyIndicator.running = false
+            busyLabel.running = false
         }
     }
 }

@@ -35,8 +35,7 @@ InputHandler {
     topItem: Component {
         TopItem {
             id: topItem
-            visible: canvas.portraitLayout
-            height: visible ? Theme.itemSizeSmall : 0
+            height: Theme.itemSizeSmall
 
             Rectangle {
                 height: parent.height

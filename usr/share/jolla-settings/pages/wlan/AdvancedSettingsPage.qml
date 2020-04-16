@@ -9,6 +9,8 @@ Page {
 
     property QtObject network
 
+    onStatusChanged: if (status == PageStatus.Active) caCertChooser.cancel()
+
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: content.height + Theme.paddingLarge
@@ -64,9 +66,10 @@ Page {
             }
 
             CACertChooser {
+                id: caCertChooser
                 network: root.network
 
-                onFromFileSelected: pageStack.push(filePickerPage)
+                onFromFileSelected: pageStack.push(filePickerPage, { fieldName: 'caCert' })
             }
 
             IdentityField {
@@ -104,12 +107,10 @@ Page {
         id: filePickerPage
 
         FilePickerPage {
-            property bool fileSelected: false
             nameFilters: [ '*.crt', '*.pem' ]
-            Component.onDestruction: if (!fileSelected) root.network.caCert = ''
+            property string fieldName
             onSelectedContentPropertiesChanged: {
-                root.network.caCert = CertHelper.readCert(selectedContentProperties.filePath)
-                fileSelected = true
+                root.network[fieldName] = CertHelper.readCert(selectedContentProperties.filePath, 'CERTIFICATE')
             }
         }
     }

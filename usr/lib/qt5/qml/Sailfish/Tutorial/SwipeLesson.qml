@@ -64,9 +64,7 @@ Lesson {
 
     CoverItem {
         id: peopleApp
-
-        row: 0
-        column: 0
+        name: "people"
 
         onClicked: {
             timeline.complete()
@@ -96,21 +94,20 @@ Lesson {
         anchors.fill: parent
         clip: x > 0 || width < parent.width
 
-        Image {
+        BackgroundImage {
             id: appMainPage
             opacity: 0.0
 
-            Behavior on opacity { SmoothedAnimation { duration: 400; velocity: 1000 / duration } }
+            Behavior on opacity { SmoothedAnimation { duration: 300; velocity: 1000 / duration } }
             source: Screen.sizeCategory >= Screen.Large
-                    ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.png")
+                    ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.jpg")
                     : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-app-background.jpg")
-            width: lesson.width
             x: -parent.x
-            fillMode: Screen.sizeCategory >= Screen.Large ? null : Image.PreserveAspectFit
+            width: lesson.width
 
             Image {
                 width: parent.width
-                fillMode: Screen.sizeCategory >= Screen.Large ? null : Image.PreserveAspectFit
+                fillMode: Image.PreserveAspectFit
                 source: Screen.sizeCategory >= Screen.Large
                         ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-people-app.png")
                         : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-people-app.jpg")

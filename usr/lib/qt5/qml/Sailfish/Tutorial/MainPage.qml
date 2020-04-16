@@ -6,6 +6,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Tutorial 1.0
 import "private"
@@ -44,10 +45,9 @@ TutorialPage {
         if (lessons.length > 0)
             return
 
-        if (Screen.sizeCategory <= Screen.Medium)
-            lessons = [ "HomeLesson.qml", "LauncherLesson.qml", "SwipeLesson.qml", "PageStackLesson.qml", "PulleyLesson.qml", "PhoneCallLesson.qml" ]
-        else // tablet
-            lessons = [ "HomeLesson.qml", "LauncherLesson.qml", "SwipeLesson.qml", "PageStackLesson.qml", "PulleyLesson.qml", "TabletAlarmLesson.qml" ]
+        lessons = [ "HomeLesson.qml", "LauncherLesson.qml",
+                   "SwipeLesson.qml", "PageStackLesson.qml", "PulleyLesson.qml",
+                   Screen.sizeCategory <= Screen.Medium ? "PhoneCallLesson.qml" : "TabletAlarmLesson.qml"]
     }
 
     function lessonCompleted(pauseDuration) {
@@ -70,10 +70,20 @@ TutorialPage {
         lessonLoader.source = ""
 
         var index = lessonCounter - 1
-        if (index < lessons.length)
+        if (index < lessons.length) {
             lessonLoader.source = Qt.resolvedUrl(lessons[index])
-        else
+        } else {
+            __silica_applicationwindow_instance.deactivate()
+            delayedQuit.restart()
+        }
+    }
+
+    Timer {
+        id: delayedQuit
+        interval: 400   // wait for window fade out
+        onTriggered: {
             Qt.quit()
+        }
     }
 
     Pannable {
@@ -89,11 +99,11 @@ TutorialPage {
             Switcher {
                 id: switcher
 
-                anchors.fill: parent
-
+                y: baseY
+                statusBarHeight: statusIndicator.y + statusIndicator.height
                 visible: opacity > 0
                 opacity: showApplicationOverlay ? 1 : 0
-                Behavior on opacity { FadeAnimation { duration: 400 } }
+                Behavior on opacity { FadeAnimation { duration: 300 } }
             }
         }
 
@@ -107,40 +117,10 @@ TutorialPage {
 
         Behavior on opacity { FadeAnimation { duration: 1000 } }
 
-        Image {
-            anchors.fill: {
-                if (Screen.width > 1080) {
-                    parent
-                } else if (Screen.height <= 2519) {
-                    null
-                } else {
-                    parent
-                }
-            }
-
-            height: {
-                if (Screen.width > 1080) {
-                    null
-                } else if (Screen.height <= 2519) {
-                    parent.height
-                }
-            }
-
-            fillMode: {
-                if (Screen.width > 1080) {
-                    null
-                } else if (Screen.height <= 2519) {
-                    Image.PreserveAspectFit
-                } else {
-                    Image.PreserveAspectCrop
-                }
-            }
+        BackgroundImage {
             z: -1
-
-            //Centering horizontally
-            x: Screen.sizeCategory >= Screen.Large ? 0 : (parent.width - width)/2
             source: Screen.sizeCategory >= Screen.Large
-                    ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-wallpaper.png")
+                    ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-wallpaper.jpg")
                     : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-wallpaper.jpg")
         }
 
@@ -203,14 +183,6 @@ TutorialPage {
             BatteryStatusIndicator {
                 id: batteryIndicator
 
-                property real iconWidth: Theme.iconSizeExtraSmall
-                property size iconSize: Qt.size(iconWidth,iconWidth)
-                property string iconSuffix: ""
-
-                anchors {
-                    left: parent.left
-                }
-
                 color: palette.primaryColor
             }
 
@@ -247,6 +219,14 @@ TutorialPage {
                 horizontalCenter: parent.horizontalCenter
             }
         }
+    }
+
+    IconGridViewBase {
+        id: launcherLayout
+
+        // from Home LauncherGrid
+        property real topMargin: Screen.sizeCategory >= Screen.Large ? Theme.paddingLarge*4 : Theme._homePageMargin - Theme.paddingLarge
+        height: parent.height
     }
 
     Item {

@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import com.jolla.settings.accounts 1.0
@@ -13,16 +13,14 @@ AccountSettingsAgent {
     property bool saveConnectionSettings
 
     Component.onCompleted: {
-        if (connectionSettingsPage === null) {
+        if (!connectionSettingsPage) {
             connectionSettingsPage = connectionSettingsComponent.createObject(root)
         }
     }
 
     initialPage: Page {
-        id: settingsPage
-
         onPageContainerChanged: {
-            if (pageContainer == null) {
+            if (pageContainer == null && !credentialsUpdater.running) {
                 root.delayDeletion = true
                 settingsDisplay.saveAccount(false, saveConnectionSettings)
             }
@@ -31,8 +29,12 @@ AccountSettingsAgent {
         Component.onDestruction: {
             if (status == PageStatus.Active || root.serverSettingsActive) {
                 // app closed while settings are open, so save settings synchronously
-               settingsDisplay.saveAccount(true, saveConnectionSettings)
+                settingsDisplay.saveAccount(true, saveConnectionSettings)
             }
+        }
+
+        AccountCredentialsUpdater {
+            id: credentialsUpdater
         }
 
         SilicaFlickable {
@@ -40,18 +42,21 @@ AccountSettingsAgent {
             contentHeight: header.height + settingsDisplay.height + Theme.paddingLarge
 
             StandardAccountSettingsPullDownMenu {
-                allowCredentialsUpdate: false
+                allowCredentialsUpdate: root.accountNotSignedIn
+                allowDelete: !root.accountIsReadOnly
 
+                onCredentialsUpdateRequested: credentialsUpdater.replaceWithCredentialsUpdatePage(root.accountId)
                 onAccountDeletionRequested: {
                     root.accountDeletionRequested()
                     pageStack.pop()
                 }
                 onSyncRequested: {
-                    settingsDisplay.saveAccountAndSync(saveConnectionSettings)
+                    settingsDisplay.saveAccountAndTriggerSync(saveConnectionSettings)
                     saveConnectionSettings = false
                 }
 
                 MenuItem {
+                    visible: !root.accountIsReadOnly
                     enabled: settingsDisplay.accountEnabled
                     //: Opens server settings page
                     //% "Edit server settings"
@@ -88,15 +93,6 @@ AccountSettingsAgent {
     Component {
         id: connectionSettingsComponent
         Page {
-            property alias emailaddress: activesyncConnectionSettings.emailaddress
-            property alias username: activesyncConnectionSettings.username
-            property alias password: activesyncConnectionSettings.password
-            property alias domain: activesyncConnectionSettings.domain
-            property alias server: activesyncConnectionSettings.server
-            property alias port: activesyncConnectionSettings.port
-            property alias secureConnection: activesyncConnectionSettings.secureConnection
-            property alias passwordEdited: activesyncConnectionSettings.passwordEdited
-            property alias acceptSSLCertificates: activesyncConnectionSettings.acceptSSLCertificates
             property alias settings: activesyncConnectionSettings
 
             onPageContainerChanged: {
@@ -111,6 +107,7 @@ AccountSettingsAgent {
                 Column {
                     id: contentColumn
                     width: parent.width
+                    bottomPadding: Theme.paddingMedium
 
                     PageHeader {
                         id: header
@@ -123,6 +120,12 @@ AccountSettingsAgent {
                         id: activesyncConnectionSettings
                         checkMandatoryFields: true
                         editMode: true
+                        onCertificateDataSaved: {
+                            // increase credentials counter so daemon side knows to reload.
+                            // would be saved later, but let's already avoid different settings getting out of sync
+                            settingsDisplay.increaseCredentialsCounter()
+                            settingsDisplay.saveAccount(false, true)
+                        }
                     }
                 }
                 VerticalScrollDecorator {}

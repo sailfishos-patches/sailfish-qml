@@ -8,6 +8,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Tutorial 1.0
+import "private"
 
 Lesson {
     id: lesson
@@ -127,35 +128,10 @@ Lesson {
         }
     }
 
-    Image {
-        source: "image://theme/graphic-edge-swipe-handle-top"
-
-        anchors {
-            bottom: applicationGrid.top
-            horizontalCenter: applicationGrid.horizontalCenter
-        }
-    }
-
-    Image {
+    LauncherGrid {
         id: applicationGrid
 
-        width: parent.width
         y: parent.height
-        fillMode: Screen.sizeCategory >= Screen.Large ? null : Image.PreserveAspectFit
-
-
-        source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-launcher.png")
-                : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-launcher.jpg")
-    }
-
-    Image {
-        source: "image://theme/graphic-edge-swipe-handle-bottom"
-
-        anchors {
-            top: applicationGrid.top
-            horizontalCenter: applicationGrid.horizontalCenter
-        }
     }
 
     HintLabel {

@@ -16,6 +16,8 @@ Item {
     readonly property int displayableSymbolCount: Math.floor(symbolColumn.height / _symbolBoxSize) - _additionalSymbolCount
     readonly property bool pressed: overlayMouseArea.pressed
 
+    property bool _symbolRepeaterLoaded
+
     signal favoriteIconClicked()
     signal recentIconClicked()
     signal symbolClicked(int symbolIndex, string symbol)
@@ -39,7 +41,7 @@ Item {
     }
 
     function highlightSymbolIndex(symbolIndex, symbol) {
-        if (symbol == _currentSymbol) {
+        if (symbol == _currentSymbol || !_symbolRepeaterLoaded) {
             return false
         }
 
@@ -229,6 +231,8 @@ Item {
 
         Repeater {
             id: symbolRepeater
+
+            Component.onCompleted: root._symbolRepeaterLoaded = true
 
             delegate: Label {
                 id: symbolDelegate

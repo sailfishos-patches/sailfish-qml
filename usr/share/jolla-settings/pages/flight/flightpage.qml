@@ -1,10 +1,17 @@
+/****************************************************************************
+**
+** Copyright (c) 2013-2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+** License: Proprietary
+**
+****************************************************************************/
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
+import Sailfish.Settings.Networking 1.0
 import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
-import Sailfish.Settings.Networking 1.0
-import org.freedesktop.contextkit 1.0
+import org.nemomobile.ofono 1.0
 
 Page {
     id: root
@@ -32,11 +39,11 @@ Page {
             checked: flightMode.active
             //% "Airplane mode"
             text: qsTrId("settings_flight-la-flight-mode")
-            description: capabilityDataContextProperty.value || capabilityDataContextProperty.value === undefined
-            // Description for devices with mobile data capability
-            //% "Switches off cellular, WLAN and Bluetooth radios for safe usage in restricted environments. WLAN or Bluetooth can be switched on separately even in airplane mode if allowed in restricted environment."
+            description: modemManager.availableModems.length > 0
+                           //: Description for devices with mobile data capability
+                           //% "Switches off cellular, WLAN and Bluetooth radios for safe usage in restricted environments. WLAN or Bluetooth can be switched on separately even in airplane mode if allowed in restricted environment."
                          ? qsTrId("settings_flight-la-flight-mode-description")
-                           // Description for devices without mobile data capability
+                           //: Description for devices without mobile data capability
                            //% "Switches off WLAN and Bluetooth radios for safe usage in restricted environments. WLAN or Bluetooth can be switched on separately even in airplane mode if allowed in restricted environment."
                          : qsTrId("settings_flight-la-flight-mode-description_non-mobile-data")
             icon.source: "image://theme/icon-m-airplane-mode"
@@ -55,9 +62,8 @@ Page {
         }
     }
 
-    ContextProperty {
-        id: capabilityDataContextProperty
-        key: "Cellular.CapabilityData"
+    OfonoModemManager {
+        id: modemManager
     }
 }
 

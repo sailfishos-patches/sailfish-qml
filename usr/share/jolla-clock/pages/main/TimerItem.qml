@@ -62,7 +62,7 @@ AlarmItemBase {
 
                         text: value.toLocaleString()
                         color: timerItem.highlighted ? Theme.highlightColor : Theme.primaryColor
-                        font.pixelSize: Theme.fontSizeLarge
+                        font.pixelSize: scaleRatio * Theme.fontSizeLarge
                         width: Math.min(implicitWidth, circle.width*0.8 - minutesLabel.width - parent.spacing)
                         // QTBUG-55873: Workaround for implicitHeight not getting updated
                         verticalAlignment: Text.AlignBottom
@@ -73,7 +73,7 @@ AlarmItemBase {
                         id: minutesLabel
                         //% "min"
                         text: qsTrId("clock-la-minute_short", minutes.value)
-                        font.pixelSize: Theme.fontSizeExtraSmall
+                        font.pixelSize: scaleRatio * Theme.fontSizeExtraSmall
                         anchors.baseline: minutes.baseline
                         verticalAlignment: Text.AlignBottom
                         color: timerItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
@@ -91,7 +91,7 @@ AlarmItemBase {
 
                         text: value.toLocaleString()
                         color: timerItem.highlighted ? Theme.highlightColor : Theme.primaryColor
-                        font.pixelSize: Theme.fontSizeLarge
+                        font.pixelSize: scaleRatio * Theme.fontSizeLarge
                         width: Math.min(implicitWidth, circle.width*0.8 - secondLabel.width - parent.spacing)
                         // QTBUG-55873: Workaround for implicitHeight not getting updated
                         verticalAlignment: Text.AlignBottom
@@ -103,7 +103,7 @@ AlarmItemBase {
                         // Abbreviated second to fit inside the timer circle
                         //% "sec"
                         text: qsTrId("clock-la-seconds_short", seconds.value)
-                        font.pixelSize: Theme.fontSizeExtraSmall
+                        font.pixelSize: scaleRatio * Theme.fontSizeExtraSmall
                         anchors.baseline: seconds.baseline
                         verticalAlignment: Text.AlignBottom
                         color: timerItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
@@ -116,7 +116,7 @@ AlarmItemBase {
             width: parent.width
             color: timerItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
             horizontalAlignment: implicitWidth > width ? Qt.AlignLeft : Qt.AlignHCenter
-            font.pixelSize: Theme.fontSizeSmall // For consistency with AlarmItem
+            font.pixelSize: scaleRatio * Theme.fontSizeSmall // For consistency with AlarmItem
             text: alarm.title
             truncationMode: TruncationMode.Fade
             maximumLineCount: 1

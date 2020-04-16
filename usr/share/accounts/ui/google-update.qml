@@ -37,6 +37,9 @@ AccountCredentialsAgent {
         }
 
         onAccountCredentialsUpdated: {
+            // Re-enable the account after updating the credentials
+            account.enabled = true
+            account.sync()
             root.credentialsUpdated(root.accountId)
             root.goToEndDestination()
         }
@@ -48,6 +51,11 @@ AccountCredentialsAgent {
         onPageContainerChanged: {
             if (pageContainer == null) {    // page was popped
                 cancelSignIn()
+
+                // Reset account id so that its status resets, and the account internals can be
+                // re-initialized.
+                account.identifier = 0
+                account.identifier = root.accountId
             }
         }
     }

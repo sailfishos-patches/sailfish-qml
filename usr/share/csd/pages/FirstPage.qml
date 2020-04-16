@@ -89,9 +89,11 @@ Page {
                 //% "CSD Tool"
                 title: qsTrId("csd-he-csd_tool")
 
-                //: Sailfish OS (version)
-                //% "Sailfish OS %1"
-                description: qsTrId("csd-la-sailfish_os_version").arg(aboutSettings.softwareVersionId)
+                //: %1 is the operating system name, %2 is its version
+                //% "%1 %2"
+                description: qsTrId("csd-la-os_name_version")
+                                        .arg(aboutSettings.localizedOperatingSystemName)
+                                        .arg(aboutSettings.softwareVersionId)
             }
 
             SectionHeader {

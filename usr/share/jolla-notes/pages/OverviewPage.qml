@@ -59,16 +59,6 @@ Page {
         // reference column width: 960 / 4
         property int columnCount: Math.floor((isLandscape ? Screen.height : Screen.width) / (Theme.pixelRatio * 240))
 
-        property Item contextMenu
-        property Item contextMenuOn: contextMenu ? contextMenu.parent : null
-        // Figure out which delegates need to be moved down to make room
-        // for the context menu when it's open.
-        property int minOffsetIndex:
-            contextMenuOn ? contextMenuOn.index
-                            - (contextMenuOn.index % columnCount) + columnCount
-                          : 0
-        property int yOffset: contextMenu ? contextMenu.height : 0
-
         onMovementStarted: {
             focus = false   // close the vkb
         }
@@ -92,7 +82,6 @@ Page {
                 value: placeholder.placeholderText()
             }
 
-            y: Math.round(view.height/3)
             enabled: notesModel.populated && notesModel.count === 0
         }
         header: SearchField {
@@ -111,69 +100,44 @@ Page {
             EnterKey.onClicked: focus = false
         }
 
-        delegate: Item {
-            // The NoteItem is wrapped in an Item in order to allow the
-            // delegate to resize for the contextMenu without affecting
-            // the layout inside the NoteItem.
-            id: itemContainer
-
-            // Adjust the height to make space for the context menu if needed
-            height: menuOpen ? view.cellHeight + view.contextMenu.height
-                             : view.cellHeight
-            width: view.cellWidth
+        delegate: NoteItem {
+            id: noteItem
 
             // make model.index accessible to other delegates
             property int index: model.index
-            property bool menuOpen: view.contextMenuOn === itemContainer
 
             function deleteNote() {
-                Remorse.itemAction(noteItem, Remorse.deletedText,
-                                 function() {
-                                     notesModel.deleteNote(index)
-                                 })
+                remorseDelete(function() {
+                    notesModel.deleteNote(index)
+                })
             }
 
             function flash() {
                 flashAnim.running = true
             }
 
-            NoteItem {
-                id: noteItem
 
-                text: model.text ? Theme.highlightText(model.text.substr(0, Math.min(model.text.length, 300)), notesModel.filter, Theme.highlightColor) : ""
-                color: model.color
-                pageNumber: model.pagenr
-                height: view.cellHeight
-                width: view.cellWidth
-                y: index >= view.minOffsetIndex ? view.yOffset : 0
-                highlighted: down || menuOpen
-                _backgroundColor: down && !menuOpen ? highlightedColor : "transparent"
+            text: model.text ? Theme.highlightText(model.text.substr(0, Math.min(model.text.length, 300)), notesModel.filter, Theme.highlightColor) : ""
+            color: model.color
+            pageNumber: model.pagenr
+            menu: contextMenuComponent
 
-                onClicked: pageStack.animatorPush(notePage, {currentIndex: model.index})
-                onPressAndHold: view.openContextMenu(itemContainer)
+            onClicked: pageStack.animatorPush(notePage, { currentIndex: model.index } )
 
-                Rectangle {
-                    id: flashRect
-                    anchors.fill: parent
-                    color: noteItem.color
-                    opacity: 0.0
-                    SequentialAnimation {
-                        id: flashAnim
-                        running: false
-                        PropertyAnimation { target: flashRect; property: "opacity"; to: Theme.opacityLow; duration: 600; easing.type: Easing.InOutQuad }
-                        PropertyAnimation { target: flashRect; property: "opacity"; to: 0.01; duration: 600; easing.type: Easing.InOutQuad }
-                        PropertyAnimation { target: flashRect; property: "opacity"; to: Theme.opacityLow; duration: 600; easing.type: Easing.InOutQuad }
-                        PropertyAnimation { target: flashRect; property: "opacity"; to: 0.00; duration: 600; easing.type: Easing.InOutQuad }
-                    }
+            Rectangle {
+                id: flashRect
+                anchors.fill: parent
+                color: noteItem.color
+                opacity: 0.0
+                SequentialAnimation {
+                    id: flashAnim
+                    running: false
+                    PropertyAnimation { target: flashRect; property: "opacity"; to: Theme.opacityLow; duration: 600; easing.type: Easing.InOutQuad }
+                    PropertyAnimation { target: flashRect; property: "opacity"; to: 0.01; duration: 600; easing.type: Easing.InOutQuad }
+                    PropertyAnimation { target: flashRect; property: "opacity"; to: Theme.opacityLow; duration: 600; easing.type: Easing.InOutQuad }
+                    PropertyAnimation { target: flashRect; property: "opacity"; to: 0.00; duration: 600; easing.type: Easing.InOutQuad }
                 }
             }
-        }
-
-        function openContextMenu(item) {
-            if (!contextMenu)
-                contextMenu = contextMenuComponent.createObject(view)
-
-            contextMenu.open(item)
         }
 
         PullDownMenu {
@@ -204,36 +168,6 @@ Page {
         ContextMenu {
             id: contextMenu
 
-            // The menu extends across the whole gridview horizontally
-            width: view.width
-            x: parent ? -parent.x : 0
-
-            property Item moveToTopItem
-
-            onClosed: {
-                if (moveToTopItem) {
-                    moveToTopAnim.start()
-                }
-            }
-
-            SequentialAnimation {
-                id: moveToTopAnim
-
-                NumberAnimation {
-                    target: moveToTopItem
-                    properties: "opacity"
-                    duration: 200
-                    to: Theme.opacityHigh
-                }
-                ScriptAction {
-                    script: {
-                        moveToTopItem.opacity = 1.0
-                        notesModel.moveToTop(moveToTopItem.index)
-                        moveToTopItem = null
-                    }
-                }
-            }
-
             MenuItem {
                 //: Delete this note from overview
                 //% "Delete"
@@ -246,19 +180,9 @@ Page {
                 //% "Move to top"
                 text: qsTrId("notes-la-move-to-top")
                 visible: contextMenu.parent && contextMenu.parent.index > 0
-                onClicked: moveToTopItem = contextMenu.parent
-            }
-        }
-    }
-
-    Component {
-        id: remorsecomponent
-        RemorseItem {
-            id: remorseItem
-            wrapMode: Text.Wrap
-            Connections {
-                target: notesModel
-                onFilterChanged: remorseItem.trigger()
+                property int index
+                onClicked: index = contextMenu.parent.index // parent is null by the time delayedClick() is called
+                onDelayedClick: notesModel.moveToTop(index)
             }
         }
     }

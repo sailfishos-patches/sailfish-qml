@@ -104,11 +104,54 @@ Column {
                         {
                             "ssid": root.network.ssid,
                             "securityType": root.network.securityType,
-                            "eapType": root.network.eapType,
+                            "eapMethod": root.network.eapMethod,
                             "phase2": root.network.phase2,
                             "identity": root.network.identity,
                             "passphrase": root.network.passphrase,
                             "caCert": "custom",
+                            "privateKeyFile": root.network.privateKeyFile,
+                            "clientCertFile": root.network.clientCertFile,
+                            "hidden": root.network.hidden
+                        })
+            settingsDBus.call("showAddNetworkDialog");
+            root.closeDialog()
+        }
+    }
+
+    ClientCertChooser {
+        network: root.network
+
+        onKeyFromFileSelected: {
+            networkHelper.writeSettings(
+                        {
+                            "ssid": root.network.ssid,
+                            "securityType": root.network.securityType,
+                            "eapMethod": root.network.eapMethod,
+                            "phase2": root.network.phase2,
+                            "identity": root.network.identity,
+                            "passphrase": root.network.passphrase,
+                            "caCert": root.network.caCert,
+                            "caCertFile": root.network.caCertFile,
+                            "privateKeyFile": "custom",
+                            "clientCertFile": root.network.clientCertFile,
+                            "hidden": root.network.hidden
+                        })
+            settingsDBus.call("showAddNetworkDialog");
+            root.closeDialog()
+        }
+        onCertFromFileSelected: {
+            networkHelper.writeSettings(
+                        {
+                            "ssid": root.network.ssid,
+                            "securityType": root.network.securityType,
+                            "eapMethod": root.network.eapMethod,
+                            "phase2": root.network.phase2,
+                            "identity": root.network.identity,
+                            "passphrase": root.network.passphrase,
+                            "caCert": root.network.caCert,
+                            "caCertFile": root.network.caCertFile,
+                            "privateKeyFile": root.network.privateKeyFile,
+                            "clientCertFile": "custom",
                             "hidden": root.network.hidden
                         })
             settingsDBus.call("showAddNetworkDialog");
@@ -145,7 +188,7 @@ Column {
                         {
                             "ssid": root.network.ssid,
                             "securityType": root.network.securityType,
-                            "eapType": root.network.eapType,
+                            "eapMethod": root.network.eapMethod,
                             "phase2": root.network.phase2,
                             "identity": root.network.identity,
                             "passphrase": root.network.passphrase,

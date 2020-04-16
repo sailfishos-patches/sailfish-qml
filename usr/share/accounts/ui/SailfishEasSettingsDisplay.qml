@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import com.jolla.settings.accounts 1.0
@@ -8,33 +8,33 @@ import "SailfishEasSettings.js" as ServiceSettings
 Column {
     id: root
 
-    property bool _saving
-    property bool _syncProfileWhenAccountSaved
     property bool autoEnableAccount
     property bool isNewAccount
     property string defaultServiceName: accountProvider.serviceNames[0]
     property string username
     property alias accountEnabled: mainAccountSettings.accountEnabled
-    property alias account: account
+    property int accountId
     property Provider accountProvider
     property AccountManager accountManager
-    property AccountSyncManager syncManager: AccountSyncManager {}
-    property int accountId
     property Item connectionSettings
     property Item busyPage
-    property bool provisioningChecked
-    property int credentialsUpdateCounter
-    property string emailProfileId
-    property string calendarProfileId
-    property string contactsProfileId
+    property alias _account: account
+    property bool _provisioningChecked
+    property string _emailProfileId
+    property string _calendarProfileId
+    property string _contactsProfileId
+    property int _credentialsUpdateCounter
+    property bool _saving
+    property bool _triggerSyncWhenAccountSaved
 
     signal accountSaveCompleted(var success)
 
     function _populateServiceSettings() {
-        // General
-        var accountGeneralSettings = account.configurationValues("")
-        easSettings.conflictsIndex = parseInt(accountGeneralSettings["conflict_policy"]) === 0 ? 1 : 0
-        easSettings.provision = !accountGeneralSettings["disable_provision"]
+        // Global account configuration / settings
+        var accountGlobalSettings = account.configurationValues("")
+        easSettings.conflictsIndex = parseInt(accountGlobalSettings["conflict_policy"]) === 0 ? 1 : 0
+        easSettings.provision = !accountGlobalSettings["disable_provision"]
+        easSettings.setSyncPolicy(accountGlobalSettings["folderSyncPolicy"])
 
         // Email
         var accountEmailSettings = account.configurationValues("sailfisheas-email")
@@ -62,21 +62,31 @@ Column {
         easSettings.contacts2WaySync = accountContatcsSettings["sync_local"]
 
         // Avoid to update credentials if user modifies username but ends up with same as saved
-        username = accountGeneralSettings["connection/username"]
+        username = accountGlobalSettings["connection/username"] || ""
 
         // Server connection settings
-        connectionSettings.acceptSSLCertificates = accountGeneralSettings["connection/accept_all_certificates"]
-        connectionSettings.domain = accountGeneralSettings["connection/domain"]
-        connectionSettings.emailaddress = accountGeneralSettings["connection/emailaddress"]
-        connectionSettings.port = accountGeneralSettings["connection/port"]
-        connectionSettings.secureConnection = accountGeneralSettings["connection/secure_connection"]
-        connectionSettings.server = accountGeneralSettings["connection/server_address"]
-        connectionSettings.username = accountGeneralSettings["connection/username"]
+        connectionSettings.acceptSSLCertificates = accountGlobalSettings["connection/accept_all_certificates"] || false
+        connectionSettings.domain = accountGlobalSettings["connection/domain"] || ""
+        connectionSettings.emailaddress = accountGlobalSettings["connection/emailaddress"] || ""
+        connectionSettings.port = accountGlobalSettings["connection/port"] || 443
+
+        // To respect key if it exists, use "in" to check existence.
+        // Other similar tests shave reasonable fallback values.
+        connectionSettings.secureConnection = ("connection/secure_connection" in accountGlobalSettings)
+                ? accountGlobalSettings["connection/secure_connection"]
+                : true
+        connectionSettings.server = accountGlobalSettings["connection/server_address"] || ""
+        connectionSettings.username = accountGlobalSettings["connection/username"] || ""
+
+        if (accountGlobalSettings["SslCertCredentialsId"]) {
+            connectionSettings.loadCertificateData(accountGlobalSettings["SslCertCredentialsId"],
+                                                   accountGlobalSettings["connection/ssl_certificate_path"])
+        }
 
         // can't read 'password' from DB, so initialising it with some placeholder value
         connectionSettings.password = "default"
 
-        credentialsUpdateCounter = parseInt(accountGeneralSettings["credentials_update_counter"])
+        _credentialsUpdateCounter = parseInt(accountGlobalSettings["credentials_update_counter"])
     }
 
     function saveAccount(blockingSave, saveConnectionSettings) {
@@ -89,8 +99,6 @@ Column {
         }
 
         if (!root.isNewAccount) {
-            // updating profiles, since enabled services might be changed
-            _saveScheduleProfile()
             saveSettings()
 
             _saving = true
@@ -105,7 +113,6 @@ Column {
                 busyPage.currentTask = "checkProvisioning"
             } else {
                 busyPage.currentTask = "savingAccount"
-                _saveScheduleProfile()
                 saveSettings()
             }
             // The sync will be triggered later by the busy page status change
@@ -117,13 +124,14 @@ Column {
         account.sync()
     }
 
-    function saveAccountAndSync(saveConnectionSettings) {
-        root._syncProfileWhenAccountSaved = true
+    function saveAccountAndTriggerSync(saveConnectionSettings) {
+        root._triggerSyncWhenAccountSaved = true
         saveAccount(false, saveConnectionSettings)
     }
 
     function saveSettings() {
         console.log("[jsa-eas] Saving account settings")
+        _saveScheduleProfile()
         ServiceSettings.saveSettings(easSettings)
         if (root.isNewAccount) {
             // Save service here, since settings loader can overwrite those for new accounts
@@ -148,42 +156,48 @@ Column {
     }
 
     function _saveScheduleProfile() {
-        console.log("[jsa-eas] Saving profile for new account")
+        console.log("[jsa-eas] Saving profile schedule")
         var hasSchedule = (easSettings.syncScheduleOptions !== null &&
                            easSettings.syncScheduleOptions.schedule !== null)
         var sharedScheduleEnabled = hasSchedule ? easSettings.syncScheduleOptions.schedule.enabled : false
         // Email profile
-        if (root.emailProfileId != "") {
+        if (root._emailProfileId != "") {
             if (sharedScheduleEnabled && !easSettings.mail) {
                 // disable the schedule since the service is disabled
                 easSettings.syncScheduleOptions.schedule.enabled = false
             }
             var emailPropertiesObject = { "enabled": easSettings.mail ? "true" : "false" }
-            syncManager.updateProfile(root.emailProfileId, emailPropertiesObject,
+            syncManager.updateProfile(root._emailProfileId, emailPropertiesObject,
                                       easSettings.syncScheduleOptions)
         }
         // Calendar profile
-        if (root.calendarProfileId != "") {
+        if (root._calendarProfileId != "") {
             if (sharedScheduleEnabled && !easSettings.calendar) {
                 // disable the schedule since the service is disabled
                 easSettings.syncScheduleOptions.schedule.enabled = false
             }
             var calendarPropertiesObject = { "enabled": easSettings.calendar ? "true" : "false" }
-            syncManager.updateProfile(root.calendarProfileId, calendarPropertiesObject,
+            syncManager.updateProfile(root._calendarProfileId, calendarPropertiesObject,
                                       easSettings.syncScheduleOptions)
         }
-        if (root.contactsProfileId != "") {
+        if (root._contactsProfileId != "") {
             if (sharedScheduleEnabled && !easSettings.contacts) {
                 // disable the schedule since the service is disabled
                 easSettings.syncScheduleOptions.schedule.enabled = false
             }
             var contactsPropertiesObject = { "enabled": easSettings.contacts ? "true" : "false" }
-            syncManager.updateProfile(root.contactsProfileId, contactsPropertiesObject,
+            syncManager.updateProfile(root._contactsProfileId, contactsPropertiesObject,
                                       easSettings.syncScheduleOptions)
         }
         if (hasSchedule) {
             easSettings.syncScheduleOptions.schedule.enabled = sharedScheduleEnabled
         }
+    }
+
+    function increaseCredentialsCounter() {
+        _credentialsUpdateCounter++
+        // Save a string since double is not supported in c++ side:  'Account::setConfigurationValues(): variant type  QVariant::double'
+        account.setConfigurationValue("", "credentials_update_counter", _credentialsUpdateCounter.toString())
     }
 
     CheckProvision {
@@ -193,9 +207,8 @@ Column {
             if (root.busyPage !== null) {
                 if (checkProvisionService.provisionStatus === CheckProvision.PROVISION_POLICY_NOT_REQUIRED ||
                     checkProvisionService.provisionStatus === CheckProvision.PROVISION_POLICY_REQUIRED_SUCCESS) {
-                    root._saveScheduleProfile()
                     root.saveSettings()
-                    root.account.sync()
+                    account.sync()
                 } else if (checkProvisionService.provisionStatus === CheckProvision.PROVISION_POLICY_REQUIRED_NOT_IMPLEMENTED) {
                     root.busyPage.operationFailed("ProvCheck NotImplemented")
                 } else if (checkProvisionService.provisionStatus === CheckProvision.PROVISION_POLICY_REQUIRED_FAILED) {
@@ -212,7 +225,7 @@ Column {
                     root.busyPage.operationFailed("ProvCheck NotImplemented")
                 }
             }
-            root.provisioningChecked = true
+            root._provisioningChecked = true
         }
         onCheckProvisionFailed: {
             console.log("[jsa-eas] CheckProvisionFailed!\n error == " + error + " | provisionStatus == " + checkProvisionService.provisionStatus)
@@ -221,14 +234,13 @@ Column {
                     console.log("[jsa-eas] CheckProvision - Server doesn't support provisioning request for the used protocol")
                     easSettings.provision = false
                     root.busyPage.provisioningDisabled = true
-                    root._saveScheduleProfile()
                     root.saveSettings()
-                    root.account.sync()
+                    account.sync()
                 } else {
                     root.busyPage.operationFailed("ProvCheck failed")
                 }
             }
-            root.provisioningChecked = false
+            root._provisioningChecked = false
         }
     }
 
@@ -240,6 +252,8 @@ Column {
         accountProvider: root.accountProvider
         accountUserName: root.username
         accountDisplayName: account.displayName
+        accountIsProvisioned: account.provisioned
+        accountEnabledReadOnly: account.readonly
     }
 
     AccountServiceSettingsDisplay {
@@ -256,10 +270,10 @@ Column {
     }
 
     StandardAccountSettingsLoader {
-        account: root.account
+        account: root._account
         accountProvider: root.accountProvider
         accountManager: root.accountManager
-        accountSyncManager: root.syncManager
+        accountSyncManager: syncManager
         autoEnableServices: root.autoEnableAccount
         onSettingsLoaded: {
             // Load the initial settings. Each of these services only have one sync profile.
@@ -274,19 +288,19 @@ Column {
             var emailProfileIds = accountSyncManager.profileIds(account.identifier,
                                                                 "sailfisheas-email")
             if (emailProfileIds.length > 0 && emailProfileIds[0] !== "") {
-                root.emailProfileId = emailProfileIds[0]
+                root._emailProfileId = emailProfileIds[0]
             }
             // Getting calendars sync profile
             var calendarsProfileIds = accountSyncManager.profileIds(account.identifier,
                                                                     "sailfisheas-calendars")
             if (calendarsProfileIds.length > 0 && calendarsProfileIds[0] !== "") {
-                root.calendarProfileId = calendarsProfileIds[0]
+                root._calendarProfileId = calendarsProfileIds[0]
             }
             // Getting contacts sync profile
-            var contactsProfileIds = accountSyncManager.profileIds(account.identifier,
+            var _contactsProfileIds = accountSyncManager.profileIds(account.identifier,
                                                                    "sailfisheas-contacts")
-            if (contactsProfileIds.length > 0 && contactsProfileIds[0] !== "") {
-                root.contactsProfileId = contactsProfileIds[0]
+            if (_contactsProfileIds.length > 0 && _contactsProfileIds[0] !== "") {
+                root._contactsProfileId = _contactsProfileIds[0]
             }
         }
     }
@@ -294,6 +308,10 @@ Column {
     AccountSyncAdapter {
         id: syncAdapter
         accountManager: root.accountManager
+    }
+
+    AccountSyncManager {
+        id: syncManager
     }
 
     Account {
@@ -305,6 +323,8 @@ Column {
                 mainAccountSettings.accountEnabled = root.isNewAccount || account.enabled
                 root._populateServiceSettings()
             } else if (status === Account.Synced) {
+                // success
+                easSettings.applyFolderSyncPolicy()
                 if (!root.isNewAccount) {
                     if (username !== connectionSettings.username || connectionSettings.passwordEdited) {
                         username = connectionSettings.username
@@ -315,17 +335,17 @@ Column {
                         }
                         account.updateSignInCredentials( "Jolla", "ActiveSync",
                                         account.signInParameters(defaultServiceName, connectionSettings.username, password))
-                    } else if (root._syncProfileWhenAccountSaved) {
-                        root._syncProfileWhenAccountSaved = false
+                    } else if (root._triggerSyncWhenAccountSaved) {
+                        root._triggerSyncWhenAccountSaved = false
                         syncAdapter.triggerSync(account)
                     }
                 } else {
-                    if (easSettings.provision && !provisioningChecked) {
+                    if (easSettings.provision && !_provisioningChecked) {
                         console.log("[jsa-eas] starting checkProv from acc.synced ", account.identifier)
                         // TODO
                         checkProvisionService.checkSettings(identifier)
                     } else {
-                        if (root.provisioningChecked) {
+                        if (root._provisioningChecked) {
                             root.busyPage.operationSucceeded()
                         }
                         console.log("[jsa-eas] Trigger sync for account ", account.identifier)
@@ -345,13 +365,11 @@ Column {
 
         onSignInCredentialsUpdated: {
             console.log("[jsa-eas] Credentials updated sucessfully")
-            if (root._syncProfileWhenAccountSaved) {
-                root._syncProfileWhenAccountSaved = false
+            if (root._triggerSyncWhenAccountSaved) {
+                root._triggerSyncWhenAccountSaved = false
                 syncAdapter.triggerSync(account)
             }
-            credentialsUpdateCounter++
-            // Save a string since double is not supported in c++ side:  'Account::setConfigurationValues(): variant type  QVariant::double'
-            account.setConfigurationValue("", "credentials_update_counter", credentialsUpdateCounter.toString())
+            root.increaseCredentialsCounter()
             sync()
         }
 

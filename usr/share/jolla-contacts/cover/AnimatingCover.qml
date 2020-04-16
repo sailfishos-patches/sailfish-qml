@@ -3,10 +3,10 @@ import Sailfish.Silica 1.0
 import org.nemomobile.contacts 1.0
 
 Item {
-    id: rootItem
+    id: root
 
-    property bool active: root.active
-    property int status: root.status
+    property bool active: coverRoot.active
+    property int status: coverRoot.status
     property bool cacheSynchronized
     property real side: height / 2
     property real halfSide: height / 4
@@ -17,15 +17,17 @@ Item {
 
     //+ Jonas Raoni Soares Silva
     //@ http://jsfromhell.com/array/shuffle [v1.0]
-    function shuffle(o){ //v1.0
-        for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-        return o;
+    function shuffle(o) { //v1.0
+        for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x) {
+        }
+
+        return o
     }
     function cacheFavorites() {
-
         // count the number of avatars
         var avatarCount = 0
-        for (var i = 0; i < favoritesModel.count; i++) {
+        var i
+        for (i = 0; i < favoritesModel.count; i++) {
             var avatarUrl = favoritesModel.get(i).avatarUrl + ""
             if (avatarUrl.length > 0)  {
                 avatarCount = avatarCount + 1
@@ -33,7 +35,7 @@ Item {
         }
 
         var favoriteArray = []
-        for (var i = 0; i < favoritesModel.count; i++) {
+        for (i = 0; i < favoritesModel.count; i++) {
             var modelData = favoritesModel.get(i)
 
             // if there are enough avatars don't display name labels
@@ -81,7 +83,7 @@ Item {
             fillerArray.push(personObject)
         }
         fillerArray.sort(function() { return 0.5 - Math.random() })
-        var index;
+        var index
         for (i = 0; i < fillerArray.length; i++) {
             if (i % 2 === 0) {
                 // Adding fillers to lowerFavoritesModel first is intentional to
@@ -106,7 +108,7 @@ Item {
     Component.onCompleted: loadCover()
 
     PathView {
-        id : upperFavorites
+        id: upperFavorites
 
         anchors { top: parent.top; left: parent.left; right: parent.right }
         height: parent.height/2
@@ -115,9 +117,9 @@ Item {
         model: ListModel { id: upperFavoritesModel }
         delegate: CoverContact { height: side; width: height; contact: person }
         path: Path {
-            startX: root.width + halfSide + edgeOffset; startY: halfSide
-            PathLine { x: root.width - halfSide + edgeOffset; y: halfSide }
-            PathLine { x: root.width - (upperFavoritesModel.count - 1) * side - halfSide + edgeOffset; y: halfSide }
+            startX: coverRoot.width + halfSide + edgeOffset; startY: halfSide
+            PathLine { x: coverRoot.width - halfSide + edgeOffset; y: halfSide }
+            PathLine { x: coverRoot.width - (upperFavoritesModel.count - 1) * side - halfSide + edgeOffset; y: halfSide }
         }
     }
 
@@ -138,7 +140,7 @@ Item {
     }
 
     Timer {
-        property bool upper: true;
+        property bool upper: true
         interval: 4000
         repeat: true
         running: active
@@ -154,7 +156,7 @@ Item {
 
     Connections {
         target: favoritesModel
-        onDataChanged: rootItem.cacheSynchronized = false
+        onDataChanged: root.cacheSynchronized = false
     }
 
     CoverActionList {

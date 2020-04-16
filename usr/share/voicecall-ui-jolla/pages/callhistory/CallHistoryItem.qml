@@ -24,8 +24,11 @@ ListItem {
     property int rightMargin: Theme.horizontalPageMargin
     property alias reminder: reminder
 
+    //% "Phone"
+    property string defaultNumberDetail: qsTrId("voicecall-la-detail_phone")
+
     width: parent ? parent.width : 0
-    contentHeight: Math.max(Theme.itemSizeSmall, content.height + 2*Theme.paddingMedium)
+    contentHeight: Math.max(Theme.itemSizeSmall, content.height + (showDetails ? 3 : 2) * Theme.paddingMedium)
 
     function getNumberDetail() {
         var label = ""
@@ -42,9 +45,7 @@ ListItem {
                 }
             }
         }
-        //% "Phone"
-        label = label.length > 0 ? label : qsTrId("voicecall-la-detail_phone")
-        return label
+        return label.length > 0 ? label : defaultNumberDetail
     }
 
     Reminder {

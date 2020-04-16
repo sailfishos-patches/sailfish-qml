@@ -32,6 +32,7 @@ ListItem {
     property int modemIndex: MessageUtils.simManager.indexOfModemFromImsi(modelData.subscriberIdentity)
     property bool inbound: modelData ? modelData.direction == CommHistory.Inbound : false
     property bool hasAttachments: modelData.messageParts.length > 0
+                                  || attachmentOverlay.visible
     property bool hasText
     property bool canRetry
     property int eventStatus
@@ -94,8 +95,13 @@ ListItem {
         id: bubble
 
         property int fullMessageWidth: (hasText ? (messageText.contentWidth + 2 * messageText.horizontalMargin) : 0)
-                                       + ((timestamp.mergeTimestamp && messageText.lineCount === 1) ? (timestamp.width + Theme.paddingMedium) : 0)
-                                       + (hasAttachments ? (attachments.width + attachments.anchors.leftMargin + attachments.anchors.rightMargin) : 0)
+                                       + ((timestamp.mergeTimestamp && messageText.lineCount === 1)
+                                          ? (timestamp.width + Theme.paddingMedium) : 0)
+                                       + (hasAttachments
+                                          ? (attachments.width + attachments.anchors.leftMargin
+                                             + attachments.anchors.rightMargin
+                                             + (!hasText ? Theme.paddingLarge : 0))
+                                          : 0)
         property int extendedTimestampWidth: {
             if (inbound) {
                 return timestamp.x + timestamp.width
@@ -118,7 +124,7 @@ ListItem {
         radius: Theme.paddingLarge
         roundedCorners: {
             // Note: MessagesView has a BottomToTop layout direction, so groupFirst is the bottom-most
-            var result = BubbleBackground.NoCorners;
+            var result = BubbleBackground.NoCorners
             result |= inbound ? BubbleBackground.BottomRight : BubbleBackground.BottomLeft
             if (message.groupLast) {
                 result |= inbound ? BubbleBackground.TopLeft : BubbleBackground.TopRight
@@ -198,14 +204,18 @@ ListItem {
 
     BackgroundItem {
         anchors.fill: attachments
-        enabled: hasAttachments
-        onClicked: pageStack.animatorPush(Qt.resolvedUrl("../MessagePartsPage.qml"), { 'modelData': modelData, 'eventStatus': eventStatus })
+        enabled: modelData.messageParts.length > 0
+        onClicked: pageStack.animatorPush(Qt.resolvedUrl("../MessagePartsPage.qml"),
+                                          { 'modelData': modelData, 'eventStatus': eventStatus })
     }
 
     Item {
         id: attachmentOverlay
+
         width: height
-        height: (busyLoader.active || progressLoader.active || attachmentRetryIcon.status === Image.Ready) ? Theme.itemSizeLarge : 0
+        height: (busyLoader.active || progressLoader.active || attachmentRetryIcon.status === Image.Ready)
+                ? Theme.itemSizeLarge : 0
+        visible: height > 0
         anchors {
             left: attachments.left
             bottom: attachments.bottom
@@ -219,9 +229,10 @@ ListItem {
 
         Loader {
             id: busyLoader
-            active: (eventStatus === CommHistory.DownloadingStatus || eventStatus === CommHistory.WaitingStatus ||
-                     (eventStatus === CommHistory.SendingStatus && modelData.eventType === CommHistory.MMSEvent)) &&
-                    !(progressLoader.active && progressLoader.item && progressLoader.item.visible)
+            active: (eventStatus === CommHistory.DownloadingStatus
+                     || eventStatus === CommHistory.WaitingStatus
+                     || (eventStatus === CommHistory.SendingStatus && modelData.eventType === CommHistory.MMSEvent))
+                    && !(progressLoader.active && progressLoader.item && progressLoader.item.visible)
             anchors.centerIn: parent
             sourceComponent: BusyIndicator {
                 running: true
@@ -230,7 +241,8 @@ ListItem {
 
         Loader {
             id: progressLoader
-            active: (modelData.eventType === CommHistory.MMSEvent) && (eventStatus === CommHistory.DownloadingStatus || eventStatus === CommHistory.SendingStatus)
+            active: (modelData.eventType === CommHistory.MMSEvent) && (eventStatus === CommHistory.DownloadingStatus
+                                                                       || eventStatus === CommHistory.SendingStatus)
             anchors.centerIn: parent
             sourceComponent: ProgressCircle {
                 visible: transfer.running // running = progress is known, greater than 0 and less than 1
@@ -330,7 +342,8 @@ ListItem {
         id: timestamp
 
         readonly property int mergedTimestampLtrX: messageText.lastLineWidth + Theme.paddingMedium
-        readonly property int mergedTimestampRtlX: messageText.contentWidth + messageText.marginCorrection - mergedTimestampLtrX - timestamp.width
+        readonly property int mergedTimestampRtlX: messageText.contentWidth + messageText.marginCorrection
+                                                   - mergedTimestampLtrX - timestamp.width
         readonly property bool canMergeTimestamp: messageText.layoutDone // Ensure that the message text is fully laid out
                                                   && (width > 0) // Ensure that the timestamp is laid out as well
                                                   && !hideDefaultTimestamp // Never merge if the timestamp is hidden by default
@@ -491,7 +504,8 @@ ListItem {
                 }
 
                 HighlightImage {
-                    visible: message.showDetails && (modelData.readStatus === CommHistory.ReadStatusRead || eventStatus === CommHistory.DeliveredStatus)
+                    visible: message.showDetails && (modelData.readStatus === CommHistory.ReadStatusRead
+                                                     || eventStatus === CommHistory.DeliveredStatus)
                     highlighted: message.highlighted
                     source: "image://theme/icon-s-checkmark"
                     color: timestampLabel.color
@@ -558,7 +572,7 @@ ListItem {
     onClicked: {
         if (canRetry) {
             conversation.message.retryEvent(modelData)
-        } else {
+        } else if (eventStatusText.length == 0) {
             showDetails = !showDetails
         }
     }

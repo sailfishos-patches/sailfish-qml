@@ -186,21 +186,57 @@ Page {
                 height: implicitHeight + Theme.paddingLarge
             }
 
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-                enabled: backupStoragePicker.selectionValid
+            Item {
+                width: parent.width
+                height: Math.max(storageBusyIndicator.height, actionButton.height)
 
-                //: Start process of backing up data
-                //% "Backup"
-                text: qsTrId("vault-bt-backup")
+                BusyIndicator {
+                    id: storageBusyIndicator
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    running: _storageListModel.busy
+                }
 
-                onClicked: {
-                    if (backupStoragePicker.cloudAccountId > 0) {
-                        root.backupToCloudAccount(backupStoragePicker.cloudAccountId)
-                    } else if (backupStoragePicker.memoryCardPath.length > 0) {
-                        root.backupToDir(backupStoragePicker.memoryCardPath)
-                    } else {
-                        console.log("Internal error, invalid storage type!")
+                Button {
+                    id: actionButton
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    enabled: (backupStoragePicker.selectionValid
+                              || !backupStoragePicker.selectedStorageMounted
+                              || backupStoragePicker.selectedStorageLocked)
+                             && !storageBusyIndicator.running
+                    opacity: 1 - storageBusyIndicator.opacity
+
+                    text: {
+                        if (backupStoragePicker.selectedStorageMounted) {
+                            //: Start process of backing up data
+                            //% "Backup"
+                            return qsTrId("vault-bt-backup")
+                        } else if (backupStoragePicker.selectedStorageLocked) {
+                            //: SD-card but it is locked (encryption is not yet opened)
+                            //% "Unlock"
+                            return qsTrId("vault-bt-unlock")
+                        }
+
+                        //: SD-card but it is not mounted.
+                        //% "Mount"
+                        return qsTrId("vault-bt-mount")
+                    }
+
+                    onClicked: {
+                        var data
+                        if (backupStoragePicker.selectedStorageLocked) {
+                            data = backupStoragePicker.activeItem()
+                            _storageListModel.unlock(data.devPath)
+                        } else if (!backupStoragePicker.selectedStorageMounted) {
+                            data = backupStoragePicker.activeItem()
+                            _storageListModel.mount(data.devPath)
+                        } else if (backupStoragePicker.cloudAccountId > 0) {
+                            root.backupToCloudAccount(backupStoragePicker.cloudAccountId)
+                        } else if (backupStoragePicker.memoryCardPath.length > 0) {
+                            root.backupToDir(backupStoragePicker.memoryCardPath)
+                        } else {
+                            console.log("Internal error, invalid storage type!")
+                        }
                     }
                 }
             }

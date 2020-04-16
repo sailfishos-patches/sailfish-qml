@@ -187,7 +187,7 @@ Column {
     ComboBox {
         id: networkMode
         enabled: radioSettings.valid && AccessPolicy.cellularTechnologySettingsEnabled
-        description: enabled
+        description: AccessPolicy.cellularTechnologySettingsEnabled
                      ? ""
                        //: %1 is an operating system name without OS suffix
                        //% "Disabled by %1 Device Manager"

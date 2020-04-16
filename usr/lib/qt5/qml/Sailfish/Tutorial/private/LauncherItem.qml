@@ -8,21 +8,14 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 BackgroundItem {
-    property double row
-    property double column
+    property int row
+    property int column
+    property Item _grid: launcherLayout
 
-    property double _rows: 6
-    property double _columns: 4
+    x: _grid.x + column * _grid.cellWidth
+    y: _grid.topMargin + row * _grid.cellHeight
 
-    property double _horizontalMargin: Screen.sizeCategory >= Screen.Large ? 120 : 0
-    property double _verticalMargin: Screen.sizeCategory >= Screen.Large ? 50 : 20
-    property double _cellWidth: Screen.sizeCategory >= Screen.Large ? 324 : 135
-    property double _cellHeight: Screen.sizeCategory >= Screen.Large ? 320 : 150
-
-    x: (_horizontalMargin + column*_cellWidth) * xScale
-    y: (_verticalMargin + row*_cellHeight) * yScale
-
-    width: _cellWidth * xScale
-    height: _cellHeight * yScale
+    width: launcherLayout.cellWidth + (Screen.sizeCategory >= Screen.Large ? 0 : _grid.x)
+    height: launcherLayout.cellHeight
     enabled: false
 }

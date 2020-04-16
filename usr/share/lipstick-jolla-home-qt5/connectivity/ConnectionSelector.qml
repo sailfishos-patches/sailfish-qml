@@ -19,6 +19,7 @@ import com.jolla.connection 1.0
 import Nemo.Notifications 1.0 as SystemNotifications
 import org.nemomobile.ofono 1.0
 import org.nemomobile.lipstick 0.1
+import org.nemomobile.configuration 1.0
 
 import "../connectivity"
 import "../systemwindow"
@@ -255,7 +256,7 @@ SystemWindow {
                 connectingService = false
             } else if (!selectedService.autoConnect) {
                 selectedService.waitingAutoConnect = true
-                selectedService.autoConnect = true
+                selectedService.requestConnect()
             } else {
                 selectedService.requestConnect()
             }
@@ -528,7 +529,8 @@ SystemWindow {
                                         mobileData.autoConnect = true
 
                                         // Close immediately if already connected.
-                                        if (mobileData.connected) {
+                                        // WLAN preferred by the system.
+                                        if (mobileData.connected || wifiListModel.connected) {
                                             closeDialog(true)
                                         }
                                     }
@@ -1015,7 +1017,8 @@ SystemWindow {
         }
 
         onBrowserRequested: {
-            if (url.length === 0) url = "http://jolla.com";
+            if (url.length === 0)
+                url = homePage.value
 
             captivePortalUrl.load(url)
         }
@@ -1038,6 +1041,12 @@ SystemWindow {
             }
             connectionDialog.userInputOk = false
         }
+    }
+
+    ConfigurationValue {
+        id: homePage
+        key: "/apps/sailfish-browser/settings/home_page"
+        defaultValue: "http://jolla.com"
     }
 
     NetworkTechnology {

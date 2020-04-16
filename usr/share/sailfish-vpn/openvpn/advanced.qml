@@ -22,7 +22,7 @@ Column {
         openVpnAskPass.path = getProperty('OpenVPN.AskPass')
         openVpnAuthNoCache.checked = getProperty('OpenVPN.AuthNoCache') == 'true'
         openVpnNSCertType.setValue(getProperty('OpenVPN.NSCertType'))
-        openVpnRemoteCertTLS.setValue(getProperty('OpenVPN.RemoteCertTLS'))
+        openVpnRemoteCertTLS.setValue(getProperty('OpenVPN.RemoteCertTls'))
         openVpnCipher.text = getProperty('OpenVPN.Cipher')
         openVpnAuth.text = getProperty('OpenVPN.Auth')
         openVpnMTU.text = getProperty('OpenVPN.MTU')
@@ -49,7 +49,7 @@ Column {
             updateProvider('OpenVPN.AuthNoCache', 'true')
         }
         updateProvider('OpenVPN.NSCertType', openVpnNSCertType.selection)
-        updateProvider('OpenVPN.RemoteCertTLS', openVpnRemoteCertTLS.selection)
+        updateProvider('OpenVPN.RemoteCertTls', openVpnRemoteCertTLS.selection)
         updateProvider('OpenVPN.Cipher', openVpnCipher.text)
         updateProvider('OpenVPN.Auth', openVpnAuth.text)
         updateProvider('OpenVPN.MTU', openVpnMTU.text)

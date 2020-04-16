@@ -6,6 +6,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import "private"
 
 Lesson {
     id: root
@@ -53,7 +54,7 @@ Lesson {
                 dismissMenu.busy = true
             }
         }
-        PauseAnimation { duration: 4000 }
+        PauseAnimation { duration: 3000 }
         ScriptAction  {
             script: {
                 hintLabel.opacity = 0.0
@@ -102,13 +103,12 @@ Lesson {
         }
     }
 
-    Image {
+    BackgroundImage {
         parent: applicationBackground
-        anchors.fill: parent
         opacity: root.opacity
         source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.png")
-                : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-app-background.png")
+                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.jpg")
+                : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-app-background.jpg")
     }
 
     SilicaFlickable {

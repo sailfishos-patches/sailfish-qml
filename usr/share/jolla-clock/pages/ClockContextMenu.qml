@@ -25,7 +25,8 @@ ContextMenu {
         onClicked: {
             pageStack.animatorPush(Qt.resolvedUrl("ClockEditDialog.qml"), {
                                        alarmMode: !alarm.countdown,
-                                       alarmObject: alarm
+                                       alarmObject: alarm,
+                                       editExisting: true
                                    })
         }
     }

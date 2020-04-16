@@ -78,18 +78,15 @@ Page {
             onClicked: pageStack.animatorPush(Qt.resolvedUrl("PlaylistPage.qml"), {media: media})
 
             function remove() {
-                //: Deleting in n seconds
-                //% "Deleting"
-                remorseAction(qsTrId("mediaplayer-la-deleting"), function() { playlists.removePlaylist(media) })
+                remorseDelete(function() { playlists.removePlaylist(media) })
             }
 
             Component {
                 id: menuComponent
                 ContextMenu {
                     MenuItem {
-                        //: Remove playlist context menu entry in playlists page
-                        //% "Remove playlist"
-                        text: qsTrId("mediaplayer-me-playlists-remove-playlist")
+                        //% "Delete"
+                        text: qsTrId("mediaplayer-me-delete")
                         onClicked: remove()
                     }
                 }

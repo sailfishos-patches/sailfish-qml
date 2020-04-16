@@ -6,6 +6,7 @@ GridItem {
 
     property QtObject alarm: model.alarm
     property bool showContents: true
+    property real scaleRatio: Math.min(1.2, Screen.width/Theme.pixelRatio/540)
 
     highlighted: alarm.enabled || down || menuOpen
 

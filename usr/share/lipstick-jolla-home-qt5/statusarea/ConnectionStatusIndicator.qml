@@ -1,14 +1,15 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Vesa Halttunen <vesa.halttunen@jollamobile.com>
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import MeeGo.Connman 0.2
-import org.freedesktop.contextkit 1.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
 

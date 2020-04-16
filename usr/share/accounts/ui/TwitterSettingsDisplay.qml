@@ -7,6 +7,8 @@ import org.nemomobile.configuration 1.0
 StandardAccountSettingsDisplay {
     id: root
 
+    property bool _hasEnabledService
+
     settingsModified: true
     onAboutToSaveAccount: {
         if (settingsLoader.anySyncOptionsModified()
@@ -67,8 +69,10 @@ StandardAccountSettingsDisplay {
 
         Repeater {
             id: syncServicesRepeater
+
             TextSwitch {
                 id: serviceSwitch
+
                 checked: model.enabled
                 text: model.displayName
                 onCheckedChanged: {
@@ -77,6 +81,7 @@ StandardAccountSettingsDisplay {
                     } else {
                         root.account.disableWithService(model.serviceName)
                     }
+                    root._hasEnabledService = root.testHasCheckedSwitch(syncServicesRepeater)
                 }
             }
         }
@@ -94,6 +99,7 @@ StandardAccountSettingsDisplay {
         }
 
         schedule: syncOptions ? syncOptions.schedule : null
+        enabled: root._hasEnabledService
     }
 
     Loader {
@@ -117,6 +123,7 @@ StandardAccountSettingsDisplay {
         text: qsTrId("settings-accounts-la-twitter_feed_auto_sync_title")
         //% "Fetch new tweets periodically when browsing Events Twitter feed."
         description: qsTrId("settings-accounts-la-twitter_feed_auto_sync_description")
+        enabled: root._hasEnabledService
 
         onCheckedChanged: {
             autoSyncConf.value = checked

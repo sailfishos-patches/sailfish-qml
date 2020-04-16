@@ -28,7 +28,8 @@ Page {
             Column {
                 width: parent.width
                 spacing: Theme.paddingSmall
-                opacity: 1.0 - busyIndicator.opacity
+                opacity: busyIndicator.running ? 0.0 : 1.0
+                Behavior on opacity { FadeAnimator {}}
                 SwitchField {
                     id: allField
                     enabled: !ofonoCallForwarding.networkBusy
@@ -77,10 +78,11 @@ Page {
         }
     }
 
-    BusyRetrieving {
+    BusyLabel {
         id: busyIndicator
-        anchors.centerIn: parent
         running: !ofonoCallForwarding.ready && !ofonoCallForwarding.failed
+        //% "Retrieving settings"
+        text: qsTrId("settings_voicecall-la-retrieving_settings")
     }
 
     OfonoCallForwarding {

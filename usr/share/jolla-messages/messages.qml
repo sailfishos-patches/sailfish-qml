@@ -130,7 +130,7 @@ ApplicationWindow {
         }
     }
 
-    function showConversationPage(operationType, focus) {
+    function showConversationPage(operationType, focus, sync) {
         pageChangedManually = true
 
         if (!conversation.hasConversation) {
@@ -154,8 +154,13 @@ ApplicationWindow {
             if (pageStack.depth == 0)
                 showMainPage(PageStackAction.Immediate)
 
-            pageStack.animatorPush(Qt.resolvedUrl("pages/ConversationPage.qml"),
-                                   focus ? { "editorFocus": true } : {}, operationType)
+            if (!!sync) {
+                pageStack.push(Qt.resolvedUrl("pages/ConversationPage.qml"),
+                               focus ? { "editorFocus": true } : {}, operationType)
+            } else {
+                pageStack.animatorPush(Qt.resolvedUrl("pages/ConversationPage.qml"),
+                                       focus ? { "editorFocus": true } : {}, operationType)
+            }
         }
     }
 
@@ -179,7 +184,7 @@ ApplicationWindow {
             conversation.fromMessageChannel()
 
             showConversationPage(Qt.application.active ? PageStackAction.Animated : PageStackAction.Immediate,
-                                 true)
+                                 true, true)
             if (body !== undefined && body.length > 0)
                 conversationPage.setText(body)
             activate()

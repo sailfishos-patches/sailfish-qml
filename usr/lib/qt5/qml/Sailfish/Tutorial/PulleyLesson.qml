@@ -8,6 +8,7 @@ import QtQuick 2.0
 import QtTest 1.0
 import QtGraphicalEffects 1.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 import org.nemomobile.time 1.0
 import "private"
 
@@ -145,7 +146,7 @@ Lesson {
         ScriptAction  {
             script: {
                 //: 'New timer' must match with clock-me-new_timer
-                //% "Pull down slowly without lifting your finger and select 'New timer'"
+                //% "Pull down slowly without lifting your finger and select 'New alarm'"
                 hintLabel.text = qsTrId("tutorial-la-clock_pull_down_slowly")
                 hintLabel.opacity = 1.0
                 hintLabel.opacityFadeDuration = 500 // quicker fade for cross-fade with overlayLabel
@@ -180,53 +181,21 @@ Lesson {
         }
     }
 
-    Image {
-        source: "image://theme/graphic-edge-swipe-handle-top"
-        opacity: 1 - appMainPage.opacity
-        anchors {
-            bottom: applicationGrid.top
-            horizontalCenter: applicationGrid.horizontalCenter
-        }
-    }
-
-    Image {
+    LauncherGrid {
         id: applicationGrid
 
-        width: parent.width
         opacity: timeline2.running ? 0 : 1
-        fillMode: Screen.sizeCategory >= Screen.Large ? null : Image.PreserveAspectFit
 
         y: parent.height
 
-        source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-launcher.png")
-                : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-launcher.jpg")
-
-        Behavior on y { NumberAnimation { duration: 400; easing.type: Easing.InOutQuad } }
+        Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
     }
 
     LauncherItem {
         id: clockIcon
 
-        row: {
-            if (Screen.width > 1080) {
-                 2
-             } else if (Screen.height <= 2519) {
-                 2
-             } else {
-                 1.32
-             }
-        }
-
-        column: {
-            if (Screen.width > 1080) {
-                3
-            } else if (Screen.height <= 2519) {
-                3
-            } else {
-                2.95
-            }
-        }
+        row: 2
+        column: 3
 
         enabled: applicationGrid.y === 0
 
@@ -269,23 +238,22 @@ Lesson {
         Behavior on opacity { FadeAnimation { duration: 500 } }
     }
 
-    Image {
+    BackgroundImage {
         id: appMainPage
 
+        anchors.top: parent.top
         parent: applicationBackground
         source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.png")
+                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.jpg")
                 : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-app-background.jpg")
-        width: parent.width
 
         // Centering vertically
         y: (parent.height - height)/2
 
         opacity: 0.0
-        fillMode: Screen.sizeCategory >= Screen.Large ? null : Image.PreserveAspectFit
     }
 
-    Flickable {
+    SilicaFlickable {
         id: flickable
 
         anchors.fill: parent
@@ -304,11 +272,53 @@ Lesson {
                         ? Flickable.DragOverBounds : Flickable.StopAtBounds
         flickableDirection: Flickable.VerticalFlick
 
+        Item {
+            height: tabs.headerHeight
+            width: parent.width
+
+            TabView {
+                id: tabs
+
+                anchors.fill: parent
+                currentIndex: 1
+                yOffset: -1
+
+                header: TabButtonRow {
+                    Repeater {
+                        model: [
+                            //: Title of Timers tab page showing saved timers
+                            //% "Timers"
+                            qsTrId("clock-he-timers"),
+                            //: Title of Alarms tab page showing saved alarms
+                            //% "Alarms"
+                            qsTrId("clock-he-alarms"),
+                            //: Title of Stopwatch tab page with stopwatch counter
+                            //% "Stopwatch"
+                            qsTrId("clock-he-stopwatch"),
+                        ]
+
+                        TabButton {
+                            enabled: false
+                            title: modelData
+                            tabIndex: model.index
+                        }
+                    }
+                }
+
+                model: [emptyView, emptyView, emptyView]
+
+                Component {
+                    id: emptyView
+                    TabItem {}
+                }
+            }
+        }
+
         Column {
             id: content
 
-            x: Theme.horizontalPageMargin - Theme.paddingLarge
-            width: parent.width - 2*x
+            y: tabs.headerHeight - Theme.paddingLarge
+            width: parent.width
 
             ClockItem {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -322,6 +332,30 @@ Lesson {
                 }
             }
 
+            Item {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: dateText.width
+                height: dateText.height + (Screen.sizeCategory > Screen.Medium ? Theme.itemSizeExtraSmall : Theme.paddingLarge)
+                Label {
+                    id: dateText
+                    anchors {
+                        top: parent.top
+                        topMargin: -Theme.paddingMedium
+                    }
+                    color: palette.highlightColor
+
+                    text: {
+                        var dateString = Format.formatDate(wallClock.time, Format.DateFull)
+                        return dateString.charAt(0).toUpperCase() + dateString.substr(1)
+                    }
+
+                    WallClock {
+                        id: wallClock
+                        updateFrequency: WallClock.Day
+                    }
+                }
+            }
+
             Grid {
                 id: alarmsView
 
@@ -331,25 +365,6 @@ Lesson {
                 Repeater {
                     model: alarmsModel
                     delegate: AlarmItem {
-                        width: columnWidth
-                    }
-                }
-            }
-
-            Item {
-                width: parent.width
-                height: Theme.paddingMedium + Theme.paddingSmall
-            }
-
-            Grid {
-                id: timersView
-
-                columns: columnCount
-                width: parent.width
-
-                Repeater {
-                    model: timersModel
-                    delegate: TimerItem {
                         width: columnWidth
                     }
                 }
@@ -400,39 +415,13 @@ Lesson {
             }
 
             MenuItem {
-                //: Needs to match with clock-me-open_stopwatch
-                //% "Stopwatch"
-                text: qsTrId("tutorial-me-open_stopwatch")
-            }
-
-            MenuItem {
                 //: Needs to match with clock-me-new_alarm
                 //% "New alarm"
                 text: qsTrId("tutorial-me-new_alarm")
-            }
-
-            MenuItem {
-                id: newTimerOption
-                //: Needs to match with clock-me-new_timer
-                //% "New timer"
-                text: qsTrId("tutorial-me-new_timer")
                 onClicked: {
                     if (pulleyMenu.userAttempt && !pulleyMenu.wasLocked) {
                         timeline4.restart()
                     }
-                }
-            }
-
-            MenuLabel {
-                text: {
-                    var dateString = Format.formatDate(wallClock.time, Format.DateFull)
-                    return dateString.charAt(0).toUpperCase() + dateString.substr(1)
-                }
-
-                WallClock {
-                    id: wallClock
-                    enabled: pulleyMenu.active
-                    updateFrequency: WallClock.Day
                 }
             }
         }
@@ -556,25 +545,15 @@ Lesson {
                 "minute": 0,
                 "daysOfWeek": "sS"
             })
-        }
-    }
-
-    ListModel {
-        id: timersModel
-
-        Component.onCompleted: {
-            append({
-                //: Example timer title
-                //% "Egg"
-                "title": qsTrId("tutorial-timer_model_egg"),
-                "duration": 300
-            })
 
             append({
-                //: Example timer title
-                //% "Noodles"
-                "title": qsTrId("tutorial-timer_model_noodles"),
-                "duration": 360
+                "enabled": true,
+                //: Example alarm title
+                //% "Gym"
+                "title": qsTrId("tutorial-alarm_model_gym"),
+                "hour": 18,
+                "minute": 0,
+                "daysOfWeek": "tTs"
             })
         }
     }
@@ -616,10 +595,10 @@ Lesson {
     Hand {
         id: hand
 
-        handScale: 1.33
+        handScale: (Screen.sizeCategory >= Screen.Large ? 1 : 0.5) * xScale
         pressRotate: -2
         pressTranslate: 6
-        dragRotate: -24
+        dragRotate: Screen.sizeCategory >= Screen.Large ? -18 : -24
         dragTranslate: 50
 
         // Reverse the scaling of the app, to maintain the original size

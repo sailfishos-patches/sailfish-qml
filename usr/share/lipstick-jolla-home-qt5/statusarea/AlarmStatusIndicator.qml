@@ -1,20 +1,17 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Petri M. Gerdt <petri.gerdt@jollamobile.com>
+** Copyright (C) 2013 - 2019 Jolla Ltd.
+** Copyright (C) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import org.freedesktop.contextkit 1.0
+import QtQuick 2.6
+import com.jolla.lipstick 0.1
 
 Image {
     source: "image://theme/icon-status-alarm" + iconSuffix
-    visible: alarmContextProperty.value !== undefined && alarmContextProperty.value
+    visible: Desktop.timedStatus.alarmPresent
     height: visible ? implicitHeight : 0
-
-    ContextProperty {
-        id: alarmContextProperty
-        key: "Alarm.Present"
-    }
 }

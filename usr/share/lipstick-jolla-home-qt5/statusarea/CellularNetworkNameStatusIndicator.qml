@@ -1,52 +1,54 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Vesa Halttunen <vesa.halttunen@jollamobile.com>
+** Copyright (c) 2013 - 2020 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
 import QtQuick 2.0
-import org.freedesktop.contextkit 1.0
 import Sailfish.Silica 1.0
+import MeeGo.QOfono 0.2
 import com.jolla.lipstick 0.1
+import org.nemomobile.ofono 1.0
 
 Row {
     id: cellularNetworkNameStatusIndicator
 
+    property string modemPath
     property real maxWidth
-    property int modem: 1
     property alias homeNetwork: cellularNetworkNameStatusIndicatorHome.text
     property alias visitorNetwork: cellularNetworkNameStatusIndicatorVisitor.text
     property alias color: cellularNetworkNameStatusSeparator.color
-    property bool registered: registrationStatus.value === "home" || registrationStatus.value === "roam"
+    property bool registered: _networkRegistrationStatus === "registered" || _networkRegistrationStatus === "roaming"
     property bool textVisible: cellularNetworkNameStatusIndicatorHome.text.length || cellularNetworkNameStatusIndicatorVisitor.text.length
 
-    property string _modemContext: Desktop.cellularContext(modem)
     property bool _showHome: cellularNetworkNameStatusIndicatorHome.text != ''
     property bool _showVisitor: cellularNetworkNameStatusIndicatorVisitor.text != ''
-    property bool _showSeparator: registrationStatus.value === "roam"
+    property bool _showSeparator: _networkRegistrationStatus === "roaming"
 
     property real _separatorWidth: cellularNetworkNameStatusSeparator.width + (_showHome ? Theme.paddingSmall : 0) + (_showVisitor ? Theme.paddingSmall : 0)
     property real _maxTextWidth: maxWidth - (_showSeparator ? _separatorWidth : 0)
     property real _maxHomeTextWidth: _maxTextWidth - (_showVisitor ? Math.min(cellularNetworkNameStatusIndicatorVisitor.implicitWidth, (_maxTextWidth/2)) : 0)
     property real _maxVisitorTextWidth: _maxTextWidth - (_showHome ? Math.min(cellularNetworkNameStatusIndicatorHome.implicitWidth, (_maxTextWidth/2)) : 0)
 
-    ContextProperty {
-        id: cellularNetworkNameContextProperty
-        key: _modemContext + ".NetworkName"
-        onValueChanged: cellularNetworkNameStatusIndicator.setNetworkName()
+    property string _networkName: networkRegistration.valid ? networkRegistration.name : ""
+    property string _networkRegistrationStatus: networkRegistration.valid ? networkRegistration.status : ""
+    property string _serviceProviderName: simInfo.valid ? simInfo.serviceProviderName : ""
+
+    on_NetworkNameChanged: setNetworkName()
+    on_NetworkRegistrationStatusChanged: setNetworkName()
+    on_ServiceProviderNameChanged: setNetworkName()
+
+    OfonoNetworkRegistration {
+        id: networkRegistration
+        modemPath: cellularNetworkNameStatusIndicator.modemPath
     }
 
-    ContextProperty {
-        id: cellularServiceProviderNameContextProperty
-        key: _modemContext + ".ServiceProviderName"
-        onValueChanged: cellularNetworkNameStatusIndicator.setNetworkName()
-    }
-
-    ContextProperty {
-        id: registrationStatus
-        key: _modemContext + ".RegistrationStatus"
-        onValueChanged: cellularNetworkNameStatusIndicator.setNetworkName()
+    OfonoSimInfo {
+        id: simInfo
+        modemPath: cellularNetworkNameStatusIndicator.modemPath
     }
 
     visible: fakeOperator !== "" || (registered && textVisible)
@@ -91,7 +93,7 @@ Row {
             return
         }
 
-        var networkName = cellularNetworkNameContextProperty.value
+        var networkName = _networkName
         if (networkName === undefined) {
             networkName = ""
         } else {
@@ -102,7 +104,7 @@ Row {
         var networkMatches = networkName.trim().match(/([^(]*)(\()(.*)(\))$/)
         if (networkMatches != null) {
             // If we have a value for ServiceProviderName, that should override the home network value
-            var spn = cellularServiceProviderNameContextProperty.value
+            var spn = _serviceProviderName
             if (spn) {
                 cellularNetworkNameStatusIndicatorHome.text = spn
             } else {
@@ -110,8 +112,8 @@ Row {
             }
             cellularNetworkNameStatusIndicatorVisitor.text = networkMatches[3].trim()
         } else {
-            if (registrationStatus.value === "roam") {
-                cellularNetworkNameStatusIndicatorHome.text = cellularServiceProviderNameContextProperty.value
+            if (_networkRegistrationStatus === "roaming") {
+                cellularNetworkNameStatusIndicatorHome.text = _serviceProviderName
                 cellularNetworkNameStatusIndicatorVisitor.text = networkName.trim()
             } else {
                 cellularNetworkNameStatusIndicatorHome.text = networkName.trim()

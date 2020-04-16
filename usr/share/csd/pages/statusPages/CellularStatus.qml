@@ -1,87 +1,88 @@
 /*
  * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
-import org.freedesktop.contextkit 1.0
-
+import Sailfish.Settings.Networking 1.0
+import MeeGo.QOfono 0.2
+import Nemo.Connectivity 1.0
 
 Column {
-    property string modemContext
+    id: root
+
+    property string modemPath
+    property var simManager
+
+    property string _statusText: {
+        if (!simManager.modemHasPresentSim(modemPath)) {
+            return "no-sim"
+        }
+
+        switch (networkStatusIndicator.networkRegistration.status) {
+        case "unregistered":
+            return "disabled"
+        case "registered":
+            return "home"
+        case "searching":
+        case "unknown":
+            return "offline"
+        case "denied":
+            return "forbidden"
+        case "roaming":
+            return "roam"
+        default:
+            return ""
+        }
+    }
 
     Row {
         spacing: Theme.paddingMedium
         CheckLabel {
-            checked: cellularStatus.value !== "disabled"
+            checked: networkStatusIndicator.networkRegistration.status !== "unregistered"
             //% "Enabled"
             text: qsTrId("csd-la-enabled")
         }
         CheckLabel {
-            checked: !!cellularDataContextProperty.value
+            checked: mobileData.valid && mobileData.autoConnect
+
             //% "Data"
             text: qsTrId("csd-la-data")
         }
-        Label { text: "Reg: %1".arg(cellularStatus.value) }
+        Label { text: "Reg: %1".arg(root._statusText) }
+
         Row {
+            spacing: Theme.paddingSmall
+
             Label {
                 text: {
-                    var val = cellularDataTechnologyContextProperty.value
-                    if (val !== undefined && val !== 'unknown') {
-                        var techToG = {gprs: "2", egprs: "2.5", umts: "3", hspa: "3.5", lte: "4"}
+                    var val = networkStatusIndicator.networkRegistration.technology
+                    if (val.length && val !== 'unknown') {
+                        var techToG = {gsm: "2", edge: "2.5", umts: "3", hspa: "3.5", lte: "4"}
                         return techToG[val] + "G"
                     }
                     return ""
                 }
             }
-            Image {
-                anchors.verticalCenter: parent.verticalCenter
-                source: {
-                    var path = function(name) {
-                        return "image://theme/icon-status-" + name
-                    }
 
-                    switch (cellularStatus.value) {
-                    case "no-sim":
-                        return path("no-sim")
-                    case "offline":
-                        return path("no-cellular")
-                    case "home":
-                    case "roam":
-                        var bars = cellularSignalBarsContextProperty.value
-                        bars = (bars === undefined ? "0" : bars)
-                        return path(("cellular-") + bars)
-                    default:
-                        return ""
-                    }
-                }
+            MobileNetworkStatusIndicator {
+                id: networkStatusIndicator
+
+                anchors.verticalCenter: parent.verticalCenter
+                modemPath: root.modemPath
+                simManager: root.simManager
             }
-            Item { width: Theme.paddingSmall; height: 1 }
-            Label { text: cellularSignalStrengthContextProperty.value || "" }
+
+            Label { text: networkStatusIndicator.networkRegistration.strength || "" }
         }
     }
 
-    ContextProperty {
-        id: cellularStatus
-        key: modemContext + ".RegistrationStatus"
-    }
-    ContextProperty {
-        id: cellularSignalBarsContextProperty
-        key: modemContext + ".SignalBars"
-    }
-    ContextProperty {
-        id: cellularSignalStrengthContextProperty
-        key: modemContext + ".SignalStrength"
-    }
-    ContextProperty {
-        id: cellularDataTechnologyContextProperty
-        key: modemContext + ".DataTechnology"
-    }
-    ContextProperty {
-        id: cellularDataContextProperty
-        key: modemContext + ".GPRSAttached"
+    MobileDataConnection {
+        id: mobileData
+
+        modemPath: root.modemPath
     }
 }

@@ -1,3 +1,12 @@
+/****************************************************************************
+**
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
+**
+****************************************************************************/
+
 pragma Singleton
 import QtQml 2.0
 import Sailfish.Silica 1.0
@@ -7,7 +16,6 @@ import Nemo.DBus 2.0
 import Nemo.FileManager 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.devicelock 1.0
-import org.freedesktop.contextkit 1.0
 import com.jolla.lipstick 0.1
 
 QtObject {
@@ -110,6 +118,8 @@ QtObject {
     }
 
     property FileUtils fileUtils: FileUtils { }
+
+    property TimedStatus timedStatus: TimedStatus {}
 
     signal showVolumeBar()
 

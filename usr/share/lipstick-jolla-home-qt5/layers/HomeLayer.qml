@@ -144,9 +144,7 @@ Pannable {
         z: -2000
     }
 
-    BusyIndicator {
-        anchors.centerIn: parent
-        size: BusyIndicatorSize.Large
+    PageBusyIndicator {
         running: !Lipstick.compositor.systemInitComplete
     }
 

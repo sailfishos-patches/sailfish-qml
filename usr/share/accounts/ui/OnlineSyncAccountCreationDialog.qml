@@ -95,7 +95,7 @@ Dialog {
                     if (serverAddressField.visible) {
                         serverAddressField.focus = true
                     } else {
-                        root.focus = true
+                        parent.focus = true
                     }
                 }
             }
@@ -118,8 +118,8 @@ Dialog {
                 }
 
                 EnterKey.enabled: text || inputMethodComposing
-                EnterKey.iconSource: "image://theme/icon-m-enter-next"
-                EnterKey.onClicked: root.focus = true
+                EnterKey.iconSource: "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: parent.focus = true
             }
 
             SectionHeader {
@@ -132,7 +132,7 @@ Dialog {
                 model: root.services
 
                 delegate: TextSwitch {
-                    text: modelData.displayName
+                    text: AccountsUtil.serviceDisplayNameForService(modelData)
                     checked: true   // enable services by default
 
                     Component.onCompleted: root._serviceEnabledChanged(modelData, checked)
@@ -163,8 +163,8 @@ Dialog {
                     label: qsTrId("components_accounts-la-webdav_path")
 
                     EnterKey.enabled: text || inputMethodComposing
-                    EnterKey.iconSource: "image://theme/icon-m-enter-accept"
-                    EnterKey.onClicked: root.focus = true
+                    EnterKey.iconSource: "image://theme/icon-m-enter-next"
+                    EnterKey.onClicked: addressbookPathField.focus = true
                 }
 
                 TextField {
@@ -177,8 +177,8 @@ Dialog {
                     label: qsTrId("components_accounts-la-optional_addressbook_path")
 
                     EnterKey.enabled: text || inputMethodComposing
-                    EnterKey.iconSource: "image://theme/icon-m-enter-accept"
-                    EnterKey.onClicked: root.focus = true
+                    EnterKey.iconSource: "image://theme/icon-m-enter-next"
+                    EnterKey.onClicked: calendarPathField.focus = true
                 }
 
                 TextField {
@@ -191,8 +191,8 @@ Dialog {
                     label: qsTrId("components_accounts-la-optional_calendar_path")
 
                     EnterKey.enabled: text || inputMethodComposing
-                    EnterKey.iconSource: "image://theme/icon-m-enter-accept"
-                    EnterKey.onClicked: root.focus = true
+                    EnterKey.iconSource: "image://theme/icon-m-enter-close"
+                    EnterKey.onClicked: parent.focus = true
                 }
             }
         }

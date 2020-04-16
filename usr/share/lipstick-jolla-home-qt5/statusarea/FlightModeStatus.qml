@@ -1,13 +1,19 @@
-import QtQml 2.2
-import org.freedesktop.contextkit 1.0
+/****************************************************************************
+**
+** Copyright (c) 2013-2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
+**
+****************************************************************************/
 
-ContextProperty {
+import QtQml 2.2
+import MeeGo.Connman 0.2
+
+NetworkManager {
     id: flightMode
 
     readonly property string path: "system_settings/connectivity/flight/enable_switch"
-    readonly property bool enabled: !value
+    readonly property bool enabled: flightMode.offlineMode
     readonly property alias connected: flightMode.enabled
-
-    // System.InternetEnabled is MCE master radio switch
-    key: "System.InternetEnabled"
 }

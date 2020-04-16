@@ -152,6 +152,7 @@ CsdTestPage {
             spacing: Theme.paddingMedium
 
             property bool simPresent: ofonoSimManager.valid && ofonoSimManager.present
+            readonly property bool isPinRequired: ofonoSimManager.pinRequired !== OfonoSimManager.NoPin
             property bool passed: ofonoModem.passed && ofonoSimManager.passed
 
             function updateResult(passed) {
@@ -178,8 +179,9 @@ CsdTestPage {
                 id: ofonoSimManager
                 modemPath: modelData
                 property bool passed: valid && present && cardIdentifier !== ""
-                                      && mobileCountryCode !== "" && mobileNetworkCode !== ""
-                                      && subscriberIdentity !== ""
+                                      && (mobileCountryCode !== "" && mobileNetworkCode !== ""
+                                          && subscriberIdentity !== ""
+                                          || isPinRequired)
                 onValidChanged: modemFailTimer.start()
             }
 
@@ -248,28 +250,28 @@ CsdTestPage {
             }
 
             Label {
-                visible: simPresent
+                visible: simPresent && !isPinRequired
                 x: Theme.paddingLarge
                 //% "MCC: %1"
                 text: qsTrId("csd-la-mcc").arg(ofonoSimManager.mobileCountryCode)
             }
 
             Label {
-                visible: simPresent
+                visible: simPresent && !isPinRequired
                 x: Theme.paddingLarge
                 //% "MNC: %1"
                 text: qsTrId("csd-la-mnc").arg(ofonoSimManager.mobileNetworkCode)
             }
 
             Label {
-                visible: simPresent
+                visible: simPresent && !isPinRequired
                 x: Theme.paddingLarge
                 //% "Subscriber identity: %1"
                 text: qsTrId("csd-la-subscriber_identity").arg(ofonoSimManager.subscriberIdentity)
             }
 
             Label {
-                visible: simPresent
+                visible: simPresent && !isPinRequired
                 x: Theme.paddingLarge
                 //% "Subscriber numbers: %1"
                 text: qsTrId("csd-la-subscriber_numbers").arg(ofonoSimManager.subscriberNumbers.length > 0 ? ofonoSimManager.subscriberNumbers.join(", ") : 'N/A')
@@ -279,7 +281,7 @@ CsdTestPage {
                 x: Theme.paddingLarge
                 width: parent.width - 2*Theme.paddingLarge
                 wrapMode: Text.Wrap
-                visible: !ofonoSimManager.passed
+                visible: !ofonoSimManager.passed || isPinRequired
                 text: {
                     if (!ofonoSimManager.present) {
                         //% "Cellular modem is not available"
@@ -287,6 +289,10 @@ CsdTestPage {
                     } else if (ofonoSimManager.cardIdentifier === "") {
                         //% "Invalid card identifier"
                         return qsTrId("csd-la-invalid_card_identifier")
+                    } else if (isPinRequired) {
+                        //: "Because the requested PIN code wasn't entered during boot, fields MCC, MNC, Subscriber identity and numbers won't be visible"
+                        //% "PIN not entered, some fields unavailable"
+                        return qsTrId("csd-la-pin_code_not_entered")
                     } else if (ofonoSimManager.mobileCountryCode === "") {
                         //% "Invalid MCC"
                         return qsTrId("csd-la-invalid_mcc")

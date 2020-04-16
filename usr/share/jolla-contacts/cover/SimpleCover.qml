@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0
 
 Item {
     property int contactCount: allContactsModel.populated ? allContactsModel.count : 0
@@ -11,42 +10,35 @@ Item {
     Column {
         id: favoritesColumn
 
+        visible: favoriteCount > 0
         anchors.fill: parent
-        anchors.topMargin: placeholder.icon.y + placeholder.icon.height + Theme.paddingLarge
+
+        Item {
+            width: parent.width
+            height: favoritesColumn.height / (favoriteCount + 1)
+            Image {
+                source: "image://theme/icon-launcher-people"
+                anchors.centerIn: parent
+            }
+
+        }
 
         Repeater {
-            id: favoritesRepeater
-
             model: favoritesModel
             delegate: CoverContact {
                 visible: index < 2
-                height: favoritesColumn.height / 2
+                height: favoritesColumn.height / (favoriteCount + 1)
                 width: favoritesColumn.width
                 contact: {
-                    "primaryName" : model.primaryName,
-                    "secondaryName" : model.secondaryName,
-                    "avatarUrl" : model.avatarUrl,
-                    "displayLabel" : model.displayLabel,
+                    "primaryName": model.primaryName,
+                    "secondaryName": model.secondaryName,
+                    "avatarUrl": model.avatarUrl,
+                    "displayLabel": model.displayLabel,
                     "presenceState": model.globalPresenceState
                 }
                 center: true
             }
         }
-    }
-
-    function getText(favorites, contacts) {
-        if (favorites === 0) {
-            if (contacts > 0) {
-                //: Cover header when no favorites
-                //% "Add favorites"
-                return qsTrId("contacts-he-add_favorites");
-            } else {
-                //: Cover header when no contacts
-                //% "Add contacts"
-                return qsTrId("contacts-he-add_contacts")
-            }
-        }
-        return "";
     }
 
     // If there are no contacts or no favorites show placeholder with instructional text.
@@ -55,8 +47,19 @@ Item {
     CoverPlaceholder {
         id: placeholder
 
+        visible: favoriteCount == 0
         icon.source: "image://theme/icon-launcher-people"
-        text: getText(favoriteCount, contactCount)
+        text: {
+            if (contactCount > 0) {
+                //: Cover header when no favorites
+                //% "Add favorites"
+                return qsTrId("contacts-he-add_favorites")
+            } else {
+                //: Cover header when no contacts
+                //% "Add contacts"
+                return qsTrId("contacts-he-add_contacts")
+            }
+        }
     }
 
     // No contacts: allow user to select "plus" to add contacts

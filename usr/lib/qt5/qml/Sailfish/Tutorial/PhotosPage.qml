@@ -96,17 +96,13 @@ TutorialPage {
     }
 
     Image {
-        anchors {
-            top: pageHeader.bottom
-            bottom: parent.bottom
-            left: parent.left
-            right: parent.right
-        }
-        sourceSize.width: width
-        sourceSize.height: height
+        width: parent.width
+        anchors.top: pageHeader.bottom
+        fillMode: Image.PreserveAspectFit
+        verticalAlignment: Image.AlignTop
 
         source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-gallery-app-grid.png")
+                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-gallery-app-grid.jpg")
                 : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-gallery-app-grid.jpg")
     }
 

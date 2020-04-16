@@ -48,7 +48,7 @@ AlarmItemBase {
                 color: alarmItem.highlighted ? Theme.highlightColor : Theme.primaryColor
                 opacity: alarmItem.highlighted ? 1.0 : Theme.opacityHigh
                 text: alarm.title
-                font { pixelSize: Theme.fontSizeSmall; family: Theme.fontFamilyHeading }
+                font { pixelSize: scaleRatio * Theme.fontSizeSmall; family: Theme.fontFamilyHeading }
                 truncationMode: TruncationMode.Fade
                 maximumLineCount: 1
             }
@@ -57,8 +57,8 @@ AlarmItemBase {
         ClockItem {
             id: timeText
             anchors.horizontalCenter: parent.horizontalCenter
-            primaryPixelSize: (timeFormatConfig.value !== "24") ? Theme.fontSizeExtraLarge : Theme.fontSizeHugeBase
-            secondaryPixelSize: Theme.fontSizeHuge / 2.5
+            primaryPixelSize: scaleRatio * ((timeFormatConfig.value !== "24") ? Theme.fontSizeExtraLarge : Theme.fontSizeHugeBase)
+            secondaryPixelSize: scaleRatio * Theme.fontSizeHuge/2.5
             color: alarmItem.highlighted ? Theme.highlightColor : Theme.primaryColor
             secondaryColor: alarmItem.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
             time: {

@@ -2,10 +2,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 Label {
-    id: nameLabel
-
-    property bool tooLongToCenter: false // needed to break binding loop
-    property bool center: false
+    property bool tooLongToCenter // needed to break binding loop
+    property bool center
 
     function canCenter() {
         if (paintedWidth > width && !tooLongToCenter) {

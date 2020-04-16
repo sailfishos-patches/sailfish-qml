@@ -40,8 +40,10 @@ Rectangle {
 
     BusyIndicator {
         id: busyIndicator
+
         size: BusyIndicatorSize.Large
-        anchors.centerIn: parent
+        y: Math.round(parent.height/4)
+        anchors.horizontalCenter: parent.horizontalCenter
     }
 
     function hide() {

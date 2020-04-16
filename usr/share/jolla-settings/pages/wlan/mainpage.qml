@@ -40,6 +40,12 @@ Page {
                     if (addNetworkProperties.domainSuffixMatch)
                         dialog.network.domainSuffixMatch = addNetworkProperties.domainSuffixMatch
                 }
+                if (addNetworkProperties.privateKeyFile) {
+                    dialog.network.privateKeyFile = addNetworkProperties.privateKeyFile
+                }
+                if (addNetworkProperties.clientCertFile) {
+                    dialog.network.clientCertFile = addNetworkProperties.clientCertFile
+                }
 
                 dialog.accepted.connect(function() {
                     networkSetupLoader.active = true

@@ -368,12 +368,8 @@ Page {
         }//Column
     } //Flickable
 
-    BusyIndicator {
-        anchors.centerIn: parent
-        opacity: _initialized ? 0 : 1
-        visible: opacity > 0
-        running: visible
-        size: BusyIndicatorSize.Large
+    PageBusyIndicator {
+        running: !_initialized
     }
 
     Timer {

@@ -117,18 +117,7 @@ Page {
             ListView.onRemove: animateRemoval()
 
             function remove() {
-                //: Deleting in n seconds
-                //% "Deleting"
-                remorseAction(qsTrId("mediaplayer-la-deleting"), function() {
-                    if (File.removeFile(itemMedia.url)) {
-
-                        // Remove item from the playqueue
-                        AudioPlayer.removeItemFromQueue(itemMedia)
-
-                        // Remove the item from the playlists
-                        playlists.removeItem(itemMedia.url)
-                    }
-                })
+                AudioPlayer.remove(itemMedia, delegate, playlists)
             }
 
             Component {

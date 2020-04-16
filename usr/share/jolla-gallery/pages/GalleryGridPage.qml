@@ -190,10 +190,6 @@ MediaSourcePage {
         id: removalComponent
         RemorseItem {
             objectName: "remorseItem"
-            //: RemorseItem cancel help text
-            //% "Undo"
-            cancelText: qsTrId("gallery-la-undo-deletion")
-            horizontalAlignment: Text.AlignHCenter
             font.pixelSize: Theme.fontSizeSmallBase
         }
     }

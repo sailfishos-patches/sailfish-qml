@@ -144,9 +144,7 @@ Loader {
             enabled: parent.visible
         }
 
-        BusyIndicator {
-            anchors.centerIn: parent
-            size: BusyIndicatorSize.Large
+        PageBusyIndicator {
             running: parent.visible
         }
     }

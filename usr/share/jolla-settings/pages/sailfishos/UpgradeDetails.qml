@@ -1,15 +1,22 @@
+/****************************************************************************
+**
+** Copyright (c) 2013-2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+** License: Proprietary
+**
+****************************************************************************/
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import com.jolla.settings.sailfishos 1.0
-import org.freedesktop.contextkit 1.0
+import org.nemomobile.ofono 1.0
 import Sailfish.Vault 1.0
 
 Column {
     // Update info
     property bool backupEnabled: backupSwitch.checked && storagePicker.selectionValid
     property int horizontalMargin: Theme.horizontalPageMargin
-    property bool haveVoiceCalls: capabilityVoiceContextProperty.value || capabilityVoiceContextProperty.value === undefined
+    property bool haveVoiceCalls: modemManager.enabledModems.length > 0
     property BackupRestoreStoragePicker backupStoragePicker: storagePicker
 
     anchors {
@@ -17,9 +24,8 @@ Column {
         right: parent.right
     }
 
-    ContextProperty {
-        id: capabilityVoiceContextProperty
-        key: "Cellular.CapabilityVoice"
+    OfonoModemManager {
+        id: modemManager
     }
 
     Label {

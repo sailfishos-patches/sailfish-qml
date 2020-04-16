@@ -1,7 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Vesa Halttunen <vesa.halttunen@jollamobile.com>
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2019 Open Mobile Platform LLC.
+**
+** License: Proprietary
 **
 ****************************************************************************/
 
@@ -9,10 +11,10 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Telephony 1.0
+import Sailfish.Settings.Networking 1.0
 import com.jolla.lipstick 0.1
 import org.nemomobile.lipstick 0.1
 import org.nemomobile.time 1.0
-import org.freedesktop.contextkit 1.0
 import "../lockscreen"
 import "../main"
 
@@ -49,6 +51,8 @@ Item {
             BatteryStatusIndicator {
                 id: batteryStatusIndicator
                 color: statusArea.color
+                usbPreparingMode: usbModeSelector.preparingMode != ""
+                iconSuffix: statusArea.iconSuffix
             }
 
             ProfileStatusIndicator {
@@ -76,11 +80,11 @@ Item {
                 spacing: Theme.paddingSmall
                 BluetoothStatusIndicator {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: !lockscreenMode && opacity > 0.0
+                    visible: opacity > 0.0
                 }
                 LocationStatusIndicator {
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: !lockscreenMode && opacity > 0.0
+                    visible: opacity > 0.0
                     recentlyOnDisplay: statusArea.recentlyOnDisplay
                 }
             }
@@ -123,6 +127,7 @@ Item {
         Component {
             id: operatorName
             CellularNetworkNameStatusIndicator {
+                modemPath: Desktop.simManager.enabledModems[0] || ""
                 maxWidth: centralArea.width
                 color: statusArea.color
             }
@@ -140,7 +145,6 @@ Item {
             VpnStatusIndicator {
                 id: vpnStatusIndicator
                 anchors.verticalCenter: parent.verticalCenter
-                updatesEnabled: statusArea.recentlyOnDisplay
             }
             Loader {
                 active: !Desktop.showDualSim
@@ -155,21 +159,11 @@ Item {
             Item {
                 width: flightModeStatusIndicator.offline ? flightModeStatusIndicator.width : cellularStatusLoader.width
                 height: iconBar.height
-                visible: !!capabilityData.value || !!capabilityVoice.value || flightModeStatusIndicator.offline
-
-                ContextProperty {
-                    id: capabilityData
-                    key: "Cellular.CapabilityData"
-                }
-                ContextProperty {
-                    id: capabilityVoice
-                    key: "Cellular.CapabilityVoice"
-                }
+                visible: Desktop.simManager.enabledModems.length > 0 || flightModeStatusIndicator.offline
 
                 FlightModeStatusIndicator {
                     id: flightModeStatusIndicator
                     anchors.right: parent.right
-                    updatesEnabled: statusArea.recentlyOnDisplay
                 }
 
                 Loader {
@@ -185,18 +179,29 @@ Item {
                         CellularNetworkTypeStatusIndicator {
                             id: cellularNetworkTypeStatusIndicator
                             anchors.verticalCenter: parent.verticalCenter
-                            color: Desktop.simManager.indexOfModem(Desktop.simManager.defaultDataModem) === 1 ? cellularStatus2.color : cellularStatus1.color
+                            color: Desktop.simManager.indexOfModem(Desktop.simManager.defaultDataModem) === 1 && networkStatusRepeater.count > 1
+                                   ? networkStatusRepeater.itemAt(1).iconColor
+                                   : networkStatusRepeater.itemAt(0).iconColor
                         }
 
-                        CellularStatus {
-                            id: cellularStatus1
-                            visible: Desktop.showDualSim || Desktop.activeSim == 1
-                        }
+                        Repeater {
+                            id: networkStatusRepeater
 
-                        CellularStatus {
-                            id: cellularStatus2
-                            modem: 2
-                            visible: Desktop.showDualSim || Desktop.activeSim == 2
+                            model: Desktop.simManager.enabledModems
+
+                            MobileNetworkStatusIndicator {
+                                readonly property color iconColor: _highlight ? Theme.highlightColor : statusArea.color
+                                readonly property bool _highlight: Telephony.promptForVoiceSim
+                                                                   || (Desktop.showDualSim && Desktop.simManager.activeModem !== modemPath)
+
+                                visible: Desktop.showDualSim || Desktop.simManager.activeModem === modemPath
+                                modemPath: modelData
+                                simManager: Desktop.simManager
+
+                                showMaximumStrength: fakeOperator !== ""
+                                showRoamingStatus: !Desktop.showDualSim
+                                iconSuffix: _highlight ? ('?' + Theme.highlightColor) : statusArea.iconSuffix
+                            }
                         }
                     }
                 }
