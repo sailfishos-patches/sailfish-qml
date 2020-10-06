@@ -227,7 +227,7 @@ Page {
                         //: %1 is operating system name without OS suffix
                         //% "USB modes disabled by %1 Device Manager: "
                         return qsTrId("settings_usb_la-modes-disabled-by-mdm")
-                            .arg(aboutSettings.baseOperatingSystemName) + disabledModes.join(", ")
+                            .arg(aboutSettings.baseOperatingSystemName) + disabledModes.join(Format.listSeparator)
                     }
                     return ""
                 }

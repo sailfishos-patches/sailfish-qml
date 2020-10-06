@@ -5,8 +5,11 @@ Image {
     property url icon
 
     fillMode: Image.PreserveAspectFit
-    source: icon + "?" + (Theme.colorScheme == Theme.LightOnDark
+    source: icon.toString().length
+            ? icon + "?" + (Theme.colorScheme == Theme.LightOnDark
                           ? Theme.highlightColor
                           : Theme.highlightFromColor(Theme.highlightColor, Theme.LightOnDark))
+            : ""
+
     scale: 0.75
 }

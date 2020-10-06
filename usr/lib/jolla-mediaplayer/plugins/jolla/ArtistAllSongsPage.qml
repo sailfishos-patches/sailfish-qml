@@ -6,8 +6,6 @@ import Sailfish.Media 1.0
 import com.jolla.mediaplayer 1.0
 
 Page {
-    id: artistAllSongsPage
-
     property var media
 
     MediaPlayerListView {
@@ -31,8 +29,6 @@ Page {
         }
 
         PullDownMenu {
-            id: artist
-
             MenuItem {
                 //: Shuffle all menu entry in artist page
                 //% "Shuffle all"
@@ -43,8 +39,6 @@ Page {
             NowPlayingMenuItem { }
 
             MenuItem {
-                id: menuItemSearch
-
                 //: Search menu entry
                 //% "Search"
                 text: qsTrId("mediaplayer-me-search")

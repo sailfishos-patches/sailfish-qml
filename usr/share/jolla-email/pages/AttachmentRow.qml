@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 – 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -7,6 +8,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Nemo.Email 0.1
+import org.nemomobile.thumbnailer 1.0
 
 Row {
     id: root
@@ -23,28 +25,39 @@ Row {
             return 4
         }
     }
+
+    height: Theme.itemSizeExtraSmall
+
     Repeater {
         model: emailMessage && emailMessage.numberOfAttachments > 0 &&
                emailMessage.numberOfAttachments <= _maximumVisibleAttachments
                ? attachmentsModel
                : null
         delegate: AttachmentDelegate {
-            // Two delegates
-            width: root.width / emailMessage.numberOfAttachments
-            leftMargin: Positioner.isFirstItem ? Theme.horizontalPageMargin : Theme.paddingMedium
-            rightMargin: Positioner.isLastItem ? Theme.horizontalPageMargin : Theme.paddingMedium
-            iconSize: Theme.iconSizeMedium
+            id: attachmentItem
+
+            leftMargin: attachmentItem.Positioner.isFirstItem
+                        ? Theme.horizontalPageMargin
+                        : Theme.paddingMedium
+            rightMargin: attachmentItem.Positioner.isLastItem
+                        ? Theme.horizontalPageMargin
+                        : Theme.paddingMedium
+
+            width: ((root.width - (2 * (Theme.horizontalPageMargin - Theme.paddingMedium))) / emailMessage.numberOfAttachments)
+                    + (leftMargin - Theme.paddingMedium)
+                    + (rightMargin - Theme.paddingMedium)
+
+            contentHeight: Theme.itemSizeExtraSmall
+
             attachmentNameFontSize: Theme.fontSizeExtraSmall
-            attachmentStatusFontSize: Theme.fontSizeTiny
-            contentHeight: Theme.itemSizeSmall
-            spacing: Theme.paddingLarge
+            attachmentStatusFontSize: Theme.fontSizeExtraSmall
         }
     }
 
     BackgroundItem {
         id: attachmentsLink
         visible: emailMessage && emailMessage.numberOfAttachments > root._maximumVisibleAttachments
-        contentHeight: Theme.itemSizeSmall
+        contentHeight: Theme.itemSizeExtraSmall
 
         onClicked: {
             pageStack.animatorPush("AttachmentListPage.qml", {
@@ -57,7 +70,6 @@ Row {
             //: Number of email attachments (only used when number of attachments greater than 2)
             //% "%n attachments"
             text: qsTrId("jolla-email-la-attachments_summary", emailMessage ? emailMessage.numberOfAttachments : 0)
-            color: attachmentsLink.highlighted ? Theme.highlightColor : Theme.primaryColor
             anchors {
                 verticalCenter: parent.verticalCenter
                 left: parent.left

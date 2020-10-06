@@ -1,11 +1,18 @@
+/*
+ * Copyright (c) 2012 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import org.nemomobile.policy 1.0
 import org.nemomobile.contacts 1.0
 import org.nemomobile.dbus 2.0 as NemoDBus
 
 IncomingCallViewBase {
     id: incomingCallView
-    property string menuAction
     property bool hangupHeld
     property var heldCall: telephony.heldCall
     onHeldCallChanged:  {
@@ -29,35 +36,26 @@ IncomingCallViewBase {
         }
     }
 
-    onMenuActiveChanged: {
-        if (menuActive) {
-            return
-        }
-
-        if (menuAction == "answer") {
-            telephony.incomingCall.answer()
-        } else if (menuAction == "releaseAndAnswer") {
-            telephony.releaseAndAnswer()
-        }
-        menuAction = ""
+    onAnswered: {
+        var call = telephony.incomingCall || telephony.silencedCall
+        call.answer()
     }
 
-    onAnswered: {
-        if (callCount > 1) {
-            menuAction = "answer"
-        } else {
-            telephony.incomingCall.answer()
-        }
+    onRejected: {
+        var call = telephony.incomingCall || telephony.silencedCall
+        telephony.hangupCall(call)
+        main.hangupAnimation.complete()
     }
 
     onEndActiveAndAnswered: {
         if (callCount > 2) {
             // We have one call on hold and another active. End the active call and answer incoming.
-            menuAction = "releaseAndAnswer"
+            telephony.releaseAndAnswer()
         } else {
             // need to wait for the active call to change to held before hanging up
+            var call = telephony.incomingCall || telephony.silencedCall
+            call.answer()
             hangupHeld = true
-            menuAction = "answer"
         }
     }
 
@@ -65,15 +63,14 @@ IncomingCallViewBase {
 
     property var person: null
     property string remoteUid
-    property var incomingCallerDetails: telephony.incomingCallerDetails
-    onIncomingCallerDetailsChanged: {
-        if (incomingCallerDetails) {
-            person = incomingCallerDetails.person
-            remoteUid = incomingCallerDetails.remoteUid
+    property var callerDetails: main.state === "silenced" ? telephony.silencedCallerDetails : telephony.incomingCallerDetails
+    onCallerDetailsChanged: {
+        if (callerDetails) {
+            person = callerDetails.person
+            remoteUid = callerDetails.remoteUid
         }
     }
-
-    active: telephony.incomingCallerDetails ? !telephony.incomingCallerDetails.silenced : false
+    active: main.state === "silenced" || main.state === "incoming"
     onActiveChanged: {
         if (active) {
             // Only update this when we become active since we don't want to see UI changes during hide animation
@@ -82,10 +79,41 @@ IncomingCallViewBase {
         }
     }
 
+    numberDetail: main.getNumberDetail(person, remoteUid)
     phoneNumber: remoteUid
-    firstText: person ? person.primaryName : ""
-    secondText: person ? person.secondaryName : ""
+    firstText: {
+        if (person) {
+            if (isPortrait) {
+                return person.primaryName
+            } else {
+                return person.primaryName + " " + person.secondaryName
+            }
+        }
+        return ""
+    }
+    secondText: {
+        if (person && isPortrait) {
+            return person.secondaryName
+        }
+        return ""
+    }
     callCount: telephony.effectiveCallCount
     forwarded: telephony.incomingCall && telephony.incomingCall.isForwarded
     silenced: main.state === "silenced"
+    focus: true
+
+    Keys.onVolumeDownPressed: if (keysResource.acquired) telephony.silenceIncomingCall()
+    Keys.onVolumeUpPressed: if (keysResource.acquired) telephony.silenceIncomingCall()
+
+    Permissions {
+        autoRelease: true
+        applicationClass: "call"
+        enabled: main.state === "incoming"
+
+        Resource {
+            id: keysResource
+            type: Resource.ScaleButton
+            optional: true
+        }
+    }
 }

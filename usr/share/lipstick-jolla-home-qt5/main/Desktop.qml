@@ -114,7 +114,7 @@ QtObject {
 
     property bool weatherAvailable
     function refreshWeatherAvailable() {
-        weatherAvailable = fileUtils.exists("/usr/lib/qt5/qml/Sailfish/Weather/WeatherIndicator.qml")
+        weatherAvailable = fileUtils.exists(StandardPaths.resolveImport("Sailfish.Weather.WeatherIndicator"))
     }
 
     property FileUtils fileUtils: FileUtils { }

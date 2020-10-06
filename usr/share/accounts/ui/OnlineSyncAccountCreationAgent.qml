@@ -13,10 +13,13 @@ AccountCreationAgent {
     property alias username: authDialog.username
     property alias password: authDialog.password
 
+    property alias extraText: authDialog.extraText
     property alias serverAddress: authDialog.serverAddress
     property alias addressbookPath: authDialog.addressbookPath
     property alias calendarPath: authDialog.calendarPath
     property alias webdavPath: authDialog.webdavPath
+    property alias imagesPath: authDialog.imagesPath
+    property alias backupsPath: authDialog.backupsPath
     property alias showAdvancedSettings: authDialog.showAdvancedSettings
 
     property QtObject _accountCreator
@@ -25,13 +28,6 @@ AccountCreationAgent {
     initialPage: OnlineSyncAccountCreationDialog {
         id: authDialog
         acceptDestination: busyComponent
-        accountProvider: root.provider
-        services: root.services
-        addressbookPath: root.addressbookPath
-        calendarPath: root.calendarPath
-        webdavPath: root.webdavPath
-        usernameLabel: root.usernameLabel
-        showAdvancedSettings: root.showAdvancedSettings
     }
 
     Component {
@@ -58,6 +54,9 @@ AccountCreationAgent {
             "addressbookPath": authDialog.addressbookPath,
             "calendarPath": authDialog.calendarPath,
             "webdavPath": authDialog.webdavPath,
+            "imagesPath": authDialog.imagesPath,
+            "backupsPath": authDialog.backupsPath,
+            "ignoreSslErrors": authDialog.ignoreSslErrors,
             "servicesEnabledConfig": authDialog.servicesEnabledConfig
         }
         _accountCreator = accountCreatorComponent.createObject(root, props)
@@ -110,11 +109,13 @@ AccountCreationAgent {
 
                 OnlineSyncAccountSettingsDisplay {
                     id: settingsDisplay
+
                     anchors.top: header.bottom
                     accountManager: root.accountManager
                     accountProvider: root.accountProvider
                     autoEnableAccount: true
                     services: root.services
+                    allowCalendarRefresh: false
 
                     onAccountSaveCompleted: {
                         root.delayDeletion = false

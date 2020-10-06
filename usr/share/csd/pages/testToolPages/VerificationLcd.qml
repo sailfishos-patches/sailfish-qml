@@ -59,7 +59,7 @@ CsdTestPage {
             id: buttonText
             anchors.centerIn: parent
             width: parent.width - (Theme.paddingLarge * 2)
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             visible: false
             font.pixelSize: Theme.fontSizeLarge
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 – 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -17,7 +18,7 @@ BackgroundItem {
     property real rightMargin: Theme.paddingMedium
     property real iconSize: Theme.iconSizeMedium
 
-    contentHeight: Theme.itemSizeSmall
+    contentHeight: Theme.itemSizeExtraSmall
     height: contentItem.height
 
     InvitationQuery {
@@ -55,7 +56,7 @@ BackgroundItem {
         }
     }
 
-    Image {
+    Icon {
         id: defaultIcon
         x: leftMargin
         height: iconSize
@@ -63,7 +64,7 @@ BackgroundItem {
         anchors.verticalCenter: parent.verticalCenter
         sourceSize.width: width
         sourceSize.height: height
-        source: "image://theme/icon-l-date?" + (highlighted ? Theme.highlightColor : Theme.primaryColor)
+        source: "image://theme/icon-l-date"
     }
 
     Item {
@@ -84,7 +85,6 @@ BackgroundItem {
             //: Calendar invitation label
             //% "Calendar invitation"
             text: qsTrId("jolla-email-la-calendar_invitation")
-            color: highlighted ? Theme.highlightColor : Theme.primaryColor
             truncationMode: TruncationMode.Fade
         }
 
@@ -96,7 +96,6 @@ BackgroundItem {
             font.pixelSize: Theme.fontSizeTiny
 
             text: email ? statusText(email.calendarInvitationStatus) : ""
-            color: highlighted ? Theme.highlightColor : Theme.primaryColor
             truncationMode: TruncationMode.Fade
         }
 

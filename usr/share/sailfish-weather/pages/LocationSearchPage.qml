@@ -1,21 +1,22 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Weather 1.0
-import QtQuick.XmlListModel 2.0
 
 Page {
     id: page
 
-    property bool error: locationsModel.status === XmlListModel.Error
-    property bool loading: locationsModel.status === XmlListModel.Loading || loadingTimer.running
+    property bool error: locationsModel.status === Weather.Error
+    property bool loading: locationsModel.status === Weather.Loading || loadingTimer.running
     objectName: "LocationSearchPage"
 
     Timer { id: loadingTimer; interval: 600 }
+
     LocationsModel {
         id: locationsModel
-        onStatusChanged: if (status === XmlListModel.Loading) loadingTimer.restart()
+        onStatusChanged: if (status === Weather.Loading) loadingTimer.restart()
         onFilterChanged: delayedFilter.restart()
     }
+
     SilicaListView {
         id: locationListView
         currentIndex: -1
@@ -108,9 +109,9 @@ Page {
             height: Theme.itemSizeMedium
             onClicked: {
                 var location = {
-                    "locationId": model.locationId,
-                    "city": model.city,
-                    "state": model.state,
+                    "locationId": model.id,
+                    "city": model.name,
+                    "state": "",
                     "country": model.country
                 }
                 if (!savedWeathersModel.currentWeather
@@ -135,15 +136,14 @@ Page {
                 Label {
                     width: parent.width
                     textFormat: Text.StyledText
-                    text: Theme.highlightText(model.city, locationsModel.filter, Theme.highlightColor)
+                    text: Theme.highlightText(model.name, locationsModel.filter, Theme.highlightColor)
                     color: highlighted ? Theme.highlightColor : Theme.primaryColor
                     truncationMode: TruncationMode.Fade
                 }
                 Label {
                     width: parent.width
                     textFormat: Text.StyledText
-                    text: Theme.highlightText((model.state && model.state.length > 0 ? model.state + ", " : "")
-                                              + model.country, locationsModel.filter, Theme.highlightColor)
+                    text: Theme.highlightText(model.country, locationsModel.filter, Theme.highlightColor)
                     color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
                     font.pixelSize: Theme.fontSizeSmall
                     truncationMode: TruncationMode.Fade

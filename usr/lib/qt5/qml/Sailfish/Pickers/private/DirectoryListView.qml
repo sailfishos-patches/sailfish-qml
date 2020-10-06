@@ -42,14 +42,17 @@ SilicaListView {
     currentIndex: -1
     anchors.fill: parent
 
-    delegate: FileItem {
+    delegate: FileBackgroundItem {
         id: fileItem
+
         baseName: model.isDir ? model.fileName : model.baseName
         extension: model.isDir ? "" : (model.extension != "" ? "." + model.extension : "")
+        mimeType: model.mimeType
         size: model.size
+        isDir: model.isDir
+        created: model.created
         modified: model.modified
         selected: highlightSelected && model.isSelected
-        iconSource: model.mimeType ? Theme.iconForMimeType(model.mimeType) : ""
         visible: !isParentDirectory || listView.showParentDirectory
 
         Binding {

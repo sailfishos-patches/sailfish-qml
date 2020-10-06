@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 – 2019 Jolla Ltd.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -159,7 +160,7 @@ Page {
                 height: Theme.itemSizeLarge
                 IconButton {
                     anchors.centerIn: parent
-                    icon.source: "image://theme/icon-m-forward"
+                    icon.source: "image://theme/icon-m-message-forward"
                     onClicked: _moveClicked()
                 }
             }

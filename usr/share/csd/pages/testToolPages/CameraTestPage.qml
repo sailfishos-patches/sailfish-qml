@@ -206,10 +206,13 @@ CsdTestPage {
 
         // rotate and stretch to fit screen
         anchors.centerIn: parent
-        width: Screen.height
-        height: Screen.width
         sourceSize.height: 1.5 * height
-        rotation: 90
+        rotation: camera.position === Camera.FrontFace
+                ? camera.orientation
+                : -camera.orientation
+
+        width:  rotation % 180 ? Screen.height : Screen.width
+        height: rotation % 180 ? Screen.width  : Screen.height
         fillMode: Image.PreserveAspectFit
 
         // don't load cached versions of previously deleted images

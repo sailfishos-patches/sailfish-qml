@@ -64,7 +64,7 @@ Item {
         color: Theme.highlightColor
         visible: main.state === 'disconnected' || main.state === 'null'
         font.pixelSize: Theme.fontSizeSmall
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         horizontalAlignment: Qt.AlignHCenter
         anchors {
             top: stateLabel.bottom

@@ -24,9 +24,6 @@ Page {
         id: combinedInboxModel
 
         folderAccessor: emailAgent.combinedInboxAccessor()
-        currentDate: app.today
-
-        onCurrentDateChanged: Utils.updateForDateChange(combinedInboxModel, messageListView)
     }
 
     Binding {

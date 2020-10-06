@@ -94,6 +94,7 @@ ApplicationWindow {
 
         onRequestAccepted: lipstickService.call("replyToAgentRequest", [requestId, BluezQt.PendingCall.NoError, passkey])
         onRequestRejected: lipstickService.call("replyToAgentRequest", [requestId, BluezQt.PendingCall.AuthenticationRejected, ""])
+        onInitiatiatedRequestCanceled: lipstickService.call("cancelPairWithDevice", [address])
     }
 
     DBusInterface {

@@ -10,6 +10,7 @@ QtObject {
     property alias connectionState: networkManager.state
     property alias defaultRoute: networkManager.defaultRoute
     property alias connectedWifi: networkManager.connectedWifi
+    property alias connectingWifi: networkManager.connectingWifi
 
     property alias offlineMode: networkManager.offlineMode
 

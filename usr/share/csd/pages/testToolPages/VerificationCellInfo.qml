@@ -7,22 +7,29 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.ofono 1.0
+import org.nemomobile.systemsettings 1.0
 
 AllModemsPage {
     id: page
 
+    property bool allModemsWithSimsHaveCells
     property int cellCount
     property bool supported
 
     function updateCellCount() {
+        var modemsWithCells = 0
         var count = 0
         for (var i = 0; i<availableModems.length; i++) {
             var item = modemList.itemAt(i)
             if (item) {
                 count += item.cellCount
+                if (item.cellCount) {
+                    modemsWithCells += 1
+                }
             }
         }
         cellCount = count
+        allModemsWithSimsHaveCells = (modemsWithCells === Math.min(presentSimCount, availableModems.length))
     }
 
     onAvailableModemsChanged: updateCellCount()
@@ -31,6 +38,19 @@ AllModemsPage {
         id: startTimer
         interval: 2000
         running: true
+        onTriggered: determineTestResult()
+    }
+
+    function determineTestResult() {
+        setTestResult((cellCount > 0) && allModemsWithSimsHaveCells && locationSettings.cellPositioningEnabled)
+        testCompleted(false)
+    }
+
+    LocationSettings {
+        id: locationSettings
+        property bool cellPositioningEnabled: locationSettings.locationEnabled &&
+                                              ((locationSettings.hereAvailable && locationSettings.hereState == LocationSettings.OnlineAGpsEnabled) ||
+                                              (locationSettings.mlsAvailable && locationSettings.mlsEnabled))
     }
 
     SilicaFlickable {
@@ -62,12 +82,13 @@ AllModemsPage {
                     running: resultsItem.busy
                 }
 
-                Label {
+                ResultLabel {
                     id: resultLabel
+                    result: (cellCount > 0) && allModemsWithSimsHaveCells && locationSettings.cellPositioningEnabled
                     anchors.verticalCenter: parent.verticalCenter
                     opacity: resultsItem.busy ? 0 : 1
                     Behavior on opacity { FadeAnimation {}}
-                    text: supported ?
+                    text: result ?
                         //% "%n cell(s) found"
                         qsTrId("csd-la-cells_found", cellCount) :
                         //% "Cell positioning is unavailable"

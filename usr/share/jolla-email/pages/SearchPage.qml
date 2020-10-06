@@ -43,11 +43,8 @@ Page {
     EmailMessageListModel {
         id: messageListModel
 
-        currentDate: app.today
         limit: app.defaultMessageListLimit
         folderAccessor: emailAgent.accountWideSearchAccessor(accountId)
-
-        onCurrentDateChanged: Utils.updateForDateChange(messageListModel, listView)
     }
 
     SilicaListView {

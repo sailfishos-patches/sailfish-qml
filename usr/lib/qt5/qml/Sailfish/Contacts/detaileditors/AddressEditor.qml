@@ -17,6 +17,16 @@ MultiTypeFieldEditor {
         }
     }
 
+    function _testHasAddressContent() {
+        for (var i = 0; i < detailEditors.count; ++i) {
+            var delegate = detailEditors.itemAt(i)
+            if (delegate && testHasContent(delegate.addressFields)) {
+                return true
+            }
+        }
+        return false
+    }
+
     //: Add an address for this contact
     //% "Add address"
     fieldAdditionText: qsTrId("contacts-bt-contact_add_address")
@@ -48,6 +58,7 @@ MultiTypeFieldEditor {
         property int addressIndex: model.index
         property int addressSubType: model.subType === undefined ? -1 : model.subType
         property int addressLabel: model.label
+        property bool aboutToDelete
 
         function forceActiveFocus(delayInterval) {
             if (addressFieldsRepeater.count > 0) {
@@ -127,13 +138,17 @@ MultiTypeFieldEditor {
             opacity: addressHeaderLabel.opacity
 
             onClicked: {
+                addressDelegate.aboutToDelete = true
                 root.detailModel.userModified = true
                 root.detailModel.setProperty(model.index, "value", "")
                 addressDelegate.addressFields.clearAllFields()
+                root.hasContent = false
 
                 if (!root.animateAndRemove(model.index, addressDelegate, addAddressButton.animationDuration)) {
                     addAddressButton.offscreen = false
                 }
+
+                root.hasContent = root._testHasAddressContent()
             }
         }
 
@@ -224,6 +239,10 @@ MultiTypeFieldEditor {
                     editor: root
 
                     onModified: {
+                        if (addressDelegate.aboutToDelete) {
+                            return
+                        }
+
                         var wasEmpty = (model.value.length === 0 && addressFields.allFieldsEmpty())
                         addressFields.setProperty(index, "value", root.detailModel.rightTrim(value))
 
@@ -231,6 +250,8 @@ MultiTypeFieldEditor {
                         if (wasEmpty && value.length > 0 && addressDelegate.addressIndex === root.detailModel.count - 1) {
                             root.addEmptyField()
                         }
+
+                        root.hasContent = value.length > 0 || root._testHasAddressContent()
                     }
                 }
             }

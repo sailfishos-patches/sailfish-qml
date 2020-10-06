@@ -1,4 +1,5 @@
-import QtQuick 2.0
+import QtQuick 2.6
+import Sailfish.Silica 1.0
 import org.nemomobile.contacts 1.0
 import org.nemomobile.commhistory 1.0
 import Sailfish.Contacts 1.0
@@ -154,18 +155,6 @@ Item {
     }
 
     function _addFakePersonAccounts(person, phoneNumbers, imAccounts) {
-        var name = ""
-        if (phoneNumbers.length)
-            name = phoneNumbers[0]
-        else if (imAccounts.length)
-            name = imAccounts[0].remoteUid
-
-        person.nicknameDetails = [ {
-            'type': Person.NicknameType,
-            'nickname': name,
-            'index': -1
-        } ]
-
         if (phoneNumbers.length) {
             var numbers = person.phoneDetails || []
             for (var i = 0; i < phoneNumbers.length; i++) {
@@ -387,7 +376,7 @@ Item {
                 conversationTitle += shortName
 
                 if (i !== (peopleList.length - 1)) {
-                    conversationTitle += ", "
+                    conversationTitle += Format.listSeparator
                 }
             }
         }

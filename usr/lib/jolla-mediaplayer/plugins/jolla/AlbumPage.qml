@@ -11,8 +11,6 @@ Page {
     property var media
 
     Loader {
-        id: coverLoader
-
         active: albumPage.isLandscape && coverArt.source != ""
         anchors {
             top: parent.top
@@ -27,7 +25,8 @@ Page {
     CoverArt {
         id: coverArt
 
-        source: albumArtProvider.albumArt(media.title, media.author)
+        // re-evaluate when state changes
+        source: (albumArtProvider.extracting || true) ? albumArtProvider.albumArt(media.title, media.author) : ""
     }
 
     MediaPlayerListView {
@@ -43,7 +42,6 @@ Page {
                 //% "Unknown artist"
                 var unknownArtist = qsTrId("mediaplayer-la-unknown-artist")
 
-                // tracker-urn is abused with the id of the author
                 return AudioTrackerHelpers.getSongsQuery(albumHeader.searchText,
                                                          {"unknownArtist": unknownArtist,
                                                              "unknownAlbum": unknownAlbum,
@@ -55,8 +53,6 @@ Page {
         contentWidth: albumPage.width
 
         PullDownMenu {
-            id: album
-
             MenuItem {
                 //: Shuffle all menu entry in album page
                 //% "Shuffle all"
@@ -67,8 +63,6 @@ Page {
             NowPlayingMenuItem { }
 
             MenuItem {
-                id: menuItemSearch
-
                 //: Search menu entry
                 //% "Search"
                 text: qsTrId("mediaplayer-me-search")
@@ -124,7 +118,6 @@ Page {
                 id: menuComponent
 
                 ContextMenu {
-
                     width: view.contentWidth
 
                     MenuItem {

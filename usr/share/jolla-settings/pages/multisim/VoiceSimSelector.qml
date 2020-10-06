@@ -11,10 +11,11 @@ SimSelectorBase {
     id: root
 
     readonly property bool alwaysAsk: Telephony.voiceSimUsageMode === Telephony.AlwaysAskSim
+    property bool admin
 
     width: parent.width
     height: comboBox.height
-    enabled: active
+    enabled: active && admin
     controlType: SimManagerType.Voice
     modemManager.objectName: "VoiceSimSelector"
 

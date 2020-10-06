@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 – 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -20,14 +21,23 @@ Column {
     property bool showLoadImages
     property bool isOutgoing
 
+    property bool open: true
+
+    property alias contentX: content.x
+    readonly property alias contentY: header.height
+
+    property alias contentItem: buttonsColumn
+    property alias heightBehaviorEnabled: heightBehavior.enabled
+
     property QtObject event
     property QtObject occurrence
 
     readonly property bool inlineInvitation: email && email.calendarInvitationSupportsEmailResponses
 
     signal loadImagesClicked
+    signal loadImagesCloseClicked
 
-    spacing: Theme.paddingMedium
+    signal clicked
 
     function _emailRecipients() {
         var recipientsDisplayName = email.recipientsDisplayName.toString()
@@ -39,131 +49,137 @@ Column {
                   qsTrId("jolla-email-la-no_recipient")
     }
 
-    PageHeader {
-        id: pageHeader
+    BackgroundItem {
+        id: headerBackground
 
-        title: email ? (isOutgoing ? _emailRecipients() : email.fromDisplayName) : ""
-        _titleItem.anchors.right: sensitivityImage.visible
-                                  ? sensitivityImage.left
-                                  : (priorityImage.visible ? priorityImage.left : pageHeader.right)
-        _titleItem.anchors.rightMargin: (priorityImage.visible || sensitivityImage.visible)
-                                        ? Theme.paddingSmall : Theme.horizontalPageMargin
-        Image {
-            id: priorityImage
-            visible: source != ""
-            anchors {
-                verticalCenter: pageHeader._titleItem.verticalCenter
-                verticalCenterOffset: Theme.paddingSmall / 2
-                right: parent.right
-                rightMargin: Theme.horizontalPageMargin - Theme.paddingMedium
-            }
-            source: email ? Utils.priorityIcon(email.priority) : ""
-        }
-        Image {
-            id: sensitivityImage
-            visible: inlineInvitation && event &&
-                     (event.secrecy === CalendarEvent.SecrecyPrivate ||
-                      event.secrecy === CalendarEvent.SecrecyConfidential)
-            anchors {
-                verticalCenter: pageHeader._titleItem.verticalCenter
-                verticalCenterOffset: Theme.paddingSmall / 2
-                right: priorityImage.visible ? priorityImage.left : parent.right
-                rightMargin: priorityImage.visible ? Theme.paddingSmall : Theme.horizontalPageMargin
-            }
-            source: visible ? "image://theme/icon-s-secure" : ""
-        }
-    }
+        width: root.width
+        height: header.height
 
-    ImportModel {
-        icsString: inlineInvitation ? email.calendarInvitationBody : ""
-        onCountChanged: {
-            if (count > 0) {
-                root.event = getEvent(0)
-                root.occurrence = root.event ? root.event.nextOccurrence() : null
-            } else {
-                root.event = null
-                root.occurrence = null
-            }
-        }
-    }
+        onClicked: root.clicked()
 
-    Loader {
-        active: inlineInvitation && root.event != null
-        width: parent.width
-        sourceComponent: CalendarEventView {
-            event: root.event
-            occurrence: root.occurrence
-            showDescription: false
-            onEventChanged: {
-                if (event && event.organizerEmail !== email.fromAddress
-                        && event.organizerEmail.length > 0
-                        && event.organizer.length > 0) {
-                    var organizerAsList =
-                            [
-                                { isOrganizer: true, name: event.organizer }
-                            ];
-                    setAttendees(organizerAsList)
+        SilicaControl {
+            width: headerBackground.width
+            height: header.height
+
+            highlighted: undefined
+
+            palette {
+                primaryColor: headerBackground.palette.highlightColor
+                secondaryColor: headerBackground.palette.secondaryHighlightColor
+                highlightColor: headerBackground.palette.primaryColor
+                secondaryHighlightColor: headerBackground.palette.secondaryColor
+            }
+
+            PageHeader {
+                id: header
+
+                title: email ? (isOutgoing ? _emailRecipients() : email.fromDisplayName) : ""
+                description: email ? email.subject : ""
+                _titleItem.anchors.right: sensitivityImage.visible
+                                          ? sensitivityImage.left
+                                          : (priorityImage.visible ? priorityImage.left : header.right)
+                _titleItem.anchors.rightMargin: (priorityImage.visible || sensitivityImage.visible)
+                                                    ? Theme.paddingSmall : Theme.horizontalPageMargin
+                ImportModel {
+                    icsString: inlineInvitation ? email.calendarInvitationBody : ""
+                    onCountChanged: {
+                        if (count > 0) {
+                            root.event = getEvent(0)
+                            root.occurrence = root.event ? root.event.nextOccurrence() : null
+                        } else {
+                            root.event = null
+                            root.occurrence = null
+                        }
+                    }
+                }
+
+                Image {
+                    id: priorityImage
+                    visible: source != ""
+                    anchors {
+                        verticalCenter: header._titleItem.verticalCenter
+                        verticalCenterOffset: Theme.paddingSmall / 2
+                        right: parent.right
+                        rightMargin: Theme.horizontalPageMargin - Theme.paddingMedium
+                    }
+                    source: email ? Utils.priorityIcon(email.priority) : ""
+                }
+                Image {
+                    id: sensitivityImage
+                    visible: inlineInvitation && event &&
+                             (event.secrecy === CalendarEvent.SecrecyPrivate ||
+                              event.secrecy === CalendarEvent.SecrecyConfidential)
+                    anchors {
+                        verticalCenter: header._titleItem.verticalCenter
+                        verticalCenterOffset: Theme.paddingSmall / 2
+                        right: priorityImage.visible ? priorityImage.left : parent.right
+                        rightMargin: priorityImage.visible ? Theme.paddingSmall : Theme.horizontalPageMargin
+                    }
+                    source: visible ? "image://theme/icon-s-secure" : ""
                 }
             }
         }
     }
 
-    Column {
-        width: parent.width
-        AttachmentRow {
+    SilicaControl {
+        id: content
+
+        palette.colorScheme: Theme.DarkOnLight
+
+        width: root.width - x
+        height: root.open ? buttonsColumn.implicitHeight : 0
+
+        clip: heightAnimation.running
+        visible: root.open || heightAnimation.running
+
+        Behavior on height {
+            id: heightBehavior
+            SmoothedAnimation { id: heightAnimation; easing.type: Easing.InOutQuad; duration: 100 }
+        }
+
+        Rectangle {
+            width: root.width
+            height: buttonsColumn.implicitHeight
+
+            color: "#f3f0f0"
+        }
+
+        Column {
+            id: buttonsColumn
             width: parent.width
-            visible: email && email.numberOfAttachments > 0
-            attachmentsModel: root.attachmentsModel
-            emailMessage: email
-        }
 
-        CalendarDelegate {
-            visible: email && email.hasCalendarInvitation && !inlineInvitation
-            email: root.email
-        }
+            LoadImagesItem {
+                width: root.width
 
-        Loader {
-            visible: email && email.signatureStatus != EmailMessage.NoDigitalSignature
-            // SignatureItem.qml is not installed by default.
-            active: root.email && emailAppCryptoEnabled
-            source: "SignatureItem.qml"
-            onItemChanged: if (item) item.email = root.email
-            width: parent.width
-        }
-    }
+                visible: root.showLoadImages
 
-    LoadImagesItem {
-        visible: showLoadImages
-        onClicked: loadImagesClicked()
-    }
-
-    InvitationResponseButtons {
-        subject: root.event ? root.event.displayLabel : ""
-        width: parent.width
-        visible: inlineInvitation
-        onCalendarInvitationResponded: {
-            var emailResponse = EmailAgent.InvitationResponseUnspecified
-            switch (response) {
-            case CalendarEvent.ResponseAccept:
-                emailResponse = EmailAgent.InvitationResponseAccept
-                break
-            case CalendarEvent.ResponseTentative:
-                emailResponse = EmailAgent.InvitationResponseTentative
-                break
-            case CalendarEvent.ResponseDecline:
-                emailResponse = EmailAgent.InvitationResponseDecline
-                break
-            default:
-                return
+                onClicked: root.loadImagesClicked()
+                onCloseClicked: root.loadImagesCloseClicked()
             }
-            emailAgent.respondToCalendarInvitation(email.messageId, emailResponse, responseSubject)
-            pageStack.pop()
-        }
-    }
 
-    Item {
-        width: parent.width
-        height: 1
-        visible: inlineInvitation
+            AttachmentRow {
+                width: root.width
+
+                visible: email && email.numberOfAttachments > 0
+                attachmentsModel: root.attachmentsModel
+                emailMessage: email
+            }
+
+            Loader {
+                visible: email && email.signatureStatus != EmailMessage.NoDigitalSignature
+                // SignatureItem.qml is not installed by default.
+                active: root.email && emailAppCryptoEnabled
+                source: "SignatureItem.qml"
+                onItemChanged: if (item) item.email = root.email
+                width: parent.width
+            }
+
+            CalendarDelegate {
+                width: root.width
+
+                visible: email && email.hasCalendarInvitation && !inlineInvitation
+                email: root.email
+            }
+        }
     }
 }

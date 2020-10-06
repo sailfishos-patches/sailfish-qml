@@ -46,8 +46,7 @@ TutorialPage {
             return
 
         lessons = [ "HomeLesson.qml", "LauncherLesson.qml",
-                   "SwipeLesson.qml", "PageStackLesson.qml", "PulleyLesson.qml",
-                   Screen.sizeCategory <= Screen.Medium ? "PhoneCallLesson.qml" : "TabletAlarmLesson.qml"]
+                   "SwipeLesson.qml", "PageStackLesson.qml", "PulleyLesson.qml"]
     }
 
     function lessonCompleted(pauseDuration) {

@@ -24,6 +24,7 @@ Column {
     property bool isNewAccount
     property bool pushCapable
     property bool accountIsReadOnly
+    property bool accountIsLimited
     property bool accountIsProvisioned
     property string outgoingUsername
     property string incomingUsername
@@ -299,7 +300,7 @@ Column {
         accountProvider: root.accountProvider
         accountUserName: account.defaultCredentialsUserName
         accountDisplayName: account.displayName
-        accountEnabledReadOnly: root.accountIsReadOnly
+        accountEnabledReadOnly: root.accountIsReadOnly || root.accountIsLimited
         accountIsProvisioned: root.accountIsProvisioned
     }
 
@@ -368,9 +369,6 @@ Column {
         }
 
         SyncScheduleOptions {
-            //: Click to show options on how often emails should be fetched from the server
-            //% "Sync emails"
-            label: qsTrId("settings-accounts-la-sync_emails")
             schedule: root._emailSyncOptions ? root._emailSyncOptions.schedule : null
             isAlwaysOn: root._emailSyncOptions ? root._emailSyncOptions.syncExternallyEnabled : false
             showAlwaysOn: root.pushCapable
@@ -465,7 +463,6 @@ Column {
                 }
             } else if (status === Account.Synced) {
                 // success
-                folderSyncSettings.applyFolderSyncPolicy()
                 if (!root.isNewAccount && settings) {
                     if (incomingUsername != settings.incomingUsername || settings.incomingPasswordEdited) {
                         needToUpdateIncoming = true

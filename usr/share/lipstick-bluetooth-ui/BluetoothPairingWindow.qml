@@ -149,6 +149,7 @@ SystemDialog {
             id: content
 
             width: parent.width
+            spacing: Theme.paddingMedium
 
             states: [
                 State {
@@ -156,6 +157,10 @@ SystemDialog {
                     PropertyChanges {
                         target: busyIndicator
                         running: true
+                    }
+                    PropertyChanges {
+                        target: cancelButton
+                        visible: true
                     }
                 },
                 State {

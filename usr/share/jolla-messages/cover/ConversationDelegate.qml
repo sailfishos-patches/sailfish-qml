@@ -41,7 +41,7 @@ Item {
 
                 width: message.width - 2*(Theme.paddingMedium + Theme.paddingSmall)
                 font.pixelSize: extraSmall ? Theme.fontSizeExtraSmall : Theme.fontSizeSmall
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
             }
 
             delegate: Item {

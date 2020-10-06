@@ -161,7 +161,7 @@ NotificationGroupMember {
             visible: _displayBody && _maxBodyLines > 0
             text: bodyText
             textFormat: Text.PlainText
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             maximumLineCount: _maxBodyLines
             truncationMode: TruncationMode.Elide
             font.pixelSize: Theme.fontSizeExtraSmall

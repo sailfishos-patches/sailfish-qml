@@ -4,6 +4,7 @@ import Sailfish.Silica.private 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.dbus 2.0
 import org.nemomobile.devicelock 1.0
+import org.nemomobile.systemsettings 1.0
 
 Page {
     id: page
@@ -104,6 +105,10 @@ Page {
 
     WindowGestureOverride {
         active: fingerprintSettings.acquiring
+    }
+
+    UserInfo {
+        id: userInfo
     }
 
     SilicaFlickable {
@@ -366,7 +371,7 @@ Page {
 
                 automaticCheck: false
                 checked: securityCodeSettings.set
-                visible: !securityCodeSettings.mandatory && (!deviceLockSettings.homeEncrypted || !securityCodeSettings.set)
+                visible: !securityCodeSettings.mandatory && ((!deviceLockSettings.homeEncrypted && userInfo.alone) || !securityCodeSettings.set)
                 onClicked: {
                     if (securityCodeSettings.set) {
                         securityCodeSettings.clear()

@@ -2,11 +2,14 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0 as Telephony
 import Sailfish.Settings.Networking 1.0
+import Sailfish.AccessControl 1.0
 import com.jolla.settings.system 1.0
 import Nemo.Notifications 1.0
 
 Page {
     id: root
+
+    readonly property bool admin: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")
 
     SilicaFlickable {
         anchors.fill: parent
@@ -39,7 +42,7 @@ Page {
 
                 model: voiceSimSelector.modemManager.modemSimModel
                 delegate: TextSwitch {
-                    enabled: voiceSimSelector.valid
+                    enabled: admin && voiceSimSelector.valid
                     busy: !voiceSimSelector.valid
                     automaticCheck: false
                     text: longSimDescription
@@ -78,6 +81,7 @@ Page {
 
             VoiceSimSelector {
                 id: voiceSimSelector
+                admin: root.admin
             }
 
             Item {

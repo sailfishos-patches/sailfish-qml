@@ -84,6 +84,8 @@ SlideshowView {
 
             VideoPoster {
                 onClicked: overlay.active = !overlay.active
+                onDoubleClicked: overlay.seekForward()
+
                 onTogglePlay: {
                     playerLoader.active = true
                     player.togglePlay()
@@ -110,13 +112,12 @@ SlideshowView {
         active: false
         width: itemWidth
         height: itemHeight
-        sourceComponent: VideoOutput {
-            property alias player: mediaPlayer
-            visible: player.playbackState != MediaPlayer.StoppedState
-            source: GalleryMediaPlayer {
+        sourceComponent: GalleryVideoOutput {
+            player: GalleryMediaPlayer {
                 id: mediaPlayer
-                active: currentItem && !currentItem.isImage
+
                 autoPlay: root.autoPlay
+                active: currentItem && !currentItem.isImage && Qt.application.active
                 source: active ? currentItem.source : ""
                 onPlayingChanged: {
                     if (playing && overlay.active) {
@@ -124,20 +125,8 @@ SlideshowView {
                         overlay.active = false
                     }
                 }
-                onHasErrorChanged: {
-                    if (error === MediaPlayer.FormatError) {
-                        //: %1 is replaced with specific codec
-                        //% "Unsupported codec: %1"
-                        errorNotification.previewBody = qsTrId("gallery-la-unsupported-codec").arg(errorString)
-                        errorNotification.publish()
-                    }
-                }
                 onLoadedChanged: if (loaded) playerLoader.anchors.centerIn = currentItem
-                onStatusChanged: {
-                    if (status === MediaPlayer.InvalidMedia) {
-                        root.currentItem.item.displayError()
-                    }
-                }
+                onDisplayError: root.currentItem.item.displayError()
             }
         }
     }

@@ -6,13 +6,6 @@ import Sailfish.Settings.Networking 1.0
 
 Column {
     function setProperties(providerProperties) {
-        var getProperty = function(name) {
-            if (providerProperties) {
-                return providerProperties[name] || ''
-            }
-            return ''
-        }
-
         vpncIkeAuthMode.setValue(getProperty('VPNC.IKE.Authmode'))
         vpncIkeDhGroup.setValue(getProperty('VPNC.IKE.DHGroup'))
         vpncPfsDhGroup.setValue(getProperty('VPNC.PFS'))
@@ -29,13 +22,6 @@ Column {
     }
 
     function updateProperties(providerProperties) {
-        var updateProvider = function(name, value) {
-            // If the value is empty/default, do not include the property in the configuration
-            if (value != '' && value != "_default") {
-                providerProperties[name] = value
-            }
-        }
-
         updateProvider('VPNC.IKE.Authmode', vpncIkeAuthMode.selection)
         updateProvider('VPNC.IKE.DHGroup', vpncIkeDhGroup.selection)
         updateProvider('VPNC.PFS', vpncPfsDhGroup.selection)

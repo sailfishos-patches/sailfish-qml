@@ -9,6 +9,7 @@ Page {
 
     signal calendarClicked(string uid)
     property string selectedCalendarUid
+    property bool hideExcludedCalendars
 
     SilicaFlickable {
         anchors.fill: parent
@@ -36,6 +37,7 @@ Page {
                 delegate: BackgroundItem {
                     height: Math.max(calendarDelegate.height + 2*Theme.paddingSmall, Theme.itemSizeMedium)
                     onClicked: root.calendarClicked(model.uid)
+                    visible: !model.excluded || !hideExcludedCalendars
 
                     CalendarSelectorDelegate {
                         id: calendarDelegate

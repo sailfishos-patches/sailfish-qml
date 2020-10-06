@@ -476,7 +476,7 @@ PinchArea {
             width: overlay._menuWidth
             height: width
             visible: Settings.mode.flashValues.length > 0
-            y: topRow.dragY(flashMenu.currentItem.y)
+            y: flashMenu.currentItem != null ? topRow.dragY(flashMenu.currentItem.y) : 0
 
             Image {
                 anchors.centerIn: parent

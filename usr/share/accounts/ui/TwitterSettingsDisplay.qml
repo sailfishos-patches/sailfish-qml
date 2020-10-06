@@ -81,7 +81,7 @@ StandardAccountSettingsDisplay {
                     } else {
                         root.account.disableWithService(model.serviceName)
                     }
-                    root._hasEnabledService = root.testHasCheckedSwitch(syncServicesRepeater)
+                    root._hasEnabledService = AccountsUtil.countCheckedSwitches(syncServicesRepeater) > 0
                 }
             }
         }

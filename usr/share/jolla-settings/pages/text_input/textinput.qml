@@ -284,7 +284,7 @@ Page {
                             }
                         }
                     }
-                    return result.join(", ")
+                    return result.join(Format.listSeparator)
                 }
 
                 onClicked: pageStack.animatorPush(enabledKeyboardsPage)

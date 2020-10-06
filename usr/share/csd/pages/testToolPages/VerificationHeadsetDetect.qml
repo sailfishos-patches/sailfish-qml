@@ -36,7 +36,7 @@ CsdTestPage {
         visible: page.done
         anchors.centerIn: parent
         color: "green"
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         width: parent.width-(2*Theme.paddingLarge)
         font.pixelSize: Theme.fontSizeLarge
         //% "Headset detection test passed!"
@@ -47,7 +47,7 @@ CsdTestPage {
         visible: page.started && !page.done
         anchors.centerIn: parent
         color: "green"
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         width: parent.width-(2*Theme.paddingLarge)
         font.pixelSize: Theme.fontSizeLarge
         text: detect.wiredOutputConnected ? //% "Disconnect headset plug from device"
@@ -67,7 +67,7 @@ CsdTestPage {
         visible: page.failed
         anchors.centerIn: parent
         color: "red"
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         font.pixelSize: Theme.fontSizeLarge
         width: parent.width-(2*Theme.paddingLarge)
         //% "Headset detection test failed!"

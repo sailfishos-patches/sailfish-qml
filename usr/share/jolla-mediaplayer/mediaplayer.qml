@@ -4,8 +4,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Media 1.0
 import com.jolla.mediaplayer 1.0
-import org.nemomobile.thumbnailer 1.0
-import org.nemomobile.dbus 2.0
+import org.nemomobile.thumbnailer 1.0 // register image provider
+import Nemo.DBus 2.0
 import "cover"
 import "pages"
 
@@ -63,7 +63,6 @@ ApplicationWindow {
     }
 
     MediaKeys {
-        id: mediaKeys
         active: AudioPlayer.active && !root.mediaKeyOverride
     }
 
@@ -82,6 +81,13 @@ ApplicationWindow {
 
     AlbumArtProvider {
         id: albumArtProvider
+        songsModel: allSongModel
+    }
+
+    GriloTrackerModel {
+        id: allSongModel
+
+        query: AudioTrackerHelpers.getSongsQuery("", {"unknownArtist": "", "unknownAlbum": "" })
     }
 
     PlaylistManager {

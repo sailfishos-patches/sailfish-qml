@@ -1,5 +1,13 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.AccessControl 1.0
 import com.jolla.messages.settings.translations 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.notifications 1.0
@@ -34,6 +42,7 @@ Column {
         placeholderText: label
         text: ofonoMessageManager.serviceCenterAddress
         inputMethodHints: Qt.ImhDialableCharactersOnly
+        visible: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")
         EnterKey.iconSource: "image://theme/icon-m-enter-close"
         EnterKey.onClicked: focus = false
         onActiveFocusChanged: {
@@ -50,6 +59,7 @@ Column {
         //% "Request report when recipient receives the SMS"
         description: qsTrId("settings_messages-ls-delivery_reports_description")
         checked: ofonoMessageManager.useDeliveryReports
+        visible: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")
         onCheckedChanged: {
             busy = true
             reportsFailedMessage.visible = false

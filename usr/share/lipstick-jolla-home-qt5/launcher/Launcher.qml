@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2013 Jolla Ltd.
- * Copyright (c) 2019 Open Mobile Platform LLC.
+ * Copyright (c) 2013 - 2018 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -69,6 +69,29 @@ SilicaListView {
         contentYAnimation.stop()
     }
 
+    function findClosestDelegate(x, y) {
+        // Adjust here for center to do less calculations later
+        var x = x - launcher.cellWidth/2
+        var y = y - launcher.cellHeight/2
+        var closest = null;
+        // Square of Euclidean distance
+        var distance = Infinity;
+        var delegates = launcher.contentItem.children
+        for (var i = 0; i < delegates.length; i++) {
+            var delegate = delegates[i]
+            if (!delegate.contentItem || delegate.contentItem.objectName !== "EditableGridDelegate_contentItem") {
+                // In addition to EditableGridDelegates there are other items that we don't want
+                continue
+            }
+            var d = Math.pow(x - delegate.x, 2) + Math.pow(y - delegate.y, 2)
+            if (d < distance) {
+                closest = delegate
+                distance = d
+            }
+        }
+        return closest
+    }
+
     NumberAnimation {
         id: contentYAnimation
 
@@ -116,10 +139,11 @@ SilicaListView {
         }
 
         onPressAndHold: {
-            if (Lipstick.compositor.launcherLayer.active &&
+            if (Lipstick.compositor.launcherLayer.active && !launcher.launcherEditMode &&
                 Math.abs(mouse.x - pressX) < Theme.startDragDistance &&
                 Math.abs(mouse.y - pressY) < Theme.startDragDistance) {
                 launcher.setEditMode(true)
+                findClosestDelegate(mouse.x, mouse.y).animateScaleUp()
             }
         }
         onClicked: if (launcher.launcherEditMode) launcher.setEditMode(false)
@@ -145,11 +169,15 @@ SilicaListView {
 
                     // Currently desktop-file path is good app grid item
                     // identifier. However, this is a subject to change in future.
-                    var blacklist = []
+                    var blacklist = AppBlacklist.list
                     var path = "/usr/share/applications"
                     if (!developerModeEnabled.value ||
                         !AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")) {
                         blacklist.push(path + "/fingerterm.desktop")
+                    }
+
+                    if (!AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")) {
+                        blacklist.push(path + "/store-client.desktop")
                     }
 
                     if (!AccessPolicy.cameraEnabled) {

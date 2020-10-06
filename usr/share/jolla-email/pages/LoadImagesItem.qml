@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 – 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -10,27 +11,42 @@ import Sailfish.Silica 1.0
 BackgroundItem {
     id: loadImagesArea
 
+    signal closeClicked()
+
     height: Theme.itemSizeExtraSmall
 
-    Image {
+    Icon {
         id: fileImage
         x: Theme.horizontalPageMargin
         anchors.verticalCenter: parent.verticalCenter
-        source: "image://theme/icon-m-file-image" + (loadImagesArea.highlighted ? ("?" + Theme.highlightColor) : "")
+        source: "image://theme/icon-m-file-image"
     }
 
     Label {
         anchors {
             left: fileImage.right
-            leftMargin: Theme.paddingMedium
-            right: parent.right
-            rightMargin: Theme.horizontalPageMargin
+            right: closeButton.left
+            margins: Theme.paddingMedium
         }
-        height: Theme.itemSizeExtraSmall
+        height: loadImagesArea.height
+
         //% "Load images"
         text: qsTrId("jolla-email-la-load_images")
+        font.pixelSize: Theme.fontSizeSmall
         verticalAlignment: Text.AlignVCenter
-        color: loadImagesArea.highlighted ? Theme.highlightColor : Theme.primaryColor
         truncationMode: TruncationMode.Fade
+    }
+
+    IconButton {
+        id: closeButton
+
+        icon.source: "image://theme/icon-m-input-remove"
+
+        width: loadImagesArea.height
+        height: loadImagesArea.height
+
+        x: loadImagesArea.width - width - Theme.horizontalPageMargin
+
+        onClicked: loadImagesArea.closeClicked()
     }
 }

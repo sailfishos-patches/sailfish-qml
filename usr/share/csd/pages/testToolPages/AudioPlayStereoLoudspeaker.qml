@@ -60,7 +60,7 @@ CsdTestPage {
         anchors.centerIn: parent
         font.pixelSize: Theme.fontSizeLarge
         width: parent.width - 2*Theme.horizontalPageMargin
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         //% "Was voice speaking 'left speaker' from left loudspeaker and 'right speaker' from right loudspeaker?"
         text: qsTrId("csd-la-is_music_playing_from_stereo_loudspeaker")
     }

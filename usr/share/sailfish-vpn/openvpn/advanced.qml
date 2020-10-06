@@ -6,13 +6,6 @@ import Sailfish.Settings.Networking 1.0
 
 Column {
     function setProperties(providerProperties) {
-        var getProperty = function(name) {
-            if (providerProperties) {
-                return providerProperties[name] || ''
-            }
-            return ''
-        }
-
         openVpnCert.path = getProperty('OpenVPN.Cert')
         openVpnKey.path = getProperty('OpenVPN.Key')
         openVpnPort.text = getProperty('OpenVPN.Port')
@@ -31,13 +24,6 @@ Column {
     }
 
     function updateProperties(providerProperties) {
-        var updateProvider = function(name, value) {
-            // If the value is empty/default, do not include the property in the configuration
-            if (value != '' && value != '_default') {
-                providerProperties[name] = value
-            }
-        }
-
         updateProvider('OpenVPN.Cert', openVpnCert.path)
         updateProvider('OpenVPN.Key', openVpnKey.path)
         updateProvider('OpenVPN.Port', openVpnPort.text)

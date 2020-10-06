@@ -51,6 +51,7 @@ Page {
             MessageInfoLabel {
                 text: message ? message.subject : ""
                 font.pixelSize: Theme.fontSizeMedium
+                maximumLineCount: 10
             }
 
             Column {

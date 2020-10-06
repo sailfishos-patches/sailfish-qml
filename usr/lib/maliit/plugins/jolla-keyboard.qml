@@ -251,6 +251,38 @@ Item {
         defaultValue: false
     }
 
+    OpaqueBackgroundItem {
+        x: MInputMethodQuick.appOrientation == 270
+                ? canvas.width - width
+                : 0
+        y: MInputMethodQuick.appOrientation == 0
+                ? canvas.height - height
+                : 0
+
+        width: {
+            if (MInputMethodQuick.appOrientation == 0 || MInputMethodQuick.appOrientation == 180) {
+                return canvas.width
+            } else if (!MInputMethodQuick.active || showAnimation.running || hideAnimation.running) {
+                return 0
+            } else if (!newLayoutBackground.visible || currentLayoutBackground.height < newLayoutBackground.height) {
+                return currentLayoutBackground.height
+            } else {
+                return newLayoutBackground.height
+            }
+        }
+        height: {
+            if (MInputMethodQuick.appOrientation == 90 || MInputMethodQuick.appOrientation == 270) {
+                return canvas.height
+            } else if (!MInputMethodQuick.active || showAnimation.running || hideAnimation.running) {
+                return 0
+            } else if (!newLayoutBackground.visible || currentLayoutBackground.height < newLayoutBackground.height) {
+                return currentLayoutBackground.height
+            } else {
+                return newLayoutBackground.height
+            }
+        }
+    }
+
     Item {
         // container at the of current orientation. allows actual keyboard to show relative to that.
         id: root

@@ -18,10 +18,18 @@ BackgroundItem {
         x: Theme.paddingMedium
         width: parent.width - 2 * x
         y: Theme.paddingLarge
+        spacing: Theme.paddingSmall
 
-        Icon {
-            id: image
+        // Wrap the icon, so that a larger icon can also be aligned with smaller ones
+        Item {
+            width: Theme.iconSizeMedium
+            height: Theme.iconSizeMedium
             anchors.horizontalCenter: parent.horizontalCenter
+
+            Icon {
+                id: image
+                anchors.centerIn: parent
+            }
         }
 
         Label {
@@ -30,6 +38,7 @@ BackgroundItem {
             width: parent.width
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
+            font.pixelSize: Theme.fontSizeExtraSmall
         }
 
         Label {

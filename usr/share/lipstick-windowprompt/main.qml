@@ -77,6 +77,14 @@ ApplicationWindow {
 
             _queueOrShowPrompt(promptConfig)
         }
+
+        onShowInfoWindowUi: {
+            if (!promptConfig.componentName) {
+                promptConfig.componentName = "InfoWindow.qml"
+            }
+
+            _queueOrShowPrompt(promptConfig)
+        }
     }
 
     Timer {

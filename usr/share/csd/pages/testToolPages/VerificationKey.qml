@@ -98,7 +98,7 @@ CsdTestPage {
     }
 
     Permissions {
-        enabled: true
+        enabled: page.status === PageStatus.Active
         autoRelease: true
         applicationClass: "camera"
 

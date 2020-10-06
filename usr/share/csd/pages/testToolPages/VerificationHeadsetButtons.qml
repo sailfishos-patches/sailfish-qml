@@ -35,7 +35,7 @@ CsdTestPage {
         visible: page.done && !detect.pressed
         anchors.centerIn: parent
         color: "green"
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         width: parent.width-(2*Theme.paddingLarge)
         font.pixelSize: Theme.fontSizeLarge
         //% "Headset buttons test passed!"
@@ -47,7 +47,7 @@ CsdTestPage {
 
         visible: page.started && !holdTimer.completed
         anchors.centerIn: parent
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         width: parent.width-(2*Theme.paddingLarge)
         font.pixelSize: Theme.fontSizeLarge
         //% "Press and hold headset button"
@@ -57,7 +57,7 @@ CsdTestPage {
     Label {
         visible: holdTimer.completed && detect.pressed
         anchors.centerIn: parent
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         width: parent.width-(2*Theme.paddingLarge)
         font.pixelSize: Theme.fontSizeLarge
         //% "Release headset button"
@@ -103,7 +103,7 @@ CsdTestPage {
         visible: page.failed
         anchors.centerIn: parent
         color: "red"
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         font.pixelSize: Theme.fontSizeLarge
         width: parent.width-(2*Theme.paddingLarge)
         //% "Headset buttons test failed!"

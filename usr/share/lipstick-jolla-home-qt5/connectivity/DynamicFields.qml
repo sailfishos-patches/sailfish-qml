@@ -15,6 +15,18 @@ Column {
     property var formData: ({})
     property Item focusField
 
+    readonly property bool canAccept: {
+        var passphraseType = form.fields["Passphrase"]["Type"]
+        if (passphraseType === "psk") {
+            var passphrasePsk = formData[passphraseType, "Passphrase"]
+            return validPskPassphrase(passphrasePsk)
+        } else if (passphraseType === "wep") {
+            var passphraseWep = formData[passphraseType, "Passphrase"]
+            return validWepPassphrase(passphraseWep)
+        }
+        return true
+    }
+
     signal enterKeyClicked
 
     width: parent.width

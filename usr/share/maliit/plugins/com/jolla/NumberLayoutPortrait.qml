@@ -93,6 +93,7 @@ KeyboardLayout {
         }
         NumberKey {
             caption: Qt.locale().decimalPoint
+            accents: Qt.locale().decimalPoint === "." ? "," : "."
             width: main.keyWidth
         }
         EnterKey {

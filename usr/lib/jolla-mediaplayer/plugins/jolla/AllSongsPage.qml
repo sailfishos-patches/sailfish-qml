@@ -28,7 +28,6 @@ Page {
         }
 
         PullDownMenu {
-
             MenuItem {
                 //: Shuffle all menu entry in all songs page
                 //% "Shuffle all"
@@ -39,8 +38,6 @@ Page {
             NowPlayingMenuItem { }
 
             MenuItem {
-                id: menuItemSearch
-
                 //: Search menu entry
                 //% "Search"
                 text: qsTrId("mediaplayer-me-search")

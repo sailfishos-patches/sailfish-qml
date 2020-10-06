@@ -41,6 +41,7 @@ AccountSettingsAgent {
             StandardAccountSettingsPullDownMenu {
                 allowCredentialsUpdate: false
                 allowDelete: !root.accountIsReadOnly
+                allowDeleteLimited: !root.accountIsLimited
 
                 onAccountDeletionRequested: {
                     root.accountDeletionRequested()
@@ -124,7 +125,7 @@ AccountSettingsAgent {
                 Column {
                     id: contentColumn
                     width: parent.width
-                    enabled: !disabledByMdmBanner.active
+                    enabled: !accountIsReadOnly
                     spacing: Theme.paddingLarge
 
                     PageHeader {
@@ -136,14 +137,16 @@ AccountSettingsAgent {
 
                     DisabledByMdmBanner {
                         id: disabledByMdmBanner
-                        active: root.accountIsReadOnly
+                        active: root.accountIsReadOnly || root.accountIsLimited
+			limited: root.accountIsLimited && !root.accountIsReadOnly
                     }
 
                     EmailCommon {
                         id: serverConnectionSettings
                         editMode: true
                         checkMandatoryFields: true
-                        opacity: disabledByMdmBanner.active ? Theme.opacityLow : 1.0
+                        opacity: accountIsReadOnly ? Theme.opacityLow : 1.0
+                        accountLimited: root.accountIsLimited
                     }
                 }
                 VerticalScrollDecorator {}

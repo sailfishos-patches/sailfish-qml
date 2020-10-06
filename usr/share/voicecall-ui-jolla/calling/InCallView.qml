@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2012 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
@@ -7,8 +14,6 @@ import Nemo.Configuration 1.0
 import org.nemomobile.notifications 1.0
 import org.nemomobile.systemsettings 1.0
 import org.nemomobile.voicecall 1.0 as VoiceCall
-import org.nemomobile.messages.internal 1.0 as Messages
-import com.jolla.voicecall 1.0
 import "../common/CallHistory.js" as CallHistory
 import "../common"
 
@@ -55,8 +60,9 @@ SilicaFlickable {
     }
 
     anchors.fill: parent
-    enabled: main.state !== 'incoming'
-    interactive: !telephony.isEmergency && (main.state === "active" || main.state === "held" || main.state === "silenced")
+    enabled: main.state !== 'incoming' && main.state !== "silenced"
+    interactive: !telephony.isEmergency
+                 && (main.state === "active" || main.state === "held")
 
     opacity: enabled ? 1.0 : 0.0
     contentHeight: height
@@ -102,10 +108,6 @@ SilicaFlickable {
         function dismiss() {
             root.completeAnimation()
 
-            // If the menu is shown, close it
-            if (menuLoader.item) {
-                menuLoader.item.close()
-            }
         }
 
         onClicked: dismiss()
@@ -125,7 +127,8 @@ SilicaFlickable {
 
     PullDownMenu {
         id: pullDownMenu
-        visible: root.interactive
+        enabled: !callItem.enabled && (telephony.effectiveCallCount > 1 || main.state !== "silenced")
+        visible: root.interactive && enabled
         quickSelect: main.state === "silenced"
         property bool animWasPaused
         onActiveChanged: {
@@ -146,19 +149,14 @@ SilicaFlickable {
             }
         }
         MenuItem {
-            property bool activate
-            property bool menuActive: pullDownMenu.active
-            onMenuActiveChanged: {
-                if (!menuActive && activate) {
-                    telephony.merge(telephony.primaryCall, telephony.heldCall)
-                    activate = false
-                }
-            }
             // GSM 02.84 states that the maximum number of remote parties is 5
             visible: main.state === "active" && telephony.heldCall && (!telephony.conferenceCall || telephony.conferenceCall.childCalls.count < 5)
             //% "Merge calls"
             text: qsTrId("voicecall-me-merge_calls")
-            onClicked: activate = true
+            onDelayedClick: {
+                telephony.merge(telephony.primaryCall, telephony.heldCall)
+                activate = false
+            }
         }
         MenuItem {
             visible: telephony.effectiveCallCount === 1 && main.state !== "silenced"
@@ -179,21 +177,17 @@ SilicaFlickable {
                 property string mainState: main.state
                 onMainStateChanged: updateAction()
                 property bool isSilenced: telephony.silencedCall ? telephony.silencedCall.handlerId == instance.handlerId : false
-                property bool activate
-                property bool menuActive: pullDownMenu.active
-                onMenuActiveChanged: {
-                    if (!menuActive && activate) {
-                        if (isSilenced) {
-                            if (callCount > 2) {
-                                // We have one call on hold and another active. End the active call and answer incoming.
-                                telephony.releaseAndAnswer()
-                            } else {
-                                instance.answer()
-                            }
+
+                onDelayedClick: {
+                    if (isSilenced) {
+                        if (callCount > 2) {
+                            // We have one call on hold and another active. End the active call and answer incoming.
+                            telephony.releaseAndAnswer()
                         } else {
-                            instance.hold(statusText !== "held")
+                            instance.answer()
                         }
-                        activate = false
+                    } else {
+                        instance.hold(statusText !== "held")
                     }
                 }
 
@@ -234,35 +228,27 @@ SilicaFlickable {
                         }
                     }
                 }
-
-                onClicked: activate = true
             }
         }
     }
 
-    PushUpMenu {
-        id: pushUpMenu
-        visible: telephony.silencedCall && main.state !== "silenced"
-        enabled: visible
-        quickSelect: true
-        MenuItem {
-            property QtObject silencedCall: telephony.silencedCall
-            onSilencedCallChanged: {
-                if (silencedCall) {
-                    var person = telephony.silencedCallerDetails.person
-                    var label = CallHistory.callerNameShort(person, telephony.silencedCallerDetails.remoteUid)
-                    //: Reject an incoming call which has been muted
-                    //% "Reject %1"
-                    text = qsTrId("voicecall-me-reject_muted_call").arg(label)
-                }
-            }
-            onClicked: {
-                telephony.hangupCall(silencedCall)
-                main.hangupAnimation.complete()
-            }
-        }
-    }
+    CallerItem {
+        id: callItem
+        person: telephony.silencedCallerDetails ? telephony.silencedCallerDetails.person : undefined
+        remoteUid: telephony.silencedCallerDetails ? telephony.silencedCallerDetails.remoteUid : undefined
+        enabled: telephony.silencedCall && telephony.primaryCall
+        opacity: enabled ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimator {}}
 
+        onClicked: {
+            // state update will reset to incoming call, the normal priority status
+            telephony.updateState()
+        }
+        //: Shown on a tappable green banner representing the incoming call,
+        //: next to the caller name or phone number
+        //% "incoming"
+        secondaryText: qsTrId("voicecall-bt-incoming")
+    }
 
     Item {
         id: controlContainer
@@ -443,6 +429,12 @@ SilicaFlickable {
                     y: Theme.itemSizeMedium/2 - height/2   // Theme.itemSizeMedium = glass item default height
                     width: parent.width
                 }
+
+                Component {
+                    id: bluetoothAudioComponent
+
+                    CurrentBluetoothAudioDevice { }
+                }
             }
 
             Switch {
@@ -468,7 +460,7 @@ SilicaFlickable {
                         var inCallKeypadComponent = Qt.createComponent("InCallKeypad.qml")
 
                         if (inCallKeypadComponent.status === Component.Ready) {
-                            inCallKeypad = inCallKeypadComponent.createObject(root)
+                            inCallKeypad = inCallKeypadComponent.createObject(keypadParent)
                             inCallKeypad.button = endCallButton
                         } else {
                             console.log(inCallKeypadComponent.errorString())
@@ -541,275 +533,51 @@ SilicaFlickable {
     }
 
     Item {
-        height: parent.height
-        width: controlContainer.width
-        parent: isPortrait && inCallKeypad && inCallKeypad.open && !inCallKeypad.moving ? inCallKeypad : root.contentItem
+        id: keypadParent
 
-        Row {
-            property bool showDisconnectedButtons: main.state === "silenced"
-                        || (main.state === 'null' || main.state === "disconnected")
-
-            x: Theme.horizontalPageMargin
-            y: endCallButton.y - height - Theme.itemSizeSmall
-
-            width: parent.width - 2 * x
-
-            enabled: showDisconnectedButtons && (!menuLoader.item || !menuLoader.item.active)
-            opacity: enabled ? 1.0 : 0.0
-            Behavior on opacity { FadeAnimation { id: disconnectTimer } }
-
-            IconTextButton {
-                //% "Send message"
-                text: qsTrId("voicecall-bt-send_message")
-                icon.source: "image://theme/icon-m-message"
-                width: parent.width/2
-
-                onClicked: {
-                    menuLoader.sourceComponent = messageReplyMenuComponent
-                    menuLoader.active = true
-                }
-            }
-
-            IconTextButton {
-                id: reminderButton
-
-                //: Create a reminder to return a dismissed call
-                //% "Remind me"
-                text: qsTrId("voicecall-bt-create_reminder")
-                icon.source: "image://theme/icon-m-alarm"
-                description: callerItem.reminder.exists
-                             ? Format.formatDate(callerItem.reminder.when, Formatter.TimeValue)
-                             : ""
-                width: parent.width/2
-
-                onClicked: {
-                    menuLoader.sourceComponent = reminderMenuComponent
-                    menuLoader.active = true
-                }
-            }
-        }
-
-        Loader {
-            id: menuLoader
-
-            active: false
-            sourceComponent: messageReplyMenuComponent
-            onLoaded: {
-                item.open(root)
-            }
-        }
-
-        FooterButton {
-            id: endCallButton
-
-            readonly property bool showEndCallButton: main.state !== "incoming"
-                        && (!menuLoader.item || !menuLoader.item.active)
-                        && (main.state !== "null" && main.state !== "disconnected")
-            readonly property string labelText: {
-                if (main.state === "incoming") {
-                    return ""
-                } else if (main.state === 'dialing' || main.state === 'alerting') {
-                    return qsTrId("voicecall-bt-cancel")
-                } else if (main.state === 'silenced') {
-                    //% "Reject call"
-                    return qsTrId("voicecall-bt-reject_call")
-                } else if (main.state !== 'null' && main.state !== 'disconnected') {
-                    return qsTrId("voicecall-bt-end_call")
-                } else {
-                    return ""
-                }
-            }
-            onLabelTextChanged: {
-                // Keep the old text if the button is being hidden to avoid flicker.
-                if (labelText !== "") {
-                    text = labelText
-                }
-            }
-
-            anchors {
-                bottom: parent.bottom
-                bottomMargin: endCallButton.bottomMargin
-            }
-
-            onClicked: {
-                if (main.state === "silenced") {
-                    telephony.hangupCall(telephony.silencedCall)
-                    main.hangupAnimation.complete()
-                } else if (main.state !== 'null' && main.state !== 'disconnected') {
-                    telephony.hangupCall(telephony.primaryCall)
-                }
-            }
-            enabled: showEndCallButton
-            opacity: showEndCallButton ? 1.0 : 0.0
-            Behavior on opacity { FadeAnimation { } }
-        }
+        width: root.width
+        height: root.height
     }
 
-    Component {
-        id: bluetoothAudioComponent
+    FooterButton {
+        id: endCallButton
 
-        CurrentBluetoothAudioDevice { }
-    }
-
-    Component {
-        id: messageReplyMenuComponent
-
-        ContextMenu {
-            id: messageReplyMenu
-
-            property bool sending
-
-            onClosed: {
-                if (!messageReplyMenu.sending) {
-                    // We're not sending an SMS, so we can just destroy the thing right now
-                    menuLoader.active = false
-                }
-            }
-
-            Label {
-                font {
-                    family: Theme.fontFamilyHeading
-                    pixelSize: Theme.fontSizeLarge
-                }
-                anchors {
-                    left: parent ? parent.left : undefined
-                    leftMargin: Theme.horizontalPageMargin
-                    right: parent ? parent.right : undefined
-                    rightMargin: Theme.horizontalPageMargin
-                    bottom: parent ? messageReplyMenu.top : undefined
-                    bottomMargin: Theme.paddingLarge
-                }
-
-                color: palette.highlightColor
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
-                opacity: messageReplyMenu.active ? 1.0 : 0.0
-                Behavior on opacity { FadeAnimator {} }
-
-                // We can't have this item inside the ContextMenu because we don't want the background behind it,
-                // ContextMenu sets its own parent, so we follow it.
-                parent: messageReplyMenu.parent
-
-                //: Header that appears on top of the message reply menu.
-                //% "Select your message"
-                text: qsTrId("voicecall-he-select_your_message")
-            }
-
-            Messages.SmsSender {
-                id: smsSender
-
-                function sendingDone() {
-                    messageReplyMenu.sending = false
-
-                    if (!messageReplyMenu.active) {
-                        // Menu is already invisible, we can just destroy it now
-                        menuLoader.active = false
-                    }
-                }
-
-                onSendingSucceeded: sendingDone()
-                onSendingFailed: sendingDone()
-            }
-
-            SimPickerMenuItem {
-                id: simPickerMenuItem
-                menu: messageReplyMenu
-                actionType: Telephony.Message
-            }
-
-            Repeater {
-                model: QuickMessagesModel {
-                    id: quickMessagesModel
-                }
-
-                MenuItem {
-                    id: menuItem
-
-                    text: model.display.replace(/\n/g, ' ')
-                    enabled: !messageReplyMenu.sending
-                    onClicked: {
-                        var number = (main.state === "silenced" ? telephony.silencedCallerDetails.remoteUid : telephony.lastCaller)
-
-                        if (telephony.promptForSim(number)) {
-                            simPickerMenuItem.active = true
-                            simPickerMenuItem.simSelected.connect(function(sim, modemPath) {
-                                menuItem.sendMessage(modemPath, number)
-                            })
-                        } else {
-                            menuItem.sendMessage(telephony.simManager.activeModem, number)
-                        }
-                    }
-
-                    function sendMessage(modemPath, number) {
-                        messageReplyMenu.sending = true
-                        main.hangupAnimation.complete()
-                        smsSender.sendSMS(modemPath, number, model.display)
-
-                        // If the call is silenced, hang up, otherwise it's already ended, so no need to do anything
-                        if (main.state === "silenced") {
-                            telephony.hangupCall(telephony.silencedCall)
-                            main.hangupAnimation.complete()
-                        }
-                    }
-                }
-            }
-
-            MenuItem {
-                //: Appears in the message reply menu which has limited space,
-                //: opens the Messages app and allow the user to write a custom message.
-                //% "Enter your message"
-                text: qsTrId("voicecall-me-custom_message")
-                onClicked: {
-                    __window.lower() // make sure Phone app __window doesn't become active in-between and call callingDialog().activate()
-                    main.callingView.lower() // JB#47779: Explicitly minimize the call dialog to make sure Messages comes on top
-                    var number = (main.state === "silenced" ? telephony.silencedCallerDetails.remoteUid : telephony.lastCaller)
-                    messaging.startSMS(number)
-                    main.hangupAnimation.complete()
-                }
+        readonly property bool showEndCallButton: main.state !== "incoming"
+                                                  && (main.state !== "null" && main.state !== "disconnected")
+        readonly property string labelText: {
+            if (main.state === "incoming") {
+                return ""
+            } else if (main.state === 'dialing' || main.state === 'alerting') {
+                return qsTrId("voicecall-bt-cancel")
+            } else if (main.state === 'silenced') {
+                //% "Reject call"
+                return qsTrId("voicecall-bt-reject_call")
+            } else if (main.state !== 'null' && main.state !== 'disconnected') {
+                return qsTrId("voicecall-bt-end_call")
+            } else {
+                return ""
             }
         }
-    }
-
-    Component {
-        id: reminderMenuComponent
-
-        ReminderContextMenu {
-            id: reminderMenu
-
-            number: main.state === "silenced"
-                    ? telephony.silencedCallerDetails.remoteUid
-                    : telephony.lastCaller
-            person: main.state === "silenced"
-                    ? telephony.silencedCallerDetails.person
-                    : people.personByPhoneNumber(telephony.lastCaller)
-
-            onClosed: menuLoader.active = false
-
-            Label {
-                parent: reminderMenu.parent
-                font {
-                    family: Theme.fontFamilyHeading
-                    pixelSize: Theme.fontSizeLarge
-                }
-
-                anchors {
-                    left: parent ? parent.left : undefined
-                    leftMargin: Theme.horizontalPageMargin
-                    right: parent ? parent.right : undefined
-                    rightMargin: Theme.horizontalPageMargin
-                    bottom: parent ? reminderMenu.top : undefined
-                    bottomMargin: Theme.paddingLarge
-                }
-
-                color: palette.highlightColor
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
-
-                //: Header that appears on top of the call back reminder menu.
-                //% "Remind me"
-                text: qsTrId("voicecall-he-remind_me")
+        onLabelTextChanged: {
+            // Keep the old text if the button is being hidden to avoid flicker.
+            if (labelText !== "") {
+                text = labelText
             }
         }
+
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: endCallButton.bottomMargin
+        }
+
+        onClicked: {
+            if (main.state !== 'null' && main.state !== 'disconnected') {
+                telephony.hangupCall(telephony.primaryCall)
+            }
+        }
+        enabled: showEndCallButton
+        opacity: showEndCallButton ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimation { } }
     }
 
     AboutSettings {

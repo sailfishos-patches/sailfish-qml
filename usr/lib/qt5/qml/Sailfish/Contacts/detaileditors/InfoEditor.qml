@@ -144,6 +144,8 @@ BaseEditor {
                     // Add an empty field to act as the 'add new x' button
                     root._addEmptyInfoDetailField()
                 }
+
+                root.hasContent = value.length > 0 || root.testHasContent()
             }
 
             onRemoveClicked: {

@@ -21,7 +21,15 @@ Column {
 
     FolderListFilterTypeModel {
         id: folderModel
-        typeFilter: [EmailFolder.NormalFolder, EmailFolder.InboxFolder]
+        typeFilter: [
+            EmailFolder.NormalFolder,
+            EmailFolder.InboxFolder,
+            EmailFolder.OutboxFolder,
+            EmailFolder.SentFolder,
+            EmailFolder.DraftsFolder,
+            EmailFolder.TrashFolder,
+            EmailFolder.JunkFolder
+        ]
     }
 
     Repeater {

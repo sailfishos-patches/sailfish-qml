@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
@@ -44,10 +51,12 @@ StandardAccountSettingsDisplay {
 
         Repeater {
             id: syncServicesRepeater
-            TextSwitch {
+            IconTextSwitch {
                 id: serviceSwitch
                 checked: model.enabled
                 text: model.displayName
+                icon.source: model.iconName
+                description: model.description
                 visible: text.length > 0
                 onCheckedChanged: {
                     if (checked) {

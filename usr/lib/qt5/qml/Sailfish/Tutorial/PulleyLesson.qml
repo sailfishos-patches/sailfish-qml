@@ -145,7 +145,7 @@ Lesson {
         PauseAnimation { duration: 1000 }
         ScriptAction  {
             script: {
-                //: 'New timer' must match with clock-me-new_timer
+                //: 'New alarm' must match with clock-me-new_alarm
                 //% "Pull down slowly without lifting your finger and select 'New alarm'"
                 hintLabel.text = qsTrId("tutorial-la-clock_pull_down_slowly")
                 hintLabel.opacity = 1.0

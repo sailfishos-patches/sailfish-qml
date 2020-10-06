@@ -71,7 +71,7 @@ MouseArea {
             pixelSize: Theme.fontSizeExtraSmall
             bold: true
         }
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         horizontalAlignment: alignment & Qt.AlignLeft ? Text.AlignLeft : Text.AlignRight
 
         opacity: menu.open ? 1.0 : 0.0

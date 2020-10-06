@@ -15,7 +15,7 @@ DetailItem {
                 features[i] = feature.name + (feature.version.length > 0 ? " " + feature.version : "")
             }
 
-            value = features.join(", ")
+            value = features.join(Format.listSeparator)
         } else {
             value = "-"
         }

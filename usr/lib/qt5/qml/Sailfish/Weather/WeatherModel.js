@@ -13,25 +13,8 @@ function updateAllowed(interval) {
     return updateAllowed
 }
 
-function getWeatherData(weather, forecast) {
-    var dateArray
-    if (forecast) {
-        dateArray = weather.timestamp.split("-")
-    } else {
-        dateArray = weather.timestamp.split(" ")[0].split("-")
-    }
-    var timestamp =  new Date(parseInt(dateArray[0]),
-                              parseInt(dateArray[1] - 1),
-                              parseInt(dateArray[2]))
-
-    if (!forecast && weather.timestamp.length > 0) {
-        var timeArray = weather.timestamp.split(" ")[1].split(":")
-        timestamp.setHours(timeArray[0])
-        timestamp.setMinutes(timeArray[1])
-        timestamp.setSeconds(timeArray[2])
-    }
-
-    var precipitationRateCode = weather.code.charAt(2)
+function getWeatherData(weather) {
+    var precipitationRateCode = weather.symbol.charAt(2)
     var precipitationRate = ""
     switch (precipitationRateCode) {
     case '0':
@@ -64,7 +47,7 @@ function getWeatherData(weather, forecast) {
         //% "None"
         precipitationType = qsTrId("weather-la-precipitationtype_none")
     } else {
-        var precipitationTypeCode = weather.code.charAt(3)
+        var precipitationTypeCode = weather.symbol.charAt(3)
         switch (precipitationTypeCode) {
         case '0':
             //% "Rain"
@@ -83,53 +66,13 @@ function getWeatherData(weather, forecast) {
             break
         }
     }
-    // where wind is coming from
-    var windDirection = 0
-    switch (weather.windDirection) {
-    case 'N':
-        windDirection = 0
-        break
-    case 'NE':
-        windDirection = 45
-        break
-    case 'E':
-        windDirection = 90
-        break
-    case 'SE':
-        windDirection = 135
-        break
-    case 'S':
-        windDirection = 180
-        break
-    case 'SW':
-        windDirection = 225
-        break
-    case 'W':
-        windDirection = 270
-        break
-    case 'NW':
-        windDirection = 315
-        break
-    }
 
     var data = {
-        "description": description(weather.code),
-        "weatherType": weatherType(weather.code),
-        "timestamp": timestamp,
-        "cloudiness": (100*parseInt(weather.code.charAt(1))/4),
+        "description": description(weather.symbol),
+        "weatherType": weatherType(weather.symbol),
+        "cloudiness": (100*parseInt(weather.symbol.charAt(1))/4),
         "precipitationRate": precipitationRate,
-        "precipitationType": precipitationType,
-        "windSpeed": Math.round(weather.windSpeed),
-        "windDirection": windDirection
-    }
-
-    if (forecast) {
-        data.accumulatedPrecipitation = weather.accumulatedPrecipitation
-        data.high = weather.high
-        data.low = weather.low
-    } else {
-        data.temperature = weather.temperature
-        data.temperatureFeel = weather.temperatureFeel
+        "precipitationType": precipitationType
     }
     return data
 }

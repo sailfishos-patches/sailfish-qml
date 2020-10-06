@@ -29,12 +29,9 @@ Page {
         }
 
         PullDownMenu {
-
             NowPlayingMenuItem { }
 
             MenuItem {
-                id: menuItemSearch
-
                 //: Search menu entry
                 //% "Search"
                 text: qsTrId("mediaplayer-me-search")
@@ -92,7 +89,8 @@ Page {
             AlbumArt {
                 id: albumArt
 
-                source: albumArtProvider.albumThumbnail(title, subtitle)
+                // re-evaluate when state changes
+                source: (albumArtProvider.extracting || true) ? albumArtProvider.albumThumbnail(title, subtitle) : ""
                 highlighted: delegate.highlighted
             }
         }

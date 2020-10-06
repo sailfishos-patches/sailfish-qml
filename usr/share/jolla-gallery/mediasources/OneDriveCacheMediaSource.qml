@@ -1,5 +1,13 @@
-import QtQuick 2.0
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
+import QtQuick 2.6
 import Sailfish.Silica 1.0
+import Sailfish.Accounts 1.0
 import com.jolla.gallery 1.0
 import com.jolla.gallery.onedrive 1.0
 import org.nemomobile.socialcache 1.0
@@ -11,10 +19,10 @@ MediaSource {
     //: Label of the OneDrive album in Jolla Gallery application
     //% "OneDrive"
     title: qsTrId("jolla_gallery_onedrive-user_photos")
-    icon: "/usr/lib/qt5/qml/com/jolla/gallery/onedrive/OneDriveGalleryIcon.qml"
+    icon: StandardPaths.resolveImport("com.jolla.gallery.onedrive.OneDriveGalleryIcon")
     model: allPhotos
     count: model.count
-    ready: false
+    ready: syncHelper.syncProfiles.length > 0 && accountManager.cloudServiceReady
 
     property AccessTokensProvider accessTokensProvider: AccessTokensProvider {
         service: "onedrive-sync"
@@ -32,8 +40,16 @@ MediaSource {
     property OneDriveImageCacheModel oneDriveUsers: OneDriveImageCacheModel {
         type: OneDriveImageCacheModel.Users
         onCountChanged: {
-            root.page = count < 2 ? "/usr/lib/qt5/qml/com/jolla/gallery/onedrive/OneDriveAlbumsPage.qml"
-                                  : "/usr/lib/qt5/qml/com/jolla/gallery/onedrive/OneDriveUsersPage.qml"
+            root.page = count < 2 ? StandardPaths.resolveImport("com.jolla.gallery.onedrive.OneDriveAlbumsPage")
+                                  : StandardPaths.resolveImport("com.jolla.gallery.onedrive.OneDriveUsersPage")
+        }
+    }
+
+    property AccountManager accountManager: AccountManager {
+        property bool cloudServiceReady
+
+        Component.onCompleted: {
+            cloudServiceReady = enabledAccounts("onedrive", "onedrive-images").length > 0
         }
     }
 
@@ -50,9 +66,6 @@ MediaSource {
             oneDriveUsers.refresh()
             allPhotos.refresh()
         }
-        onSyncProfilesChanged: {
-            root.ready = syncProfiles.length > 0
-        }
     }
 
     property Item connections: Item {
@@ -60,7 +73,7 @@ MediaSource {
         Connections {
              target: root.accessTokensProvider
              onAccessTokenRetrieved: {
-                 OneDriveImageDownloader.accessTokenRetrived(accessToken, accountId)
+                 OneDriveImageDownloader.accessTokenRetrieved(accessToken, accountId)
              }
          }
 

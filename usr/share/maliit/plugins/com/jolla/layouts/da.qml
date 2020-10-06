@@ -49,7 +49,7 @@ KeyboardLayout {
 
     KeyboardRow {
         CharacterKey { caption: "a"; captionShifted: "A"; symView: "*"; symView2: "`"; accents: "aåæäàáâã"; accentsShifted: "AÅÆÄÀÁÂÃ"}
-        CharacterKey { caption: "s"; captionShifted: "S"; symView: "#"; symView2: "^"; accents: "sß$"; accentsShifted: "S$" }
+        CharacterKey { caption: "s"; captionShifted: "S"; symView: "#"; symView2: "^"; accents: "sß$"; accentsShifted: "Sẞ$" }
         CharacterKey { caption: "d"; captionShifted: "D"; symView: "+"; symView2: "|"; accents: "dð"; accentsShifted: "DÐ" }
         CharacterKey { caption: "f"; captionShifted: "F"; symView: "-"; symView2: "_" }
         CharacterKey { caption: "g"; captionShifted: "G"; symView: "="; symView2: "§" }

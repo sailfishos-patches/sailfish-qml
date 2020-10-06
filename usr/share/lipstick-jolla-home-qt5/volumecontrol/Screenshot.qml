@@ -33,7 +33,8 @@ Item {
         var filename = fileUtils.uniqueFileName(folderPath, qsTrId("lipstick-jolla-home-la-screenshot") + ".png")
 
         notification.previewBody = filename
-        Lipstick.takeScreenshot(folderPath + filename)
+        notification.screenshotFilePath = folderPath + filename
+        Lipstick.takeScreenshot(notification.screenshotFilePath)
         notification.publish()
     }
 
@@ -45,18 +46,36 @@ Item {
     Notification {
         id: notification
 
+        property string screenshotFilePath
+
+        appName: Lipstick.notificationSystemApplicationName
         //% "Screenshot captured"
         previewSummary: qsTrId("lipstick-jolla-home-la-screenshot_captured")
         isTransient: true
         urgency: Notification.Critical
         icon: "icon-lock-information"
-        remoteActions: [ {
-            "name": "default",
-            "service": "com.jolla.gallery",
-            "path": "/com/jolla/gallery/ui",
-            "iface": "com.jolla.gallery.ui",
-            "method": "showScreenshots"
-        }]
+        remoteActions: [
+            {
+                "name": "default",
+                //% "Show screenshots"
+                "displayName": qsTrId("lipstick-jolla-home-la-show_screenshots"),
+                "service": "com.jolla.gallery",
+                "path": "/com/jolla/gallery/ui",
+                "iface": "com.jolla.gallery.ui",
+                "method": "showScreenshots"
+            },
+            {
+                "name": "action_open_file",
+                //: Open the captured screenshot file
+                //% "Open"
+                "displayName": qsTrId("lipstick-jolla-home-la-open"),
+                "service": "com.jolla.gallery",
+                "path": "/com/jolla/gallery/ui",
+                "iface": "com.jolla.gallery.ui",
+                "method": "openFile",
+                "arguments": [ notification.screenshotFilePath ]
+            }
+        ]
     }
 
     Notification {

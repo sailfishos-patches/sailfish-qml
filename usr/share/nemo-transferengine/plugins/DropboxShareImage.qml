@@ -18,10 +18,7 @@ ShareFilePreviewDialog {
     descriptionVisible: false
     metaDataSwitchVisible: false
 
-    //: Target folder in Dropbox. OneDrive has a special folder called 'Pictures'
-    //: where images are upload. Localization should match that.
-    //% "Pictures"
-    remoteDirName: qsTrId("webshare-la-dropbox_pictures")
+    remoteDirName: "/Apps/Sailfish OS/Pictures"
 
     onAccepted: {
         shareItem.start()

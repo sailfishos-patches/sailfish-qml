@@ -8,9 +8,10 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Nemo.Email 0.1
+import Sailfish.WebView 1.0
 import org.nemomobile.configuration 1.0
 
-Page {
+WebViewPage {
     id: messageViewPage
 
     property alias messageId: message.messageId
@@ -23,41 +24,11 @@ Page {
     property var removeCallback
     property string pathToLoad
     readonly property bool isLocalFile: pathToLoad !== ""
+    readonly property string _mimeType: message.contentType == EmailMessage.HTML
+            ? "text/html"
+            : "text/plain"
 
     property bool _sendReadReceipt
-
-    // Transition values similar to sailfish-browser
-    orientationTransitions: Transition {
-        to: 'Portrait,Landscape,PortraitInverted,LandscapeInverted'
-        from: 'Portrait,Landscape,PortraitInverted,LandscapeInverted'
-        SequentialAnimation {
-            PropertyAction {
-                target: messageViewPage
-                property: 'orientationTransitionRunning'
-                value: true
-            }
-            FadeAnimation {
-                target: messageViewPage
-                to: 0
-                duration: 150
-            }
-            PropertyAction {
-                target: messageViewPage
-                properties: 'width,height,rotation,orientation'
-            }
-            // TODO: better solution to reduce visible relayoutting.
-            FadeAnimation {
-                target: messageViewPage
-                to: 1
-                duration: 850
-            }
-            PropertyAction {
-                target: messageViewPage
-                property: 'orientationTransitionRunning'
-                value: false
-            }
-        }
-    }
 
     function doRemove() {
         if (removeCallback) {
@@ -72,16 +43,11 @@ Page {
             message.loadFromFile(pathToLoad);
         }
         if (status == PageStatus.Active) {
-            if (!loaded && message.contentType == EmailMessage.HTML) {
-                htmlLoader.load(message.htmlBody, message)
+            if (!loaded) {
+                htmlLoader.load(message.htmlBody, _mimeType, message)
             }
             pageStack.pushAttached(messageInfoComponent, { message: message })
             app.coverMode = "mailViewer"
-        } else if (status == PageStatus.Activating && !loaded && message.contentType == EmailMessage.Plain) {
-            htmlLoader.visible = false
-            plainTextViewer.active = true
-            plainTextViewer.show(message)
-            loaded = true
         }
     }
 
@@ -123,7 +89,7 @@ Page {
                     plainTextViewer.active = false
                     htmlLoader.visible = true
                 }
-                htmlLoader.load(htmlBody, message)
+                htmlLoader.load(htmlBody, messageViewPage._mimeType, message)
             }
         }
 
@@ -139,46 +105,6 @@ Page {
             // when some parts are retrived, the server as priority, so for the case of
             // inline images the message read state can change back to unread
             htmlLoader.markAsRead()
-        }
-    }
-
-    Loader {
-        id: plainTextViewer
-
-        function loadBody() {
-            if (item) {
-                item.loadBody()
-            } else {
-                console.warn("Plain text view loadBody() called when loader inactive. Source of a bug.")
-                console.trace()
-            }
-        }
-
-        function show(message) {
-            if (item) {
-                item.show(message)
-                messageViewPage.loaded = true
-            } else {
-                console.warn("Plain text view show() called when loader inactive. Source of a bug.")
-                console.trace()
-            }
-        }
-
-        active: false
-        anchors.fill: parent
-
-        sourceComponent: PlainTextViewer {
-            anchors.fill: parent
-            contentWidth: parent.width
-            interactive: visible
-            portrait: messageViewPage.isPortrait
-            attachmentsModel: attachModel
-            isOutgoing: messageViewPage.isOutgoing
-            isLocalFile: messageViewPage.isLocalFile
-            onRemoveRequested: messageViewPage.doRemove()
-            onNeedToSendReadReceipt: {
-                _sendReadReceipt = true
-            }
         }
     }
 

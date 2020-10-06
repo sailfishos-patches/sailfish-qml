@@ -45,14 +45,6 @@ Item {
                     "comparator": ">=",
                     "value": 100
                 } ]
-                if (Screen.sizeCategory >= Screen.Large) {
-                    // Temporary: don't show missed calls on tablet
-                    rv.push({
-                        "property": "appName",
-                        "comparator": "!match",
-                        "value": "Missed calls"
-                    })
-                }
                 return rv
             }
         }

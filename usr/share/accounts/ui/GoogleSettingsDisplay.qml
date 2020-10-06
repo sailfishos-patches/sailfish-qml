@@ -53,11 +53,6 @@ StandardAccountSettingsDisplay {
             settingsLoader.updateAllSyncProfiles()
         }
     }
-    onAccountSaveSynced: {
-        if (folderSyncSettings.item) {
-            folderSyncSettings.item.applyFolderSyncPolicy()
-        }
-    }
 
     function _enableAutoSync(serviceName, enable) {
         var options = settingsLoader.allSyncOptionsForService(serviceName)
@@ -346,9 +341,6 @@ StandardAccountSettingsDisplay {
 
             property QtObject syncOptions
 
-            //: Click to show options on how often emails should be fetched from the server
-            //% "Sync emails"
-            label: qsTrId("settings-accounts-la-sync_emails")
             schedule: syncOptions ? syncOptions.schedule : null
             isAlwaysOn: syncOptions ? syncOptions.syncExternallyEnabled : false
             showAlwaysOn: root._pushCapable

@@ -4,8 +4,6 @@ import Sailfish.Silica.private 1.0 as SilicaPrivate
 import org.nemomobile.lipstick 0.1
 
 SilicaPrivate.GlassBackgroundBase {
-    id: glassBackground
-
     patternItem: Lipstick.compositor.wallpaper.applicationBackgroundOverlayImage
     backgroundItem: Lipstick.compositor.wallpaper.applicationBackgroundSourceImage
     transformItem: Lipstick.compositor.wallpaper.transformItem

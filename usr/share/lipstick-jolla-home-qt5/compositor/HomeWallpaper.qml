@@ -5,8 +5,6 @@ import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 
 Wallpaper {
-    id: wallpaper
-
     property alias ambience: ambience
     property alias applicationBackgroundSourceImage: appBgSourceImage
     property alias applicationBackgroundOverlayImage: appBgOverlayImage
@@ -36,8 +34,8 @@ Wallpaper {
     }
 
     Image {
-        id: appBgOverlayImage;
-        source: "image://theme/graphic-shader-texture";
+        id: appBgOverlayImage
+        source: "image://theme/graphic-shader-texture"
         visible: false
     }
 

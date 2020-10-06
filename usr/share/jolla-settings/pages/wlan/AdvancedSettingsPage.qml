@@ -9,7 +9,12 @@ Page {
 
     property QtObject network
 
-    onStatusChanged: if (status == PageStatus.Active) caCertChooser.cancel()
+    onStatusChanged: {
+        if (status === PageStatus.Active) {
+            caCertChooser.cancel()
+            clientCertChooser.cancel()
+        }
+    }
 
     SilicaFlickable {
         anchors.fill: parent
@@ -69,7 +74,15 @@ Page {
                 id: caCertChooser
                 network: root.network
 
-                onFromFileSelected: pageStack.push(filePickerPage, { fieldName: 'caCert' })
+                onFromFileSelected: pageStack.push(fileLoaderPage, { fieldName: 'caCert' })
+            }
+
+            ClientCertChooser {
+                id: clientCertChooser
+                network: root.network
+
+                onKeyFromFileSelected: pageStack.push(filePickerPage, { fieldName: 'privateKeyFile', nameFilters: ['*.pem', '*.key', '*.p12', '*.pfx'] })
+                onCertFromFileSelected: pageStack.push(filePickerPage, { fieldName: 'clientCertFile', nameFilters: ['*.pem', '*.crt'] })
             }
 
             IdentityField {
@@ -95,6 +108,11 @@ Page {
                 }
             }
 
+            AnonymousIdentityField {
+                id: anonymousIdentityField
+                network: root.network
+            }
+
             AdvancedSettingsColumn {
                 id: advancedSettingsColumn
                 network: root.network
@@ -104,7 +122,7 @@ Page {
     }
 
     Component {
-        id: filePickerPage
+        id: fileLoaderPage
 
         FilePickerPage {
             nameFilters: [ '*.crt', '*.pem' ]
@@ -112,6 +130,16 @@ Page {
             onSelectedContentPropertiesChanged: {
                 root.network[fieldName] = CertHelper.readCert(selectedContentProperties.filePath, 'CERTIFICATE')
             }
+        }
+    }
+
+    Component {
+        id: filePickerPage
+
+        FilePickerPage {
+            nameFilters: [ '*.crt', '*.pem' ]
+            property string fieldName
+            onSelectedContentPropertiesChanged: network[fieldName] = selectedContentProperties.filePath
         }
     }
 }

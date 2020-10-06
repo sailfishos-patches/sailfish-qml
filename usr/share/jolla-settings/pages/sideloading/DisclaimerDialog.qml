@@ -26,7 +26,7 @@ Dialog {
                 color: Theme.highlightColor
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * x
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
                 textFormat: Text.AutoText
 
                 //% "Notice. By installing and using untrusted software, you can cause permanent damage both to your product and/or content. The product manufacturer, seller and Jolla accept no liability whatsoever for any such damage. You install and use untrusted software at your own risk.<br><br>Installing and using untrusted software may void your warranty.<br><br>Accepting these terms is required to enable the possibility to install untrusted software."

@@ -27,7 +27,7 @@ Dialog {
                 color: Theme.highlightColor
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2 * Theme.horizontalPageMargin
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
                 textFormat: Text.AutoText
 
                 //% "Notice. In developer mode, you can enable features that when used incorrectly can cause permanent damage both to your device and/or content.<br><br>Enabling developer mode may void your warranty.<br><br>Device needs to be rebooted after enabling developer mode. During that time you are not able to make or receive any phone calls.<br><br>Accepting these terms enables developer mode.</p>"

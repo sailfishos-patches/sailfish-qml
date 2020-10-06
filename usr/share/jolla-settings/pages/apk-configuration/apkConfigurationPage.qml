@@ -83,7 +83,8 @@ Page {
 
     SilicaFlickable {
         anchors.fill: parent
-        contentHeight: header.height + content.height + Theme.paddingLarge
+        contentHeight: header.height + (content.enabled ? (content.height + Theme.paddingLarge)
+                                                        : 0)
         width: parent.width
 
         PageHeader {

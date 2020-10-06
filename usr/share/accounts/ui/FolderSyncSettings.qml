@@ -16,7 +16,6 @@ Column {
     property int maxFolders: 6
     readonly property string policy: comboBox.currentItem.policy
     property bool _autoScroll
-    readonly property EmailAgent _emailAgent: EmailAgent{}
     opacity: enabled ? 1.0 : Theme.opacityLow
 
     id: root
@@ -36,10 +35,6 @@ Column {
             _autoScroll = false
             comboBox.currentIndex = newIndex
         }
-    }
-
-    function applyFolderSyncPolicy() {
-        _emailAgent.applyFolderSyncPolicy(accountId)
     }
 
     ComboBox {
@@ -136,7 +131,7 @@ Column {
                             truncationMode: foldersSelected ? TruncationMode.Fade : TruncationMode.None
                             wrapMode: foldersSelected ? Text.NoWrap : Text.Wrap
                             text: foldersSelected
-                                  ? folderListView.syncFolderList.join(", ")
+                                  ? folderListView.syncFolderList.join(Format.listSeparator)
                                     //: Shown instead of the folder list in case no folders are selected
                                     //% "No folders selected"
                                   : qsTrId("settings_accounts-la-none_selected")

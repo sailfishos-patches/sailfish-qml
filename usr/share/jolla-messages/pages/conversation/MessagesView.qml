@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 import Sailfish.Contacts 1.0
 import Sailfish.Messages 1.0
 import org.nemomobile.commhistory 1.0
@@ -11,7 +12,7 @@ SilicaListView {
     verticalLayoutDirection: ListView.BottomToTop
     // Necessary to avoid resetting focus every time a row is added, which breaks text input
     currentIndex: -1
-    quickScroll: false
+    _quickScrollItem.directionsEnabled: QuickScrollDirection.Down
 
     delegate: Item {
         id: wrapper
@@ -103,34 +104,11 @@ SilicaListView {
                 horizontalAlignment: Text.AlignHCenter
                 color: Theme.secondaryColor
                 text: {
-                    if (!modelData)
-                        return ""
-
-                    var messageDate = new Date(modelData.startTime).setHours(0, 0, 0, 0)
-                    var today = new Date(wallClock.time).setHours(0, 0, 0, 0)
-                    var daysDiff = (today - messageDate) / (24 * 60 * 60 * 1000)
-
-                    // Today, yesterday
-                    if (daysDiff === 0) {
-                        //: Section header for messages that arrived on the current day.
-                        //% "Today"
-                        return qsTrId("messages-he-today")
-                    } else if (daysDiff === 1) {
-                        //: Section header for messages that arrived on the previous day.
-                        //% "Yesterday"
-                        return qsTrId("messages-he-yesterday")
-                    }
-
-                    var dateString = ""
-                    if (daysDiff <= 6) {
-                        dateString = Format.formatDate(modelData.startTime, Formatter.WeekdayNameStandalone)
-                    } else if (daysDiff < 365) {
-                        dateString = Format.formatDate(modelData.startTime, Formatter.DateFullWithoutYear)
+                    if (modelData && Qt.application.active) { // force refresh
+                        return Format.formatDate(modelData.startTime, Formatter.TimepointSectionRelative)
                     } else {
-                        dateString = Format.formatDate(modelData.startTime, Formatter.DateFull)
+                        return ""
                     }
-
-                    return dateString.charAt(0).toUpperCase() + dateString.substring(1)
                 }
             }
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
@@ -118,7 +125,7 @@ Column {
         id: recordingsModelComponent
 
         FileModel {
-            path: StandardPaths.home + "/CallRecordings/"
+            path: VoiceCall.VoiceCallAudioRecorder.recordingsDirPath
             includeDirectories: false
             nameFilters: ["*.wav"]
             sortBy: FileModel.SortByModified

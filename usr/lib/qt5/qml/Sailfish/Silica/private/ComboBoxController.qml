@@ -53,6 +53,7 @@ Item {
 
     property string value: (currentItem !== null && currentItem.text !== "") ? currentItem.text : ""
     readonly property bool menuOpen: menu !== null && menu.parent === comboBox
+    property bool automaticSelection: true
 
     property bool _updating
     property bool _completed
@@ -194,7 +195,9 @@ Item {
     Connections {
         target: controller.menu
         onActivated: {
-            controller.currentIndex = index
+            if (controller.automaticSelection) {
+                controller.currentIndex = index
+            }
         }
     }
 

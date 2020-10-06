@@ -139,12 +139,14 @@ ApplicationWindow {
             iface: "com.jolla.lipstick"
 
             signal pairWithDevice(string address)
+            signal cancelPairWithDevice(string address)
             signal replyToAgentRequest(int requestId, int error, string passkey)
 
             signal replyToObexAgentRequest(string transferPath, bool acceptFile)
             signal cancelTransfer(string transferPath)
 
             onPairWithDevice: bluetoothSystemAgent.pairWithDevice(address)
+            onCancelPairWithDevice: bluetoothSystemAgent.cancelPairWithDevice(address)
             onReplyToAgentRequest: bluetoothSystemAgent.replyToAgentRequest(requestId, error, passkey)
 
             onReplyToObexAgentRequest: bluetoothObexSystemAgent.replyToObexAgentRequest(transferPath, acceptFile)

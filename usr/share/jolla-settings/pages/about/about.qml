@@ -1,7 +1,15 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
+import org.nemomobile.devicelock 1.0
 import org.nemomobile.ofono 1.0
 import org.nemomobile.dbus 2.0
 
@@ -22,6 +30,10 @@ Page {
         service: "com.jolla.csd"
         path: "/com/jolla/csd"
         iface: "com.jolla.csd"
+    }
+
+    EncryptionSettings {
+        id: encryptionSettings
     }
 
     SilicaFlickable {
@@ -91,8 +103,7 @@ Page {
 
                             //% "IMEI"
                             label: qsTrId("settings_about-la-imei")
-                            // TODO: locale specific separator
-                            value: modemManager.imeiCodes.join(", ")
+                            value: modemManager.imeiCodes.join(Format.listSeparator)
                             visible: active
                         }
 
@@ -100,7 +111,7 @@ Page {
                             id: imeiSvItem
                             //% "IMEI SV"
                             label: qsTrId("settings_about-la-imei_sv")
-                            value: modemManager.imeisvCodes.join(", ")
+                            value: modemManager.imeisvCodes.join(Format.listSeparator)
                             visible: value != ""
                         }
                     }
@@ -195,6 +206,12 @@ Page {
                     BluetoothInfo {
                         id: bluetoothInfo
                     }
+                }
+
+                Loader {
+                    width: parent.width
+                    active: encryptionSettings.homeEncrypted
+                    source: "HomeEncryption.qml"
                 }
 
                 DetailItem {

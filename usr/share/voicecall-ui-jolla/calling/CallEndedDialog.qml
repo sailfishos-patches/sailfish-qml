@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0 as SilicaPrivate
@@ -176,7 +182,7 @@ SystemDialog {
                 height: parent.height
                 //% "Send message"
                 text: qsTrId("voicecall-bt-send_message")
-                visible: !telephony.callEndedLocally
+                visible: !telephony.callEndedLocally && telephony.messagingPermitted
                 iconSource: "image://theme/icon-m-message"
                 roundedCorners: SilicaPrivate.BubbleBackground.BottomLeft
 
@@ -226,7 +232,7 @@ SystemDialog {
                 //% "Call again"
                 text: qsTrId("voicecall-bt-call_again")
                 iconSource: "image://theme/icon-m-call"
-                visible: !telephony.callEndedLocally
+                visible: !telephony.callEndedLocally && telephony.callingPermitted
                 enabled: !_simPicker || !_simPicker.visible
                 roundedCorners: SilicaPrivate.BubbleBackground.BottomRight
 

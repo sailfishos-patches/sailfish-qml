@@ -1,4 +1,11 @@
-import QtQuick 2.0
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import com.jolla.settings.accounts 1.0
@@ -12,22 +19,21 @@ Dialog {
     property string usernameLabel
     property alias username: usernameField.text
     property alias password: passwordField.text
+    property alias extraText: extraTextLabel.text
     property alias serverAddress: serverAddressField.text
-    property alias addressbookPath: addressbookPathField.text
-    property alias calendarPath: calendarPathField.text
-    property alias webdavPath: webdavPathField.text
+    property alias addressbookPath: advancedSettings.addressbookPath
+    property alias calendarPath: advancedSettings.calendarPath
+    property alias webdavPath: advancedSettings.webdavPath
+    property alias imagesPath: advancedSettings.imagesPath
+    property alias backupsPath: advancedSettings.backupsPath
     property bool showAdvancedSettings
+    property alias ignoreSslErrors: ignoreSslErrorsSwitch.checked
 
     property var servicesEnabledConfig: ({})
 
     function _serviceEnabledChanged(service, enable) {
         servicesEnabledConfig[service.name] = enable
-
-        if (service.serviceType === "carddav") {
-            addressbookPathField.visible = enable
-        } else if (service.serviceType === "caldav") {
-            calendarPathField.visible = enable
-        }
+        advancedSettings.setServiceFieldEnabled(service, enable)
     }
 
     canAccept: username.length > 0 && password.length > 0
@@ -82,6 +88,19 @@ Dialog {
                 right: parent.right
             }
 
+            Label {
+                id: extraTextLabel
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    margins: Theme.horizontalPageMargin
+                }
+                color: Theme.highlightColor
+                font.pixelSize: Theme.fontSizeSmall
+                wrapMode: Text.Wrap
+                height: extraTextLabel.text.length > 0 ? (implicitHeight + Theme.paddingLarge) : 0
+            }
+
             AccountUsernameField {
                 id: usernameField
                 label: usernameLabel.length == 0 ? defaultLabel : usernameLabel
@@ -122,6 +141,13 @@ Dialog {
                 EnterKey.onClicked: parent.focus = true
             }
 
+            TextSwitch {
+                id: ignoreSslErrorsSwitch
+                //: Switch to ignore SSL security errors
+                //% "Ignore SSL Errors"
+                text: qsTrId("components_accounts-la-jabber_ignore_ssl_errors")
+            }
+
             SectionHeader {
                 //: Section header under which the user can toggle select various services to enable/disable
                 //% "Services"
@@ -129,74 +155,60 @@ Dialog {
             }
 
             Repeater {
+                id: serviceRepeater
+
                 model: root.services
 
-                delegate: TextSwitch {
+                delegate: IconTextSwitch {
                     text: AccountsUtil.serviceDisplayNameForService(modelData)
+                    icon.source: modelData.iconName
+                    description: AccountsUtil.serviceDescription(modelData, accountProvider.displayName, accountProvider.name)
+
                     checked: true   // enable services by default
+                    automaticCheck: false
 
                     Component.onCompleted: root._serviceEnabledChanged(modelData, checked)
                     onCheckedChanged: root._serviceEnabledChanged(modelData, checked)
+
+                    onClicked: {
+                        if (checked && AccountsUtil.countCheckedSwitches(serviceRepeater) === 1) {
+                            minimumServiceEnabledNotification.publish()
+                            return
+                        }
+                        checked = !checked
+                    }
                 }
             }
 
-            Column {
-                width: parent.width
+            SectionHeader {
+                //% "Advanced settings"
+                text: qsTrId("components_accounts-la-advanced_settings")
+                visible: root.showAdvancedSettings
+                opacity: advancedSettings.opacity
+            }
+
+            OnlineSyncAccountAdvancedSettings {
+                id: advancedSettings
+
                 visible: root.showAdvancedSettings
 
-                SectionHeader {
-                    //% "Advanced settings"
-                    text: qsTrId("components_accounts-la-advanced_settings")
-                    visible: webdavPathField.visible
-                             || addressbookPathField.visible
-                             || calendarPathField.visible
-                }
+                // The default server paths may depend on the username and server address values,
+                // so disable the path input fields until those two values have been entered.
+                enabled: usernameField.text.length > 0
+                        && serverAddressField.text.length > 0
 
-                TextField {
-                    id: webdavPathField
-                    width: parent.width
-                    inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-                    placeholderText: label
-                    visible: text.length > 0
-                    //: The field where the user can enter their WebDAV path
-                    //% "WebDAV path"
-                    label: qsTrId("components_accounts-la-webdav_path")
-
-                    EnterKey.enabled: text || inputMethodComposing
-                    EnterKey.iconSource: "image://theme/icon-m-enter-next"
-                    EnterKey.onClicked: addressbookPathField.focus = true
-                }
-
-                TextField {
-                    id: addressbookPathField
-                    width: parent.width
-                    inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-                    placeholderText: label
-                    //: The field where the user can enter their addressbook home set path.  It is optional and can normally be automatically discovered.
-                    //% "Address book path (optional)"
-                    label: qsTrId("components_accounts-la-optional_addressbook_path")
-
-                    EnterKey.enabled: text || inputMethodComposing
-                    EnterKey.iconSource: "image://theme/icon-m-enter-next"
-                    EnterKey.onClicked: calendarPathField.focus = true
-                }
-
-                TextField {
-                    id: calendarPathField
-                    width: parent.width
-                    inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-                    placeholderText: label
-                    //: The field where the user can enter their calendar home set path.  It is optional and can normally be automatically discovered.
-                    //% "Calendar path (optional)"
-                    label: qsTrId("components_accounts-la-optional_calendar_path")
-
-                    EnterKey.enabled: text || inputMethodComposing
-                    EnterKey.iconSource: "image://theme/icon-m-enter-close"
-                    EnterKey.onClicked: parent.focus = true
+                Component.onCompleted: {
+                    // No account argument, as account is not yet created, so cannot load
+                    // saved service settings.
+                    load(null, root.services)
                 }
             }
         }
 
         VerticalScrollDecorator {}
+    }
+
+    MinimumServiceEnabledNotification {
+        id: minimumServiceEnabledNotification
     }
 }

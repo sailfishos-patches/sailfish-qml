@@ -12,4 +12,6 @@ OnlineSyncAccountCreationAgent {
     calendarPath: "/dav/" + username + "/Calendar/"
     //% "Yahoo! ID"
     usernameLabel: qsTrId("settings_accounts-la-yahoo_id")
+    //% "Ensure that you are using a third-party app password for Sailfish OS, as generated in your Yahoo! account settings."
+    extraText: qsTrId("settings_accounts-la-yahoo_third_party_app_password")
 }

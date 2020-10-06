@@ -33,7 +33,7 @@ CsdTestPage {
             //% "Automated Touch IC test ongoing. Please wait a moment to give test some time to complete."
             text: qsTrId("csd-la-automated_touch_ic_test_ongoing")
             width: parent.width-(2*Theme.paddingLarge)
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
         }
     }
 

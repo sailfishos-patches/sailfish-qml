@@ -23,7 +23,7 @@ Page {
             width: parent.width - 2*Theme.horizontalPageMargin
             color: Theme.highlightColor
             font.pixelSize: Theme.fontSizeExtraLarge
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
             //% "This is a recurring event"
             text: qsTrId("calendar-event-ph-delete_recurring")
@@ -34,7 +34,7 @@ Page {
             width: parent.width - 2*Theme.horizontalPageMargin
             color: Theme.highlightColor
             font.pixelSize: Theme.fontSizeMedium
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
             //% "Confirm, if you want to delete this event or all events."
             text: qsTrId("calendar-event-delete_confirmation")

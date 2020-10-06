@@ -126,7 +126,7 @@ KeyboardLayout {
             symView: "#"
             symView2: "^"
             accents: "sšßśş$"
-            accentsShifted: "SŠŚŞ$"
+            accentsShifted: "SŠẞŚŞ$"
             deadKeyAccents: "ˇš"
             deadKeyAccentsShifted: "ˇŠ"
         }

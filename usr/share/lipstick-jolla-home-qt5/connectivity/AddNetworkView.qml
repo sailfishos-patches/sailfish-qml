@@ -9,9 +9,20 @@ Column {
     id: root
 
     property string path
-    property bool canAccept: network.ssid.length > 0 &&
-                             (!passphraseField.required || network.passphrase.length > 0) &&
-                             (!identityField.required   || network.identity.length > 0)
+    property bool canAccept: {
+        if (network.ssid.length > 0 && (!identityField.required || network.identity.length > 0)) {
+            if (!passphraseField.required) {
+                return true
+            } else if (network.securityType === NetworkService.SecurityWEP) {
+                return validWepPassphrase(network.passphrase)
+            } else if (network.securityType === NetworkService.SecurityIEEE802) {
+                return network.passphrase.length > 0
+            } else {
+                return validPskPassphrase(network.passphrase)
+            }
+        }
+        return false
+    }
 
     signal accepted(var config)
     signal rejected

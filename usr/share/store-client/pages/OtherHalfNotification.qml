@@ -184,7 +184,7 @@ SystemDialog {
             font.pixelSize: Theme.fontSizeLarge
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             color: Theme.highlightColor
             //% "Other Half installation prevented by Sailfish Device Manager"
             text: qsTrId("jolla-store-other_half_installation_not_allowed")

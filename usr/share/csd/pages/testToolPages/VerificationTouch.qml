@@ -109,7 +109,7 @@ CsdTestPage {
         font.pointSize: Theme.fontSizeSmall
         //% "Touch and slide over surrounding grids with your finger."
         text: qsTrId("csd-la-touch_and_slide_grids")
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
     }
 
     Column {

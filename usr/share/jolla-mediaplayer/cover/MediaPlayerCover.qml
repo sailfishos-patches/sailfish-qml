@@ -3,7 +3,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.mediaplayer 1.0
-import "../scripts/AlbumArtFinder.js" as AlbumArtFinder
 
 CoverBackground {
     id: root
@@ -11,14 +10,71 @@ CoverBackground {
     property alias idle: idleCover
     property string idleArtist
     property string idleSong
+    property var _reservedOrInvalid: ({})
 
     function fetchAlbumArts(count) {
         var artList = []
         for (var i = 0; i < count; ++i) {
-            var albumArt = AlbumArtFinder.randomArt(allSongModel, albumArtProvider)
+            var albumArt = randomArt(allSongModel, albumArtProvider)
             artList.push(albumArt)
         }
         return artList
+    }
+
+    function randomArt(model, albumArtProvider) {
+        var randomIndex = Math.floor(Math.random() * model.count)
+        var i = randomIndex
+        var count = model.count
+        var textualArt
+        // From index to end as index is a random model index
+        while (i < count) {
+            var song = model.get(i)
+            if (!_reservedOrInvalid[song.album + song.author]) {
+                var image = albumArtProvider.albumThumbnail(song.album, song.author)
+                _reservedOrInvalid[song.album + song.author] = true
+                if (image != "") {
+                    return {
+                        url: image,
+                        author: song.author,
+                        title: song.title
+                    }
+                }
+            } else if (!textualArt) {
+                textualArt = {
+                    url: image,
+                    author: song.author,
+                    title: song.title
+                }
+            }
+            ++i
+        }
+
+        // From beginning to index as index is a random model index
+        i = 0
+        count = randomIndex
+        while (i < count) {
+            song = model.get(i)
+            if (!_reservedOrInvalid[song.album + song.author]) {
+                image = albumArtProvider.albumThumbnail(song.album, song.author)
+                _reservedOrInvalid[song.album + song.author] = true
+                if (image != "") {
+                    return {
+                        url: image,
+                        author: song.author,
+                        title: song.title
+                    }
+                }
+            } else if (!textualArt) {
+                textualArt = {
+                    url: image,
+                    author: song.author,
+                    title: song.title
+                }
+            }
+            ++i
+        }
+
+        return textualArt ? textualArt : { url : "", album: "", author: ""}
     }
 
     width:  Theme.coverSizeLarge.width
@@ -169,8 +225,8 @@ CoverBackground {
         }
     }
 
-    GriloTrackerModel {
-        id: allSongModel
+    Connections {
+        target: allSongModel
 
         //: placeholder string for albums without a known name
         //% "Unknown album"
@@ -179,10 +235,6 @@ CoverBackground {
         //: placeholder string to be shown for media without a known artist
         //% "Unknown artist"
         readonly property string unknownArtist: qsTrId("mediaplayer-la-unknown-artist")
-
-        query: {
-            return AudioTrackerHelpers.getSongsQuery("", {"unknownArtist": unknownArtist, "unknownAlbum": unknownAlbum})
-        }
 
         onFinished: {
             var artList = fetchAlbumArts(3)

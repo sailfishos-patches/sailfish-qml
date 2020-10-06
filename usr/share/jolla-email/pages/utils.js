@@ -172,11 +172,3 @@ function sortTypeText(sortType) {
     return ""
 }
 
-function updateForDateChange(emailModel, listView) {
-    // QTBUG-32386: EmailMessageListModel::notifyDateChanged() must be called twice and a
-    // forceLayout() done on the ListView, to trigger multiple updates on the view layout,
-    // otherwise the first section's first item is laid out incorrectly.
-    emailModel.notifyDateChanged()
-    emailModel.notifyDateChanged()
-    listView.forceLayout()
-}

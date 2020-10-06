@@ -12,7 +12,10 @@ Dialog {
         caCertChooser.domainField,
         clientCertChooser.passphraseField,
         identityField,
-        passphraseField
+        passphraseField,
+        anonymousIdentityField,
+        advancedSettingsColumn.firstFocusableItem,
+        column
     ]
 
     property NetworkManager networkManager
@@ -26,7 +29,7 @@ Dialog {
         if (i === -1)
             return null
         for (i++; i < _focusItems.length; i++)
-            if (_focusItems[i].visible)
+            if (_focusItems[i] && _focusItems[i].visible)
                 return _focusItems[i]
         return null
     }
@@ -97,7 +100,7 @@ Dialog {
                 network: root.network
 
                 property Item nextFocusItem: _nextFocus(this)
-                EnterKey.iconSource: nextFocusItem ? "image://theme/icon-m-enter-next"
+                EnterKey.iconSource: nextFocusItem !== parent ? "image://theme/icon-m-enter-next"
                                                : "image://theme/icon-m-enter-close"
                 EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
             }
@@ -130,7 +133,7 @@ Dialog {
                 immediateUpdate: true
 
                 property Item nextFocusItem: _nextFocus(this.domainField)
-                EnterKey.iconSource: nextFocusItem ? "image://theme/icon-m-enter-next"
+                EnterKey.iconSource: nextFocusItem !== parent ? "image://theme/icon-m-enter-next"
                                                : "image://theme/icon-m-enter-close"
                 EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
             }
@@ -144,7 +147,7 @@ Dialog {
                 onCertFromFileSelected: pageStack.push(filePickerPage, { fieldName: 'clientCertFile', nameFilters: ['*.pem', '*.crt'] })
 
                 property Item nextFocusItem: _nextFocus(this.passphraseField)
-                EnterKey.iconSource: nextFocusItem ? "image://theme/icon-m-enter-next"
+                EnterKey.iconSource: nextFocusItem !== parent ? "image://theme/icon-m-enter-next"
                                                : "image://theme/icon-m-enter-close"
                 EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
             }
@@ -154,8 +157,11 @@ Dialog {
 
                 network: root.network
                 immediateUpdate: true
-                EnterKey.iconSource: "image://theme/icon-m-enter-next"
-                EnterKey.onClicked: passphraseField.focus = true
+
+                property Item nextFocusItem: _nextFocus(this)
+                EnterKey.iconSource: nextFocusItem !== parent ? "image://theme/icon-m-enter-next"
+                                               : "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
             }
 
             PassphraseField {
@@ -164,14 +170,22 @@ Dialog {
                 network: root.network
                 immediateUpdate: true
 
-                EnterKey.iconSource: "image://theme/icon-m-enter-" + (advancedSettingsColumn.focusable ? "next" : "close")
-                EnterKey.onClicked: {
-                    if (advancedSettingsColumn.focusable) {
-                        advancedSettingsColumn.firstFocusableItem.focus = true
-                    } else {
-                        parent.focus = true
-                    }
-                }
+                property Item nextFocusItem: _nextFocus(this)
+                EnterKey.iconSource: nextFocusItem !== parent ? "image://theme/icon-m-enter-next"
+                                               : "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
+            }
+
+            AnonymousIdentityField {
+                id: anonymousIdentityField
+
+                network: root.network
+                immediateUpdate: true
+
+                property Item nextFocusItem: _nextFocus(this)
+                EnterKey.iconSource: nextFocusItem !== parent ? "image://theme/icon-m-enter-next"
+                                               : "image://theme/icon-m-enter-close"
+                EnterKey.onClicked: if (nextFocusItem) nextFocusItem.focus = true
             }
 
             AdvancedSettingsColumn {

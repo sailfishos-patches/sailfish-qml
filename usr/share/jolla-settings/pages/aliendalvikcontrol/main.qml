@@ -57,19 +57,19 @@ Page {
         }
     }
 
-    ConfigurationGroup {
-        id: edgeConfiguration
-        path: "/org/coderus/aliendalvikcontrol/edge"
-        property bool active: false
-        property bool leftHanded: false
-        onLeftHandedChanged: {
-            if (!isActive) {
-                return
-            }
+//    ConfigurationGroup {
+//        id: edgeConfiguration
+//        path: "/org/coderus/aliendalvikcontrol/edge"
+//        property bool active: false
+//        property bool leftHanded: false
+//        onLeftHandedChanged: {
+//            if (!isActive) {
+//                return
+//            }
 
-            setTouchRegionDelayed.start()
-        }
-    }
+//            setTouchRegionDelayed.start()
+//        }
+//    }
 
     SilicaFlickable {
         id: flick
@@ -131,7 +131,7 @@ Page {
                 onClicked: {
                     dbus.call("openCamera", [])
                 }
-}
+            }
 
             SectionHeader {
                 text: "Navigation bar"
@@ -153,6 +153,60 @@ Page {
                     text: "Show"
                     onClicked: {
                         dbus.call("showNavBar", [])
+                    }
+                }
+            }
+
+            SectionHeader {
+                text: "Volume control"
+                visible: apiVersion >= 27
+            }
+
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: Theme.paddingMedium
+                height: Theme.itemSizeExtraSmall
+                visible: apiVersion >= 27
+
+                Timer {
+                    id: delayVC
+                    interval: 1000
+                    repeat: false
+                    onTriggered: {
+                        dbus.call("sendKeyevent", [24])
+                    }
+                }
+
+                Button {
+                    text: "Show"
+                    onClicked: {
+                        delayVC.start()
+                    }
+                }
+            }
+
+            SectionHeader {
+                text: "Status bar"
+                visible: apiVersion >= 27
+            }
+
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: Theme.paddingMedium
+                height: Theme.itemSizeExtraSmall
+                visible: apiVersion >= 27
+
+                Button {
+                    text: "Hide"
+                    onClicked: {
+                        dbus.call("hideStatusBar", [])
+                    }
+                }
+
+                Button {
+                    text: "Show"
+                    onClicked: {
+                        dbus.call("showStatusBar", [])
                     }
                 }
             }
@@ -249,25 +303,25 @@ Page {
                 }
             }
 
-            SectionHeader {
-                text: "Onehand control"
-            }
+//            SectionHeader {
+//                text: "Onehand control"
+//            }
 
-            TextSwitch {
-                id: edgeActiveSwitch
-                text: "Enable onehand control"
-                checked: edgeConfiguration.active
-                onClicked: edgeConfiguration.active = checked
+//            TextSwitch {
+//                id: edgeActiveSwitch
+//                text: "Enable onehand control"
+//                checked: edgeConfiguration.active
+//                onClicked: edgeConfiguration.active = checked
 
-            }
+//            }
 
-            TextSwitch {
-                id: edgeLeftHandedSwitch
-                text: "Left handed control"
-                visible: edgeActiveSwitch.checked
-                checked: edgeConfiguration.leftHanded
-                onClicked: edgeConfiguration.leftHanded = checked
-            }
+//            TextSwitch {
+//                id: edgeLeftHandedSwitch
+//                text: "Left handed control"
+//                visible: edgeActiveSwitch.checked
+//                checked: edgeConfiguration.leftHanded
+//                onClicked: edgeConfiguration.leftHanded = checked
+//            }
 
             Item {
                 width: 1; height: Theme.itemSizeSmall

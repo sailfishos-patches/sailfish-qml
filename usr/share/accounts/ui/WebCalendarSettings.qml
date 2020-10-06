@@ -154,7 +154,6 @@ Column {
     SyncScheduleOptions {
         id: scheduleOptions
         schedule: profileSchedule
-        isSync: true
     }
 
     Loader {

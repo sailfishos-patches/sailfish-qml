@@ -24,13 +24,9 @@ Page {
         anchors.fill: parent
 
         PullDownMenu {
-            id: mainPageMenu
-
             NowPlayingMenuItem { }
 
             MenuItem {
-                id: menuItemSearch
-
                 //: Search menu entry
                 //% "Search"
                 text: qsTrId("mediaplayer-me-search")
@@ -134,8 +130,6 @@ Page {
                     }
 
                     delegate: PlaylistItem {
-                        id: playlistItem
-
                         width: playlistRow.cellWidth
                         contentHeight: playlistRow.cellHeight
 

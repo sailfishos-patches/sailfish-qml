@@ -221,8 +221,8 @@ ApplicationWindow {
 
         // Normalize embedded whitespace to single space
         number = number.replace(/\s+/g, ' ')
-        // Only digits, '+' and space are allowed
-        number = number.replace(/[^+ 0-9]/g, '')
+        // Only digits, '+', dtmf pause characters ('p', 'w', ',', and ';') and space are allowed
+        number = number.replace(/[^+ 0-9pw,;]/g, '')
         // Remove leading and trailing whitespace
         number = number.replace(/^\s+/, '').replace(/\s+$/, '')
         callPromptDialog.number = number
@@ -281,6 +281,24 @@ ApplicationWindow {
         } else {
             VoiceCall.VoiceCallAudioRecorder.stopRecording()
         }
+    }
+
+    function getNumberDetail(person, remoteUid) {
+        var label = ""
+        if (person) {
+            var numbers = Person.removeDuplicatePhoneNumbers(person.phoneDetails)
+            var minimizedRemoteUid = Person.minimizePhoneNumber(remoteUid)
+            for (var i = 0; i < numbers.length; i++) {
+                var number = numbers[i].normalizedNumber
+
+                if (Person.minimizePhoneNumber(number) === minimizedRemoteUid) {
+                    var detail = numbers[i]
+                    label = ContactsUtil.getNameForDetailSubType(detail.type, detail.subTypes, detail.label)
+                    break
+                }
+            }
+        }
+        return label
     }
 
     onCallActiveChanged: {
@@ -370,6 +388,13 @@ ApplicationWindow {
     }
 
     Instantiator {
+        model: telephony.modems
+        delegate: CellBroadcast {
+            modemPath: modelData
+        }
+    }
+
+    Instantiator {
         id: supplementaryServices
 
         function initiateService(command, modemPath) {
@@ -437,8 +462,9 @@ ApplicationWindow {
         onCallRecorded: {
             var n = recordingNotification.createObject()
 
-            //% "Call recorded"
-            n.summary = qsTrId("voicecall-la-call_recorded")
+            //: A call recording has been created
+            //% "Recording created"
+            n.summary = qsTrId("voicecall-la-call_recording_created")
             n.body = label
             n.previewSummary = n.summary
             n.previewBody = n.body
@@ -469,19 +495,25 @@ ApplicationWindow {
             //% "Call recordings"
             appName: qsTrId("voicecall-la-call_recordings")
             category: "x-jolla.voicecall.callrecordings"
-            remoteActions: [ {
-                "name": "default",
-                "service": "com.jolla.settings",
-                "path": "/com/jolla/settings/ui",
-                "iface": "com.jolla.settings.ui",
-                "method": "showCallRecordings"
-            }, {
-                "name": "app",
-                "service": "com.jolla.settings",
-                "path": "/com/jolla/settings/ui",
-                "iface": "com.jolla.settings.ui",
-                "method": "showCallRecordings"
-            } ]
+            remoteActions: [
+                {
+                    "name": "default",
+                    //: Show the list of call recordings
+                    //% "Show recordings"
+                    "displayName": qsTrId("voicecall-la-show_call_recordings"),
+                    "service": "com.jolla.settings",
+                    "path": "/com/jolla/settings/ui",
+                    "iface": "com.jolla.settings.ui",
+                    "method": "showCallRecordings"
+                },
+                {
+                    "name": "app",
+                    "service": "com.jolla.settings",
+                    "path": "/com/jolla/settings/ui",
+                    "iface": "com.jolla.settings.ui",
+                    "method": "showCallRecordings"
+                }
+            ]
         }
     }
 
@@ -515,9 +547,6 @@ ApplicationWindow {
                 }
 
                 main.addCallMode = false
-                if (telephony.silencedCall) {
-                    telephony.silencedCallerDetails.silenced = false
-                }
                 updateVisibility()
                 showCallView()
             }

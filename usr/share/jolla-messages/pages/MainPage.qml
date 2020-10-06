@@ -20,7 +20,7 @@ Page {
         id: view
         anchors.fill: parent
         model: groupModel
-        section.property: "weekdaySection"
+        section.property: "timeSection"
         header: Item { width: parent.width; height: Theme.paddingLarge }
         delegate: Item {
             id: wrapper

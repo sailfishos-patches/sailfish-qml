@@ -16,8 +16,8 @@ Item {
             x: Theme.paddingSmall
             y: Theme.paddingSmall
             width: parent.width - 2 * Theme.paddingSmall
-            text: overlapTitles
-            wrapMode: Text.WordWrap
+            text: overlapTitles.join(Format.listSeparator)
+            wrapMode: Text.Wrap
             elide: Text.ElideRight
             visible: parent.height >= 2 * (Theme.paddingSmall + overview.height)
             height: parent.height - overview.height

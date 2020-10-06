@@ -46,10 +46,13 @@ Rectangle {
     property real expandedX
     property bool expanded
     property real activeX
+    property bool hasAccents
 
     onTargetChanged: {
         expanded = false
-        if (target && target.showPopper) {
+        hasAccents = target && (typeof target.accents == "string") && target.accents.length > 0
+
+        if (hasAccents || (target && target.showPopper)) {
             popperExpandTimer.restart()
             setup()
         } else {
@@ -104,7 +107,7 @@ Rectangle {
         },
         State {
             name: "expanded"
-            when: target !== null && target.showPopper && popper.expanded
+            when: target !== null && (target.showPopper || hasAccents) && popper.expanded
 
             PropertyChanges {
                 target: popper
@@ -114,7 +117,7 @@ Rectangle {
                     var margin = geometry.popperMargin
                     return Math.max(margin,
                                     Math.min(result,
-                                             parent.width-popper.expandedWidth-margin))
+                                             parent.width - popper.expandedWidth - margin))
                 }
                 width: popper.expandedWidth
             }
@@ -233,12 +236,12 @@ Rectangle {
                            (middleCell * geometry.accentPopperCellWidth)
         popper.expandedX = Math.max(geometry.popperMargin,
                                     Math.min(expandedX,
-                                             parent.width-popper.expandedWidth-geometry.popperMargin))
+                                             parent.width - popper.expandedWidth - geometry.popperMargin))
 
         // calculate active cell
         var translatedX = mappedTargetX + target.width * .5 - expandedX - geometry.accentPopperMargin
         translatedX = Math.max(Math.min(translatedX,
-                                        expandedWidth-2*geometry.accentPopperMargin-0.1),
+                                        expandedWidth - 2*geometry.accentPopperMargin - 0.1),
                                0)
         activeCell = Math.floor(translatedX / geometry.accentPopperCellWidth)
         initialActiveCell = activeCell

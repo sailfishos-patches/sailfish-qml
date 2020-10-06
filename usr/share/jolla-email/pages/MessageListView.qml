@@ -68,14 +68,12 @@ SilicaListView {
     model: EmailMessageListModel {
         id: messageModel
 
-        currentDate: app.today
         limit: app.defaultMessageListLimit
         // reset limit upon content change
         onFolderAccessorChanged: {
             limit = app.defaultMessageListLimit
+            messageListView.contentY = messageListView.originY
         }
-
-        onCurrentDateChanged: Utils.updateForDateChange(messageModel, messageListView)
     }
 
     header: MessageListHeader {

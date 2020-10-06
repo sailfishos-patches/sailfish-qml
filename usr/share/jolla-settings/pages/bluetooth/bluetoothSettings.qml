@@ -5,6 +5,7 @@ import Sailfish.Bluetooth 1.0
 import com.jolla.settings.bluetooth.translations 1.0
 import org.kde.bluezqt 1.0 as BluezQt
 import Nemo.Ssu 1.1 as Ssu
+import Nemo.DBus 2.0
 
 Page {
     id: root
@@ -15,13 +16,26 @@ Page {
     readonly property QtObject _bluetoothManager: BluezQt.Manager
     readonly property bool _bluetoothPoweredOn: btTechModel.available && btTechModel.powered && adapter && adapter.powered
     property int _baseStackDepth: -1
+    property var _connecting: ({})
 
     function _connectToDevice(btDevice) {
+        if (!!_connecting[btDevice.address]) {
+            console.warn("Last connection request still in progress for", btDevice.address)
+            return
+        }
+
         var pendingCall = btDevice.connectToDevice()
         pendingCall.userData = btDevice.address
         devicePicker.addConnectingDevice(btDevice.address)
+        _connecting[btDevice.address] = pendingCall
+
         pendingCall.finished.connect(function(call) {
             devicePicker.removeConnectingDevice(call.userData)
+            if (call.error !== BluezQt.PendingCall.NoError
+                    && call.error !== BluezQt.PendingCall.InProgress) {
+                windowPrompt.showConnectionError()
+            }
+            delete root._connecting[call.userData]
         })
     }
 
@@ -265,5 +279,23 @@ Page {
     Timer {
         id: delayedAutoDiscoveryTimer
         onTriggered: root._checkAutoStartDiscovery()
+    }
+
+    DBusInterface {
+        id: windowPrompt
+
+        function showConnectionError() {
+            //: Shown when Bluetooth connection attempt fails
+            //% "Connection failed"
+            var title = qsTrId("settings_bluetooth-he-connection_failed")
+
+            //% "Ensure the other device is turned on, or remove the pairing and pair the devices again."
+            var body = qsTrId("settings_bluetooth-la-connection_failed_body")
+            windowPrompt.call("showInfoWindow", [title, "", body])
+        }
+
+        service: "com.jolla.windowprompt"
+        path: "/com/jolla/windowprompt"
+        iface: "com.jolla.windowprompt"
     }
 }

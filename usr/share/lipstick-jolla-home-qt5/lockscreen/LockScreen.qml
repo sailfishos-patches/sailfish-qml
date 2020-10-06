@@ -338,9 +338,13 @@ ApplicationWindow {
                 previewSummary: qsTrId("lipstick-jolla-home-he-devicelock")
                 summary: previewSummary
                 body: previewBody
+                icon: "icon-lock-settings"
                 replacesId: Desktop.settings.security_code_notification_id
                 remoteActions: [ {
                     "name": "default",
+                    //: Update the device lock code now (instead of waiting for it to expire)
+                    //% "Update now"
+                    "displayName": qsTrId("lipstick-jolla-home-la-update_device_code_now"),
                     "service": "com.jolla.settings",
                     "path": "/com/jolla/settings/ui",
                     "iface": "com.jolla.settings.ui",

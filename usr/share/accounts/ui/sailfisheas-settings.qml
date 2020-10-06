@@ -3,6 +3,7 @@ import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import com.jolla.settings.accounts 1.0
 import com.jolla.sailfisheas 1.0
+import com.jolla.settings.system 1.0
 import "SailfishEasSettings.js" as ServiceSettings
 
 AccountSettingsAgent {
@@ -44,6 +45,7 @@ AccountSettingsAgent {
             StandardAccountSettingsPullDownMenu {
                 allowCredentialsUpdate: root.accountNotSignedIn
                 allowDelete: !root.accountIsReadOnly
+                allowDeleteLimited: !root.accountIsLimited
 
                 onCredentialsUpdateRequested: credentialsUpdater.replaceWithCredentialsUpdatePage(root.accountId)
                 onAccountDeletionRequested: {
@@ -116,10 +118,17 @@ AccountSettingsAgent {
                         title: qsTrId("accounts-he-server_settings")
                     }
 
+                    DisabledByMdmBanner {
+                        id: disabledByMdmBanner
+                        active: root.accountIsLimited
+                        limited: true
+                    }
+
                     SailfishEasConnectionSettings {
                         id: activesyncConnectionSettings
                         checkMandatoryFields: true
                         editMode: true
+                        limitedMode: root.accountIsLimited
                         onCertificateDataSaved: {
                             // increase credentials counter so daemon side knows to reload.
                             // would be saved later, but let's already avoid different settings getting out of sync

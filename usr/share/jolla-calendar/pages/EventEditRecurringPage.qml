@@ -21,7 +21,7 @@ Page {
             width: parent.width - 2*Theme.horizontalPageMargin
             color: Theme.highlightColor
             font.pixelSize: Theme.fontSizeExtraLarge
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
             //% "This is a recurring event"
             text: qsTrId("calendar-event-he-edit_recurring")
@@ -32,7 +32,7 @@ Page {
             width: parent.width - 2*Theme.horizontalPageMargin
             color: Theme.highlightColor
             font.pixelSize: Theme.fontSizeMedium
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignHCenter
             //% "Do you want to edit this event or the series"
             text: qsTrId("calendar-event-edit_recurring_confirmation")

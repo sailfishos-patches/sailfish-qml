@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 
@@ -7,8 +13,9 @@ Loader {
     property var callInstance
     property var callerDetails
     property bool showWhenCallEnds: {
+        var allowedToReact = telephony.callingPermitted || telephony.messagingPermitted
         var hasReminder = item && item.reminder.exists
-        return !telephony.callEndedLocally || hasReminder
+        return allowedToReact && (!telephony.callEndedLocally || hasReminder)
     }
 
     property bool _showWhenLoaded

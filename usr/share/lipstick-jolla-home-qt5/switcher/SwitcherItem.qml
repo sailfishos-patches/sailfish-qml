@@ -350,7 +350,9 @@ EditableGridDelegate {
     }
 
     Rectangle {
-        color: closeArea.pressed ? Theme.highlightColor : Theme.primaryColor
+        color: Theme.colorScheme === Theme.LightOnDark
+               ? closeArea.pressed ? Theme.highlightColor : Theme.primaryColor
+               : closeArea.pressed ? Theme.highlightDimmerColor : Theme.highlightBackgroundColor
         width: Theme.iconSizeMedium
         height: width
         radius: width/2
@@ -360,7 +362,9 @@ EditableGridDelegate {
 
         Image {
             anchors.centerIn: parent
-            source: "image://theme/icon-close-app?" + Theme.highlightBackgroundColor
+            source: "image://theme/icon-close-app?" + (Theme.colorScheme === Theme.LightOnDark
+                    ? closeArea.pressed ? Theme.highlightDimmerColor : Theme.highlightBackgroundColor
+                    : closeArea.pressed ? Theme.darkSecondaryColor : Theme.lightPrimaryColor)
         }
 
         Behavior on opacity { NumberAnimation { } }

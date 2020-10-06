@@ -20,6 +20,7 @@ Column {
     property bool outgoingUsernameEdited
     property bool outgoingPasswordEdited
     property bool checkMandatoryFields
+    property bool accountLimited
     property alias emailAddress: emailaddress.text
     property alias serverTypeIndex: incomingServerType.currentIndex
     property alias incomingUsername: incomingUsernameField.text
@@ -66,6 +67,7 @@ Column {
 
     GeneralEmailAddressField {
         id: emailaddress
+        visible: !accountLimited
         width: parent.width
         onTextChanged: {
             if (!incomingUsernameEdited && !editMode) {
@@ -87,7 +89,7 @@ Column {
 
     ComboBox {
         id: incomingServerType
-        visible: !editMode && !hideIncoming
+        visible: !editMode && !hideIncoming && !accountLimited
         width: parent.width - Theme.paddingMedium
         //: Incoming server type
         //% "Server type"
@@ -103,7 +105,7 @@ Column {
 
     TextField {
         id: incomingUsernameField
-        visible: !hideIncoming
+        visible: !hideIncoming && !accountLimited
         width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
         //: Placeholder text for account incoming server username
@@ -149,7 +151,7 @@ Column {
 
     TextField {
         id: incomingServerField
-        visible: !hideIncoming
+        visible: !hideIncoming && !accountLimited
         width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
         //: Placeholder text for account incoming server address
@@ -165,7 +167,7 @@ Column {
 
     ComboBox {
         id: incomingSecureConnection
-        visible: !hideIncoming
+        visible: !hideIncoming && !accountLimited
         width: parent.width - Theme.paddingMedium
         //: Incoming server secure connection
         //% "Secure connection"
@@ -185,7 +187,7 @@ Column {
 
     TextField {
         id: incomingPortField
-        visible: !hideIncoming
+        visible: !hideIncoming && !accountLimited
         width: parent.width
         inputMethodHints: Qt.ImhDigitsOnly
         //: Placeholder text for account incoming server port
@@ -202,7 +204,7 @@ Column {
 
     SectionHeader {
         id: outgoingServerSection
-        visible: !hideOutgoing
+        visible: !hideOutgoing && !accountLimited && outgoingPasswordField.visible
         //: Label explaining that the following fields are for the outgoing mail server
         //% "Outgoing mail server"
         text: qsTrId("components_accounts-la-genericemail_outgoing_server_label")
@@ -210,7 +212,7 @@ Column {
 
     ComboBox {
         id: outgoingServerType
-        visible: !editMode && !hideOutgoing
+        visible: !editMode && !hideOutgoing && !accountLimited
         width: parent.width
         //: Outgoing server type
         //% "Server type"
@@ -225,7 +227,7 @@ Column {
 
     TextField {
         id: outgoingServerField
-        visible: !hideOutgoing
+        visible: !hideOutgoing && !accountLimited
         width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
         //: Placeholder text for account outgoing server address
@@ -241,7 +243,7 @@ Column {
 
     ComboBox {
         id: outgoingSecureConnection
-        visible: !hideOutgoing
+        visible: !hideOutgoing && !accountLimited
         width: parent.width - Theme.paddingMedium
         //: Outgoing server secure connection
         //% "Secure connection"
@@ -259,7 +261,7 @@ Column {
 
     TextField {
         id: outgoingPortField
-        visible: !hideOutgoing
+        visible: !hideOutgoing && !accountLimited
         width: parent.width
         inputMethodHints: Qt.ImhDigitsOnly
         //: Placeholder text for account outgoing server port
@@ -276,7 +278,7 @@ Column {
 
     TextSwitch {
         id: outgoingRequiresAuthSwitch
-        visible: !hideOutgoing
+        visible: !hideOutgoing && !accountLimited
         checked: true
         //% "Requires authentication"
         text: qsTrId("components_accounts-la-genericemail_outgoing_requires_auth")
@@ -284,7 +286,7 @@ Column {
 
     TextField {
         id: outgoingUsernameField
-        visible: !hideOutgoing && outgoingRequiresAuthSwitch.checked
+        visible: !hideOutgoing && outgoingRequiresAuthSwitch.checked && !accountLimited
         width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
         //: Placeholder text for server username
@@ -324,7 +326,7 @@ Column {
 
     SectionHeader {
         id: certificatesSection
-        visible: true
+        visible: !accountLimited
         //: Label explaining that the following fields are related to server certificates
         //% "Certificates"
         text: qsTrId("components_accounts-la-genericemail_certificates_label")
@@ -332,6 +334,7 @@ Column {
 
     TextSwitch {
         id: acceptUntrustedCertificatesSwitch
+        visible: !accountLimited
         checked: false
         //: Accept untrusted certificates
         //% "Accept untrusted certificates"

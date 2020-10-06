@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2019 Jolla Ltd.
- * Copyright (c) 2019 Open Mobile Platform LLC.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -17,7 +17,7 @@ import Nemo.Configuration 1.0
 Page {
     id: root
 
-    property bool quickCall: quickCallConfig.value
+    property bool quickCall: telephony.callingPermitted && quickCallConfig.value
     signal reset
     clip: true
 
@@ -95,14 +95,19 @@ Page {
                 DisabledByMdmBanner {
                     id: disabledBanner
                     clip: true
-                    active: simFiltersHelper.ready &&
-                            (!simFiltersHelper.activeSimCount ||
-                             !simFiltersHelper.anyActiveSimCanDial ||
-                             !simFiltersHelper.anyActiveSimCanReceive)
+                    active: !telephony.callingPermitted ||
+                            (simFiltersHelper.ready &&
+                             (!simFiltersHelper.activeSimCount ||
+                              !simFiltersHelper.anyActiveSimCanDial ||
+                              !simFiltersHelper.anyActiveSimCanReceive))
                     compressed: true
 
                     text: {
-                        if (!simFiltersHelper.activeSimCount) {
+                        if (!telephony.callingPermitted) {
+                            //: Banner shown to the user when they are missing permission to make calls
+                            //% "Emergency calls only, outgoing calls disabled by user permissions"
+                            return qsTrId("voicecall-la-no_user_permission")
+                        } else if (!simFiltersHelper.activeSimCount) {
                             //: Banner shown to the user when there are no active SIM cards inserted
                             //% "No active SIM cards are inserted"
                             return qsTrId("voicecall-la-no_active_sim")

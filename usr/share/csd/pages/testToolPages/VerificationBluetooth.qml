@@ -121,7 +121,7 @@ CsdTestPage {
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2*x
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
                 font.bold: true
 
                 //% "Status:"
@@ -132,7 +132,7 @@ CsdTestPage {
                 delegate: Label {
                     x: Theme.horizontalPageMargin
                     width: topInfoColumn.width - 2*x
-                    wrapMode: Text.WordWrap
+                    wrapMode: Text.Wrap
                     color: model.statusColor
                     font.bold: true
                     text: model.statusText
@@ -219,7 +219,7 @@ CsdTestPage {
         Label {
             id: timerLabel
             width: parent.width
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             font.bold: true
             opacity: timeoutTimer.running ? 1 : 0
             Behavior on opacity { FadeAnimation { } }

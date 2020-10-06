@@ -101,7 +101,7 @@ CsdTestPage {
         x: Theme.paddingLarge
         font.pixelSize: Theme.fontSizeLarge
         width: parent.width-(6*Theme.paddingLarge)
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
     }
 
     Label {
@@ -111,7 +111,7 @@ CsdTestPage {
         x: Theme.paddingLarge
         font.pixelSize: Theme.fontSizeLarge
         width: parent.width-(6*Theme.paddingLarge)
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
     }
 
     Column {
@@ -171,7 +171,7 @@ CsdTestPage {
         x: Theme.paddingLarge
         font.pixelSize: Theme.fontSizeLarge
         width: parent.width-(6*Theme.paddingLarge)
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         //% "Is radio playing from headset?"
         text: qsTrId("csd-la-is_radio_playing_from_headset")
     }

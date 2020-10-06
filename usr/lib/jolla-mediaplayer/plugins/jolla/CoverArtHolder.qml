@@ -17,8 +17,6 @@ Item {
     Component.onDestruction: view.contentWidth = Qt.binding(function() { return view.width })
 
     Rectangle {
-        id: artRectangle
-
         anchors {
             top: coverHolder.top
             bottom: parent.bottom

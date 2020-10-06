@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Open Mobile Platform LLC
  * Copyright (c) 2016 - 2019 Jolla Ltd.
  *
  * License: Proprietary
@@ -31,7 +32,7 @@ ListModel {
         "VerificationHeadsetDetect", "VerificationHeadsetButtons", "VerificationHeadset", "AudioPlayMusicHeadset",
         "VerificationVideoPlayback", "VerificationVideoPlaybackVibrator",
         "VerificationFrontCamera", "VerificationFrontCameraReboot", "VerificationBackCamera", "VerificationFrontBackCamera",
-        "VerificationWifi", "VerificationBluetooth", "VerificationToh", "VerificationGpsRadio", "VerificationGpsLock", "VerificationCellInfo",
+        "VerificationWifi", "VerificationBluetooth", "VerificationToh", "VerificationNfc", "VerificationGpsRadio", "VerificationGpsLock", "VerificationCellInfo",
         "VerificationFmRadio",
         "Verification2G", "Verification3G", "Verification4G",
         "VerificationBattery", "VerificationUsbCharging",
@@ -232,6 +233,9 @@ ListModel {
         case "VerificationToh":
             //% "TOH"
             return qsTrId("csd-li-toh")
+        case "VerificationNfc":
+            //% "NFC"
+            return qsTrId("csd-li-nfc")
         case "VerificationGpsRadio":
             //% "GPS"
             return qsTrId("csd-li-gps")
@@ -373,6 +377,7 @@ ListModel {
         case "VerificationWifi":
         case "VerificationBluetooth":
         case "VerificationToh":
+        case "VerificationNfc":
         case "VerificationGpsRadio":
         case "VerificationGpsLock":
         case "VerificationCellInfo":
@@ -446,6 +451,7 @@ ListModel {
         "VerificationWifi": ["Wifi"],
         "VerificationBluetooth": ["Bluetooth"],
         "VerificationToh": ["TOH"],
+        "VerificationNfc": ["NFC"],
         "VerificationGpsRadio": ["GPS"],
         "VerificationGpsLock": ["GPS"],
         "VerificationCellInfo": ["CellInfo"],

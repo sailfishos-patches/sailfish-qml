@@ -15,71 +15,45 @@ import com.jolla.gallery.nextcloud 1.0
 BackgroundItem {
     id: root
 
-    property int accountId
-    property string userId
-    property string albumId
-    property string albumName
+    property alias accountId: imageDownloader.accountId
+    property alias userId: imageDownloader.userId
+    property alias albumId: imageDownloader.albumId
+    property alias albumName: dirItem.title
     property string albumThumbnailPath
     property int photoCount
+    property bool usePlaceholderColor
 
-    height: image.height
+    width: parent.width
+    height: dirItem.height
 
-    HighlightImage {
-        id: image
+    NextcloudDirectoryItem {
+        id: dirItem
 
-        width: Theme.itemSizeExtraLarge
-        height: width
-        sourceSize.width: width
-        sourceSize.height: width
-        source: albumThumbnailPath.length ? albumThumbnailPath : "image://theme/icon-l-nextcloud"
-        fillMode: albumThumbnailPath.length ? Image.PreserveAspectCrop : Image.PreserveAspectFit
-        clip: true
-        highlighted: albumThumbnailPath.length === 0 && root.highlighted
-        opacity: albumThumbnailPath.length && root.highlighted ? Theme.opacityHigh : 1
+        titleLabel.color: root.usePlaceholderColor
+                          ? (highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor)
+                          : (highlighted ? Theme.highlightColor : Theme.primaryColor)
+
+        icon {
+            source: albumThumbnailPath.length ? albumThumbnailPath : "image://theme/icon-m-file-folder-nextcloud"
+            width: icon.sourceSize.width
+            height: icon.sourceSize.height
+            sourceSize.width: albumThumbnailPath.length ? dirItem.height : icon.paintedWidth
+            sourceSize.height: albumThumbnailPath.length ? dirItem.height : icon.paintedHeight
+            fillMode: Image.PreserveAspectCrop
+            clip: albumThumbnailPath.length > 0
+            highlighted: albumThumbnailPath.length === 0 && root.highlighted
+            opacity: albumThumbnailPath.length > 0 && highlighted ? Theme.opacityHigh : 1
+        }
+
+        countText: root.photoCount
     }
 
     NextcloudImageDownloader {
         id: imageDownloader
 
-        accountId: root.accountId
-        userId: root.userId
-        albumId: root.albumId
-
         imageCache: albumThumbnailPath.length === 0
                     ? NextcloudImageCache
                     : null
         downloadThumbnail: true
-    }
-
-    Column {
-        id: column
-
-        anchors {
-            left: image.right
-            leftMargin: Theme.paddingLarge
-            right: parent.right
-            rightMargin: Theme.paddingMedium
-            verticalCenter: image.verticalCenter
-        }
-
-        Label {
-            id: titleLabel
-            width: parent.width
-            height: text.length > 0 ? implicitHeight : 0
-            text: albumName
-            truncationMode: TruncationMode.Fade
-        }
-
-        Label {
-            id: subtitleLabel
-            width: parent.width
-
-            //: Photos count for Nextcloud album
-            //% "%n photos"
-            text: qsTrId("jolla_gallery_nextcloud-album_photo_count", photoCount)
-            font.pixelSize: Theme.fontSizeSmall
-            color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-            truncationMode: TruncationMode.Fade
-        }
     }
 }

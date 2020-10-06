@@ -69,8 +69,12 @@ SystemDialog {
 
         isTransient: true
         icon: "icon-m-sd-card"
+        appName: Lipstick.notificationSystemApplicationName
         remoteActions: [ {
                 "name": "default",
+                //: Open the system storage settings
+                //% "Show storage"
+                "displayName": qsTrId("lipstick-jolla-home-la-storage_settings"),
                 "service": "com.jolla.settings",
                 "path": "/com/jolla/settings/ui",
                 "iface": "com.jolla.settings.ui",
@@ -118,7 +122,7 @@ SystemDialog {
                 x: Theme.horizontalPageMargin
 
                 width: parent.width - 2 * x
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
                 color: Theme.highlightColor
 
                 text: connectionBus === "usb"

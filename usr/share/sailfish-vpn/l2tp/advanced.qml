@@ -8,13 +8,6 @@ Column {
     property string defaultText
 
     function setProperties(providerProperties) {
-        var getProperty = function(name) {
-            if (providerProperties) {
-                return providerProperties[name] || ''
-            }
-            return ''
-        }
-
         var getYesProperty = function(name, default_value) {
             if (getProperty(name) === 'yes') {
                 return true
@@ -56,13 +49,6 @@ Column {
     }
 
     function updateProperties(providerProperties) {
-        var updateProvider = function(name, value) {
-            // If the value is empty/default, do not include the property in the configuration
-            if (value != '' && value != '_default') {
-                providerProperties[name] = value
-            }
-        }
-
         updateProvider('L2TP.Port', l2tpPort.text)
         updateProvider('L2TP.ListenAddr', l2tpListenAddress.text)
         updateProvider('L2TP.AuthFile', l2tpAuthFile.path)

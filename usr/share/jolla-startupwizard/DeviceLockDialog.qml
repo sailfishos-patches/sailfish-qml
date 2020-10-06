@@ -14,12 +14,7 @@ MandatoryDeviceLockInputPage {
 
     readonly property bool mandatorySecurityCode: DeviceLock.state != DeviceLock.Unlocked
                 && !lockCodeSet
-
-    function qsTrIdString() {
-        //: Shown when entering to the device lock for the first time
-        //% "User data encrypted"
-        QT_TRID_NOOP("startupwizard-la-user_data_encrypted")
-    }
+    property bool homeEncrypted
 
     warningText: {
         if (lockCodeSet) {
@@ -37,8 +32,13 @@ MandatoryDeviceLockInputPage {
                ? confirmTextTitle
                : enterNewSecurityCode
 
+    //: Shown when entering to the device lock for the first time
+    //% "User data encrypted"
+    subTitleText: homeEncrypted && !lockCodeSet ? qsTrId("startupwizard-la-user_data_encrypted") : ""
+
     //% "Skip"
     cancelText: qsTrId("startupwizard-la-skip_security_code")
+    showCancelButton: !homeEncrypted
 
     onStatusChanged: {
         if (status === PageStatus.Active) {

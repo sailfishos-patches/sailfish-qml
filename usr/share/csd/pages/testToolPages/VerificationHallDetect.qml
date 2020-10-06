@@ -69,7 +69,7 @@ CsdTestPage {
         anchors.centerIn: parent
         color: "green"
         visible: hallChangeCount >= 2
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         width: parent.width-(2*Theme.paddingLarge)
         font.pixelSize: Theme.fontSizeLarge
         //% "Hall detection test passed!"

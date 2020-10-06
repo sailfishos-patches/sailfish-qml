@@ -105,7 +105,7 @@ ListItem {
 
             Label {
                 id: msgDateTime
-                text: Format.formatDate(model.qDateTime, Formatter.TimepointRelative)
+                text: Format.formatDate(model.qDateTime, Formatter.TimeValue)
                 font.pixelSize: Theme.fontSizeExtraSmall
                 anchors {
                     right: parent.right

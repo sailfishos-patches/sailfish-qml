@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2012 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.1
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
@@ -110,7 +117,7 @@ SilicaListView {
         width: parent.width
         spacing: 2 * Theme.paddingLarge
         anchors.verticalCenter: parent.verticalCenter
-        enabled: !commCallModel.count && commCallModel.populated
+        enabled: telephony.callingPermitted && !commCallModel.count && commCallModel.populated
         opacity: enabled ? 1.0 : 0.0
         Behavior on opacity { FadeAnimator {}}
         InfoLabel {
@@ -203,7 +210,7 @@ SilicaListView {
                 }
 
                 MenuItem {
-                    visible: !privateNumber && !quickCall
+                    visible: !privateNumber && !quickCall && telephony.callingPermitted
                     //% "Call"
                     text: qsTrId("voicecall-me-call")
                     onClicked: {
@@ -215,7 +222,7 @@ SilicaListView {
                     }
                 }
                 MenuItem {
-                    visible: !privateNumber
+                    visible: !privateNumber && telephony.messagingPermitted
                     objectName: "smsMenuItem"
                     //% "Send message"
                     text: qsTrId("voicecall-me-send_message")
@@ -260,7 +267,7 @@ SilicaListView {
                     onClicked: Clipboard.text = model.remoteUid
                 }
                 MenuItem {
-                    visible: !wrapper.reminder.exists
+                    visible: !wrapper.reminder.exists && telephony.callingPermitted
                     //: Add a reminder to call this contact
                     //% "Add call reminder"
                     text: qsTrId("voicecall-me-add_call_reminder")

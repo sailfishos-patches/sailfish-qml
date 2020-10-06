@@ -21,6 +21,7 @@ ApplicationWindow {
 
     signal requestAccepted(int requestId, string passkey)
     signal requestRejected(int requestId)
+    signal initiatiatedRequestCanceled(string address)
     signal done()
 
     function initiatedPairingRequest(deviceAddress, deviceName) {
@@ -71,6 +72,8 @@ ApplicationWindow {
             if (root._requestId >= 0) {
                 root.requestRejected(root._requestId)
                 root._requestId = -1
+            } else {
+                root.initiatiatedRequestCanceled(_pairingWindow.deviceAddress)
             }
         })
     }

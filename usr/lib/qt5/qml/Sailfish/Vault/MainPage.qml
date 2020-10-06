@@ -1,283 +1,172 @@
-import QtQuick 2.0
+/****************************************************************************************
+**
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2020 Open Mobile Platform LLC.
+**
+** License: Proprietary
+**
+****************************************************************************************/
+
+import QtQuick 2.6
 import Sailfish.Silica 1.0
-import Sailfish.Accounts 1.0
 import Sailfish.Vault 1.0
 import Nemo.DBus 2.0
-import org.nemomobile.configuration 1.0
+import com.jolla.settings.accounts 1.0
 
 Page {
     id: root
 
-    function backupToCloudAccount(accountId) {
-        console.log("Trigger cloud backup operation to account", accountId)
-        showDialog({"backupMode": true, "cloudAccountId": accountId})
+    property alias _storageListModel: storageListModel
+    readonly property bool _selectingNewAccount: _newAccountIdToSelect > 0
+            && (backupView.scheduledBackupAccountId != _newAccountIdToSelect)
+    property int _newAccountIdToSelect
+    property bool _waitForSailfishBackupService: true
+    property bool _placeholderCreatingAccount
+
+    onStatusChanged: {
+        if (status === PageStatus.Active
+                && root._newAccountIdToSelect > 0) {
+            if (!_placeholderCreatingAccount) {
+                backupView.selectCreatedStorage(_newAccountIdToSelect)
+            }
+            root._newAccountIdToSelect = 0
+            _placeholderCreatingAccount = false
+        }
     }
 
-    function restoreFromCloudAccount(accountId, filePath) {
-        console.log("Trigger cloud restore operation from account", accountId, filePath)
-        showDialog({"backupMode": false, "cloudAccountId": accountId, "fileToRestore": filePath})
-    }
-
-    function backupToDir(path) {
-        console.log("Trigger backup to directory", path)
-        showDialog({"backupMode": true, "backupDir": path})
-    }
-
-    function restoreFromFile(path) {
-        console.log("Trigger restore from file", path)
-        showDialog({"backupMode": false, "fileToRestore": path})
-    }
-
-    function showDialog(parameters) {
-        parameters.unitListModel = root._unitListModel
-        var obj = pageStack.animatorPush(Qt.resolvedUrl("NewBackupRestoreDialog.qml"), parameters)
-        obj.pageCompleted.connect(function(dialog) {
-            dialog.operationFinished.connect(function(successful) {
-                if (successful) {
-                    // if accounts were restored, the available storages will have changed
-
-                    // If a backup was done, need to update the last created backup info display;
-                    // if a restore was done, the accounts will have changed.
-                    contentLoader.item.refreshStoragePickers()
-                    if (!dialog.backupMode) {
-                        _storageListModel.refresh()
-                    }
-                }
-            })
-        })
-    }
-
-    property UnitListModel _unitListModel: UnitListModel {}
-    property BackupRestoreStorageListModel _storageListModel: BackupRestoreStorageListModel {}
-    property bool _cloudStorageAccountServiceAvailable: backupUtils.checkCloudAccountServiceAvailable()
-
-    Component.onCompleted: {
-        _unitListModel.loadVaultUnits(BackupRestoreUnitReader.readUnits())
-    }
-
-    BusyIndicator {
+    BusyLabel {
         id: pageBusy
-        anchors.centerIn: parent
-        size: BusyIndicatorSize.Large
-        running: contentLoader.status !== Loader.Ready
-    }
 
-    BackupUtils {
-        id: backupUtils
+        running: !root._storageListModel.ready
+                 || _waitForSailfishBackupService
+                 || (_selectingNewAccount || selectNewAccountTimer.running)
     }
 
     SilicaFlickable {
         anchors.fill: parent
-        contentHeight: header.height + contentLoader.height + Theme.paddingLarge
+        contentHeight: header.height + (placeholder.visible ? placeholder.height : mainContent.height)
 
         VerticalScrollDecorator {}
 
         PageHeader {
             id: header
+
             //% "Backup"
             title: qsTrId("vault-he-backup")
         }
 
-        Loader {
-            id: contentLoader
-            opacity: 1 - pageBusy.opacity
+        BackupPlaceholder {
+            id: placeholder
+
             anchors.top: header.bottom
             width: parent.width
-            sourceComponent: root._storageListModel.ready
-                             ? (root._storageListModel.count > 0 ? mainContentComponent : placeholderContentComponent)
-                             : null
-        }
-    }
+            visible: root._storageListModel.ready && root._storageListModel.count === 0
+            opacity: 1 - pageBusy.opacity
+            enabled: !pageBusy.running
 
-    Component {
-        id: placeholderContentComponent
-
-        Column {
-            width: parent ? parent.width : Screen.width
-            spacing: Theme.paddingLarge
-
-            Label {
-                x: Theme.horizontalPageMargin
-                width: parent.width - x*2
-                font.family: Theme.fontFamilyHeading
-                font.pixelSize: Theme.fontSizeExtraLarge
-                wrapMode: Text.Wrap
-                color: Theme.highlightColor
-
-                //: No memory card or cloud account available for doing system backup
-                //% "There's no memory card or cloud storage account"
-                text: qsTrId("vault-la-no_memory_card_or_cloud")
-            }
-
-            Label {
-                x: Theme.horizontalPageMargin
-                width: parent.width - x*2
-                height: implicitHeight + Theme.paddingLarge
-                wrapMode: Text.Wrap
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.highlightColor
-                textFormat: Text.PlainText
-
-                //% "Please insert a micro SD card and try again. Always use a dedicated card for storing your backups and keep it in a safe place."
-                text: qsTrId("vault-la-insert_micro_sd_and_try_again")
-            }
-
-            Label {
-                visible: root._cloudStorageAccountServiceAvailable
-                x: Theme.horizontalPageMargin
-                width: parent.width - x*2
-                height: implicitHeight + Theme.paddingLarge
-                wrapMode: Text.Wrap
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.highlightColor
-                textFormat: Text.PlainText
-
-                //% "Alternatively, create a storage account with a third party service to safely store your backed up data."
-                text: qsTrId("vault-la-add_cloud_storage_account")
-            }
-
-            Button {
-                visible: root._cloudStorageAccountServiceAvailable
-                anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: settingsUi.call("showAccounts", [])
-
-                //% "Add account"
-                text: qsTrId("vault-bt-add_account")
-            }
-
-            DBusInterface {
-                id: settingsUi
-                service: "com.jolla.settings"
-                path: "/com/jolla/settings/ui"
-                iface: "com.jolla.settings.ui"
+            onCreateAccount: {
+                root._placeholderCreatingAccount = true
+                accountCreationManager.startAccountCreation()
             }
         }
-    }
-
-    Component {
-        id: mainContentComponent
 
         Column {
             id: mainContent
 
-            function refreshStoragePickers() {
-                backupStoragePicker.refresh()
-                restoreStoragePicker.refresh()
-            }
+            anchors.top: header.bottom
+            width: parent.width
+            bottomPadding: Theme.paddingLarge
+            visible: !placeholder.visible
+            opacity: 1 - pageBusy.opacity
+            enabled: !pageBusy.running
 
-            width: parent ? parent.width : Screen.width
+            BackupView {
+                id: backupView
 
-            Label {
-                x: Theme.horizontalPageMargin
-                width: parent.width - x*2
-                wrapMode: Text.Wrap
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.highlightColor
-                height: implicitHeight + Theme.paddingLarge
-
-                //% "Create a backup to protect your personal data. Use it later to restore your device just the way it was."
-                text: qsTrId("vault-la-create_backup_info")
-            }
-
-            BackupRestoreStoragePicker {
-                id: backupStoragePicker
-                backupMode: true
                 storageListModel: root._storageListModel
-                height: implicitHeight + Theme.paddingLarge
-            }
 
-            Item {
-                width: parent.width
-                height: Math.max(storageBusyIndicator.height, actionButton.height)
-
-                BusyIndicator {
-                    id: storageBusyIndicator
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    running: _storageListModel.busy
-                }
-
-                Button {
-                    id: actionButton
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    enabled: (backupStoragePicker.selectionValid
-                              || !backupStoragePicker.selectedStorageMounted
-                              || backupStoragePicker.selectedStorageLocked)
-                             && !storageBusyIndicator.running
-                    opacity: 1 - storageBusyIndicator.opacity
-
-                    text: {
-                        if (backupStoragePicker.selectedStorageMounted) {
-                            //: Start process of backing up data
-                            //% "Backup"
-                            return qsTrId("vault-bt-backup")
-                        } else if (backupStoragePicker.selectedStorageLocked) {
-                            //: SD-card but it is locked (encryption is not yet opened)
-                            //% "Unlock"
-                            return qsTrId("vault-bt-unlock")
-                        }
-
-                        //: SD-card but it is not mounted.
-                        //% "Mount"
-                        return qsTrId("vault-bt-mount")
-                    }
-
-                    onClicked: {
-                        var data
-                        if (backupStoragePicker.selectedStorageLocked) {
-                            data = backupStoragePicker.activeItem()
-                            _storageListModel.unlock(data.devPath)
-                        } else if (!backupStoragePicker.selectedStorageMounted) {
-                            data = backupStoragePicker.activeItem()
-                            _storageListModel.mount(data.devPath)
-                        } else if (backupStoragePicker.cloudAccountId > 0) {
-                            root.backupToCloudAccount(backupStoragePicker.cloudAccountId)
-                        } else if (backupStoragePicker.memoryCardPath.length > 0) {
-                            root.backupToDir(backupStoragePicker.memoryCardPath)
-                        } else {
-                            console.log("Internal error, invalid storage type!")
-                        }
-                    }
-                }
-            }
-
-            Item {
-                width: 1
-                height: Theme.paddingLarge * 2
+                onCloudBackupFinished: storageListModel.refreshLatestCloudBackup(accountId)
+                onFileBackupFinished: storageListModel.refreshLatestFileBackup(filePath)
+                onCreateAccount: accountCreationManager.startAccountCreation()
             }
 
             SectionHeader {
                 //: Header for data restore section
                 //% "Restore device"
                 text: qsTrId("vault-la-restore_device")
+                visible: recentBackups.count > 0
             }
 
-            BackupRestoreStoragePicker {
-                id: restoreStoragePicker
+            RecentBackupsView {
+                id: recentBackups
 
-                backupMode: false
                 storageListModel: root._storageListModel
-                height: implicitHeight + Theme.paddingLarge
-            }
+                enabled: !backupView.backupRunning
 
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-                enabled: restoreStoragePicker.selectionValid && restoreStoragePicker.fileToRestore.length > 0
-
-                //: Start process of restoring data from backup
-                //% "Restore"
-                text: qsTrId("vault-bt-restore")
-
-                onClicked: {
-                    if (restoreStoragePicker.cloudAccountId > 0) {
-                        root.restoreFromCloudAccount(restoreStoragePicker.cloudAccountId, restoreStoragePicker.fileToRestore)
-                    } else if (restoreStoragePicker.fileToRestore.length > 0) {
-                        root.restoreFromFile(restoreStoragePicker.fileToRestore)
-                    } else {
-                        console.log("Internal error, invalid storage type!")
+                onBackupClicked: {
+                    var props = {
+                        "cloudAccountId": cloudAccountId,
+                        "sourceName": sourceName,
+                        "backupInfo": backupInfo,
+                        "storageListModel": root._storageListModel
                     }
+                    pageStack.animatorPush(Qt.resolvedUrl("RestorePage.qml"), props)
                 }
             }
         }
+    }
+
+    AccountCreationManager {
+        id: accountCreationManager
+
+        serviceFilter: ["storage"]
+        endDestination: root
+        endDestinationAction: PageStackAction.Pop
+
+        onAccountCreated: {
+            root._newAccountIdToSelect = newAccountId
+            if (!_placeholderCreatingAccount) {
+                backupView.selectCreatedStorage(newAccountId)
+            }
+        }
+    }
+
+    DBusInterface {
+        id: sailfishBackup
+
+        service: "org.sailfishos.backup"
+        path: "/sailfishbackup"
+        iface: "org.sailfishos.backup"
+
+        watchServiceStatus: true
+
+        onStatusChanged: {
+            if (status === DBusInterface.Available) {
+                // Ensure the service is ready before showing the main page contents on initial
+                // page load. The dbus service auto-stops after a timeout, so if it becomes
+                // unavailable at other times after the initial page load, that's okay.
+                root._waitForSailfishBackupService = false
+            }
+        }
+    }
+
+    Timer {
+        id: selectNewAccountTimer
+
+        interval: 3000
+        running: (root.status === PageStatus.Activating || root.status === PageStatus.Active)
+                 && _selectingNewAccount
+
+        // If the new account can't be selected after a timeout, load the page without
+        // selecting it. This could happen if the account's storage service is not enabled.
+        onTriggered: {
+            if (root._selectingNewAccount) {
+                root._newAccountIdToSelect = 0
+            }
+        }
+    }
+
+    BackupRestoreStorageListModel {
+        id: storageListModel
     }
 }

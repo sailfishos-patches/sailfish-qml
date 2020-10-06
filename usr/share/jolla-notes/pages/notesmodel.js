@@ -28,7 +28,7 @@ WorkerScript.onMessage = function(msg) {
     } else if (msg.action === "movetotop") {
         model.move(msg.idx, 0, 1) // move 1 item to position 0
         model.setProperty(0, "pagenr", 1)
-        for (i = 1; i < model.count; i++) {
+        for (i = 1; i <= msg.idx; i++) {
             model.setProperty(i, "pagenr", model.get(i).pagenr + 1)
         }
 

@@ -6,6 +6,7 @@ import com.jolla.mediaplayer 1.0
 
 Page {
     id: artistsPage
+
     property var model
     property string searchText
 
@@ -61,13 +62,9 @@ Page {
 
 
         PullDownMenu {
-            id: artistsMenu
-
             NowPlayingMenuItem { }
 
             MenuItem {
-                id: menuItemSearch
-
                 //: Search menu entry
                 //% "Search"
                 text: qsTrId("mediaplayer-me-search")

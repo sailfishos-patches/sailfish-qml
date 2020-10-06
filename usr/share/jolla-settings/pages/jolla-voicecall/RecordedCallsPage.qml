@@ -157,6 +157,13 @@ Page {
 
                         onClicked: remove()
                     }
+                    MenuItem {
+                        //% "Share"
+                        text: qsTrId("settings_voicecall-me-share")
+
+                        onClicked: pageStack.animatorPush('Sailfish.TransferEngine.SharePage',
+                                                          { 'source': model.absolutePath })
+                    }
                 }
             }
 

@@ -42,7 +42,7 @@ Column {
             x: Theme.horizontalPageMargin
             color: Theme.secondaryHighlightColor
             font.pixelSize: Theme.fontSizeSmall
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             //% "These proxy settings are currently being overridden by the global proxy settings."
             text: qsTrId("settings_network-la-proxy_is_overriding")
             opacity: disabledByMdmBanner.active ? Theme.opacityLow : 1.0

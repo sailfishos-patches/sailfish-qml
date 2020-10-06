@@ -232,7 +232,7 @@ SilicaFlickable {
             }
             opacity: clock.opacity
             temperatureFontPixelSize: clock.weekdayFont.pixelSize
-            active: Lipstick.compositor.lockScreenLayer.active
+            active: visible
         }
 
         MprisPlayerControls {

@@ -27,8 +27,6 @@ ApplicationWindow {
 
     function qsTrIdStrings()
     {
-        //% "Invite people"
-        QT_TRID_NOOP("calendar-ph-invite_people")
         //% "Show agenda"
         QT_TRID_NOOP("calendar-me-show_agenda")
     }

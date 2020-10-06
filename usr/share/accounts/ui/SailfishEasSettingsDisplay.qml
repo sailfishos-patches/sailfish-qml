@@ -324,7 +324,6 @@ Column {
                 root._populateServiceSettings()
             } else if (status === Account.Synced) {
                 // success
-                easSettings.applyFolderSyncPolicy()
                 if (!root.isNewAccount) {
                     if (username !== connectionSettings.username || connectionSettings.passwordEdited) {
                         username = connectionSettings.username

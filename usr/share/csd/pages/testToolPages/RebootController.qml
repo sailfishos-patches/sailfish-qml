@@ -156,7 +156,7 @@ Item {
         id: testData
 
         property bool running
-        property variant startTime
+        property double startTime
         property int iterations
         property int testMode
         property bool continuousTesting

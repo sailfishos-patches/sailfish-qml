@@ -43,8 +43,8 @@ Label {
         rightMargin: parent.rightMargin
     }
     font.pixelSize: Theme.fontSizeSmall
-    color: palette.secondaryHighlightColor
-    horizontalAlignment: Text.AlignRight
+    color: highlighted ? palette.secondaryColor : palette.secondaryHighlightColor
+    horizontalAlignment: wrapMode === Text.NoWrap && implicitWidth > width ? Text.AlignLeft : Text.AlignRight
     truncationMode: TruncationMode.Fade
     text: pageHeader.description
     visible: pageHeader.description.length > 0

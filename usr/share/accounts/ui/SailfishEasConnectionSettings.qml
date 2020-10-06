@@ -16,6 +16,7 @@ Column {
     property alias acceptSSLCertificates: acceptSSLCertificatesSwitch.checked
     property bool passwordEdited
     property bool editMode
+    property bool limitedMode
     property bool checkMandatoryFields
     readonly property bool hasSslCertificate: sslConnectionCertificate.checked && sslCertificatePath.length > 0
     property alias sslCertificatePath: certificateHelper.certificatePath
@@ -46,7 +47,13 @@ Column {
         placeholderText: label
         errorHighlight: !text && checkMandatoryFields
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
-        EnterKey.onClicked: usernameField.focus = true
+        EnterKey.onClicked: {
+            if (usernameField.visible) {
+                usernameField.focus = true
+            } else {
+                passwordField.focus = true
+            }
+        }
     }
 
     TextField {
@@ -60,6 +67,7 @@ Column {
         errorHighlight: !text && checkMandatoryFields
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: passwordField.focus = true
+        visible: !limitedMode
     }
 
     PasswordField {
@@ -71,13 +79,21 @@ Column {
             }
         }
         errorHighlight: !text && checkMandatoryFields
-        EnterKey.iconSource: "image://theme/icon-m-enter-next"
-        EnterKey.onClicked: domainField.focus = true
+        EnterKey.iconSource: domainField.visible ? "image://theme/icon-m-enter-next"
+                                                 : "image://theme/icon-m-enter-close"
+        EnterKey.onClicked: {
+            if (domainField.visible) {
+                domainField.focus = true
+            } else {
+                passwordField.focus = false
+            }
+        }
     }
 
     SectionHeader {
         //% "Server"
         text: qsTrId("components_accounts-he-server")
+        visible: !limitedMode
     }
 
     TextField {
@@ -96,6 +112,7 @@ Column {
                 domainField.focus = false
             }
         }
+        visible: !limitedMode
     }
 
     Column {
@@ -104,6 +121,7 @@ Column {
         height: enabled ? implicitHeight : 0
         opacity: enabled ? 1.0 : 0.0
         width: parent.width
+        visible: !limitedMode
         Behavior on height { NumberAnimation { easing.type: Easing.InOutQuad; duration: 400 } }
         Behavior on opacity { FadeAnimation { duration: 400 } }
 

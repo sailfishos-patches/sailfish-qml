@@ -140,10 +140,11 @@ Page {
             }
 
             InfoLabel {
-                //% "Internet sharing is enabled. Turning WLAN networking on will stop Internet sharing"
+                //% "Internet sharing is on. Turning on WLAN networking will stop Internet sharing."
                 text: qsTrId("settings_network-la-wlan_internet_sharing_warning")
                 visible: opacity > 0
                 opacity: wifiTechnology.tethering ? 1 : 0
+                font.pixelSize: Theme.fontSizeLarge
             }
         }
 

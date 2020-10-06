@@ -8,7 +8,7 @@ ListItem {
     property bool removable
     readonly property bool formatting: model.status == PartitionModel.Formatting || formattingInfo.running
     readonly property alias busy: circle.busy
-    readonly property bool errorState: !model.isSupportedFileSystemType && !model.isEncrypted && !diskUsageArea.busy
+    readonly property bool errorState: !model.isSupportedFileSystemType && !model.isCryptoDevice && !diskUsageArea.busy
     property int partitionStatus: model.status
     readonly property real _maxWidth: diskUsageArea.width - Theme.horizontalPageMargin * 2
 
@@ -228,7 +228,7 @@ ListItem {
                 horizontalAlignment: contentWidth > _maxWidth ? Text.AlignLeft : Text.AlignHCenter
                 truncationMode: TruncationMode.Fade
                 anchors.horizontalCenter: parent.horizontalCenter
-                color: model.isSupportedFileSystemType || model.isEncrypted ? circle.primaryColor : "#ff4d4d"
+                color: model.isSupportedFileSystemType || model.isCryptoDevice ? circle.primaryColor : "#ff4d4d"
                 font.pixelSize: Theme.fontSizeSmall
                 text: model.deviceLabel
             }

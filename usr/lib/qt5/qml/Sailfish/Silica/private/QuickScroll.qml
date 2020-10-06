@@ -34,6 +34,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 
 Item {
     id: root
@@ -41,6 +42,7 @@ Item {
     property Flickable flickable
     property bool quickScroll: flickable && (flickable.flickableDirection === Flickable.VerticalFlick
                                              || flickable.flickableDirection === Flickable.AutoFlickDirection)
+    property int directionsEnabled: QuickScrollDirection.UpAndDown
     property bool quickScrollAnimating
     property real quickScrollVisible: _quickScrollArea ? _quickScrollArea.active : 0
     property real rightMargin
@@ -101,6 +103,7 @@ Item {
         id: quickScrollAreaComponent
         QuickScrollArea {
             anchors.rightMargin: root.rightMargin
+            directionsEnabled: root.directionsEnabled
         }
     }
 }

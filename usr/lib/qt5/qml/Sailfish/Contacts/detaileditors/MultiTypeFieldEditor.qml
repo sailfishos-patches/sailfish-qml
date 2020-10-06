@@ -119,11 +119,13 @@ BaseEditor {
                 if (!lastItem.buttonMode) {
                     root.addEmptyField()
                 }
-            } else if (!wasEmpty && isEmpty) {
+            } else if (!wasEmpty && isEmpty && model.index > 0) {
                 if (lastItem.buttonMode) {
                     root.animateAndRemove(root.detailModel.count - 1, lastItem)
                 }
             }
+
+            root.hasContent = !isEmpty || root.testHasContent()
         }
 
         onRemoveClicked: {

@@ -190,7 +190,7 @@ ApplicationWindow {
         }
     }
     ShutDownItem {
-        rebooting: true
+        mode: ShutdownMode.Reboot
         opacity: actdeadApplication.splashScreenVisible ? 1.0 : 0.0
         Behavior on opacity { NumberAnimation { duration: 1000 } }
     }

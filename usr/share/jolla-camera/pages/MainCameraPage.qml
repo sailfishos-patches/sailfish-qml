@@ -48,8 +48,11 @@ CameraPage {
             window.activate()
         }
 
-        signal showFrontViewfinder()
+        signal showFrontViewfinder(bool switchToImageMode)
         onShowFrontViewfinder: {
+            if (switchToImageMode) {
+                Settings.global.captureMode = "image"
+            }
             Settings.cameraDevice = "secondary"
             page.returnToCaptureMode()
             window.activate()

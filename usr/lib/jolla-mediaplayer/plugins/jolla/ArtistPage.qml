@@ -4,16 +4,9 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Media 1.0
 import com.jolla.mediaplayer 1.0
-import org.nemomobile.thumbnailer 1.0
 
 Page {
-    id: artistAlbumsPage
-
     property var media
-
-    AlbumHeuristics {
-        id: heuristics
-    }
 
     MediaPlayerListView {
         id: view
@@ -53,8 +46,6 @@ Page {
             NowPlayingMenuItem { }
 
             MenuItem {
-                id: menuItemSearch
-
                 //: Search menu entry
                 //% "Search"
                 text: qsTrId("mediaplayer-me-search")
@@ -111,7 +102,8 @@ Page {
             AlbumArt {
                 id: albumArt
 
-                source: albumArtProvider.albumThumbnail(title, subtitle)
+                // re-evaluate when state changes
+                source: (albumArtProvider.extracting || true) ? albumArtProvider.albumThumbnail(title, subtitle) : ""
                 highlighted: delegate.highlighted
             }
         }

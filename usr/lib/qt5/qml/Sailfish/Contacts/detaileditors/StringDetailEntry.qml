@@ -172,6 +172,7 @@ Item {
             if (inputField.text.length > 0) {
                 inputField.text = ""
                 root.modified()
+                inputField.focus = true
             } else {
                 root.removeClicked()
             }

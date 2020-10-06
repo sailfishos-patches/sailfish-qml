@@ -39,34 +39,44 @@ import Sailfish.Silica.private 1.0
 QuickScrollButtonBase {
     id: button
     property bool active
-    property bool invert
+    property bool invert: direction === QuickScrollDirection.Down
     property alias source: image.source
+    property alias icon: image
+    property int direction: QuickScrollDirection.Up
+    property int directionsEnabled: QuickScrollDirection.UpAndDown
 
     onClicked: pressTimer.start()
 
-    width: parent.width
-    height: parent.height/2
     flickable: root.flickable
-
-    Rectangle {
-        anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: invert ? 1.0 : 0.0; color: "transparent" }
-            GradientStop { position: invert ? 0.0 : 1.0; color: Theme.rgba(button.palette.highlightBackgroundColor, 0.3) }
+    enabled: directionsEnabled & direction
+    width: parent.width
+    height: {
+        if (directionsEnabled === direction) {
+            return parent.height
+        } else if (directionsEnabled === QuickScrollDirection.UpAndDown) {
+            return parent.height/2
+        } else {
+            return 0
         }
     }
+
     Icon {
         id: image
-        anchors {
-            bottom: invert ? undefined : parent.bottom
-            top: invert ? parent.top : undefined
-            topMargin: Theme.itemSizeExtraSmall/2
-            bottomMargin: Theme.itemSizeExtraSmall/2
-            horizontalCenter: parent.horizontalCenter
+        y: {
+            if (directionsEnabled === direction) {
+                return parent.height/2 - height/2
+            } else if (direction === QuickScrollDirection.Up) {
+                return parent.height - height - Theme.itemSizeExtraSmall/2
+            } else if (directionsEnabled === QuickScrollDirection.UpAndDown) {
+                return Theme.itemSizeExtraSmall/2
+            }
         }
-        Behavior on opacity { FadeAnimation {} }
-        opacity: active ? 1.0 : 0.0
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        Behavior on opacity { FadeAnimator {} }
+        opacity: active && enabled ? 1.0 : 0.0
     }
+
     Timer {
         id: pressTimer
         interval: 300

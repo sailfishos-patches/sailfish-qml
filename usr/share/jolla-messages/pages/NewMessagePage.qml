@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
@@ -63,6 +70,7 @@ MessageComposerPage {
             id: textInput
 
             enabled: newMessagePage.errorLabel.simErrorState.length === 0
+                     && (!textInput.needsSimFeatures || MessageUtils.messagingPermitted)
                      && senderSupportsReplies
             canSend: text.length > 0 && newMessagePage.validatedRemoteUids.length > 0
 
@@ -70,8 +78,8 @@ MessageComposerPage {
             recreateDraftEvent: true
 
             onReadyToSend: {
-                if (textInput.needsSimFeatures
-                        && !MessageUtils.testCanUseSim(newMessagePage.errorLabel.simErrorState)) {
+                if (textInput.needsSimFeatures && (!MessageUtils.messagingPermitted
+                        || !MessageUtils.testCanUseSim(newMessagePage.errorLabel.simErrorState))) {
                     return
                 }
                 conversation.message.sendMessage(text)

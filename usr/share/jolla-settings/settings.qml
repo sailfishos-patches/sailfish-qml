@@ -144,6 +144,10 @@ ApplicationWindow {
             }
         }
 
+        function addNewUser() {
+            window.showSettingsPage(Qt.resolvedUrl("pages/users/users.qml"), { "creatingUser": true })
+        }
+
         function showPage(page) {
             var obj = _frontPage.model.objectForPath(page)
             if (obj && obj.type == "page") {

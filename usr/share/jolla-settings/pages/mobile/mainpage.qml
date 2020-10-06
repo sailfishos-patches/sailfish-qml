@@ -6,6 +6,7 @@ import Sailfish.Telephony 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.ofono 1.0
 import Sailfish.Settings.Networking 1.0
+import MeeGo.Connman 0.2
 
 Page {
     id: root
@@ -14,7 +15,11 @@ Page {
     property bool pageReady: sailfishSimManager.ready || status == PageStatus.Active
     onPageReadyChanged: if (pageReady) pageReady = true // remove binding
 
-    Component.onCompleted: dataSimSelector = Telephony.multiSimSupported ? Qt.createQmlObject("import com.jolla.settings.multisim 1.0; DataSimSelector {}", topSettingsContainer) : undefined
+    Component.onCompleted: {
+        dataSimSelector = Telephony.multiSimSupported
+                ? Qt.createQmlObject("import com.jolla.settings.multisim 1.0; DataSimSelector {}", topSettingsContainer)
+                : undefined
+    }
 
     SimManager {
         id: sailfishSimManager
@@ -91,10 +96,12 @@ Page {
                 property bool topSettingsAvailable: root.pageReady && (!Telephony.multiSimSupported || sailfishSimManager.availableSimCount > 0)
 
                 opacity: topSettingsAvailable ? (disabledByMdmBanner.active ? Theme.opacityHigh : 1) : 0
-                height: topSettingsAvailable ? implicitHeight : 0
+                height: topSettingsAvailable
+                        ? implicitHeight
+                        : 0
                 clip: true
                 Behavior on height {
-                    enabled: root.status == PageStatus.Active
+                    enabled: root.status == PageStatus.Active && !tetherWarningAnimation.running
                     NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                 }
                 // FadeAnimator, animating in render thread, breaks if started
@@ -142,6 +149,30 @@ Page {
                     //% "Mobile data may be used in the background and may incur data transfer costs."
                     text: qsTrId("settings_network-la-mobile_data_description")
                 }
+
+                InfoLabel {
+                    id: tetherWarning
+
+                    //% "Internet sharing is on. Devices will lose internet connectivity if mobile data is turned off."
+                    text: qsTrId("settings_network-la-mobile_data_internet_sharing_warning")
+                    opacity: enabled ? 1 : 0
+                    enabled: mobileDataSwitch.checked && wifiTechnology.tethering
+                    font.pixelSize: Theme.fontSizeLarge
+
+                    height: enabled ? implicitHeight : 0
+                    clip: true
+
+                    Behavior on height {
+                        enabled: root.status == PageStatus.Active
+
+                        NumberAnimation {
+                            id: tetherWarningAnimation
+                            duration: 200; easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                    Behavior on opacity { FadeAnimation {} }
+                }
             }
 
             Repeater {
@@ -175,5 +206,14 @@ Page {
                 }
             }
         }
+    }
+
+    NetworkManager {
+        id: networkManager
+    }
+
+    NetworkTechnology {
+        id: wifiTechnology
+        path: networkManager.WifiTechnology
     }
 }

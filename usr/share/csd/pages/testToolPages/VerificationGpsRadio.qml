@@ -25,6 +25,8 @@ CsdTestPage {
     property int _originalMlsOnlineState
     property int _originalHereState
 
+    property bool _isGPSInitialized
+
     Component.onCompleted: initialiseTimer.start()
     function storeStateAndStart() {
         _originalLocationEnabled = locationSettings.locationEnabled
@@ -34,7 +36,9 @@ CsdTestPage {
         _originalMlsOnlineState = locationSettings.mlsOnlineState
         _originalHereState = locationSettings.hereState
 
-        if (policy.value) {
+        mdmBanner.active = (policy.value == false)
+
+        if (!mdmBanner.active) {
             if (!locationSettings.locationEnabled)
                 locationSettings.locationEnabled = true
             if (!locationSettings.gpsEnabled)
@@ -47,18 +51,15 @@ CsdTestPage {
                 locationSettings.mlsOnlineState = LocationSettings.OnlineAGpsEnabled
             if (locationSettings.hereState === LocationSettings.OnlineAGpsDisabled)
                 locationSettings.hereState = LocationSettings.OnlineAGpsEnabled
-        }
-        mdmBanner.active = !(locationSettings.locationEnabled
-                             && locationSettings.gpsEnabled
-                             && !locationSettings.gpsFlightMode)
 
-        if (!mdmBanner.active) {
             createPositionSource()
+
+            _isGPSInitialized = true
         }
     }
 
     Component.onDestruction: {
-        if (policy.value) {
+        if (_isGPSInitialized) {
             locationSettings.hereState = _originalHereState
             locationSettings.mlsOnlineState = _originalMlsOnlineState
             locationSettings.mlsEnabled = _originalMlsEnabled

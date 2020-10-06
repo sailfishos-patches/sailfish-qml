@@ -7,23 +7,32 @@ MultiTypeFieldEditor {
     id: root
 
     property int _dummyBirthdaySubType: -9999
-    property var _birthday
+
+    // override BaseEditor testHasContent()
+    function testHasContent(listModel) {
+        listModel = listModel || detailModel
+        for (var i = 0; i < listModel.count; ++i) {
+            var value = listModel.get(i).value
+            if (!isNaN(value.getTime())) {
+                return true
+            }
+        }
+        return false
+    }
 
     function populateFieldEditor() {
-        detailModel.emptyValue = new Date(Number.Nan)
-        _birthday = detailModel.emptyValue
+        detailModel.emptyValue = new Date(Number.NaN)
 
         // Add dates from Person::anniversaryDetails.
         detailModel.reload(contact[propertyAccessor])
 
         // Add birthday from Person::birthday.
-        _birthday = contact.birthday
-        if (!isNaN(_birthday)) {
+        if (!isNaN(contact.birthday)) {
             var properties = {
                 "type": Person.BirthdayType,
                 "subType": _dummyBirthdaySubType,
                 "name": ContactsUtil.getNameForDetailType(Person.BirthdayType),
-                "value": _birthday,
+                "value": contact.birthday,
                 "sourceIndex": -1
             }
             // Show birthday before other date values.
@@ -49,7 +58,8 @@ MultiTypeFieldEditor {
     function aboutToSave() {
         if (detailModel.userModified) {
             // Copy birthday value to Person::birthday.
-            contact.birthday = _birthday
+            var birthdayIndex = _birthdayFieldIndex()
+            contact.birthday = birthdayIndex >= 0 ? detailModel.get(birthdayIndex).value : detailModel.emptyValue
 
             // Copy non-birthday dates from detailModel to Person::anniversaryDetails.
             detailModel.copyMultiTypeDetailChanges(contact, propertyAccessor, Person.BirthdayType)
@@ -68,9 +78,6 @@ MultiTypeFieldEditor {
                     delegate.exitButtonMode()
                 }
                 root.detailModel.setProperty(fieldIndex, "value", dialog.date)
-                if (root.detailModel.get(fieldIndex).type === Person.BirthdayType) {
-                    root._birthday = dialog.date
-                }
 
                 // Add an empty field to act as the next 'Add date' button.
                 if (wasEmpty && fieldIndex === root.detailModel.count - 1) {
@@ -78,6 +85,27 @@ MultiTypeFieldEditor {
                 }
             })
         })
+    }
+
+    function _birthdayFieldIndex() {
+        for (var i = 0; i < detailEditors.count; ++i) {
+            if (detailEditors.itemAt(i).isBirthday) {
+                return i
+            }
+        }
+        return -1
+    }
+
+    function _addEmptyDate(fieldIndex) {
+        var delegate = root.detailEditors.itemAt(fieldIndex)
+        if (!!delegate) {
+            delegate.exitButtonMode()
+        }
+
+        // Assign 'birthday' type if no other date is currently set as birthday
+        root.detailModel.setProperty(fieldIndex,
+                                     "type",
+                                     _birthdayFieldIndex() < 0 ? Person.BirthdayType : Person.AnniversaryType)
     }
 
     //: Add a date (e.g. a wedding anniversary date) for this contact
@@ -109,7 +137,6 @@ MultiTypeFieldEditor {
         readonly property int dateIndex: model.index
         readonly property int isBirthday: model.type === Person.BirthdayType
         readonly property int dateSubType: model.subType
-        readonly property var dateValue: model.value
 
         function exitButtonMode() {
             addDateButton.offscreen = true
@@ -118,6 +145,21 @@ MultiTypeFieldEditor {
         width: parent.width
         height: addDateButton.offscreen ? dateDisplay.height : addDateButton.height
 
+        Component.onCompleted: {
+            if (!isNaN(model.value)) {
+                exitButtonMode()
+            }
+        }
+
+        Behavior on height {
+            enabled: root.populated
+
+            NumberAnimation {
+                duration: root.animationDuration
+                easing.type: Easing.InOutQuad
+            }
+        }
+
         AddFieldButton {
             id: addDateButton
 
@@ -125,13 +167,12 @@ MultiTypeFieldEditor {
             text: root.fieldAdditionText
             icon.source: root.fieldAdditionIcon
             showIconWhenOffscreen: model.index === 0
-            offscreen: !isNaN(model.value)
             animate: root.ready
             opacity: enabled ? 1 : 0
             highlighted: down || dateLabelMouseArea.containsPress
 
             onClicked: {
-                root._changeDate(model.index)
+                root._addEmptyDate(model.index)
             }
 
             onEnteredButtonMode: {
@@ -167,7 +208,7 @@ MultiTypeFieldEditor {
                         margins: -Theme.paddingMedium
                     }
 
-                    onClicked: root._changeDate(model.index)
+                    onClicked: root._changeDate(model.index, model.value)
                 }
             }
 
@@ -185,9 +226,7 @@ MultiTypeFieldEditor {
                     root.detailModel.userModified = true
                     if (!root.animateAndRemove(model.index, dateDelegate)) {
                         addDateButton.offscreen = false
-                    }
-                    if (model.type === Person.BirthdayType) {
-                        root._birthday = root.detailModel.emptyValue
+                        root.detailModel.setProperty(model.index, "value", root.detailModel.emptyValue)
                     }
                 }
             }
@@ -199,7 +238,7 @@ MultiTypeFieldEditor {
                 y: addDateButton.height - Theme.paddingSmall
 
                 menu: DetailSubTypeMenu {
-                    model: dateDelegate.isBirthday || isNaN(root._birthday)
+                    model: dateDelegate.isBirthday
                            ? detailSubTypeModelWithBirthday
                            : root.detailSubTypeModel
                     currentSubType: dateDelegate.isBirthday
@@ -212,13 +251,6 @@ MultiTypeFieldEditor {
 
                     onSubTypeClicked: {
                         var birthdaySelected = (subType === _dummyBirthdaySubType)
-                        if (birthdaySelected) {
-                            // This is the new birthday.
-                            root._birthday = dateDelegate.dateValue
-                        } else if (dateDelegate.isBirthday) {
-                            // This was previously set as the birthday, but not anymore.
-                            root._birthday = root.detailModel.emptyValue
-                        }
                         root.setDetailType(dateDelegate.dateIndex, type, birthdaySelected ? Person.NoSubType : subType)
                     }
                 }

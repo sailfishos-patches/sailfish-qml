@@ -15,6 +15,7 @@ import org.nemomobile.configuration 1.0
 import org.nemomobile.devicelock 1.0
 
 import MeeGo.QOfono 0.2
+import Sailfish.AccessControl 1.0
 import Sailfish.Policy 1.0
 
 ApplicationWindow {
@@ -216,6 +217,9 @@ ApplicationWindow {
     Component {
         id: networkCheckComponent
         NetworkCheckDialog {
+            readonly property bool dateTimeSettingsEnabled: AccessPolicy.dateTimeSettingsEnabled
+                                                            && AccessControl.hasGroup(AccessControl.RealUid, "sailfish-datetime")
+
             acceptDestination: dateTimeComponent
 
             //% "Setting up your internet connection at this point is highly recommended"
@@ -236,12 +240,12 @@ ApplicationWindow {
 
             onAccepted: {
                 root._internetConnectionSkipped = false
-                acceptDestination = AccessPolicy.dateTimeSettingsEnabled ? dateTimeComponent : _accountSetupPage()
+                acceptDestination = dateTimeSettingsEnabled ? dateTimeComponent : _accountSetupPage()
             }
 
             onSkipClicked: {
                 root._internetConnectionSkipped = true
-                acceptDestination = AccessPolicy.dateTimeSettingsEnabled ? dateTimeComponent : _accountSetupPage()
+                acceptDestination = dateTimeSettingsEnabled ? dateTimeComponent : _accountSetupPage()
                 pageStack.animatorPush(acceptDestination)
             }
 
@@ -301,6 +305,7 @@ ApplicationWindow {
         DeviceLockDialog {
             id: mandatorySecurityCodePage
 
+            homeEncrypted: deviceLockSettings.homeEncrypted
             authorization: fingerprintSettings.hasSensor
                     ? fingerprintSettings.authorization
                     : deviceLockSettings.authorization

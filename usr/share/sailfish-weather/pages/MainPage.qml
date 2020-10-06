@@ -180,7 +180,7 @@ Page {
                                         "state": model.state,
                                         "country": model.country,
                                         "temperature": model.temperature,
-                                        "temperatureFeel": model.temperatureFeel,
+                                        "feelsLikeTemperature": model.feelsLikeTemperature,
                                         "weatherType": model.weatherType,
                                         "description": model.description,
                                         "timestamp": model.timestamp,

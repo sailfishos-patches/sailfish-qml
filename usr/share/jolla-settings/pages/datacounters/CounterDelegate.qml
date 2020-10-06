@@ -36,7 +36,7 @@ Column {
                                             .arg(Format.formatDate(root.lastResetTime, Formatter.Timepoint))
                                           : ""
         color: Theme.secondaryHighlightColor
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         width: parent.width
         visible: text.length > 0
     }

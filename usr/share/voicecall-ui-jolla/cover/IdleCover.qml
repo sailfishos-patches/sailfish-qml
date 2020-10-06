@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2012 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.voicecall 1.0
@@ -13,7 +20,7 @@ Item {
     CoverPlaceholder {
         //: Cover placeholder shown when the call log is empty
         //% "Call someone"
-        text: qsTrId("voicecall-la-cover_call_someone")
+        text: telephony.callingPermitted ? qsTrId("voicecall-la-cover_call_someone") : ""
         icon.source: "image://theme/icon-launcher-phone"
         visible: !listView.count
     }
@@ -66,7 +73,7 @@ Item {
     }
 
     CoverActionList {
-        enabled: !telephony.active
+        enabled: !telephony.active && telephony.callingPermitted
 
         CoverAction {
             iconSource: "image://theme/icon-cover-dialer"

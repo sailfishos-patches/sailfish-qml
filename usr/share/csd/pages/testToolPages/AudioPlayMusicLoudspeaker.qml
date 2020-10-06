@@ -86,7 +86,7 @@ CsdTestPage {
         anchors.centerIn: parent
         width: parent.width - 2*Theme.horizontalPageMargin
         font.pixelSize: Theme.fontSizeLarge
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         //% "Is music playing from loudspeaker?"
         text: qsTrId("csd-la-is_music_playing_from_loudspeaker")
     }

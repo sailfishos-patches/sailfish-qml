@@ -34,8 +34,9 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 
-Column {
+Rectangle {
     id: root
 
     property Flickable flickable
@@ -44,6 +45,7 @@ Column {
     property bool pressed: scrollUpButton.pressed || scrollDownButton.pressed
     property bool active: visibilityTimer.running || !clicked && (pressed || (flicking && inBounds))
     property bool clicked
+    property int directionsEnabled: QuickScrollDirection.UpAndDown
 
     onFlickingChanged: {
         if (flicking) {
@@ -55,10 +57,16 @@ Column {
         }
     }
 
-    height: flickable.height
-    width: Theme.itemSizeExtraLarge
     enabled: opacity > 0.0
     anchors.right: parent.right
+
+    height: flickable.height
+    width: Theme.itemSizeExtraLarge
+    gradient: Gradient {
+        GradientStop { position: 0.0; color: "transparent" }
+        GradientStop { position: 0.5; color: Theme.rgba(scrollUpButton.palette.highlightBackgroundColor, 0.3) }
+        GradientStop { position: 1.0; color: "transparent" }
+    }
 
     opacity: active ? 1.0 : 0.0
     Behavior on opacity { FadeAnimation { duration: 400 } }
@@ -71,28 +79,39 @@ Column {
         target: flickable
         onFlickingVerticallyChanged: flicking = flickable.flickingVertically && Math.abs(flickable.verticalVelocity) > Screen.height
     }
-    QuickScrollButton {
-        id: scrollUpButton
 
-        invert: false
-        active: !flickable.atYBeginning
-        source: "image://theme/icon-m-page-up"
-        flickable: root.flickable
-        onClicked: {
-            flickable.scrollToTop()
-            root.clicked = true
+    Column {
+        anchors.fill: parent
+        QuickScrollButton {
+            id: scrollUpButton
+
+            active: !flickable.atYBeginning
+            direction: QuickScrollDirection.Up
+            directionsEnabled: root.directionsEnabled
+            source: "image://theme/icon-m-page-up"
+            flickable: root.flickable
+            onClicked: {
+                if (active) {
+                    flickable.scrollToTop()
+                    root.clicked = true
+                }
+            }
         }
-    }
-    QuickScrollButton {
-        id: scrollDownButton
+        QuickScrollButton {
+            id: scrollDownButton
 
-        invert: true
-        active: !flickable.atYEnd
-        source: "image://theme/icon-m-page-down"
-        flickable: root.flickable
-        onClicked: {
-            flickable.scrollToBottom()
-            root.clicked = true
+            direction: QuickScrollDirection.Down
+            directionsEnabled: root.directionsEnabled
+            active: !flickable.atYEnd
+
+            source: "image://theme/icon-m-page-down"
+            flickable: root.flickable
+            onClicked: {
+                if (active) {
+                    flickable.scrollToBottom()
+                    root.clicked = true
+                }
+            }
         }
     }
 }

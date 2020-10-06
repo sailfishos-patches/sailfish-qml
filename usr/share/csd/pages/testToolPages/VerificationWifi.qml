@@ -158,7 +158,7 @@ CsdTestPage {
 
             Label {
                 width: parent.width
-                wrapMode: Text.WordWrap
+                wrapMode: Text.Wrap
                 font.bold: true
                 visible: !mdmBanner.active
 
@@ -169,7 +169,7 @@ CsdTestPage {
                 model: ListModel { id: statusModel }
                 delegate: Label {
                     width: contentColumn.width
-                    wrapMode: Text.WordWrap
+                    wrapMode: Text.Wrap
                     color: model.statusColor
                     font.bold: true
                     text: model.statusText
@@ -266,7 +266,7 @@ CsdTestPage {
         Label {
             id: timerLabel
             width: parent.width
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             font.bold: true
             opacity: timeoutTimer.running ? 1 : 0
             Behavior on opacity { FadeAnimation { } }

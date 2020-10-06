@@ -58,7 +58,7 @@ CsdTestPage {
         anchors.centerIn: parent
         font.pixelSize: Theme.fontSizeLarge
         width: parent.width - 2*Theme.horizontalPageMargin
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         //% "Is music playing from headset?"
         text: qsTrId("csd-la-is_music_playing_from_headset")
         visible: root.started

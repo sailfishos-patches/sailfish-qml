@@ -27,6 +27,7 @@ Column {
     property ListModel detailModel: DetailModel {}
     property int animationDuration: 350 // Same as button animation in AddFieldButton
     property bool populated
+    property bool hasContent: testHasContent()
 
     readonly property bool ready: populated && _page && _page.status === PageStatus.Active
 
@@ -55,7 +56,7 @@ Column {
             return false
         }
 
-        if (detailIndex === 0 && detailModel.count === 1) {
+        if (detailIndex === detailModel.count - 1 && !detailEditors.itemAt(detailIndex).buttonMode) {
             // This is the last field remaining, so don't remove it.
             focus = true    // ensure vkb is closed
             detailModel.setProperty(detailIndex, "value", detailModel.emptyValue)
@@ -74,6 +75,16 @@ Column {
             removalAnimation.start()
         }
         return true
+    }
+
+    function testHasContent(listModel) {
+        listModel = listModel || detailModel
+        for (var i = 0; i < listModel.count; ++i) {
+            if (listModel.get(i).value.length > 0) {
+                return true
+            }
+        }
+        return false
     }
 
     width: parent.width

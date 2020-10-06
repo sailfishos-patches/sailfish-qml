@@ -27,13 +27,6 @@ Page {
         QT_TRID_NOOP("settings_sailfishos-sailfishos_short")
     }
 
-    function _showBackupPage() {
-        var obj = pageStack.animatorPush(Qt.resolvedUrl("UpgradeBackupDialog.qml"), {"storagePicker": upgradeDetails.backupStoragePicker})
-        obj.pageCompleted.connect(function(backupPage) {
-            backupPage.continueOSUpdate.connect(storeIf.downloadUpdate)
-        })
-    }
-
     onPageActiveChanged: if (pageActive) storeIf.calculateDiskSpaceRequirements()
 
     Component.onCompleted: {
@@ -74,11 +67,7 @@ Page {
 
         onRequiredDiskChanged: {
             if (downloadPending && sufficientSpaceForDownload) {
-                if (upgradeDetails.backupEnabled) {
-                    page._showBackupPage()
-                } else {
-                    storeIf.downloadUpdate()
-                }
+                storeIf.downloadUpdate()
             }
             downloadPending = false
         }
@@ -109,6 +98,10 @@ Page {
             MdmBanner.DisabledByMdmBanner {
                 id: mdmBanner
                 active: !AccessPolicy.osUpdatesEnabled
+            }
+
+            PackageProblems {
+                visible: storeIf.updateStatus === StoreInterface.UpdateAvailable && !placeholder.enabled && storeIf.offendingPackagesList.length > 0
             }
 
             Item { width: 1; height: Theme.paddingLarge }
@@ -210,11 +203,7 @@ Page {
                             downloadPending = true
                             storeIf.getUpdateSize()
                         } else {
-                            if (upgradeDetails.backupEnabled) {
-                                page._showBackupPage()
-                            } else {
-                                storeIf.downloadUpdate()
-                            }
+                            storeIf.downloadUpdate()
                         }
                     } else if (storeIf.mayInstall) {
                         storeIf.installDownloadedUpdate()

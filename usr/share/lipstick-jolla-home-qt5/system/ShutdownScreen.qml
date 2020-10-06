@@ -1,9 +1,9 @@
-/****************************************************************************
-**
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Vesa Halttunen <vesa.halttunen@jollamobile.com>
-**
-****************************************************************************/
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Moblie Platform LLC.
+ *
+ * License: Proprietary
+ */
 
 import QtQuick 2.0
 import org.nemomobile.lipstick 0.1
@@ -17,8 +17,21 @@ SystemWindow {
 
         property bool shouldBeVisible
 
+        function getMode() {
+            if (shutdownMode === "reboot" || shutdownMode === "upgrade") {
+                return ShutdownMode.Reboot
+            } else if (shutdownMode === "userswitch") {
+                return ShutdownMode.UserSwitch
+            } else if (shutdownMode === "userswitchFailed") {
+                return ShutdownMode.UserSwitchFailed
+            } else {
+                return ShutdownMode.Shutdown
+            }
+        }
+
         opacity: shouldBeVisible ? 1 : 0
-        rebooting: shutdownMode === "reboot" || shutdownMode === "upgrade"
+        mode: getMode()
+        uid: user
 
         onOpacityAnimationFinished: if (opacity == 0) shutdownScreen.windowVisible = false
 
@@ -28,6 +41,7 @@ SystemWindow {
                 shutdownWindow.shouldBeVisible = true
                 Lipstick.compositor.onlyCurrentNotificationAllowed = true
             }
+            onUserSwitchFailed: shutdownWindow.mode = shutdownWindow.getMode()
         }
     }
 }

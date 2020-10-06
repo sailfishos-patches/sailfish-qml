@@ -1,4 +1,13 @@
-import QtQuick 2.0
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
+import QtQuick 2.6
+import Sailfish.Accounts 1.0
+import Sailfish.Silica 1.0
 import com.jolla.gallery 1.0
 import com.jolla.gallery.dropbox 1.0
 import org.nemomobile.socialcache 1.0
@@ -9,10 +18,10 @@ MediaSource {
     //: Label of the Dropbox album in Jolla Gallery application
     //% "Dropbox"
     title: qsTrId("jolla_gallery_dropbox-user_photos")
-    icon: "/usr/lib/qt5/qml/com/jolla/gallery/dropbox/DropboxGalleryIcon.qml"
+    icon: StandardPaths.resolveImport("com.jolla.gallery.dropbox.DropboxGalleryIcon")
     model: allPhotos
     count: model.count
-    ready: false
+    ready: syncHelper.syncProfiles.length > 0 && accountManager.cloudServiceReady
 
     property bool applicationActive: Qt.application.active
 
@@ -25,8 +34,16 @@ MediaSource {
     property DropboxImageCacheModel dropboxUsers: DropboxImageCacheModel {
         type: DropboxImageCacheModel.Users
         onCountChanged: {
-            root.page = count < 2 ? "/usr/lib/qt5/qml/com/jolla/gallery/dropbox/DropboxAlbumsPage.qml"
-                                  : "/usr/lib/qt5/qml/com/jolla/gallery/dropbox/DropboxUsersPage.qml"
+            root.page = count < 2 ? StandardPaths.resolveImport("com.jolla.gallery.dropbox.DropboxAlbumsPage")
+                                  : StandardPaths.resolveImport("com.jolla.gallery.dropbox.DropboxUsersPage")
+        }
+    }
+
+    property AccountManager accountManager: AccountManager {
+        property bool cloudServiceReady
+
+        Component.onCompleted: {
+            cloudServiceReady = enabledAccounts("dropbox", "dropbox-images").length > 0
         }
     }
 
@@ -42,9 +59,6 @@ MediaSource {
         onProfileDeleted: {
             dropboxUsers.refresh()
             allPhotos.refresh()
-        }
-        onSyncProfilesChanged: {
-            root.ready = syncProfiles.length > 0
         }
     }
 

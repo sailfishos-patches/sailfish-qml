@@ -34,6 +34,9 @@ Page {
         }
     }
 
+    readonly property color answerHighlightColor: (callingView.palette.colorScheme === Theme.LightOnDark) ? "#AAFF80" : "#226600"
+    readonly property color rejectHighlightColor: (callingView.palette.colorScheme === Theme.LightOnDark) ? "#FF3030" : "#660003"
+
     Component.onCompleted: updateCallingView()
     onCallingStateChanged: updateCallingView()
 
@@ -74,7 +77,7 @@ Page {
     }
 
     function updateCallingView() {
-        if (main.state === "incoming") {
+        if (main.state === "incoming" || main.state === "silenced") {
             incomingCallView()
             callDialogApplicationWindow.pageStack.pop(callingView)
         } else if (main.state !== "null") {
@@ -87,21 +90,31 @@ Page {
 
     palette.colorScheme: avatarImage.status === Image.Ready ? Theme.LightOnDark : undefined
 
-    property url callerAvatar: telephony.incomingCallerDetails ? telephony.incomingCallerDetails.avatar
-                                                               : (telephony.primaryCallerDetails
-                                                                  ? telephony.primaryCallerDetails.avatar
-                                                                  : telephony.silencedCallerDetails.avatar)
+    property url callerAvatar: {
+        if (callingState === "incoming") {
+            return telephony.incomingCallerDetails ? telephony.incomingCallerDetails.avatar : ""
+        } else if (callingState === "silenced") {
+            return telephony.silencedCallerDetails ? telephony.silencedCallerDetails.avatar : ""
+        } else {
+            return telephony.primaryCallerDetails ? telephony.primaryCallerDetails.avatar : ""
+        }
+    }
+    onCallerAvatarChanged: asyncAvatarCheck.restart()
 
-    onCallerAvatarChanged: {
-        if (!visible || (telephony.active && avatarImage.status !== Image.Ready)) {
-            glassAvatar.opacity = 0
-            avatarImage.source = callerAvatar
-        } else if (telephony.active
-                    && avatarImage.status === Image.Ready
-                    && avatarImage.source !== callerAvatar) {
-            avatarFadeInAnimation.stop()
-            avatarFadeOutAnimation.from = glassAvatar.opacity
-            avatarFadeOutAnimation.start()
+    Timer {
+        interval: 1
+        id: asyncAvatarCheck
+        onTriggered: {
+            if (!visible || (telephony.active && avatarImage.status !== Image.Ready)) {
+                glassAvatar.opacity = 0
+                avatarImage.source = callerAvatar
+            } else if (telephony.active
+                       && avatarImage.status === Image.Ready
+                       && avatarImage.source !== callerAvatar) {
+                avatarFadeInAnimation.stop()
+                avatarFadeOutAnimation.from = glassAvatar.opacity
+                avatarFadeOutAnimation.start()
+            }
         }
     }
 
@@ -113,7 +126,9 @@ Page {
         anchors.fill: parent
         blending: true
         parent: __silica_applicationwindow_instance._wallpaperItem
+        contentAngle: Math.floor(callingView.rotation / 90) * 90
 
+        color: Qt.rgba(0, 0, 0, 0.6)
         patternItem: glassTextureImage
         backgroundItem: avatarBlur
 
@@ -262,18 +277,19 @@ Page {
         y: Theme.paddingLarge
         enabled: false
         parent: callingAnimation.running ? callingView
-                                         : (telephony.incomingCall ? incomingCallView().contentItem : inCallView().contentItem)
+                                         : (telephony.incomingCall || telephony.silencedCall ? incomingCallView().contentItem : inCallView().contentItem)
         palette {
-            primaryColor: (telephony.incomingCall || newCallAnimation.running) ? "#80ff91" : undefined
-            secondaryColor: (telephony.incomingCall || newCallAnimation.running) ? "#8080ff91" : undefined
+            primaryColor: (telephony.incomingCall || telephony.silencedCall || newCallAnimation.running) ? "#80ff91" : undefined
+            secondaryColor: (telephony.incomingCall || telephony.silencedCall || newCallAnimation.running) ? "#8080ff91" : undefined
         }
         dateColumnVisible: main.state === 'active'
         time: telephony.primaryCallerDetails.startedAt
         person: main.state === "silenced" ? (telephony.silencedCallerDetails && telephony.silencedCallerDetails.person) : (telephony.primaryCallerDetails && telephony.primaryCallerDetails.person)
         remoteUid: main.state === "silenced" ? (telephony.silencedCallerDetails && telephony.silencedCallerDetails.remoteUid) : (telephony.primaryCallerDetails && telephony.primaryCallerDetails.remoteUid)
-        visible: !telephony.incomingCall || telephony.primaryCall || main.state === "null"
-                 || main.state === "disconnected" || main.state === "silenced"
+        visible: !telephony.incomingCall && !telephony.silencedCall || telephony.primaryCall || main.state === "null"
+                 || main.state === "disconnected"
     }
+
     ParallelAnimation {
         id: newCallAnimation
         YAnimator {

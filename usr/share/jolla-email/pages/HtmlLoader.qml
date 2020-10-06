@@ -7,7 +7,11 @@
 
 import QtQuick 2.2
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 import Nemo.Email 0.1
+import Sailfish.WebView 1.0
+import Sailfish.WebEngine 1.0
+import org.nemomobile.configuration 1.0
 
 Loader {
     id: htmlLoader
@@ -17,10 +21,9 @@ Loader {
     property bool portrait
     property bool isOutgoing
     property bool isLocalFile
+    readonly property bool showImages: app.accountsManagerActive || downloadImagesConfig.value
 
     property bool _wasLoaded
-    property bool _wasOffline
-    property bool _wasImagesLoaded
     property var _html
     property var _email
     property AttachmentListModel attachmentsModel
@@ -28,29 +31,31 @@ Loader {
     signal removeRequested
     signal needToSendReadReceipt
 
-    function load(html, email) {
-        // Needed for resurrecting the HtmlViewer
-        _html = html
-        _email = email
-
-        // Show progress indicator when we don't have an item.
-        if (!item) {
-            showLoadProgress = true
-            messageViewPage.loaded = false
+    function load(content, mimeType, email) {
+        if (mimeType === "text/plain") {
+            parser.text = content
+            _html = Qt.binding(plainTextAsHtml)
+        } else {
+            _html = content
+            parser.text = ""
         }
 
+        _email = email
+
+        _finishLoad()
+    }
+
+    function _finishLoad() {
         if (!item) {
+            // Show progress indicator when we don't have an item.
+            showLoadProgress = true
+            messageViewPage.loaded = false
             active = true
         } else {
-            if (email) {
-                item.email = email
-            }
-
-            if (!html.length)
+            if (!_html.length)
                 return
 
             _wasLoaded = true
-            item.setHtml(html)
             loadingTimer.restart()
         }
     }
@@ -72,22 +77,32 @@ Loader {
         }
 
         if (!item) {
-            // Loader is async. Let's do not depend directly on the _wasOffline
-            _wasImagesLoaded = !_wasOffline
             active = true
         }
 
-        load(_html, _email)
+        _finishLoad()
+    }
+
+    function plainTextAsHtml() {
+        return "<html><body><div style=\"white-space: pre-wrap; word-wrap: break-word;\">" + parser.linkedText + "</div></body></html>"
+    }
+
+    Component.onCompleted: {
+        WebEngineSettings.autoLoadImages = Qt.binding(function() {
+            return showImages
+        })
     }
 
     sourceComponent: HtmlViewer {
         anchors.fill: parent
-        contentWidth: parent.width
         interactive: messageViewPage.loaded
         portrait: htmlLoader.portrait
         attachmentsModel: htmlLoader.attachmentsModel
         isOutgoing: htmlLoader.isOutgoing
         isLocalFile: htmlLoader.isLocalFile
+        email: htmlLoader._email
+        htmlBody: htmlLoader._html
+        showImages: htmlLoader.showImages
 
         onVisuallyCommittedChanged: {
             if (visuallyCommitted) {
@@ -116,37 +131,21 @@ Loader {
 
     onItemChanged: {
         if (item) {
-            // Resurrect image loading state.
-            if (_wasImagesLoaded) {
-                item.showImagesButton = false
-                item.experimental.offline = false
-                item.showImagesMessageId = _email && _email.messageId || 0
-            }
-            _wasImagesLoaded = false
-            load(_html, _email)
+            _finishLoad()
         }
     }
 
     asynchronous: true
 
-    Rectangle {
-        anchors.fill: parent
-        anchors.topMargin: messageViewPage.isLandscape ? Theme.itemSizeSmall : Theme.itemSizeLarge
 
-        color: "white"
-        z: 1
+    LinkParser {
+        id: parser
+    }
 
-        visible: !item || !item.visuallyCommitted
-
-        // Filter mouse presses to the "Show images"
-        MouseArea {
-            anchors.fill: parent
-            enabled: parent.visible
-        }
-
-        PageBusyIndicator {
-            running: parent.visible
-        }
+    ConfigurationValue {
+        id: downloadImagesConfig
+        key: "/apps/jolla-email/settings/downloadImages"
+        defaultValue: false
     }
 
     Timer {
@@ -167,7 +166,6 @@ Loader {
         interval: 1000 * 10 // 10sec
         onTriggered: {
             if (canRelease) {
-                _wasOffline = htmlLoader.item.experimental.offline
                 htmlLoader.active = false
             }
         }

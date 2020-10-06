@@ -61,6 +61,23 @@ SystemWindow {
         connectionDialog.selectedItem = null
     }
 
+    function validWepPassphrase(passphrase) {
+        return ((passphrase.length === 5
+                 || passphrase.length === 13)
+                && passphrase.match(/^[\x00-\x7f]+$/))
+                || ((passphrase.length === 10
+                     || passphrase.length === 26)
+                    && passphrase.match(/^[0-9a-f]+$/i))
+    }
+
+    function validPskPassphrase(passphrase) {
+        return passphrase.length >= 8
+                && ((passphrase.length <= 64
+                     && passphrase.match(/^[0-9a-f]+$/i))
+                    || (passphrase.length <= 63
+                        && passphrase.match(/^[\x00-\x7f]+$/)))
+    }
+
     function closeDialog(connectionSelected) {
         if (!connectionSelected && selectedService.provisioningEap)
             selectedService.remove()
@@ -909,6 +926,9 @@ SystemWindow {
 
         remoteActions: [ {
             "name": "default",
+            //: Change the WLAN password
+            //% "Change"
+            "displayName": qsTrId("lipstick-jolla-home-la-connection_change_password"),
             "service": "com.jolla.lipstick.ConnectionSelector",
             "path": "/",
             "iface": "com.jolla.lipstick.ConnectionSelectorIf",

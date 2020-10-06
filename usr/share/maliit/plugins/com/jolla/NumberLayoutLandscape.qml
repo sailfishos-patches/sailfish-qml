@@ -82,6 +82,7 @@ KeyboardLayout {
         NumberKey {
             width: main.keyWidth
             caption: Qt.locale().decimalPoint
+            accents: Qt.locale().decimalPoint === "." ? "," : "."
             separator: SeparatorState.HiddenSeparator
         }
         BackspaceKey {

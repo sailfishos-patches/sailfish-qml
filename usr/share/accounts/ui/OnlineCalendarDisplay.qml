@@ -1,4 +1,11 @@
-import QtQuick 2.0
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import com.jolla.settings.accounts 1.0
@@ -6,19 +13,28 @@ import com.jolla.settings.accounts 1.0
 Column {
     id: root
 
-    property alias profileId: calendarModel.profileId
+    property alias accountId: calendarModel.accountId
+    property alias valid: calendarModel.valid
 
-    signal applyChanges(Account account)
+    property bool _modified
+
+    function applyChanges(account) {
+        if (_modified) {
+            calendarModel.applyChanges(account)
+        }
+    }
 
     width: parent.width
-
-    onApplyChanges: {
-        calendarModel.applyChanges(account)
-    }
 
     SectionHeader {
         //% "Calendars"
         text: qsTrId("settings_accounts-la-calendars")
+    }
+
+    InfoLabel {
+        visible: calendarModel.count === 0
+        //% "No calendars found"
+        text: qsTrId("settings_accounts-la-no_calendars_found")
     }
 
     OnlineCalendarModel {
@@ -34,6 +50,7 @@ Column {
             automaticCheck: false
             text: model.displayName
             onClicked: {
+                root._modified = true
                 calendarModel.setCalendarEnabled(model.index, !checked)
             }
         }

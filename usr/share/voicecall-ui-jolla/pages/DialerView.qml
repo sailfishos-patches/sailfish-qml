@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2012 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
@@ -15,6 +22,7 @@ Item {
     property bool isCurrentItem
     property alias flickable: flickable
     property alias headerHeight: header.height
+    property alias text: numberField.text
 
     signal endCallClicked
     signal startCallClicked()
@@ -111,10 +119,11 @@ Item {
 
     onNumberClicked: {
         numberField.input(number)
-
+    }
+    onTextChanged: {
         root.checkSpecial()
 
-        if (number !== "#") {
+        if (text.length === 0 || text[text.length - 1] !== "#") {
             return
         }
 
@@ -190,6 +199,7 @@ Item {
                 //% "Send message"
                 text: qsTrId("voicecall-me-send_message")
                 enabled: numberField.text.length > 0
+                visible: telephony.messagingPermitted
                 onClicked: messaging.startSMS(numberField.text)
             }
 
@@ -240,6 +250,7 @@ Item {
                 active: root.isCurrentItem
                 keypad: keypad
                 rightMargin: flickable.splitView ? Theme.paddingLarge : Theme.horizontalPageMargin
+                onCallKeyPressed: root.startCallClicked()
             }
 
             Item {

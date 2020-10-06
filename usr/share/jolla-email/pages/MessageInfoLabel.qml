@@ -15,6 +15,6 @@ Label {
     font.pixelSize: Theme.fontSizeSmall
     elide: Text.ElideRight
     maximumLineCount: 2
-    wrapMode: Text.WordWrap
+    wrapMode: Text.Wrap
     color: header ? Theme.secondaryHighlightColor : Theme.highlightColor
 }

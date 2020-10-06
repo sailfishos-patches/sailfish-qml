@@ -7,7 +7,6 @@ BaseEditor {
     id: root
 
     property NicknameDetailModel nicknameModel
-    property bool hasContent
     property var flickable
 
     // This editor shows name fields in this order: first name, nickname, middle name, last name.
@@ -31,7 +30,6 @@ BaseEditor {
                     var nickname = nicknameModel.get(j)
                     detailModel.append(_nameProperties(Person.NicknameType, "", nickname.value, nickname.sourceIndex))
                 }
-                hasContent |= nicknameModel.count > 0
             } else {
                 var value = contact[detail.propertyName]
                 if (detail.type === Person.MiddleNameType
@@ -42,7 +40,6 @@ BaseEditor {
                 }
 
                 detailModel.append(_nameProperties(detail.type, detail.propertyName, value, -1))
-                hasContent |= value.length > 0
             }
         }
     }
@@ -66,7 +63,6 @@ BaseEditor {
     }
 
     fieldDelegate: EditorFieldDelegate {
-        id: editorField
 
         editor: root
         leftMargin: 0
@@ -89,16 +85,7 @@ BaseEditor {
                 }
             }
 
-            var _hasContent = value.length > 0
-            if (!_hasContent) {
-                for (var i = 0; i < detailModel.count; ++i) {
-                    if (root.detailModel.get(i).value.length > 0) {
-                        _hasContent = true
-                        break
-                    }
-                }
-            }
-            root.hasContent = _hasContent
+            root.hasContent = value.length > 0 || root.testHasContent()
         }
     }
 }

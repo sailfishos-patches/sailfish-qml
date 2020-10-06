@@ -69,7 +69,7 @@ Column {
         font.pixelSize: Theme.fontSizeExtraSmall
         horizontalAlignment: (contentWidth > 0 && contentWidth > Math.ceil(width)) ? Text.AlignLeft : root.horizontalAlignment
         truncationMode: valid ? TruncationMode.Fade : TruncationMode.None
-        wrapMode: valid ? Text.NoWrap : Text.WordWrap
+        wrapMode: valid ? Text.NoWrap : Text.Wrap
         color: root.highlighted ? Theme.highlightColor : Theme.primaryColor
     }
 }

@@ -31,12 +31,6 @@ Column {
         }
     }
 
-    function applyFolderSyncPolicy() {
-        if (folderSyncSettings.item) {
-            folderSyncSettings.item.applyFolderSyncPolicy()
-        }
-    }
-
     width: parent.width
 
     onContacts2WaySyncChanged: {

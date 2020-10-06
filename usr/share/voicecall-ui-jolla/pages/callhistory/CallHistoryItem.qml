@@ -18,7 +18,14 @@ ListItem {
     property var person
     property bool privateNumber: remoteUid === ""
     property bool showNumberDetail
-    property string numberDetail: showNumberDetail ? getNumberDetail() : ""
+    property string numberDetail: {
+        if (showNumberDetail) {
+            var label = main.getNumberDetail(person, remoteUid)
+            return label.length > 0 ? label : defaultNumberDetail
+        }
+        return ""
+    }
+
     property string subscriberIdentity
     readonly property int leftMargin: Math.max(Theme.horizontalPageMargin, callDirectionIcon.width + 2*Theme.paddingMedium)
     property int rightMargin: Theme.horizontalPageMargin
@@ -29,24 +36,6 @@ ListItem {
 
     width: parent ? parent.width : 0
     contentHeight: Math.max(Theme.itemSizeSmall, content.height + (showDetails ? 3 : 2) * Theme.paddingMedium)
-
-    function getNumberDetail() {
-        var label = ""
-        if (person) {
-            var numbers = Person.removeDuplicatePhoneNumbers(person.phoneDetails)
-            var minimizedRemoteUid = Person.minimizePhoneNumber(remoteUid)
-            for (var i = 0; i < numbers.length; i++) {
-                var number = numbers[i].normalizedNumber
-
-                if (Person.minimizePhoneNumber(number) === minimizedRemoteUid) {
-                    var detail = numbers[i]
-                    label = ContactsUtil.getNameForDetailSubType(detail.type, detail.subTypes, detail.label)
-                    break
-                }
-            }
-        }
-        return label.length > 0 ? label : defaultNumberDetail
-    }
 
     Reminder {
         id: reminder

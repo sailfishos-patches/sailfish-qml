@@ -311,40 +311,33 @@ Page {
     }
 
     DBusInterface {
-        id: freeDesktopDBus
-        property bool hasAbootSettingsService
-
-        bus: DBus.SystemBus
-        service: 'org.freedesktop.DBus'
-        path: '/org/freedesktop/DBus'
-        iface: 'org.freedesktop.DBus'
-        Component.onCompleted: checkAbootSettingsService()
-
-        // Check first that we have aboot settings service available.
-        // Use org.freedesktop.DBus.NameHasOwner func. to check if plug-in is load.
-        function checkAbootSettingsService() {
-            freeDesktopDBus.call('NameHasOwner','org.sailfishos.abootsettings', function (retval) {
-                hasAbootSettingsService = retval
-                if (hasAbootSettingsService) {
-                    abootSettingsDBus.getLocked()
-                }
-            })
-        }
-    }
-
-    DBusInterface {
         id: abootSettingsDBus
         property int isLocked
         property bool fetching
+        property bool hasAbootSettingsService
 
         bus: DBus.SystemBus
         service: 'org.sailfishos.abootsettings'
         path: '/org/sailfishos/abootsettings'
-        iface: 'org.sailfishos.abootsettings'
+
+        Component.onCompleted: checkAbootSettingsService()
+
+        // Check first that we have aboot settings service available.
+        function checkAbootSettingsService() {
+            fetching = true
+            iface = 'org.freedesktop.DBus.Peer'
+            call('Ping', [], function () {
+                hasAbootSettingsService = true
+                getLocked()
+            }, function() {
+                hasAbootSettingsService = false
+            })
+        }
 
         function getLocked() {
             fetching = true
-            abootSettingsDBus.call('get_locked', [], function (retval) {
+            iface = 'org.sailfishos.abootsettings'
+            call('get_locked', [], function (retval) {
                 isLocked = retval
                 fetching = false
             }, function () {
@@ -354,7 +347,8 @@ Page {
 
         function setLocked(newLockedValue) {
             fetching = true
-            abootSettingsDBus.call('set_locked', [newLockedValue], function (retval) {
+            iface = 'org.sailfishos.abootsettings'
+            call('set_locked', [newLockedValue], function (retval) {
                 fetching = false
                 if (!retval) {
                      console.log("[developermode] Failed to set locked")
@@ -689,6 +683,17 @@ Page {
 
                 ComboBox {
                     id: frameRateCombo
+
+                    readonly property var values: [
+                        "",
+                        "simple",
+                        "detailed",
+                        "simple-compositor",
+                        "detailed-compositor",
+                        "simple-application",
+                        "detailed-application"
+                    ]
+
                     //% "Framerate display"
                     label: qsTrId("settings_developermode-cb-framerate_display")
                     menu: ContextMenu {
@@ -704,17 +709,25 @@ Page {
                             //% "Detailed"
                             text: qsTrId("settings_developermode-va-detailed")
                         }
-                    }
-
-                    onCurrentIndexChanged: {
-                        if (currentIndex == 0) {
-                            frameRateConfig.value = ""
-                        } else if (currentIndex == 1) {
-                            frameRateConfig.value = "simple"
-                        } else {
-                            frameRateConfig.value = "detailed"
+                        MenuItem {
+                            //% "Simple - Compositor only"
+                            text: qsTrId("settings_developermode-va-simple_compositor")
+                        }
+                        MenuItem {
+                            //% "Detailed - Compositor only"
+                            text: qsTrId("settings_developermode-va-detailed_compositor")
+                        }
+                        MenuItem {
+                            //% "Simple - Application only"
+                            text: qsTrId("settings_developermode-va-simple_application")
+                        }
+                        MenuItem {
+                            //% "Detailed - Application only"
+                            text: qsTrId("settings_developermode-va-detailed_capplication")
                         }
                     }
+
+                    onCurrentIndexChanged: frameRateConfig.value = values[currentIndex] || ""
 
                     ConfigurationValue {
                         id: frameRateConfig
@@ -724,13 +737,7 @@ Page {
                         Component.onCompleted: syncValue()
 
                         function syncValue() {
-                            if (value == "simple") {
-                                frameRateCombo.currentIndex = 1
-                            } else if (value == "detailed") {
-                                frameRateCombo.currentIndex = 2
-                            } else {
-                                frameRateCombo.currentIndex = 0
-                            }
+                            frameRateCombo.currentIndex = Math.max(0, frameRateCombo.values.indexOf(value))
                         }
                     }
                 }
@@ -790,18 +797,37 @@ Page {
                     checked: !abootSettingsDBus.isLocked
                     // Don't show switch if service is not available or
                     // developer mode is not enabled.
-                    visible: freeDesktopDBus.hasAbootSettingsService && root.showDeveloperModeSettings
+                    visible: abootSettingsDBus.hasAbootSettingsService && root.showDeveloperModeSettings
                     busy: abootSettingsDBus.fetching
 
-                    //: User can flash device with fastboot flash tool.
-                    //% "Allow device flashing"
-                    text: qsTrId("settings_developermode-bt-allow_device_flashing")
+                    //: User can unlock the bootloader and flash device with a flash tool.
+                    //% "Allow bootloader operations"
+                    text: qsTrId("settings_developermode-bt-allow_bootloader_operations")
 
                     onClicked: {
                         if (abootSettingsDBus.isLocked) {
                             abootSettingsDBus.setLocked(0)
                         } else {
                             abootSettingsDBus.setLocked(1)
+                        }
+                    }
+                }
+
+                TextSwitch {
+                    visible: root.showDeveloperModeSettings
+                    automaticCheck: false
+                    checked: developerModeSettings.debugHomeEnabled
+                    enabled: policy.value
+
+                    //: Content effectively under /home/.system/usr/lib/debug
+                    //% "Store debug symbols to home partition"
+                    text: qsTrId("settings_developermode-bu-enable_debug_home_location")
+
+                    onClicked: {
+                        if (developerModeSettings.debugHomeEnabled) {
+                            developerModeSettings.moveDebugToHome(false)
+                        } else {
+                            developerModeSettings.moveDebugToHome(true)
                         }
                     }
                 }
@@ -833,11 +859,27 @@ Page {
                 //% "Downloading packages"
                 return qsTrId("settings_developermode-la-downloading_packages")
             case DeveloperModeSettings.InstallingPackages:
-                //% "Installing developer mode"
-                return qsTrId("settings_developermode-la-installing_developer_mode")
+                if (developerModeSettings.installationType == DeveloperModeSettings.DebugHome) {
+                    //% "Installing debug home location"
+                    return qsTrId("settings_developermode-la-installing_debug_home_location")
+                } else if (developerModeSettings.installationType == DeveloperModeSettings.DeveloperMode){
+                    //% "Installing developer mode"
+                    return qsTrId("settings_developermode-la-installing_developer_mode")
+                } else {
+                    return ""
+                }
+
             case DeveloperModeSettings.RemovingPackages:
-                //% "Removing developer mode"
-                return qsTrId("settings_developermode-la-removing_developer_mode")
+                if (developerModeSettings.installationType == DeveloperModeSettings.DebugHome) {
+                    //% "Removing debug home location"
+                    return qsTrId("settings_developermode-la-removing_debug_home_location")
+                } else if (developerModeSettings.installationType == DeveloperModeSettings.DeveloperMode) {
+                    //% "Removing developer mode"
+                    return qsTrId("settings_developermode-la-removing_developer_mode")
+                } else {
+                    return ""
+                }
+
             case DeveloperModeSettings.Idle:
             default:
                 return ""

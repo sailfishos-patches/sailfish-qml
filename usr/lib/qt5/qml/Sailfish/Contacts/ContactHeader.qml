@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2012 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+*/
+
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.contacts 1.0
@@ -35,7 +42,10 @@ Column {
                 }
             }
             if (contact.companyName) {
-                items.push(contact.companyName)
+                // Don't show company name if it duplicates the displayed name
+                if (contact.companyName != getNameText()) {
+                    items.push(contact.companyName)
+                }
             }
             if (contact.department) {
                 items.push(contact.department)
@@ -85,7 +95,7 @@ Column {
 
         contentHeight: {
             // avoid just a few pixel padding below the avatar
-            var avatarHeight = avatar.height + 2 * avatar.y
+            var avatarHeight = avatarArea.height + 2 * avatarArea.y
             if (labelColumn.height + Theme.paddingSmall < avatarHeight) {
                 return avatarHeight
             } else {
@@ -126,8 +136,8 @@ Column {
             color: Theme.rgba(Theme.highlightBackgroundColor, highlightArea.menuOpen ? 0.1 : Theme.highlightBackgroundOpacity)
         }
 
-        AvatarImage {
-            id: avatar
+        Item {
+            id: avatarArea
 
             readonly property bool emailOnly: !!contact
                        && contact.emailDetails.length > 0
@@ -136,14 +146,19 @@ Column {
                        && contact.accountDetails.length === 0
                        && contact.websiteDetails.length === 0
 
-            y: available ? 0 : Theme.paddingMedium
-            x: available ? 0 : Theme.horizontalPageMargin
+            y: avatar.available ? 0 : Theme.paddingMedium
+            x: avatar.available ? 0 : Theme.horizontalPageMargin
 
-            // binding to visible makes the header refetch the avatar when returning to the view
-            source: contact && visible ? contact.filteredAvatarUrl(['local', 'picture', '']) : ""
+            width: avatar.available ? avatar.itemSize : avatarPlaceholder.width
+            height: avatar.available ? avatar.itemSize : avatarPlaceholder.height + 2 * y
 
-            width: available ? itemSize : avatarPlaceholder.width
-            height: available ? itemSize : avatarPlaceholder.height + 2 * y
+            AvatarImage {
+                id: avatar
+                anchors.centerIn: parent
+
+                // binding to visible makes the header refetch the avatar when returning to the view
+                source: contact && visible ? contact.filteredAvatarUrl(['local', 'picture', '']) : ""
+            }
 
             HighlightImage {
                 id: avatarPlaceholder
@@ -151,18 +166,23 @@ Column {
                 anchors.centerIn: parent
                 visible: !avatar.available
                 highlighted: highlightArea.highlighted
-                source: avatar.emailOnly ? "image://theme/icon-m-mail"
-                                         : "image://theme/icon-m-contact"
+                source: avatarArea.emailOnly ? "image://theme/icon-m-mail"
+                                             : "image://theme/icon-m-contact"
             }
         }
 
         Column {
             id: labelColumn
 
-            topPadding: Theme.paddingMedium
+            // Avoid top alignment when showing 1 line next to the small avatar placeholder.
+            topPadding: !avatar.available && nameLabel.lineCount === 1 && extraDetailLabel.text.length === 0
+                        ? 0
+                        : Theme.paddingMedium
+            y: topPadding === 0 ? avatarArea.y + (avatarArea.height/2 - height/2) : 0
+
             spacing: Theme.paddingSmall
             anchors {
-                left: avatar.right
+                left: avatarArea.right
                 leftMargin: Theme.paddingLarge
                 right: parent.right
                 rightMargin: Theme.horizontalPageMargin

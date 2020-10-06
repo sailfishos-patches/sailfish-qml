@@ -24,7 +24,7 @@ BaseEditor {
     function populateFieldEditor() {
         detailModel.clear()
 
-        for (var i = 0; i <root._fields.length; i++) {
+        for (var i = 0; i < root._fields.length; i++) {
             var detail = root._fields[i]
             var value = contact[detail.propertyName]
             if (!detail.persistent && value.length === 0) {

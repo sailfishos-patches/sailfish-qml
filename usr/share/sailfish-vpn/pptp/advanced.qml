@@ -8,26 +8,12 @@ Column {
     property string defaultText
 
     function setProperties(providerProperties) {
-        var getProperty = function(name) {
-            if (providerProperties) {
-                return providerProperties[name] || ''
-            }
-            return ''
-        }
-
         pptpUser.text = getProperty('PPTP.User')
 
         pppdOptions.setProperties(providerProperties)
     }
 
     function updateProperties(providerProperties) {
-        var updateProvider = function(name, value) {
-            // If the value is empty/default, do not include the property in the configuration
-            if (value != '' && value != '_default') {
-                providerProperties[name] = value
-            }
-        }
-
         updateProvider('PPTP.User', pptpUser.text)
 
         pppdOptions.updateProperties(providerProperties)

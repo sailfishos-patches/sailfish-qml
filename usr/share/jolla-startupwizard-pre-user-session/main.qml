@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
@@ -57,38 +64,13 @@ Window {
         _selectedLocale = locale
     }
 
-    function _setVkbLayout(locale) {
-        // set virtual keyboard layout correspondingly. Assuming such file exists if language is available
-        var layout
-        var lang = locale.substr(0, 2)
-        if (locale.substr(0, 5) === "zh_HK") {
-            layout = "zh_hwr_traditional.qml"
-        } else if (lang === "zh") {
-            layout = "zh_cn_pinyin.qml"
-        } else if (lang === "nb") {
-            layout = "no.qml"
-        } else {
-            layout = lang + ".qml"
-        }
-        currentLayoutConfig.value = layout
-
-        // set enabled layouts. Initial layouts are locale and English (and HWR layouts for Chinese).
-        if (lang === "zh") {
-            enabledLayoutsConfig.value = ["zh_cn_pinyin.qml", "zh_hwr_traditional.qml", "zh_hwr_simplified.qml", "en.qml"]
-        } else if (layout !== "en.qml") {
-            enabledLayoutsConfig.value = [layout, "en.qml"]
-        } else {
-            enabledLayoutsConfig.value = [layout]
-        }
-    }
-
     function _setContactsShowSurnameFirst(showSurnameFirst) {
         contactOrderConfig.value = showSurnameFirst ? 1 : 0
     }
 
     function _finalize() {
         wizardManager.writePreUserSessionMarker()
-        _setVkbLayout(_selectedLocale)
+        KeyboardSettings.setVkbLayout(_selectedLocale)
         var lang = _selectedLocale.substr(0, 2)
         _setContactsShowSurnameFirst(lang === "zh")
         languageModel.setSystemLocale(_selectedLocale, LanguageModel.UpdateWithoutReboot)
@@ -164,16 +146,6 @@ Window {
 
     LanguageModel {
         id: languageModel
-    }
-
-    ConfigurationValue {
-        id: currentLayoutConfig
-        key: "/sailfish/text_input/active_layout"
-    }
-
-    ConfigurationValue {
-        id: enabledLayoutsConfig
-        key: "/sailfish/text_input/enabled_layouts"
     }
 
     ConfigurationValue {

@@ -1,7 +1,15 @@
+/**
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import QtQml 2.1
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
+import Sailfish.AccessControl 1.0
 import org.nemomobile.voicecall 1.0
 import MeeGo.QOfono 0.2
 import org.nemomobile.notifications 1.0
@@ -40,6 +48,8 @@ Item {
     property alias modems: ofonoManager.modems
     property alias enabledModems: modemManager.enabledModems
     property alias imeiCodes: modemManager.imeiCodes
+    readonly property bool callingPermitted: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-phone")
+    readonly property bool messagingPermitted: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-messages")
 
     // primaryCall is the call we will show in the InCallView.  See updateState() for details
     // of which call is considered the primary call.
@@ -50,6 +60,7 @@ Item {
     property var silencedCall: null
     property var conferenceCall: null
     property var previousPrimaryCall: null
+    property bool preferPrimaryCall
     property var callerDetails: new Object
     property var incomingCallerDetails: incomingCall ? callerDetails[incomingCall.handlerId] : null
     property var primaryCallerDetails: primaryCall && callerDetails[primaryCall.handlerId] ? callerDetails[primaryCall.handlerId] : primaryCallDataCache
@@ -147,13 +158,12 @@ Item {
     }
 
     function dial(number, modemPath) {
+        telephony.dialedNumber = number
         if (isEmergencyNumber(number)) {
             // Dial emergency number immediately on current modem
-            telephony.dialedNumber = number
             telephony.handleEmergencyCall()
             return
         }
-
         if (Telephony.promptForVoiceSim) {
             executeWhenModemActive = function() { dialOnCurrentModem(number) }
             requestedModemPath = modemPath
@@ -179,7 +189,6 @@ Item {
             }
         }
 
-        telephony.dialedNumber = number
         dialAfterEndedComplete = ""
 
         if (!telephony.isError()) {
@@ -273,6 +282,10 @@ Item {
         }
     }
 
+    function updateState() {
+        telephony.updateState()
+    }
+
     function callsInConference() {
         var calls = []
         for (var ic = 0; ic < telephony.voiceCalls.count; ic++) {
@@ -320,11 +333,14 @@ Item {
         id: telephony
 
         property string dialedNumber
+        readonly property string ringAccountPath: "/org/freedesktop/Telepathy/Account/ring/tel"
 
         function isError() {
 
             var error = false
-            if (!ofonoSimManager.present) {
+            var disabledByMdm = simFiltersHelper.ready && !simFiltersHelper.anyActiveSimCanDial
+                                && (!main.callHistoryPage || main.callHistoryPage.status == PageStatus.Inactive || !Qt.application.active)
+            if (!ofonoSimManager.present || !callingPermitted) {
                 //% "Only emergency calls allowed"
                 notification.publishError(qsTrId("voicecall-la-only-emergency-allowed"))
                 error = true
@@ -335,8 +351,7 @@ Item {
             } else if (ofonoSimManager.notActive) {
                 pinQuery.call("requestSimPin", [])
                 error = true
-            } else if (simFiltersHelper.ready && !simFiltersHelper.anyActiveSimCanDial &&
-                       (!main.callHistoryPage || main.callHistoryPage.status == PageStatus.Inactive || !Qt.application.active)) {
+            } else if (disabledByMdm) {
                 //: %1 is an operating system name without the OS suffix
                 //% "Outgoing calls are disabled by the %1 Device Manager"
                 notification.publishError(qsTrId("voicecall-la-outgoing_disabled_by_mdm")
@@ -347,6 +362,9 @@ Item {
                 error = true
             }
             if (error) {
+                if (callingPermitted && !disabledByMdm) {
+                    main.commCallModel.createOutgoingCallEvent(ringAccountPath + modemPath, dialedNumber)
+                }
                 root.callError()
             }
 
@@ -459,7 +477,15 @@ Item {
                 lastIncomingLineId = incomingCall.lineId
             }
 
-            main.state = incomingCall ? "incoming" : (primaryCall ? primaryCall.statusText : (silencedCall ? "silenced" : "null"))
+            if (incomingCall) {
+                main.state = "incoming"
+            } else if (silencedCall && !preferPrimaryCall) {
+                main.state = "silenced"
+            } else {
+                main.state = primaryCall ? primaryCall.statusText : "null"
+            }
+            preferPrimaryCall = false
+
             main.updateVisibility()
 
             if (activePending && primaryCall === activePending) {
@@ -633,6 +659,8 @@ Item {
 
     SimManager {
         id: simManager
+        // TODO: Check whether simDescriptionSeparator is really needed, see JB#50515
+        simDescriptionSeparator: " " + String.fromCharCode(0x2022) + " "
     }
 
     DBusInterface {

@@ -79,7 +79,8 @@ SystemWindow {
     HighlightImage {
         id: popupIcon
 
-        property int baseX: Theme.horizontalPageMargin
+        property int baseX: Theme.horizontalPageMargin + offset
+        property real offset
 
         x: -width
         y: Theme.paddingMedium
@@ -94,6 +95,21 @@ SystemWindow {
         monochromeWeight: colorWeight
     }
 
+    Timer {
+        running: popupArea.down
+        interval: 400
+        onTriggered: popupArea._longPress = true
+    }
+
+    // wiggle the banner when pressed to hint it can be swiped away
+    Private.GestureHintAnimation {
+        id: gestureHintAnimation
+        target: popupIcon
+        running: popupArea.pressed && popupArea._longPress
+        paused: running && (popupArea.drag.active || dismissAnimation.running)
+        property: "offset"
+    }
+
     MouseArea {
         id: popupArea
 
@@ -101,6 +117,8 @@ SystemWindow {
         property real textOpacity: 0
         property color textColor: down ? Theme.highlightColor : Theme.primaryColor
         property real displayWidth: Theme.itemSizeSmall*5
+        property bool _longPress
+        property bool _triggeredWithGesture
 
         objectName: "NotificationPreview_popupArea"
         anchors {
@@ -110,24 +128,26 @@ SystemWindow {
         }
         width: displayWidth
         height: Math.max(Theme.itemSizeSmall, summary.y*2 + summary.height + bodyContainer.anchors.topMargin + bodyContainer.height)
-        opacity: 0
+        opacity: 0.0
 
         drag.minimumX: -parent.width
         drag.maximumX: parent.width
         drag.target: popupIcon
         drag.axis: Drag.XAxis
-        drag.onActiveChanged: if (!drag.active) dismissAnimation.animate(popupIcon, popupIcon.baseX, parent.width)
+        drag.onActiveChanged: if (!drag.active) _triggeredWithGesture = dismissAnimation.animate(popupIcon, popupIcon.baseX, parent.width)
 
         Private.DismissAnimation {
             id: dismissAnimation
             onCompleted: {
                 notificationWindow.state = ""
                 notificationWindow.notificationExpired()
+                popupArea._triggeredWithGesture = false
             }
         }
 
+        onPressed: _longPress = false
         onClicked: {
-            if (notification) {
+            if (notification && !_longPress) {
                 notificationWindow._invoked = true
                 notification.actionInvoked("default")
 
@@ -143,19 +163,9 @@ SystemWindow {
             }
         }
 
-        Rectangle {
+        Private.BannerBackground {
             anchors.fill: parent
-            radius: Theme.paddingSmall
-            color: Qt.tint(Theme.highlightBackgroundColor, Theme.colorScheme == Theme.LightOnDark ? Qt.rgba(0, 0, 0, Theme.opacityFaint)
-                                                                                                  : Qt.rgba(1, 1, 1, Theme.opacityFaint))
-
-            Rectangle {
-                visible: popupArea.down
-                anchors.fill: parent
-                radius: parent.radius
-                color: Theme.highlightDimmerColor
-                opacity: Theme.opacityLow
-            }
+            highlighted: popupArea.down
 
             Label {
                 id: summary
@@ -172,12 +182,28 @@ SystemWindow {
                 opacity: popupArea.textOpacity
                 truncationMode: TruncationMode.Fade
                 font.pixelSize: Theme.fontSizeSmall
-                visible: text.length
+                visible: text.length > 0 && !gestureHintAnimation.running
                 height: visible ? implicitHeight : 0
                 textFormat: Text.PlainText
                 maximumLineCount: 1
                 // Only show the first line of the summary, if there is more
                 text: firstLine(notificationWindow.summaryText)
+            }
+
+            Label {
+                id: swipeHintLabel
+                anchors {
+                    left: summary.left
+                    right: summary.right
+                    verticalCenter: parent.verticalCenter
+                }
+
+                //% "Swipe to hide"
+                text: qsTrId("lipstick-jolla-home-la-swipe-to-hide")
+                visible: gestureHintAnimation.running
+                verticalAlignment: Text.AlignVCenter
+                fontSizeMode: Text.HorizontalFit
+                color: popupArea.textColor
             }
 
             Item {
@@ -200,7 +226,7 @@ SystemWindow {
                     opacity: popupArea.textOpacity
                     truncationMode: TruncationMode.None
                     font.pixelSize: Theme.fontSizeExtraSmall
-                    visible: text.length
+                    visible: text.length > 0 && !gestureHintAnimation.running
                     height: visible ? implicitHeight : 0
                     textFormat: Text.PlainText
                     maximumLineCount: 1
@@ -292,15 +318,21 @@ SystemWindow {
         interval: 7000
         repeat: false
         onTriggered: {
-            notificationTimer.interval = 3000
+            notificationTimer.duration = 3000
             notificationTimer.start()
         }
     }
 
-    Timer {
+    SequentialAnimation {
         id: notificationTimer
-        repeat: false
-        onTriggered: notificationWindow.notificationExpired()
+        property int duration
+        paused: running && (gestureHintAnimation.running || popupArea.drag.active || popupArea._triggeredWithGesture)
+        PauseAnimation {
+            duration: notificationTimer.duration
+        }
+        ScriptAction {
+            script: notificationWindow.notificationExpired()
+        }
     }
 
     onNotificationChanged: {
@@ -387,7 +419,7 @@ SystemWindow {
             scrollAnimation.start()
             forceHideTimer.start()
         } else {
-            notificationTimer.interval = timeout
+            notificationTimer.duration = timeout
             notificationTimer.restart()
         }
     }
@@ -656,7 +688,7 @@ SystemWindow {
         ScriptAction {
             script: {
                 scrollAnimation.target = null
-                notificationTimer.interval = 2000
+                notificationTimer.duration = 2000
                 notificationTimer.start()
             }
         }

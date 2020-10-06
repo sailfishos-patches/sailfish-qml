@@ -75,7 +75,7 @@ Item {
         text: container.mediaName
         font.pixelSize: Theme.fontSizeExtraSmall
         color: container.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-        wrapMode: Text.WordWrap
+        wrapMode: Text.Wrap
         maximumLineCount: 2
         elide: Text.ElideRight
     }

@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2012 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
@@ -152,7 +159,7 @@ ContactBrowser {
             // this menu, so don't auto-close it when an option is selected.
             closeOnActivation: false
 
-            hasContent: _hasPhoneNumber || deleteMenu.visible
+            hasContent: (_hasPhoneNumber && (telephony.callingPermitted || telephony.messagingPermitted)) || deleteMenu.visible
 
             function _choosePhoneNumber(actionType) {
                 _clearContextMenu(contextMenu)
@@ -163,14 +170,14 @@ ContactBrowser {
             MenuItem {
                 //% "Call"
                 text: qsTrId("voicecall-me-call")
-                visible: contextMenu._hasPhoneNumber
+                visible: contextMenu._hasPhoneNumber && telephony.callingPermitted
                 onClicked: _choosePhoneNumber(Telephony.Call)
             }
 
             MenuItem {
                 //% "Send message"
                 text: qsTrId("voicecall-me-send_message")
-                visible: contextMenu._hasPhoneNumber
+                visible: contextMenu._hasPhoneNumber && telephony.messagingPermitted
                 onClicked: _choosePhoneNumber(Telephony.Message)
             }
 

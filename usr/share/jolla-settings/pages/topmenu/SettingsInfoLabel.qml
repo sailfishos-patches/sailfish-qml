@@ -6,5 +6,5 @@ Label {
     x: Theme.horizontalPageMargin
     color: Theme.secondaryHighlightColor
     font.pixelSize: Theme.fontSizeSmall
-    wrapMode: Text.WordWrap
+    wrapMode: Text.Wrap
 }

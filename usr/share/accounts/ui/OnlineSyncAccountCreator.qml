@@ -1,4 +1,11 @@
-import QtQuick 2.0
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import com.jolla.settings.accounts 1.0
@@ -15,6 +22,9 @@ QtObject {
     property string addressbookPath
     property string calendarPath
     property string webdavPath
+    property string imagesPath
+    property string backupsPath
+    property bool ignoreSslErrors
     property var servicesEnabledConfig: ({})
 
     signal success(int newAccountId)
@@ -40,15 +50,30 @@ QtObject {
             if (serverAddress != "") {
                 config["server_address"] = serverAddress
             }
+
             var service = services[i]
             if (service.serviceType === "carddav") {
                 if (addressbookPath != "") {
                     config["addressbook_path"] = addressbookPath
                 }
+            } else if (service.serviceType === "caldav") {
+                if (calendarPath != "") {
+                    config["calendar_path"] = calendarPath
+                }
+            } else if (service.name.search('-images$') >= 0) {
+                if (imagesPath != "") {
+                    config["images_path"] = imagesPath
+                }
+            } else if (service.serviceType === "storage") {
+                if (backupsPath != "") {
+                    config["backups_path"] = backupsPath
+                }
             }
+
             if (webdavPath != "") {
                 config["webdav_path"] = webdavPath
             }
+            config["ignore_ssl_errors"] = ignoreSslErrors
             servicesConfig[service.name] = config
         }
 
@@ -88,7 +113,7 @@ QtObject {
         property bool triggeredCompletion
         onStatusChanged: {
             if (status == Account.Initialized) {
-                // enable or disable services as required. TODO: create sync profiles?
+                // enable or disable services as required
                 var needSync = false
                 for (var i = 0; i < services.length; ++i) {
                     var service = services[i]
@@ -119,7 +144,7 @@ QtObject {
             }
         }
 
-        function _completeAccountCreation() {
+        function updateCalendars() {
             // enumerate calendars if CalDAV is enabled
             var caldav = root._findCalendarService()
             if (caldav && root.servicesEnabledConfig[caldav.name] === true) {
@@ -127,15 +152,39 @@ QtObject {
                     root._calendarUpdater.destroy()
                 }
 
+                var serviceConfig = configurationValues(caldav.name)
                 root._calendarUpdater = calendarUpdaterComponent.createObject(root)
                 root._calendarUpdater.start(_newAccount,
                                             caldav.name,
-                                            configurationValues(caldav.name)["server_address"],
+                                            serviceConfig["server_address"],
+                                            !!serviceConfig["ignore_ssl_errors"],
                                             calendarPath)
-            } else {
-                // otherwise just emit success
-                root.success(_newAccount.identifier)
+                return true
             }
+
+            return false
+        }
+
+        function _completeAccountCreation() {
+            // Validate the credentials with any enabled service
+            for (var serviceName in root.servicesEnabledConfig) {
+                if (!!root.servicesEnabledConfig[serviceName]) {
+                    //: In the process of verifying the username/password entered by the user
+                    //% "Verifying credentials"
+                    root.updateCreationStatus(qsTrId("components_accounts-la-verifying_credentials"))
+
+                    if (!root._accountAuthenticator) {
+                        root._accountAuthenticator = _accountAuthenticatorComponent.createObject(root)
+                    }
+                    root._accountAuthenticator.signIn(_newAccount.identifier, serviceName)
+                    return
+                }
+            }
+
+            // Shouldn't happen, UI forces at least one service to be enabled.
+            // Reuse the string from MinimumServiceEnabledNotification.
+            //% "At least one service must be enabled"
+            root.failed(AccountFactory.LoginError, qsTrId("settings-accounts-la-enable_at_least_one_service"))
         }
     }
 
@@ -143,7 +192,7 @@ QtObject {
     property Component calendarUpdaterComponent: Component {
         CaldavAccountCalendarUpdater {
             onStatusChanged: {
-                root.updateCreationStatus(statusText())
+                root.updateCreationStatus(statusText)
             }
             onSuccess: {
                 root.success(_newAccount.identifier)
@@ -152,6 +201,40 @@ QtObject {
                 _newAccount.remove()
                 root.failed(errorCode, errorString)
             }
+        }
+    }
+
+    property QtObject _accountAuthenticator
+    property Component _accountAuthenticatorComponent: Component {
+        AccountAuthenticator {
+            id: authenticator
+
+            function _done(success, errorString) {
+                if (success) {
+                    if (!_newAccount.updateCalendars()) {
+                        // No calendar update required, so emit success()
+                        root.success(_newAccount.identifier)
+                    }
+                } else {
+                    root.failed(AccountFactory.LoginError, errorString)
+                }
+            }
+
+            onSignInCompleted: {
+                if (root.provider.name == "nextcloud") {
+                    sendOcsUserRequest(accountId, serviceName, credentials, root.ignoreSslErrors)
+                } else {
+                    sendAuthenticatedRequest(root.serverAddress + root.webdavPath, credentials, root.ignoreSslErrors)
+                }
+            }
+
+            onSignInError: {
+                _newAccount.remove()
+                root.failed(AccountFactory.LoginError, errorString)
+            }
+
+            onAuthenticatedRequestFinished: authenticator._done(success, errorString)
+            onOcsUserRequestFinished: authenticator._done(success, errorString)
         }
     }
 }

@@ -81,7 +81,7 @@ ContextMenu {
             objectName: "CredentialsForm_respond"
             width: Math.round(parent.width / 2)
             height: Theme.itemSizeSmall
-            enabled: eap ? eapFields.canAccept : true
+            enabled: eap ? eapFields.canAccept : dynamicFields.canAccept
             onClicked: form.respond()
             Label {
                 //% "Connect"

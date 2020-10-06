@@ -6,11 +6,12 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import Sailfish.Silica 1.0
 import com.jolla.lipstick 0.1
 
 Loader {
     property Item eventsView
-    property string widgetFilePath: "/usr/lib/qt5/qml/Sailfish/Calendar/CalendarWidget.qml"
+    property string widgetFilePath: StandardPaths.resolveImport("Sailfish.Calendar.CalendarWidget")
     property bool widgetExists: fileUtils.exists(widgetFilePath)
     property bool eventsVisible: eventsViewVisible
 

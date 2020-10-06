@@ -96,7 +96,8 @@ CsdTestPage {
         id: testController
         path: "/apps/csd/reboot"
         runInTests: page.runInTests
-        initialTestTime: page.parameters["RunInTestTime"]
+        initialTestTime: page.runInTests
+                         ? page.parameters["RunInTestTime"] : 20
 
         onTestResult: page.setTestResult(passed)
         onTestFailed: {

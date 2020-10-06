@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2012 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Messages 1.0
@@ -107,6 +114,13 @@ Page {
             width: parent.width
             height: textInput.y + textInput.height
 
+            SmsDisabledBanner {
+                id: smsDisabledBanner
+                localUid: conversation.message.hasChannel
+                          ? conversation.message.channels[0].localUid
+                          : ""
+            }
+
             AccountErrorLabel {
                 id: accountErrors
                 anchors {
@@ -119,20 +133,22 @@ Page {
                 localUid: conversation.message.hasChannel
                           ? conversation.message.channels[0].localUid
                           : ""
+                visible: !smsDisabledBanner.active
             }
 
             ConversationTextInput {
                 id: textInput
 
-                y: accountErrors.height
+                y: smsDisabledBanner.active ? smsDisabledBanner.height : accountErrors.height
                 editorFocus: conversationPage.editorFocus
                 enabled: accountErrors.simErrorState.length === 0
+                         && (!textInput.needsSimFeatures || MessageUtils.messagingPermitted)
                          && senderSupportsReplies
                          && conversation.message.hasChannel
 
                 onReadyToSend: {
-                    if (textInput.needsSimFeatures
-                            && !MessageUtils.testCanUseSim(accountErrors.simErrorState)) {
+                    if (textInput.needsSimFeatures && (!MessageUtils.messagingPermitted
+                            || !MessageUtils.testCanUseSim(accountErrors.simErrorState))) {
                         return
                     }
                     saveDraftState()

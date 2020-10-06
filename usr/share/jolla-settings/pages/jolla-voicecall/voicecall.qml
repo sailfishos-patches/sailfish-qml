@@ -1,7 +1,15 @@
+/**
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import Sailfish.Telephony 1.0
+import Sailfish.AccessControl 1.0
 import com.jolla.voicecall.settings.translations 1.0
 import Nemo.Configuration 1.0
 import org.nemomobile.ofono 1.0
@@ -14,6 +22,9 @@ Page {
 
     property bool clearingCounters
     property bool showRecordingsImmediately
+    readonly property bool administrationPermitted: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")
+    readonly property bool callingPermitted: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-phone")
+    readonly property bool messagingPermitted: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-messages")
     property bool pageReady: modemManager.ready || mainPage.status == PageStatus.Active
     onPageReadyChanged: if (pageReady) pageReady = true
 
@@ -39,6 +50,7 @@ Page {
         opacity: enabled ? 1.0 : 0.0
 
         PullDownMenu {
+            visible: administrationPermitted
             MenuItem {
                 //% "Clear call counters"
                 text: qsTrId("settings_voicecall-me-clear_call_counters")
@@ -100,7 +112,7 @@ Page {
             }
 
             ExpandingSectionGroup {
-                visible: !disableFlightModeAction.visible
+                visible: !disableFlightModeAction.visible && administrationPermitted
                 width: parent.width
                 animateToExpandedSection: false
                 currentIndex: sailfishSimManager.activeSim >= 0 ? sailfishSimManager.activeSim : 0
@@ -166,10 +178,12 @@ Page {
                 SectionHeader {
                     //% "Quick message reply"
                     text: qsTrId("settings_phone-he-quick_message_reply")
+                    visible: messagingPermitted
                 }
 
                 BackgroundItem {
                     height: quickMessagesColumn.height + 2 * quickMessagesColumn.y
+                    visible: messagingPermitted
 
                     onClicked: {
                         pageStack.animatorPush("QuickMessagesPage.qml")
@@ -216,6 +230,7 @@ Page {
                 }
 
                 Column {
+                    visible: callingPermitted
                     width: parent.width
                     SectionHeader {
                         //% "Call history"
@@ -242,6 +257,7 @@ Page {
 
                 CallRecording {
                     id: callRecording
+                    visible: administrationPermitted
                 }
             }
         }

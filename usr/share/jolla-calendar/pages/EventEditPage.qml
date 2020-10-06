@@ -56,6 +56,7 @@ Dialog {
     Component {
         id: calendarPicker
         CalendarPicker {
+            hideExcludedCalendars: true
             onCalendarClicked: {
                 notebookQuery.targetUid = uid
                 selectedCalendarUid = uid
@@ -215,7 +216,7 @@ Dialog {
                                 displayName = model.email(j)
                             }
                             if (result.length !== 0) {
-                                result += ", "
+                                result += Format.listSeparator
                             }
                             result += displayName
                         }
@@ -293,12 +294,16 @@ Dialog {
             ComboBox {
                 id: recur
 
+                property bool showCustom
                 property int value: currentItem ? currentItem.value : CalendarEvent.RecurOnce
 
                 visible: !dialog._replaceOccurrence && (!dialog._isEdit || dialog.event.recurrenceId.length === 0)
 
                 //% "Recurring"
                 label: qsTrId("calendar-add-recurring")
+                description: value == CalendarEvent.RecurCustom
+                    //% "The recurrence scheme is too complex to be shown."
+                    ? qsTrId("calendar-add-custom-scheme-explanation") : ""
                 menu: ContextMenu {
                     MenuItem {
                         property int value: CalendarEvent.RecurOnce
@@ -309,6 +314,11 @@ Dialog {
                         property int value: CalendarEvent.RecurDaily
                         //% "Every Day"
                         text: qsTrId("calendar-add-every_day")
+                    }
+                    MenuItem {
+                        property int value: CalendarEvent.RecurWeeklyByDays
+                        //% "Every Selected Days"
+                        text: qsTrId("calendar-add-every_week_by_days")
                     }
                     MenuItem {
                         property int value: CalendarEvent.RecurWeekly
@@ -326,15 +336,122 @@ Dialog {
                         text: qsTrId("calendar-add-every_month")
                     }
                     MenuItem {
+                        property int value: CalendarEvent.RecurMonthlyByDayOfWeek
+                        text: {
+                            var dayLabel = Format.formatDate(dateSelector.startDate, Format.WeekdayNameStandalone)
+                            var day = dateSelector.startDate.getDate()
+                            if (day < 8) {
+                                //: %1 is replaced with weekday name
+                                //% "First %1 Every Month"
+                                return qsTrId("calendar-add-every_month_by_day_of_week_first").arg(dayLabel)
+                            } else if (day < 15) {
+                                //: %1 is replaced with weekday name
+                                //% "Second %1 Every Month"
+                                return qsTrId("calendar-add-every_month_by_day_of_week_second").arg(dayLabel)
+                            } else if (day < 22) {
+                                //: %1 is replaced with weekday name
+                                //% "Third %1 Every Month"
+                                return qsTrId("calendar-add-every_month_by_day_of_week_third").arg(dayLabel)
+                            } else if (day < 29) {
+                                //: %1 is replaced with weekday name
+                                //% "Fourth %1 Every Month"
+                                return qsTrId("calendar-add-every_month_by_day_of_week_fourth").arg(dayLabel)
+                            } else {
+                                //: %1 is replaced with weekday name
+                                //% "Fifth %1 Every Month"
+                                return qsTrId("calendar-add-every_month_by_day_of_week_fifth").arg(dayLabel)
+                            }
+                        }
+                    }
+                    MenuItem {
+                        property int value: CalendarEvent.RecurMonthlyByLastDayOfWeek
+                        function addDays(date, days) {
+                            var later = new Date(Number(date))
+                            later.setDate(date.getDate() + days)
+                            return later
+                        }
+                        visible: addDays(dateSelector.startDate, 7).getMonth() != dateSelector.startDate.getMonth()
+                        onVisibleChanged: {
+                            if (!visible && recur.value == value) {
+                                recur.currentIndex = 6
+                            }
+                        }
+                        text: {
+                            var dayLabel = Format.formatDate(dateSelector.startDate, Format.WeekdayNameStandalone)
+                            //: %1 is replaced with weekday name
+                            //% "Last %1 Every Month"
+                            return qsTrId("calendar-add-every_month_by_day_of_week_last").arg(dayLabel)
+                        }
+                    }
+                    MenuItem {
                         property int value: CalendarEvent.RecurYearly
                         //% "Every Year"
                         text: qsTrId("calendar-add-every_year")
                     }
                     MenuItem {
-                        visible: false // not used at the moment. remove?
+                        visible: recur.showCustom
                         property int value: CalendarEvent.RecurCustom
-                        //% "Custom"
-                        text: qsTrId("calendar-add-custom")
+                        //% "Keep existing scheme"
+                        text: qsTrId("calendar-add-keep-scheme")
+                    }
+                }
+            }
+
+            Row {
+                id: recurringDays
+                // By default, the day of the event is selected.
+                property int days: weekModel.model.get((dateSelector.startDate.getDay() + 6) % 7).value
+                function flipDay(day) {
+                    if (days & day) {
+                        days &= ~day
+                    } else {
+                        days |= day
+                    }
+                }
+
+                x: Theme.horizontalPageMargin
+                visible: recur.value == CalendarEvent.RecurWeeklyByDays
+
+                Repeater {
+                    id: weekModel
+                    model: ListModel {
+                        ListElement { value: CalendarEvent.Monday }
+                        ListElement { value: CalendarEvent.Tuesday }
+                        ListElement { value: CalendarEvent.Wednesday }
+                        ListElement { value: CalendarEvent.Thursday }
+                        ListElement { value: CalendarEvent.Friday }
+                        ListElement { value: CalendarEvent.Saturday }
+                        ListElement { value: CalendarEvent.Sunday }
+                    }
+                    MouseArea {
+                        property bool down: (pressed && containsMouse) || (dot.pressed && dot.containsMouse)
+
+                        width: (col.width - 2 * Theme.horizontalPageMargin) / 7
+                        height: childrenRect.height
+
+                        onClicked: recurringDays.flipDay(model.value)
+
+                        Switch {
+                            id: dot
+                            y: -Theme.paddingLarge
+                            width: parent.width
+                            highlighted: down
+                            automaticCheck: false
+                            checked: recurringDays.days & model.value
+                            down: parent.down
+                            onClicked: recurringDays.flipDay(model.value)
+                        }
+                        Label {
+                            anchors {
+                                horizontalCenter: dot.horizontalCenter
+                                top: dot.bottom
+                                topMargin: -Theme.paddingLarge
+                            }
+                            // 2020 April 20th is a Monday
+                            text: Qt.formatDateTime(new Date(2020, 3, 20 + model.index), "ddd")
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: dot.highlighted ? Theme.highlightColor : Theme.primaryColor
+                        }
                     }
                 }
             }
@@ -444,6 +561,12 @@ Dialog {
                         seconds: 2 * 60 * 60 // Reminder2Hour
                     }
                     ReminderMenuItem {
+                        seconds: 6 * 60 * 60 // Reminder6Hour
+                    }
+                    ReminderMenuItem {
+                        seconds: 12 * 60 * 60 // Reminder12Hour
+                    }
+                    ReminderMenuItem {
                         seconds: 24 * 60 * 60 // Reminder1Day
                     }
                     ReminderMenuItem {
@@ -464,11 +587,14 @@ Dialog {
                 switch (event.recur) {
                 case CalendarEvent.RecurOnce: recur.currentIndex = 0; break;
                 case CalendarEvent.RecurDaily: recur.currentIndex = 1; break;
-                case CalendarEvent.RecurWeekly: recur.currentIndex = 2; break;
-                case CalendarEvent.RecurBiweekly: recur.currentIndex = 3; break;
-                case CalendarEvent.RecurMonthly: recur.currentIndex = 4; break;
-                case CalendarEvent.RecurYearly: recur.currentIndex = 5; break;
-                case CalendarEvent.RecurCustom: break;
+                case CalendarEvent.RecurWeeklyByDays: recur.currentIndex = 2; recurringDays.days = event.recurWeeklyDays; break;
+                case CalendarEvent.RecurWeekly: recur.currentIndex = 3; break;
+                case CalendarEvent.RecurBiweekly: recur.currentIndex = 4; break;
+                case CalendarEvent.RecurMonthly: recur.currentIndex = 5; break;
+                case CalendarEvent.RecurMonthlyByDayOfWeek: recur.currentIndex = 6; break;
+                case CalendarEvent.RecurMonthlyByLastDayOfWeek: recur.currentIndex = 7; break;
+                case CalendarEvent.RecurYearly: recur.currentIndex = 8; break;
+                case CalendarEvent.RecurCustom: recur.currentIndex = 9; recur.showCustom = true; break;
                 }
             }
 
@@ -503,6 +629,7 @@ Dialog {
         modification.location = eventLocation.text
         modification.description = eventDescription.text
         modification.recur = recur.value
+        modification.recurWeeklyDays = recurringDays.days
 
         if (recur.value == CalendarEvent.RecurOnce) {
             modification.unsetRecurEndDate()

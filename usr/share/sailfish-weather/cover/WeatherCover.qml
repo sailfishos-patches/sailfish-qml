@@ -5,11 +5,11 @@ import Sailfish.Weather 1.0
 CoverBackground {
     id: cover
 
-    property var weather: savedWeathersModel.currentWeather
+    property QtObject weather: savedWeathersModel.currentWeather
 
     property bool current: true
     property bool ready: loaded && !error
-    property bool loaded: savedWeathersModel.currentWeather
+    property bool loaded: weather
     property bool error: loaded && savedWeathersModel.currentWeather.status == Weather.Error
 
     function reload() {
