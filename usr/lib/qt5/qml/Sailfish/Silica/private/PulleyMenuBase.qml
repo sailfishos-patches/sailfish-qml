@@ -443,7 +443,7 @@ SilicaMouseArea {
         height: highlightedItem ? highlightedItem.height : _menuItemHeight
 
         yAnimationDuration: 120
-        color: pulleyBase.highlightColor
+        //color: pulleyBase.highlightColor
         audioEnabled: flickable.dragging || quickSelect
         opacityAnimationDuration: _atInitialPosition || _bounceBackRunning ? 400 : Theme.minimumPressHighlightTime
         opacity: {
