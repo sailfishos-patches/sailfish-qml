@@ -2,7 +2,6 @@
 import QtQuick 2.0
 import org.nemomobile.lipstick 0.1
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0
 import com.jolla.lipstick 0.1
 import org.nemomobile.configuration 1.0
 import org.nemomobile.dbus 2.0

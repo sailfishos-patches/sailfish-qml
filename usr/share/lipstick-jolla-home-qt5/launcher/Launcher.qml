@@ -13,7 +13,7 @@ import Sailfish.Policy 1.0
 import Sailfish.AccessControl 1.0
 import org.nemomobile.configuration 1.0
 import Sailfish.Lipstick 1.0
-import Nemo.DBus 2.0
+import org.nemomobile.configuration 1.0
 import com.jolla.lipstick 0.1
 
 SilicaListView {
