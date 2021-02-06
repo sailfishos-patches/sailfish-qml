@@ -9,8 +9,8 @@ import Sailfish.Silica 1.0
 
 SocialImage {
     id: image
-    width: Theme.itemSizeExtraLarge
-    height: Theme.itemSizeExtraLarge
+    width: Theme.iconSizeMedium
+    height: Theme.iconSizeMedium
     fillMode: Image.PreserveAspectCrop
     sourceSize {
         width: image.width

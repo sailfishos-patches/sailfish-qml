@@ -16,9 +16,9 @@ Column {
     property string fieldAdditionText
     property url fieldAdditionIcon
     property int inputMethodHints: Qt.ImhNone
-    property bool acceptMouseClicks
     property alias detailEditors: detailsRepeater
     property alias fieldDelegate: detailsRepeater.delegate
+    property int initialFocusIndex: -1
 
     property ContactDetailSuggestions suggestions
 
@@ -40,14 +40,6 @@ Column {
             parentItem = parentItem.parent
         }
         return null
-    }
-
-    function focusFieldAt(detailIndex, delayInterval) {
-        if (detailIndex < detailsRepeater.count
-                && detailsRepeater.itemAt(detailIndex).forceActiveFocus(delayInterval)) {
-            return true
-        }
-        return false
     }
 
     function animateAndRemove(detailIndex, item, customAnimationDuration) {
@@ -80,7 +72,7 @@ Column {
     function testHasContent(listModel) {
         listModel = listModel || detailModel
         for (var i = 0; i < listModel.count; ++i) {
-            if (listModel.get(i).value.length > 0) {
+            if (listModel.get(i).value.trim().length > 0) {
                 return true
             }
         }
@@ -88,6 +80,13 @@ Column {
     }
 
     width: parent.width
+
+    onContactChanged: {
+        if (contact) {
+            populateFieldEditor()
+            populated = true
+        }
+    }
 
     ParallelAnimation {
         id: removalAnimation

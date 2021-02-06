@@ -1,6 +1,12 @@
+/*
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.1
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0 as SilicaPrivate
+import Sailfish.Silica.Background 1.0
 
 BackgroundItem {
     id: root
@@ -16,7 +22,7 @@ BackgroundItem {
     implicitHeight: content.height + topPadding + bottomPadding
     highlightedColor: "transparent"
 
-    SilicaPrivate.BubbleBackground {
+    ColorBackground {
         id: pressHighlight
 
         anchors.fill: parent

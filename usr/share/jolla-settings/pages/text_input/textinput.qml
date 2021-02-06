@@ -1,17 +1,45 @@
+/****************************************************************************************
+**
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2020 Open Mobile Platform LLC.
+** All rights reserved.
+**
+** This file is part of Jolla Keyboard UI component package.
+**
+** You may use this file under the terms of the GNU Lesser General
+** Public License version 2.1 as published by the Free Software Foundation
+** and appearing in the file license.lgpl included in the packaging
+** of this file.
+**
+** This library is free software; you can redistribute it and/or
+** modify it under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation
+** and appearing in the file license.lgpl included in the packaging
+** of this file.
+**
+** This library is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+** Lesser General Public License for more details.
+**
+****************************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.configuration 1.0
 import com.jolla.keyboard 1.0
 import com.jolla.keyboard.translations 1.0
-import org.nemomobile.notifications 1.0 as SystemNotifications
 
 Page {
     id: root
 
-    property bool emojisEnabled
-
     LayoutModel {
         id: layoutModel
+    }
+
+    PhysicalLayoutModel {
+        id: physicalLayoutModel
+        onEnabledLayoutsChanged: enabledPhysicalLayoutModel.refresh()
     }
 
     ListModel {
@@ -45,209 +73,36 @@ Page {
         }
     }
 
-    ListModel {
+    EnabledLayoutModel {
         id: enabledLayoutModel
-
-        property bool updating
-
-        function getLayoutIndex(name) {
-            for (var i = 0; i < count; ++i) {
-                if (get(i).layout === name) {
-                    return i
-                }
-            }
-            return -1
-        }
-
-        function refresh() {
-            updating = true
-            var enabledLayouts = new Array
-            var emojisFound = false
-
-            for (var i = 0; i < layoutModel.count; ++i) {
-                var item = layoutModel.get(i)
-                if (item.enabled) {
-                    enabledLayouts.push({"name": item.name, "layout": item.layout})
-                    if (item.type === "emojis") {
-                        emojisFound = true
-                    }
-                }
-            }
-
-            for (i = 0; i < enabledLayouts.length && i < count; ++i) {
-                set(i, enabledLayouts[i])
-            }
-            if (enabledLayouts.length > count) {
-                for (i = count; i < enabledLayouts.length; ++i) {
-                    append(enabledLayouts[i])
-                }
-            } else {
-                while (enabledLayouts.length < count) {
-                    remove(count-1)
-                }
-            }
-
-            root.emojisEnabled = emojisFound
-
-            // wait until ComboBox has updated its internal state
-            refreshTimer.restart()
-        }
-    }
-
-    ListModel {
-        id: physicalLayouts
-
-        ListElement {
-            layout: "cz"
-            name: "Čeština"
-        }
-        ListElement {
-            layout: "dk"
-            name: "Dansk"
-        }
-        ListElement {
-            layout: "de"
-            name: "Deutsch"
-        }
-        ListElement {
-            layout: "ee"
-            name: "Eesti"
-        }
-        ListElement {
-            layout: "us"
-            name: "English (US)"
-        }
-        ListElement {
-            layout: "gb"
-            name: "English (UK)"
-        }
-        ListElement {
-            layout: "es"
-            name: "Español"
-        }
-        ListElement {
-            layout: "fr"
-            name: "Français"
-        }
-        ListElement {
-            layout: "is"
-            name: "Íslensku"
-        }
-        ListElement {
-            layout: "it"
-            name: "Italiano"
-        }
-        ListElement {
-            layout: "hu"
-            name: "Magyar"
-        }
-        ListElement {
-            layout: "nl"
-            name: "Nederlands"
-        }
-        ListElement {
-            layout: "no"
-            name: "Norsk"
-        }
-        ListElement {
-            layout: "pl"
-            name: "Polski"
-        }
-        ListElement {
-            layout: "pt"
-            name: "Português"
-        }
-        ListElement {
-            layout: "si"
-            name: "Slovenščina"
-        }
-        ListElement {
-            layout: "fi"
-            name: "Suomi"
-        }
-        ListElement {
-            layout: "se"
-            name: "Svenska"
-        }
-        ListElement {
-            layout: "ch"
-            name: "Swiss"
-        }
-        ListElement {
-            layout: "tr"
-            name: "Türkçe"
-        }
-        ListElement {
-            layout: "kz"
-            name: "Қазақ"
-        }
-        ListElement {
-            layout: "ru"
-            name: "Русский"
-        }
-
-        function indexOf(layout) {
-            for (var i = 0; i < count; ++i) {
-                if (get(i).layout === layout) {
-                    return i
-                }
-            }
-
-            return -1
-        }
-    }
-
-    SystemNotifications.Notification {
-        id: systemNotification
-        isTransient: true
-        //: System notification advising user who is trying to disable all the keyboard layouts
-        //% "You must have at least one keyboard selected"
-        previewBody: qsTrId("settings_text_input-he-warning_too_few_keyboards")
-    }
-
-    Timer {
-        id: refreshTimer
-        interval: 1
-        onTriggered: {
+        layoutModel: layoutModel
+        refreshTimer.onTriggered: {
             layoutComboBox.currentIndex = enabledLayoutModel.getLayoutIndex(currentLayoutConfig.value)
             enabledLayoutModel.updating = false
         }
     }
 
+    EnabledLayoutModel {
+        id: enabledPhysicalLayoutModel
+        layoutModel: physicalLayoutModel
+        refreshTimer.onTriggered: {
+            physicalLayoutComboBox.currentIndex = enabledPhysicalLayoutModel.getLayoutIndex(currentPhysicalLayoutConfig.value)
+            enabledPhysicalLayoutModel.updating = false
+        }
+    }
+
     Component {
         id: enabledKeyboardsPage
-        Page {
-            SilicaListView {
-                anchors.fill: parent
-                header: PageHeader {
-                    //: Page header in enabled keyboards settings page
-                    //% "Keyboards"
-                    title: qsTrId("settings_text_input-he-enabled_keyboards")
-                }
-                model: layoutModel
-                delegate: TextSwitch {
-                    width: ListView.view.width
-                    height: Theme.itemSizeSmall
-                    text: qsTrId(name)
+        KeyboardsPage {
+            model: layoutModel
+            emojisEnabled: enabledLayoutModel.emojisEnabled
+        }
+    }
 
-                    checked: layoutModel.get(index).enabled
-                    automaticCheck: false
-                    onClicked: {
-                        if (checked && layoutModel.enabledCount === 1) {
-                            systemNotification.publish()
-                        } else if (checked && layoutModel.enabledCount === 2
-                                   && emojisEnabled && type !== "emojis") {
-                            systemNotification.publish()
-                        } else {
-                            systemNotification.close()
-                            checked = !checked
-                            layoutModel.setEnabled(index, checked)
-                        }
-                    }
-                }
-
-                VerticalScrollDecorator {}
-            }
+    Component {
+        id: enabledPhysicalLayoutsPage
+        KeyboardsPage {
+            model: physicalLayoutModel
         }
     }
 
@@ -259,8 +114,24 @@ Page {
 
         Column {
             id: content
-
             width: parent.width
+
+            function getEnabledLayoutsDisplayValue(model) {
+                var result = []
+                var max = 5
+                for (var i = 0; i < model.count; i++) {
+                    var layout = model.get(i)
+                    if (layout.enabled) {
+                        if (result.length < max) {
+                            result.push(qsTrId(layout.name))
+                        } else {
+                            result.push("…")
+                            break
+                        }
+                    }
+                }
+                return result.join(Format.listSeparator)
+            }
 
             PageHeader {
                 //% "Text input"
@@ -270,23 +141,7 @@ Page {
             ValueButton {
                 //% "Keyboards"
                 label: qsTrId("settings_text_input-bt-enabled_keyboards")
-                value: {
-                    var result = []
-                    var max = 5
-                    for (var i = 0; i < layoutModel.count; i++) {
-                        var layout = layoutModel.get(i)
-                        if (layout.enabled) {
-                            if (result.length < max) {
-                                result.push(qsTrId(layout.name))
-                            } else {
-                                result.push("…")
-                                break
-                            }
-                        }
-                    }
-                    return result.join(Format.listSeparator)
-                }
-
+                value: content.getEnabledLayoutsDisplayValue(layoutModel)
                 onClicked: pageStack.animatorPush(enabledKeyboardsPage)
             }
 
@@ -347,17 +202,26 @@ Page {
                 text: qsTrId("setings_text_input-la-hardware_keyboards_section")
             }
 
+            ValueButton {
+                //% "Layouts"
+                label: qsTrId("settings_text_input-bt-enabled_hardware_keyboard_layouts")
+                value: content.getEnabledLayoutsDisplayValue(physicalLayoutModel)
+                onClicked: pageStack.animatorPush(enabledPhysicalLayoutsPage)
+            }
+
             ComboBox {
-                id: hwLayoutComboBox
+                id: physicalLayoutComboBox
 
                 width: parent.width
-                //: Active physical keyboard layout combobox in settings
-                //% "Active layout"
-                label: qsTrId("settings_text_input-bt-active_physical_keyboard")
+                //: Active layout combobox in settings
+                //% "Active keyboard layout"
+                label: qsTrId("settings_text_input-bt-active_hardware_keyboard_layout")
+                //% "You can also change the active keyboard layout quickly by pressing Ctrl+Space."
+                description: qsTrId("settings_text_input-la-hardware_keyboard_layout_change_hint")
 
                 menu: ContextMenu {
                     Repeater {
-                        model: physicalLayouts
+                        model: enabledPhysicalLayoutModel
                         delegate: MenuItem {
                             text: name
                         }
@@ -365,15 +229,15 @@ Page {
                 }
 
                 onCurrentIndexChanged: {
-                    if (currentIndex >= 0) {
-                        currentPhysicalLayoutConfig.value = physicalLayouts.get(currentIndex).layout
+                    if (!enabledPhysicalLayoutModel.updating && currentIndex >= 0) {
+                        currentPhysicalLayoutConfig.value = enabledPhysicalLayoutModel.get(currentIndex).layout
                     }
                 }
 
                 Binding {
-                    target: hwLayoutComboBox
+                    target: physicalLayoutComboBox
                     property: "currentIndex"
-                    value: physicalLayouts.indexOf(currentPhysicalLayoutConfig.value)
+                    value: enabledPhysicalLayoutModel.getLayoutIndex(currentPhysicalLayoutConfig.value)
                 }
             }
         }
@@ -409,5 +273,6 @@ Page {
     Component.onCompleted: {
         pluginSettingsModel.refresh()
         enabledLayoutModel.refresh()
+        enabledPhysicalLayoutModel.refresh()
     }
 }

@@ -75,9 +75,6 @@
 // Page stack. Items are page containers.
 var pageStack = []
 
-// Page component cache map. Key is page url, value is page component.
-var componentCache = {}
-
 var placeholderPageCache = null
 
 var pendingAction
@@ -230,17 +227,6 @@ function doPush(page, properties, pushProperties) {
     container = initPage(page, properties, canUseAnimator)
     container.pageStackIndex = pageStack.length
 
-    if (useAnimator) {
-        var asyncObject = asyncObjectComponent.createObject(container)
-        if (container.page.hasOwnProperty("__placeholder")) {
-            container.page.asyncObject = asyncObject
-        } else {
-            asyncObject.page = container.page
-            // if page was created immediately still make sure to emit pageCompleted() signal
-            // TODO: replace with Qt.callLater() after Qt 5.9 migration
-            asyncObject.simulateCompletionTimer.restart()
-        }
-    }
 
     // push the page container onto the stack
     pageStack.push(container)
@@ -260,14 +246,14 @@ function doPush(page, properties, pushProperties) {
     }
 
     if (useAnimator) {
-        return ({ 'rv': asyncObject, 'stateChange': stateChange })
+        return ({ 'rv': container.asyncObject, 'stateChange': stateChange })
     }
 
     return ({ 'rv': container.page, 'stateChange': stateChange })
 }
 
 function prepareDestination(container) {
-    if (container.page._forwardDestination) {
+    if (container.page && container.page._forwardDestination) {
         var replaceAboveTarget = undefined
 
         if (!container.page.forwardNavigation) {
@@ -439,81 +425,13 @@ function doPushAttached(page, properties) {
 
 // Initializes a page and its container.
 function initPage(page, properties, useAnimator) {
-    var container = containerComponent.createObject(root)
-
-    var pageComp
-
-    if (useAnimator && (page.createObject || typeof page == "string")) {
-        if (!placeholderPageCache) {
-            page = placeholderPageCache = placeholderPage.createObject(root, { "page": page, "properties": properties })
-        } else {
-            placeholderPageCache.reset()
-            placeholderPageCache.page = page
-            placeholderPageCache.properties = properties
-            page = placeholderPageCache
-        }
-        page.parent = container
-        container.page = page
-        container.owner = root
-
-        return container
-    }
-
-    if (page.createObject) {
-        // page defined as component
-        pageComp = page
-    } else if (typeof page == "string") {
-        // If 'page' is a string but does not end in .qml, assume it is an
-        // import-path style import (e.g. push(Sailfish.Contacts.Foo))
-        if (page.indexOf(".qml", page.length - ".qml".length) === -1) {
-            page = root.resolveImportPage(page)
-        }
-
-        // page defined as string (a url)
-        pageComp = componentCache[page]
-        if (!pageComp) {
-            pageComp = componentCache[page] = Qt.createComponent(page)
-            if (!pageComp) {
-                throw new Error("Unable to locate component: " + page)
-            }
-        }
-    }
-    if (pageComp) {
-        if (pageComp.status == Component.Error) {
-            throw new Error("Error while loading page: " + pageComp.errorString())
-        } else {
-            // instantiate page from component
-            page = pageComp.createObject(container, properties || {})
-        }
-    } else {
-        // copy properties to the page
-        for (var prop in properties) {
-            if (prop in page) {
-                page[prop] = properties[prop]
-            }
-        }
-    }
-
-    container.page = page
-    container.owner = page.parent
-
-    // the page has to be reparented if
-    if (page.parent != container) {
-        page.parent = container
-    }
-
-    connectForwardDestinationHandlers(container)
+    var container = containerComponent.createObject(root, {
+        "source": page,
+        "properties": properties,
+        "asyncLoad": useAnimator
+    })
 
     return container;
-}
-
-function connectForwardDestinationHandlers(container) {
-    container.page._forwardDestinationChanged.connect(function () {
-        forwardDestinationChanged(container)
-    })
-    container.page._forwardDestinationActionChanged.connect(function () {
-        forwardDestinationChanged(container)
-    })
 }
 
 function forwardDestinationChanged(container) {

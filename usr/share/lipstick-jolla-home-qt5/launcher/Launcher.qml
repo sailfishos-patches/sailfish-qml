@@ -207,16 +207,23 @@ SilicaListView {
                 }
 
                 onNotifyLaunching: {
-                    item.isLaunching = true
+                    item.isLaunching = true // TODO: Some leftover?
                     if (!item.isUpdating) {
-                        Desktop.instance.switcher.activateWindowFor(item, false)
+                        Desktop.instance.switcher.activateWindowFor(item, false, true)
+                    }
+                }
+
+                onCanceledNotifyLaunching: {
+                    var switcher = Desktop.instance && Desktop.instance.switcher
+                    if (switcher) {
+                        switcher.closeCover(item, false)
                     }
                 }
 
                 onApplicationRemoved: {
                     var switcher = Desktop.instance && Desktop.instance.switcher
                     if (switcher) {
-                        switcher.closeCover(item)
+                        switcher.closeCover(item, true)
                     }
                 }
             }

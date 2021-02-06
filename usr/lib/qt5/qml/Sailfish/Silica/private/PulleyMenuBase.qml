@@ -211,7 +211,11 @@ SilicaMouseArea {
     onVisibleChanged: {
         if (visible) {
             _reposition()
-        } else {
+        } else if (pulleyBase) {
+            // sometimes visible goes to false during destruction
+            // make sure pulley exists in the conditional above so
+            // hide() call is not propagated through parent QML contexts
+            // to the parent page container's hide() in PageStack
             hide()
             close(true)
         }
@@ -433,6 +437,7 @@ SilicaMouseArea {
 
     HighlightBar {
         id: highlightItem
+
         y: {
             if (!active) return _menuIndicatorPosition
             if (highlightedItem || (!flickable.dragging && _atFinalPosition)
@@ -496,6 +501,17 @@ SilicaMouseArea {
             id: earlyClickTimer
             interval: 1
             onTriggered: menuItem.earlyClick()
+        }
+
+        Rectangle {
+            readonly property bool active: palette.colorScheme === Theme.DarkOnLight && !(flickable.dragging && pulleyBase.active)
+            width: parent.width
+            height: active ? 2* Math.round(Theme.pixelRatio) : 0
+            y: _isPullDownMenu ? parent.height : -height
+            opacity: active ? 1.0 : 0.0
+            Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }}
+            Behavior on opacity { FadeAnimator {}}
+            color: Qt.tint(pulleyBase.backgroundColor, Qt.rgba(0, 0, 0, 0.15))
         }
 
         transitions: [
@@ -601,7 +617,7 @@ SilicaMouseArea {
     function _interceptFlick() {
         // Do not permit flicking inside the menu (unless it is a small flick that does not present
         // a danger of accidentally selecting the wrong item)
-        if (active && !_quickSelected && (Math.abs(flickable.verticalVelocity) > 500 * Theme.pixelRatio)) {
+        if (active && !_quickSelected && (Math.abs(flickable.verticalVelocity) > Theme.dp(500))) {
             var opening = _pullDown ? flickable.verticalVelocity < 0 : flickable.verticalVelocity > 0
             flickAnimation.to = opening ? _finalPosition : _inactivePosition
             flickAnimation.duration = 300

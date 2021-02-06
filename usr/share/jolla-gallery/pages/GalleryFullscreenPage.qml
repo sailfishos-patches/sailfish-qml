@@ -13,6 +13,10 @@ FullscreenContentPage {
 
     signal requestIndex(int index)
 
+    function triggerViewerAction(action, immediately) {
+        imageView.triggerViewerAction(action, immediately)
+    }
+
     objectName: "fullscreenPage"
     allowedOrientations: Orientation.All
 
@@ -25,7 +29,13 @@ FullscreenContentPage {
     }
     FileInfo {
         id: fileInfo
-        source: model ? model.get(imageView.currentIndex).url : ""
+        source: {
+            if (model && model.count >= imageView.currentIndex - 1) {
+                var data = model.get(imageView.currentIndex)
+                return data ? data.url : ""
+            }
+            return ""
+        }
     }
 
     onCurrentIndexChanged: {

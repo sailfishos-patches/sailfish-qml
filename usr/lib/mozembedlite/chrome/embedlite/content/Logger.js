@@ -5,39 +5,42 @@
  * Copyright (c) 2020 Open Mobile Platform LLC.
  */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 let Logger = {
-  enabled: false,
-  getenv: function (name) {
-    try {
-      var environment = Components.classes["@mozilla.org/process/environment;1"].
-                                getService(Components.interfaces.nsIEnvironment);
-      return environment.get(name);
-    } catch(e) {
-      this.debug("Logger.js getEnvironment:", e);
-    }
-  },
+  _enabled: false,
+  _consoleEnv: null,
 
   init: function doInit() {
-    this.enabled = this.getenv("EMBEDLITE_COMPONENTS_LOGGING") == 1 || false;
+    try {
+      this._consoleEnv = Services.env.get("EMBED_CONSOLE");
+    } catch (e) {}
+
+    let consolePref = false;
+    try {
+      consolePref = Services.prefs.getIntPref("embedlite.console_log.enabled");
+    } catch (e) { /*pref is missing*/ }
+
+    this._enabled = this._consoleEnv || consolePref || false;
+  },
+
+  get stackTraceEnabled() {
+    return this._consoleEnv.indexOf("stacktrace") !== -1;
+  },
+
+  get devModeNetworkEnabled() {
+    return this._consoleEnv.indexOf("network") !== -1;
+  },
+
+  get enabled() {
+    return this._enabled;
   },
 
   /*
-     * Console printing utilities
-     */
-
-  dumpf: function dumpf(str) {
-    let args = arguments;
-    let i = 1;
-    dump(str.replace(/%s/g, function() {
-      if (i >= args.length) {
-        throw "dumps received too many placeholders and not enough arguments";
-      }
-      return args[i++].toString();
-    }));
-  },
-
+   * Logger printing utilities
+   */
   debug: function() {
-    if (!this.enabled)
+    if (!this._enabled)
       return;
 
     var args = Array.prototype.slice.call(arguments);

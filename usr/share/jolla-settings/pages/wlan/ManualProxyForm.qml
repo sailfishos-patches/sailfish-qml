@@ -48,7 +48,7 @@ Column {
         if (!_completed)
             return
 
-        if (addressField.validInput && portField.validInput)
+        if (addressField.acceptableInput && portField.acceptableInput)
             _updateRequired = true
 
         if (!updating && _updateRequired)
@@ -59,7 +59,7 @@ Column {
         if (!_completed)
             return
 
-        if (addressField.validInput)
+        if (addressField.acceptableInput)
             _updateRequired = true
 
         if (!updating && _updateRequired)
@@ -75,7 +75,7 @@ Column {
         proxyConfig["Servers"] = []
 
         var addProxy = function(addressField, portField) {
-            if (addressField.validInput && portField.validInput) {
+            if (addressField.acceptableInput && portField.acceptableInput) {
                 if (addressField.validProtocol) {
                     proxyServer = addressField.text
                 } else {
@@ -92,7 +92,7 @@ Column {
             addProxy(item.addressField, item.portField)
         }
 
-        if (proxyExcludesField.validInput) {
+        if (proxyExcludesField.acceptableInput) {
             proxyConfig["Excludes"] = proxyExcludesField.text.replace(" ", "").split(",")
         } else {
             proxyConfig["Excludes"] = []
@@ -277,6 +277,9 @@ Column {
 
         //% "Exclude domains"
         label: qsTrId("settings_network-la-exclude_domains")
+
+        //% "List valid domain names separated by commas"
+        description: errorHighlight ? qsTrId("settings_network_la-exclude_domains_error") : ""
 
         EnterKey.iconSource: "image://theme/icon-m-enter-close"
         EnterKey.onClicked: parent.focus = true

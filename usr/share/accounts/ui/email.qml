@@ -236,6 +236,10 @@ AccountCreationAgent {
                     PasswordField {
                         id: password
                         errorHighlight: !text && accountCreationDialog.checkMandatoryFields
+
+                        //% "Password is required"
+                        description: errorHighlight ? qsTrId("components_accounts-la-password_required") : ""
+
                         EnterKey.iconSource: "image://theme/icon-m-enter-accept"
                         EnterKey.onClicked: autoDiscoverySettings.focus = true
                     }

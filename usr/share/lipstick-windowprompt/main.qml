@@ -1,9 +1,9 @@
-/****************************************************************************
-**
-** Copyright (C) 2017 Jolla Ltd.
-** Contact: Bea Lam <bea.lam@jollamobile.com>
-**
-****************************************************************************/
+/*
+ * Copyright (c) 2017 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
 
 import QtQuick 2.0
 import QtQuick.Window 2.0
@@ -14,11 +14,13 @@ ApplicationWindow {
     id: root
 
     property var _promptWindow
+    property string _componentName
     property var _promptConfigQueue: []
 
     function _showPrompt(promptConfig) {
-        if (!_promptWindow) {
-            var comp = Qt.createComponent(Qt.resolvedUrl(promptConfig.componentName))
+        if (!_promptWindow || _componentName != promptConfig.componentName) {
+            _componentName = promptConfig.componentName
+            var comp = Qt.createComponent(Qt.resolvedUrl(_componentName))
             if (comp.status == Component.Error) {
                 console.log(promptConfig.componentName, "error:", comp.errorString())
                 return
@@ -81,6 +83,14 @@ ApplicationWindow {
         onShowInfoWindowUi: {
             if (!promptConfig.componentName) {
                 promptConfig.componentName = "InfoWindow.qml"
+            }
+
+            _queueOrShowPrompt(promptConfig)
+        }
+
+        onShowPermissionPromptUi: {
+            if (!promptConfig.componentName) {
+                promptConfig.componentName = "PermissionPrompt.qml"
             }
 
             _queueOrShowPrompt(promptConfig)

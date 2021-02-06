@@ -16,7 +16,7 @@ import com.jolla.lipstick 0.1
 import org.nemomobile.configuration 1.0
 import org.nemomobile.devicelock 1.0
 import org.nemomobile.systemsettings 1.0
-import "../compositor"
+import "../backgrounds"
 
 SilicaFlickable {
     id: topMenu
@@ -114,7 +114,7 @@ SilicaFlickable {
 
     VerticalScrollDecorator {}
 
-    BlurredBackground {
+    MenuBackground {
         id: background
         width: topMenu.width
         height: topMenu.expanded
@@ -498,8 +498,9 @@ SilicaFlickable {
         id: housekeepingNotif
 
         //% "Unlock device to organize Top Menu"
-        previewBody: qsTrId("lipstick_jolla_home-la-unlock_to_organize_top_menu")
-        icon: "icon-system-resources"
+        body: qsTrId("lipstick_jolla_home-la-unlock_to_organize_top_menu")
+        appIcon: "icon-system-resources"
+        isTransient: true
 
         // Show notification above the device lock layer
         urgency: SystemNotifications.Notification.Critical
@@ -509,16 +510,17 @@ SilicaFlickable {
         id: settingChangeNotif
 
         function reset(control) {
-            previewBody = control.checked
+            body = control.checked
                       //: Indicates a feature is now turned off. %1 = name of feature
                       //% "%1 disabled"
                     ? qsTrId("lipstick_jolla_home-la-toggle_disabled").arg(control.name)
                       //: Indicates a feature is now turned on. %1 = name of feature
                       //% "%1 enabled"
                     : qsTrId("lipstick_jolla_home-la-toggle_enabled").arg(control.name)
-            icon = control.systemIcon
+            appIcon = control.systemIcon
         }
 
         urgency: SystemNotifications.Notification.Critical
+        isTransient: true
     }
 }

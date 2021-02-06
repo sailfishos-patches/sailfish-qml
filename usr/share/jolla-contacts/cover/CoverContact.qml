@@ -1,13 +1,10 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
+import Nemo.Thumbnailer 1.0
 
-Image {
+Thumbnail {
     id: coverContact
-
-    fillMode: Image.PreserveAspectCrop
-    clip: true // otherwise paintedWidth/Height can vary.
-    asynchronous: true
 
     property var contact
     property bool center
@@ -40,6 +37,11 @@ Image {
 
     onEnableAvatarChanged: displayData()
     onContactChanged: displayData()
+
+    sourceSize {
+        width: AvatarSize.thumbnailSize
+        height: AvatarSize.thumbnailSize
+    }
 
     Rectangle {
         visible: color !== "" && opacity > 0

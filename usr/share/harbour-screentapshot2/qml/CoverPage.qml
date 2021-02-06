@@ -3,6 +3,7 @@ import Sailfish.Silica 1.0
 
 CoverBackground {
     CoverPlaceholder {
-        text: "Screen\nTap\nShot\nSettings"
+        //: Cover text
+        text: qsTr("Screen\nTap\nShot\nSettings")
     }
 }

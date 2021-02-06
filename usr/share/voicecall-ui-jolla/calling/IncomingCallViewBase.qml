@@ -29,8 +29,6 @@ IncomingCallGesture {
     property bool readyForStateChange: !menuLoader.menuOpen && !incomingCallView.animationRunning
     property int callCount
     property alias contentItem: content
-    readonly property bool showCountry: phoneNumberParser.localizedCountryName.length > 0
-                                        && (telephony.registrationStatus === "roaming" || phoneNumberParser.regionCode !== telephony.country)
 
     signal answered
     signal endActiveAndAnswered
@@ -190,6 +188,7 @@ IncomingCallGesture {
                 font.pixelSize: Theme.fontSizeSmall
                 color: palette.secondaryColor
                 text: {
+                    smallMetrics.font.pixelSize // bind to value changes
                     var details = []
                     var numberText = CallHistory.formatNumber(phoneNumber)
                     if (firstNameLabel.text !== numberText) {
@@ -202,8 +201,18 @@ IncomingCallGesture {
                     }
 
                     // Country indication
-                    if (showCountry) {
-                        details.push(phoneNumberParser.localizedCountryName)
+                    if (telephony.registrationStatus === "roaming" || phoneNumberParser.regionCode !== telephony.country) {
+                        // When roaming, always show country of caller
+                        // When not roaming, or receiving a call from abroad, also show country
+                        if (phoneNumberParser.localizedCountryName.length > 0) {
+                            details.push(phoneNumberParser.localizedCountryName)
+                        }
+                    } else if (phoneNumberParser.geocodeDescription.length > 0
+                               && phoneNumberParser.geocodeDescription != phoneNumberParser.localizedCountryName) {
+                        // When the number is local, and has any geocoding info, show that
+                        // Hack: the description falls back to country name which we don't want here
+                        // so trying to filter that out.
+                        details.push(phoneNumberParser.geocodeDescription)
                     }
 
                     // Determine wrapping

@@ -4,7 +4,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 
 PageHeader {
@@ -15,49 +15,85 @@ PageHeader {
     property string errorText
 
     title: count > 0 ? count.toLocaleString() : ""
-    height: Math.max(_preferredHeight, _titleItem.y + _titleItem.height + ((errorText.length > 0) ? errorItem.height : 0) + Theme.paddingMedium)
+    titleColor: palette.highlightColor
+    interactive: true   // don't wait until folder list is pushed to indicate the header is interactive
+    highlighted: defaultHighlighted || folderMouseArea.containsMouse
+
+    height: Math.max(_preferredHeight, _titleItem.y + _titleItem.height + ((errorText.length > 0) ? errorLabel.height : 0) + Theme.paddingMedium)
 
     Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.InOutQuad } }
 
     Label {
         id: folderText
-        anchors {
-            left: parent.left
-            leftMargin: parent.leftMargin
-            right: root._titleItem.left
-            rightMargin: title != "" ? Theme.paddingSmall : 0
-            verticalCenter: root._titleItem.verticalCenter
-        }
+
+        parent: root.extraContent
+
+        x: parent.width - width
+        y: Math.floor((root._preferredHeight - height) / 2)
+
+        width: Math.min(implicitWidth, parent.width)
+
+        rightPadding: root.title !== "" ? Theme.paddingMedium : 0
+
         truncationMode: TruncationMode.Fade
-        horizontalAlignment: implicitWidth > width ? Text.AlignLeft : Text.AlignRight
 
         font: root._titleItem.font
+        color: highlighted ? palette.highlightColor : palette.primaryColor
+
+        MouseArea {
+            id: folderMouseArea
+
+            anchors {
+                verticalCenter: parent.verticalCenter
+                right: parent.right
+            }
+            width: parent.implicitWidth + Theme.paddingLarge
+            height: root.height
+
+            onClicked: pageStack.navigateForward()
+        }
     }
 
     // The styling matches the description field taken from
     // sailfish-silica/components/private/PageHeaderDescription.qml
     // It's reimplemented here so that the opacity can be animated
-    Label {
+    Item {
         id: errorItem
+
+        x: root.leftMargin
+        y: root._titleItem.y + root._titleItem.height
+        width: root.width - root.leftMargin - root.rightMargin
+
         opacity: ((root.errorText.length > 0) ? 1 : 0)
-        visible: opacity > 0
         Behavior on opacity { FadeAnimation {} }
 
-        width: parent.width - parent.leftMargin - parent.rightMargin
-        anchors {
-            top: parent._titleItem.bottom
-            right: parent.right
-            rightMargin: parent.rightMargin
+        Icon {
+            id: errorIcon
+
+            x: errorLabel.x - width - Theme.paddingSmall
+            y: (errorLabel.height - height) / 2
+
+            source: "image://theme/icon-s-warning"
+            color: palette.secondaryHighlightColor
         }
-        font.pixelSize: Theme.fontSizeSmall
-        color: Theme.secondaryHighlightColor
-        horizontalAlignment: Text.AlignRight
-        truncationMode: TruncationMode.Fade
+
+        Label {
+            id: errorLabel
+
+            x: errorItem.width - width
+
+            width: Math.min(implicitWidth, errorItem.width - errorIcon.width - Theme.paddingSmall)
+
+            font.pixelSize: Theme.fontSizeSmall
+            color: palette.secondaryHighlightColor
+            horizontalAlignment: Text.AlignRight
+            truncationMode: TruncationMode.Fade
+        }
     }
 
     onErrorTextChanged: {
         if (errorText.length > 0) {
-            errorItem.text = errorText
+            errorLabel.text = errorText
         }
     }
 }

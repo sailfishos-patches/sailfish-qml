@@ -18,11 +18,11 @@ import Sailfish.Silica.private 1.0 as Private
 import Sailfish.Browser 1.0
 import Sailfish.Policy 1.0
 import "components" as Browser
+import "../shared" as Shared
 
 Page {
     id: browserPage
 
-    readonly property bool __hasBackground: true
     readonly property rect inputMask: inputMaskForOrientation(orientation)
     readonly property bool active: status == PageStatus.Active
     property bool tabPageActive
@@ -84,6 +84,8 @@ Page {
         return mask
     }
 
+    background: null
+
     onStatusChanged: {
         if (overlay.enteringNewTabUrl || webView.tabModel.count === 0) {
             return
@@ -91,6 +93,7 @@ Page {
 
         if (status == PageStatus.Inactive && overlay.visible) {
             overlay.animator.hide()
+            overlay.toolBar.certOverlayActive = false
         }
     }
 
@@ -104,7 +107,7 @@ Page {
 
     orientationTransitions: orientationFader.orientationTransition
 
-    Browser.OrientationFader {
+    Shared.OrientationFader {
         id: orientationFader
 
         visible: webView.contentItem
@@ -142,14 +145,14 @@ Page {
     }
 
     Browser.DownloadRemorsePopup { id: downloadPopup }
-    Browser.WebView {
+    Shared.WebView {
         id: webView
 
         enabled: overlay.animator.allowContentUse
         fullscreenHeight: portrait ? Screen.height : Screen.width
         portrait: browserPage.isPortrait
         maxLiveTabCount: 3
-        toolbarHeight: overlay.toolBar.toolsHeight
+        toolbarHeight: overlay.toolBar.rowHeight
         rotationHandler: browserPage
         imOpened: virtualKeyboardObserver.opened
         canShowSelectionMarkers: !orientationFader.waitForWebContentOrientationChanged
@@ -230,7 +233,7 @@ Page {
         baseOpacity: overlay.baseOpacity
         dimmerOpacity: overlay.animator.atBottom
                        ? 0.0
-                       : 0.9 - (overlay.y / (webView.fullscreenHeight - overlay.toolBar.toolsHeight)) * 0.9
+                       : 0.9 - (overlay.y / (webView.fullscreenHeight - overlay.toolBar.rowHeight)) * 0.9
 
         MouseArea {
             anchors.fill: parent
@@ -260,7 +263,7 @@ Page {
         opacity: privateModeTexture.visible ? 1.0 : 0.0
         anchors {
             bottom: contentDimmer.bottom
-            bottomMargin: (overlay.toolBar.toolsHeight - height) / 2
+            bottomMargin: (overlay.toolBar.rowHeight - height) / 2
         }
 
         //: Label for private browsing above address bar
@@ -289,7 +292,8 @@ Page {
         }
 
         onActiveChanged: {
-            if (active && webView.contentItem && !overlay.enteringNewTabUrl && !webView.contentItem.fullscreen) {
+            var isFullScreen = webView.contentItem && webView.contentItem.fullscreen
+            if (!isFullScreen && active && !overlay.enteringNewTabUrl) {
                 overlay.animator.showChrome()
             }
 
@@ -339,7 +343,9 @@ Page {
             }
 
             webView.grabActivePage()
-            if (!webView.tabModel.activateTab(url)) {
+            if (webView.tabModel.activateTab(url)) {
+                webView.releaseActiveTabOwnership()
+            } else {
                 webView.clearSelection()
                 webView.tabModel.newTab(url)
                 overlay.dismiss(true, !Qt.application.active /* immadiate */)
@@ -351,6 +357,12 @@ Page {
         onShowChrome: {
             pageStack.pop(browserPage, PageStackAction.Immediate)
             overlay.dismiss(true, !Qt.application.active /* immadiate */)
+            bringToForeground(webView.chromeWindow)
+            window.activate()
+        }
+        onOpenSettingsRequested: {
+            pageStack.pop(browserPage, PageStackAction.Immediate)
+            pageStack.push(Qt.resolvedUrl("SettingsPage.qml"), {}, PageStackAction.Immediate)
             bringToForeground(webView.chromeWindow)
             window.activate()
         }

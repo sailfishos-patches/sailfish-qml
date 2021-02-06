@@ -15,7 +15,9 @@ Column {
         vpncCiscoPort.text = getProperty('VPNC.CiscoPort')
         vpncAppVersion.text = getProperty('VPNC.AppVersion')
         vpncNattMode.setValue(getProperty('VPNC.NATTMode'))
-        vpncDpdTimeout.text = getProperty('VPNC.DPDTimeout')
+        var timeout = getProperty('VPNC.DPDTimeout')
+        vpncUseTimeout.checked = timeout && timeout !== '0'
+        vpncDpdTimeout.text = timeout
         vpncSingleDES.checked = getProperty('VPNC.SingleDES') == 'true'
         vpncNoEncryption.checked = getProperty('VPNC.NoEncryption') == 'true'
         vpncDeviceType.setValue(getProperty('VPNC.DeviceType'))
@@ -27,11 +29,11 @@ Column {
         updateProvider('VPNC.PFS', vpncPfsDhGroup.selection)
         updateProvider('VPNC.Domain', vpncDomain.text)
         updateProvider('VPNC.Vendor', vpncVendor.selection)
-        updateProvider('VPNC.LocalPort', vpncLocalPort.text)
-        updateProvider('VPNC.CiscoPort', vpncCiscoPort.text)
+        updateProvider('VPNC.LocalPort', vpncLocalPort.filteredText)
+        updateProvider('VPNC.CiscoPort', vpncCiscoPort.filteredText)
         updateProvider('VPNC.AppVersion', vpncAppVersion.text)
         updateProvider('VPNC.NATTMode', vpncNattMode.selection)
-        updateProvider('VPNC.DPDTimeout', vpncDpdTimeout.text)
+        updateProvider('VPNC.DPDTimeout', vpncUseTimeout.checked ? vpncDpdTimeout.filteredText : '')
         if (vpncSingleDES.checked) {
             updateProvider('VPNC.SingleDES', 'true')
         }
@@ -157,12 +159,24 @@ Column {
         text: qsTrId("settings_network-la-vpn_vpnc_no_encryption")
     }
 
-    ConfigTextField {
+    TextSwitch {
+        id: vpncUseTimeout
+
+        //% "Enable DPD timeout"
+        text: qsTrId("settings_network-la-vpn_vpnc_use_dpd_timeout")
+    }
+
+    ConfigIntField {
         id: vpncDpdTimeout
+        visible: vpncUseTimeout.checked
+
+        intLowerLimit: 10
+        intUpperLimit: 86400
 
         //% "DPD timeout seconds"
         label: qsTrId("settings_network-la-vpn_vpnc_dpd_timeout")
-        inputMethodHints: Qt.ImhDigitsOnly
+        //% "Select timeout between 10 and 86400 seconds"
+        description: errorHighlight ? qsTrId("settings_network_la_vpn_vpnc_dpd_timeout_error") : ""
     }
 
     SectionHeader {
@@ -180,21 +194,27 @@ Column {
         label: qsTrId("settings_network-la-vpn_vpnc_device_type")
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: vpncLocalPort
+        intUpperLimit: 65535
 
         //% "ISAKMP port"
         label: qsTrId("settings_network-la-vpn_vpnc_local_port")
-        inputMethodHints: Qt.ImhDigitsOnly
+        //% "Port number must be a value between 1 and 65535"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_vpnc_local_port_error") : ""
+
         nextFocusItem: vpncCiscoPort
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: vpncCiscoPort
+        intUpperLimit: 65535
 
         //% "Cisco port"
         label: qsTrId("settings_network-la-vpn_vpnc_cisco_port")
-        inputMethodHints: Qt.ImhDigitsOnly
+        //% "Port number must be a value between 1 and 65535"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_vpnc_cisco_port_error") : ""
+
         nextFocusItem: vpncAppVersion
     }
 

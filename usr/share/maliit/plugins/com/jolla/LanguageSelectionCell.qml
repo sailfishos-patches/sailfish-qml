@@ -4,26 +4,32 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-Item {
+SilicaItem {
     id: selectionCell
 
     property int index
     property bool active: popup.activeCell === index
     property alias text: textItem.text
 
-    width: textItem.width + geometry.languageSelectionCellMargin * 2
+    width: textItem.paintedWidth + geometry.languageSelectionCellMargin * 2
     height: Theme.itemSizeSmall
 
-    Text {
+    Label {
         id: textItem
-        width: paintedWidth
-        height: parent.height
         anchors.centerIn: parent
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        color: Theme.primaryColor
-        opacity: selectionCell.active ? 1 : .35
+        color: selectionCell.active ? selectionCell.palette.primaryColor
+                                    : selectionCell.palette.secondaryColor
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeMedium
+        font.bold: selectionCell.active
+    }
+
+    Rectangle {
+        color: selectionCell.palette.primaryColor
+        height: Math.round(Theme.dp(2))
+        width: textItem.paintedWidth
+        anchors.top: textItem.bottom
+        anchors.horizontalCenter: textItem.horizontalCenter
+        visible: selectionCell.active
     }
 }

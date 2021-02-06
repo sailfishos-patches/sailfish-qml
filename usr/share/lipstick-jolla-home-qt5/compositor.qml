@@ -130,8 +130,6 @@ Compositor {
     // True if only the current notification window is allowed to be visible
     property bool onlyCurrentNotificationAllowed
 
-    property bool isLegacyWallpaper: wallpaperItem.isLegacyWallpaper
-
     topmostWindowOrientation: {
         if (alarmLayerItem.window && !alarmLayerItem.renderDialogBackground) {  // test for full-screen alarm/call window
             return alarmLayerItem.window.orientation
@@ -417,6 +415,11 @@ Compositor {
     }
 
     function raiseWindow(window) {
+        if (window && window.userData && window.userData.windowType === WindowType.Wallpaper) {
+            window.userData.setAsWallpaper()
+            return
+        }
+
         var transientWindow = window
         window = toplevelForWindow(window)
 
@@ -591,14 +594,12 @@ Compositor {
 
                 anchors.fill: parent
 
-                HomeWallpaper {
+                Wallpaper {
                     id: wallpaperItem
 
                     parent: {
                         if (!peekLayer.exposed || !peekLayer.opaque) {
                             return wallpaperBelowHome
-                        } else if (lockscreenBlurSource.blur) {
-                            return wallpaperBelowLockscreen
                         } else {
                             return wallpaperWithinPeek
                         }
@@ -606,12 +607,22 @@ Compositor {
 
                     anchors.fill: parent
 
+                    dimmer {
+                        offset: Math.abs(homeLayerItem.events.offset)
+                        distance: homeLayerItem._transposed ? homeLayerItem.height : homeLayerItem.width
+                        relativeDim: homeLayerItem.events.visible
+                    }
+
                     onTransitionComplete: ambienceChangeTimeout.running = false
                     onRotationComplete: {
                         if (root.homeVisible) {
                             homeBlurSource.update()
                             peekBlurSource.update()
                             lockscreenBlurSource.update()
+                        }
+                        if (appLayerItem.opaque || alarmLayerItem.opaque) {
+                            peekBlurSource.update()
+                            applicationBlurSource.update()
                         }
                     }
                 }
@@ -718,19 +729,6 @@ Compositor {
             property bool hasChildWindows: true
             readonly property bool isFullScreen: !topMenuLayerItem.exposed
 
-            background: {
-                if ((alarmLayerItem.opaque && alarmLayerItem.renderBackground)
-                            || (appLayerItem.opaque && appLayerItem.renderBackground)) {
-                    return appBgContainer
-                } else if (!root.deviceIsLocked
-                            && lockScreenLayerItem.opaque
-                            && lockScreenLayerItem.renderBackground) {
-                    return wallpaperItem
-                } else {
-                    return null
-                }
-            }
-
             window: contentItem
             exposed: appLayerItem.exposed
                         || cameraLayerItem.exposed
@@ -786,9 +784,6 @@ Compositor {
                         } else {
                             homeLayerItem.setCurrentItem(homeLayerItem.switcher, !childrenOpaque, root._peekDirection)
                         }
-                    }
-                    if (peekLayer.mergeWindows) {
-                        transitionOptimizer.cacheWindow(peekLayer)
                     }
                 }
 
@@ -867,26 +862,9 @@ Compositor {
                            || (dialogLayerItem.exposed && dialogLayerItem.renderDialogBackground))
                             && appLayerItem.opaqueAndMapped
 
-                    ApplicationWallpaper {
-                        id: appBgContainer
-
-                        anchors.fill: parent
-                        visible: peekLayer.opaque && ((alarmLayerItem.opaque && alarmLayerItem.renderBackground)
-                                    || (appLayerItem.opaque && appLayerItem.renderBackground))
-                        isLegacyWallpaper: root.isLegacyWallpaper
-
-                        onRotationComplete: {
-                            if (appLayerItem.opaque || alarmLayerItem.opaque) {
-                                peekBlurSource.update()
-                                applicationBlurSource.update()
-                            }
-                        }
-                    }
-
                     AppLayer {
                         id: appLayerItem
 
-                        background: appBgContainer
                         peekedAt: !launcherLayerItem.opaque
                                     && !topMenuLayerItem.opaque
                                     && !dialogLayerItem.opaque
@@ -922,7 +900,6 @@ Compositor {
                             homeLayerItem.lastActiveLayer = homeLayerItem.switcher
                             homeLayerItem.setCurrentItem(homeLayerItem.switcher, root.homeVisible)
                         }
-                        onCacheWindow: transitionOptimizer.cacheWindow(window)
                         onRequestFocus: {
                             if (root.visible) {
                                 root.unlock()
@@ -974,21 +951,11 @@ Compositor {
                                 ? lockscreenHomeForeground
                                 : lockscreenApplicationForeground
 
-                        opacity: wallpaperItem.transitioning || ambienceChangeTimeout.running ? 0.0 : 1.0
-                        Behavior on opacity { FadeAnimator { duration: 300; alwaysRunToEnd: true } }
-
-                        Item {
-                            id: wallpaperBelowLockscreen
-
-                            anchors.fill: parent
-                        }
-
                         LockScreenLayer {
                             id: lockScreenLayerItem
 
                             screenIsLocked: root.screenIsLocked
                             deviceIsLocked: root.deviceIsLocked
-                            background: wallpaperItem
                             renderBackground: true
                             peekedAt: (root.deviceIsLocked && !peekLayer.opaque && peekLayer.exposed)
                                         || ((root.screenIsLocked || cameraLayerItem.exposed)
@@ -1005,12 +972,15 @@ Compositor {
                                                     || alarmLayerItem.exposed))
                             peekingAtHome: !root.deviceIsLocked && peekLayer.peeking
                             delayClose: lockscreenDelayTimer.running
-                            onCacheWindow: transitionOptimizer.cacheWindow(window)
                             onClosed: {
                                 if (active) {
                                     root.setCurrentWindow(appLayerItem.window || homeLayerItem.window)
                                 }
                             }
+
+                            foregroundItem.opacity: wallpaperItem.transitioning || ambienceChangeTimeout.running ? 0.0 : 1.0
+
+                            Behavior on foregroundItem.opacity { FadeAnimator { duration: 300; alwaysRunToEnd: true } }
 
                             Timer {
                                 // Delay the lockscreen fade out until the application has provided a
@@ -1069,7 +1039,6 @@ Compositor {
                                     || appLayerItem.renderSnapshot
                                     || lockScreenLayerItem.renderSnapshot
                                     || peekLayer.renderSnapshot
-                        onCacheWindow: transitionOptimizer.cacheWindow(window)
                     }
                 }
 
@@ -1082,7 +1051,6 @@ Compositor {
                     id: alarmLayerItem
 
                     parent: alarmApplicationForeground
-                    background: appBgContainer
                     peekedAt: (!dialogLayerItem.opaque && dialogLayerItem.exposed)
                               || (!launcherLayerItem.opaque && launcherLayerItem.exposed)
                               || (!topMenuLayerItem.opaque && topMenuLayerItem.exposed)
@@ -1101,7 +1069,6 @@ Compositor {
                     }
 
                     windowVisible: (peekLayer.exposed && peekLayer.visible) || root.incomingAlarm
-                    onCacheWindow: transitionOptimizer.cacheWindow(window)
                     onAboutToShowWindow: incomingAlarmTimer.stop()
                     onTransitioningChanged: {
                         incomingAlarmTimer.stop()
@@ -1111,8 +1078,7 @@ Compositor {
 
                 ShaderEffectSource {
                     /*  This thing merges the application wallpaper and the
-                        current frame of the window or alarm. The cache item below
-                        is set to live: false, so it doesn't update after this.
+                        current frame of the window or alarm.
                         The result is that we reduce 2x overdraw to 1x which is
                         enough to keep us at 60fps during the transition. We will
                         in all likelyhood skip one frame at the start of the
@@ -1141,71 +1107,13 @@ Compositor {
 
                     sourceItem: used ? transitioningLayer.snapshotSource : null
                     hideSource: true
-                    live: Desktop.settings.live_snapshots
 
-                    visible: used || transitionOptimizerFadeOut.running
-                    opacity: 0
-                    property bool suppressFade
+                    visible: used
                     property bool used: alarmLayerItem.renderSnapshot
                                 || dialogLayerItem.renderSnapshot
                                 || lockScreenLayerItem.renderSnapshot
                                 || appLayerItem.renderSnapshot
                                 || peekLayer.renderSnapshot
-
-                    onUsedChanged: {
-                        if (used) {
-                            transitionOptimizerFadeOut.stop()
-                            opacity = 1
-                            suppressFade = peekLayer.opaque
-                        } else if (!live && !suppressFade && peekLayer.opaque && (alarmLayer.opaque
-                                    || dialogLayerItem.opaque
-                                    || appLayerItem.opaque)) {
-                            transitionOptimizerFadeOut.start()
-                        }
-                    }
-
-                    function cacheWindow(window) {
-                        transitionOptimizerBg.scheduleUpdate()
-                        scheduleUpdate()
-                        suppressFade = peekLayer.opaque || dialogLayerItem.opaque
-                    }
-
-                    SequentialAnimation {
-                        id: transitionOptimizerFadeOut
-                        FadeAnimator {
-                            target: transitionOptimizer
-                            from: 1;
-                            to: 0
-                            duration: 350
-                            easing.type: Easing.InOutQuad
-                        }
-                        PropertyAction { target: transitionOptimizer; property: "visible"; value: false; }
-                        running: false
-                    }
-
-                    Item {
-                        anchors.fill: parent
-
-                        visible: transitionOptimizer.transitioningLayer.renderBackground
-                                    && transitionOptimizer.transitioningLayer.renderSnapshot
-                        parent: transitionOptimizer.transitioningLayer.underlayItem
-
-                        // Background for peeking and fade-in/out when wallpaper is not exposed.
-                        Rectangle {
-                            anchors.fill: parent
-                            visible: !wallpaper.exposed
-                            color: "black"
-                        }
-
-                        ShaderEffectSource {
-                            id: transitionOptimizerBg
-                            sourceItem: transitionOptimizer.used
-                                    ? transitionOptimizer.transitioningLayer.background
-                                    : null
-                            anchors.fill: parent
-                            live: Desktop.settings.live_snapshots
-                        }
-                    }
                 }
             }
 
@@ -1384,6 +1292,11 @@ Compositor {
         InProcWindowWrapper { }
     }
 
+    Component {
+        id: wallpaperWindowWrapper
+        WallpaperWindowWrapper {}
+    }
+
     onWindowAdded: {
         if (debug) {
             console.debug("Compositor: Window added \"" + window.title + "\"")
@@ -1431,49 +1344,66 @@ Compositor {
         var isOverlayWindow = window.category == "overlay"
         var isAlarmWindow = window.category == "alarm" || window.category == "call"
         var isApplicationWindow = window.category == "" || window.category == "silica"
+        var isWallpaperWindow = window.category === "wallpaper"
 
-        var type = WindowType.Internal
         var component = null;
         if (window.isInProcess) component = inProcWindowWrapper
         else component = windowWrapper
 
+        var properties = {
+            'window': window,
+            'parent': null
+        }
+
         var parent = null
-        var parentItem = null
+
         if (isHomeWindow) {
             parent = homeLayerItem.switcher
-            parentItem = homeLayerItem.switcher.contentItem
+            properties.parent = homeLayerItem.switcher.contentItem
         } else if (isEventsWindow) {
             parent = homeLayerItem.events
-            parentItem = homeLayerItem.events.contentItem
+            properties.parent = homeLayerItem.events.contentItem
         } else if (isLockScreenWindow) {
             parent = lockScreenLayer
-            parentItem = lockScreenLayerItem.contentItem
+            properties.parent = lockScreenLayerItem.contentItem
         } else if (isLauncherWindow) {
             parent = launcherLayer
-            parentItem = launcherLayerItem.contentItem
+            properties.parent = launcherLayerItem.contentItem
         } else if (isShutdownWindow) {
             parent = shutdownLayer
-            parentItem = shutdownLayer.contentItem
+            properties.parent = shutdownLayer.contentItem
         } else if (isTopMenuWindow) {
             parent = topMenuLayerItem
-            parentItem = topMenuLayerItem.contentItem
+            properties.parent = topMenuLayerItem.contentItem
         } else if (isDialogWindow) {
             parent = dialogLayer
-            type = WindowType.Dialog
+            properties.windowType = WindowType.Dialog
         } else if (isNotificationWindow) {
             parent = notificationLayer
             if (!onlyCurrentNotificationAllowed) {
-                parentItem = notificationLayer.contentItem
+                properties.parent = notificationLayer.contentItem
             }
         } else if (isOverlayWindow) {
             parent = overlayLayer
-            parentItem = overlayLayer.contentItem
+            properties.parent = overlayLayer.contentItem
         } else if (isAlarmWindow) {
             parent = alarmLayer
-            type = WindowType.Alarm
+            properties.windowType = WindowType.Alarm
         } else if (isApplicationWindow) {
-            type = WindowType.Application
+            properties.windowType = WindowType.Application
             parent = appLayer
+        } else if (isWallpaperWindow) {
+            if (window.parent) {
+                parent = appLayer
+                properties.wallpaperFor = window.parent
+
+                component = wallpaperWindowWrapper
+
+                window.visible = false
+            } else {
+                console.warn("Background window does not have a parent")
+                return
+            }
         } else {
             console.warn("Compositor: Unidentified", window.category, "window added \"" + window.title + "\"")
             window.visible = false
@@ -1490,18 +1420,15 @@ Compositor {
             return
         }
 
-        var w = component.createObject(parent, {
-            'window': window,
-            'parent': parentItem,
-            'windowType': type
-        })
+        var w = component.createObject(parent, properties)
 
         if (debug) {
             w.objectName = "windowFor_" + parent.objectName
         }
         window.userData = w
 
-        if (parentItem) {
+        if (properties.parent) {
+            var parentItem = properties.parent
             w.exposed = Qt.binding(function () { return parentItem.visible })
         }
 
@@ -1526,6 +1453,7 @@ Compositor {
             window.surface.updateSelection()
             root.clipboard.dataChanged.connect(window.surface.updateSelection)
         } else if (isNotificationWindow) {
+        } else if (isWallpaperWindow) {
         } else if (isAlarmWindow) {
             if (!root.visible) {
                 prepareToShowAlarm()
@@ -1565,6 +1493,9 @@ Compositor {
         case WindowType.Camera:
             cameraLayerItem.close()
             break
+        case WindowType.Wallpaper:
+            w.clearAsWallpaper()
+            break
         }
 
         if (topmostWindow == w) {
@@ -1586,21 +1517,30 @@ Compositor {
 
     onWindowRaised: raiseWindow(window)
     onWindowLowered: {
-        switch (window.userData ? window.userData.windowType : WindowType.Internal) {
+        var wrapper = window.userData
+
+        if (!wrapper) {
+            return
+        }
+
+        switch (wrapper.windowType) {
         case WindowType.Alarm:
-            alarmLayerItem.hide(window.userData)
+            alarmLayerItem.hide(wrapper)
             break
         case WindowType.Dialog:
-            dialogLayerItem.hide(window.userData)
+            dialogLayerItem.hide(wrapper)
             break
         case WindowType.Application:
-            appLayerItem.hide(window.userData)
+            appLayerItem.hide(wrapper)
             break
         case WindowType.PartnerSpace:
-            homeLayerItem.partnerWindowLowered(window.userData)
+            homeLayerItem.partnerWindowLowered(wrapper)
             break;
         case WindowType.Camera:
             cameraLayerItem.close()
+            break
+        case WindowType.Wallpaper:
+            wrapper.clearAsWallpaper()
             break
         }
     }
@@ -1611,6 +1551,8 @@ Compositor {
         // Setting a window visibility Hidden will cause a surface unmap
         if (window.userData && window.userData.ignoreHide) {
             window.userData.ignoreHide = false
+            return
+        } else if (window.userData && window.userData.windowType === WindowType.Wallpaper) {
             return
         }
 

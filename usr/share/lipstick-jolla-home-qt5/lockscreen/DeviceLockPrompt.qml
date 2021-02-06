@@ -34,6 +34,7 @@ Loader {
 
     readonly property bool ready: Desktop.deviceLockState == DeviceLock.Unlocked
                 || (item && item.authenticationInput.status !== AuthenticationInput.Idle)
+    readonly property bool emergency: item && item.emergency
 
     enabled: locked
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import QtQuick.Window 2.1 as QtQuickWindow
 import QtQml 2.2
@@ -447,11 +454,12 @@ ApplicationWindow {
         id: notification
 
         function publishError(error, iconUrl) {
-            icon = iconUrl || ""
-            previewBody = error
+            appIcon = iconUrl || ""
+            body = error
             publish()
         }
 
+        appIcon: "icon-launcher-phone"
         urgency: Notification.Critical
         isTransient: true
     }
@@ -462,12 +470,9 @@ ApplicationWindow {
         onCallRecorded: {
             var n = recordingNotification.createObject()
 
-            //: A call recording has been created
-            //% "Recording created"
-            n.summary = qsTrId("voicecall-la-call_recording_created")
+            //% "Call recorded"
+            n.summary = qsTrId("voicecall-la-call_recorded")
             n.body = label
-            n.previewSummary = n.summary
-            n.previewBody = n.body
 
             n.publish()
         }
@@ -478,10 +483,10 @@ ApplicationWindow {
             if (error == VoiceCall.VoiceCallAudioRecorder.FileCreation ||
                 error == VoiceCall.VoiceCallAudioRecorder.AudioRouting) {
                 //% "Could not begin recording"
-                n.previewSummary = qsTrId("voicecall-la-could_not_record")
+                n.summary = qsTrId("voicecall-la-could_not_record")
             } else if (error == VoiceCall.VoiceCallAudioRecorder.FileStorage) {
                 //% "Could not save recording"
-                n.previewSummary = qsTrId("voicecall-la-could_not_save")
+                n.summary = qsTrId("voicecall-la-could_not_save")
             }
             n.remoteActions = []
             n.publish()
@@ -495,25 +500,19 @@ ApplicationWindow {
             //% "Call recordings"
             appName: qsTrId("voicecall-la-call_recordings")
             category: "x-jolla.voicecall.callrecordings"
-            remoteActions: [
-                {
-                    "name": "default",
-                    //: Show the list of call recordings
-                    //% "Show recordings"
-                    "displayName": qsTrId("voicecall-la-show_call_recordings"),
-                    "service": "com.jolla.settings",
-                    "path": "/com/jolla/settings/ui",
-                    "iface": "com.jolla.settings.ui",
-                    "method": "showCallRecordings"
-                },
-                {
-                    "name": "app",
-                    "service": "com.jolla.settings",
-                    "path": "/com/jolla/settings/ui",
-                    "iface": "com.jolla.settings.ui",
-                    "method": "showCallRecordings"
-                }
-            ]
+            remoteActions: [ {
+                "name": "default",
+                "service": "com.jolla.settings",
+                "path": "/com/jolla/settings/ui",
+                "iface": "com.jolla.settings.ui",
+                "method": "showCallRecordings"
+            }, {
+                "name": "app",
+                "service": "com.jolla.settings",
+                "path": "/com/jolla/settings/ui",
+                "iface": "com.jolla.settings.ui",
+                "method": "showCallRecordings"
+            } ]
         }
     }
 
@@ -580,19 +579,11 @@ ApplicationWindow {
             }
             function openContactCard(number) {
                 var person = people.personByPhoneNumber(number)
-
-                if (person) {
-                    pageStack.push(
-                                "Sailfish.Contacts.ContactCardPage",
-                                { "contact": person, "activeDetail": number },
-                                PageStackAction.Immediate)
-                } else {
-                    var contact = ContactCreator.createContact({"phoneNumbers": [number]})
-                    pageStack.push(
-                                "Sailfish.Contacts.TemporaryContactCardPage",
-                                { "contact": contact, "activeDetail": number },
-                                PageStackAction.Immediate)
-                }
+                var personObject = !!person ? person : ContactCreator.createContact({"phoneNumbers": [number]})
+                pageStack.push(
+                            "Sailfish.Contacts.ContactCardPage",
+                            { "contact": personObject, "activeDetail": number },
+                            PageStackAction.Immediate)
                 main.activate()
             }
         }

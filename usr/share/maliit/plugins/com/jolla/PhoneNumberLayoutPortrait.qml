@@ -38,10 +38,9 @@ KeyboardLayout {
             opacity: enabled ? (pressed ? 0.6 : 1.0)
                              : 0.3
 
-            Image {
+            Silica.Icon {
                 anchors.centerIn: parent
-                source: "image://theme/icon-m-clipboard?"
-                        + (parent.pressed ? Silica.Theme.highlightColor : Silica.Theme.primaryColor)
+                source: "image://theme/icon-m-clipboard"
             }
         }
     }

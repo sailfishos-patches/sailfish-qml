@@ -17,40 +17,16 @@ CsdTestPage {
     id: page
 
     property PositionSource positionSource
-
-    property bool _originalLocationEnabled
-    property bool _originalGpsEnabled
-    property bool _originalGpsFlightMode
-    property bool _originalMlsEnabled
-    property int _originalMlsOnlineState
-    property int _originalHereState
-
     property bool _isGPSInitialized
 
     Component.onCompleted: initialiseTimer.start()
     function storeStateAndStart() {
-        _originalLocationEnabled = locationSettings.locationEnabled
-        _originalGpsEnabled = locationSettings.gpsEnabled
-        _originalGpsFlightMode = locationSettings.gpsFlightMode
-        _originalMlsEnabled = locationSettings.mlsEnabled
-        _originalMlsOnlineState = locationSettings.mlsOnlineState
-        _originalHereState = locationSettings.hereState
+        GpsStateRestorer.increaseConsumer()
 
         mdmBanner.active = (policy.value == false)
 
         if (!mdmBanner.active) {
-            if (!locationSettings.locationEnabled)
-                locationSettings.locationEnabled = true
-            if (!locationSettings.gpsEnabled)
-                locationSettings.gpsEnabled = true
-            if (locationSettings.gpsFlightMode)
-                locationSettings.gpsFlightMode = false
-            if (!locationSettings.mlsEnabled)
-                locationSettings.mlsEnabled = true
-            if (locationSettings.mlsOnlineState === LocationSettings.OnlineAGpsDisabled)
-                locationSettings.mlsOnlineState = LocationSettings.OnlineAGpsEnabled
-            if (locationSettings.hereState === LocationSettings.OnlineAGpsDisabled)
-                locationSettings.hereState = LocationSettings.OnlineAGpsEnabled
+            GpsStateRestorer.setGpsConfiguration()
 
             createPositionSource()
 
@@ -60,12 +36,7 @@ CsdTestPage {
 
     Component.onDestruction: {
         if (_isGPSInitialized) {
-            locationSettings.hereState = _originalHereState
-            locationSettings.mlsOnlineState = _originalMlsOnlineState
-            locationSettings.mlsEnabled = _originalMlsEnabled
-            locationSettings.gpsFlightMode = _originalGpsFlightMode
-            locationSettings.gpsEnabled = _originalGpsEnabled
-            locationSettings.locationEnabled = _originalLocationEnabled
+            GpsStateRestorer.decreaseConsumer()
         }
 
         if (!!positionSource) {

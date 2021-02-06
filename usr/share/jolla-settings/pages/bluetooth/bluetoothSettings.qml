@@ -6,6 +6,8 @@ import com.jolla.settings.bluetooth.translations 1.0
 import org.kde.bluezqt 1.0 as BluezQt
 import Nemo.Ssu 1.1 as Ssu
 import Nemo.DBus 2.0
+import Sailfish.Policy 1.0
+import com.jolla.settings.system 1.0
 
 Page {
     id: root
@@ -82,7 +84,7 @@ Page {
 
     SilicaFlickable {
         anchors.fill: parent
-        contentHeight: switchColumn.height + settingsColumn.height
+        contentHeight: switchColumn.height + (settingsColumn.opacity > 0 ? settingsColumn.height : 0)
         visible: btTechModel.available
 
         VerticalScrollDecorator {}
@@ -124,10 +126,16 @@ Page {
                 title: qsTrId("settings_bluetooth-he-bluetooth")
             }
 
+            DisabledByMdmBanner {
+                id: disabledByMdmBanner
+                active: !AccessPolicy.bluetoothToggleEnabled
+            }
+
             IconTextSwitch {
                 id: bluetoothSwitch
 
                 automaticCheck: false
+                enabled: !disabledByMdmBanner.active
                 checked: root._bluetoothPoweredOn
                 //% "Bluetooth"
                 text: qsTrId("settings_bluetooth-la-bluetooth")

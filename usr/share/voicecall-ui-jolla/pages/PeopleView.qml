@@ -26,7 +26,7 @@ ContactBrowser {
     }
 
     function openNewContactEditor() {
-        ContactsUtil.editContact(ContactCreator.createContact({}), people, pageStack)
+        ContactsUtil.editNewContact(ContactCreator.createContact({}), people, pageStack)
     }
 
     function _clearContextMenu(contextMenu) {
@@ -181,11 +181,15 @@ ContactBrowser {
                 onClicked: _choosePhoneNumber(Telephony.Message)
             }
 
-            MenuItem {
+            ContactDeleteMenuItem {
                 id: deleteMenu
+
                 //% "Delete contact"
                 text: qsTrId("voicecall-me-delete_contact")
+                contact: contextMenu.contact
+                peopleModel: root.allContactsModel
                 visible: contextMenu.parent && contextMenu.parent.canDeleteContact
+
                 onClicked: {
                     contextMenu.close()
                     contextMenu.parent.deleteContact()

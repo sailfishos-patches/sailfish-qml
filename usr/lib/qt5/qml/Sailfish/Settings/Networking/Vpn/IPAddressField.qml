@@ -21,6 +21,9 @@ NetworkField {
 
     regExp: (emptyInputOk && length === 0) ? null : ipRegExp
 
+    //% "Valid IP address is required"
+    description: errorHighlight ? qsTrId("settings_network_la-ip_address_field_error") : ""
+
     function updateErrorHighlight() {
         errorHighlight = (!emptyInputOk && length === 0) || !ipRegExp.test(text)
     }

@@ -8,42 +8,25 @@ import Sailfish.Silica 1.0
 import Nemo.FileManager 1.0
 
 Dialog {
-    property string oldPath
-    property string oldName
+    id: dialog
 
-    property bool _sameName: true
+    property alias oldPath: fileInfo.file
+
+    readonly property string _newPath: fileName.text !== "" && !_hasInvalidCharacters
+            ? fileInfo.directoryPath + "/" + fileName.text
+            : ""
+
     readonly property var _regExp: new RegExp("[\/*\?<>\|]+")
-    // FIXME : JB#50567 here that use file name suffix from FileInfo instead.
-    property string _suffix: fileName.text.replace(_baseName(fileName.text), "")
-    property int _selectionLength: fileName.text.length - _suffix.length
-    // FIXME : JB#50567 here that use basePath from FileInfo instead.
-    property string _directory
+    readonly property bool _hasInvalidCharacters: _regExp.test(fileName.text)
+    readonly property bool _exists: _newPath !== "" && _newPath !== oldPath && FileEngine.exists(_newPath)
 
-    function _renameFile(fileName) {
-        var newPath = oldPath.replace(oldName, fileName)
-        var exist = FileEngine.exists(newPath)
-
-        var counter = 0
-        while (exist) {
-            counter++
-            var incrementedFileName = _baseName(fileName) + "(%1)".arg(counter) + _suffix
-
-            if (incrementedFileName === oldName)
-                return
-
-            var path = _directory + incrementedFileName
-            newPath = path
-            exist = FileEngine.exists(newPath)
-        }
-        FileEngine.rename(oldPath, newPath)
+    function _suffixForFileName(fileName) {
+        var suffix = FileEngine.extensionForFileName(fileName)
+        return suffix !== "" ?  "." + suffix : suffix
     }
 
-    // FIXME : JB#50567 here that use baseName from FileInfo instead.
-    function _baseName(fileName) {
-        var baseName = fileName
-        if (baseName.lastIndexOf(".") !== -1)
-            baseName = baseName.substring(0, baseName.lastIndexOf("."));
-        return baseName;
+    FileInfo {
+        id: fileInfo
     }
 
     DialogHeader {
@@ -57,33 +40,44 @@ Dialog {
 
         width: parent.width
         anchors.top: dialogHeader.bottom
-        label: errorHighlight
+        label: {
+            if (dialog._hasInvalidCharacters) {
                //% "Invalid file name"
-               ? qsTrId("filemanager-te-invalid_filename")
+               return qsTrId("filemanager-te-invalid_filename")
+            } else if (dialog._exists) {
+                //% "A file with the same name exists"
+                return qsTrId("filemanager-te-filename_exists")
+            } else {
                //% "Title"
-               : qsTrId("filemanager-la-title")
+               return qsTrId("filemanager-la-title")
+            }
+        }
 
         placeholderText: qsTrId("filemanager-la-title")
-        onFocusChanged: if (focus) select(0, _selectionLength)
+        onFocusChanged: {
+            if (focus) {
+                var suffix = _suffixForFileName(text)
+
+                select(0, text.length - suffix.length)
+            }
+        }
+
+        text: fileInfo.fileName
+        errorHighlight: dialog._hasInvalidCharacters || dialog._exists
 
         EnterKey.iconSource: "image://theme/icon-m-enter-accept"
         EnterKey.enabled: text !== ""
         EnterKey.onClicked: accept()
 
         Component.onCompleted: {
-            text = oldName
-
             focus = true
-
-            textChanged.connect(function () {
-                errorHighlight = _regExp.test(text)
-                _sameName = oldName === text
-            })
-
-            _directory = oldPath.replace(oldName, "")
         }
     }
 
-    canAccept: !fileName.errorHighlight && fileName.text !== ""
-    onAccepted: if (!_sameName) _renameFile(fileName.text)
+    canAccept: _newPath !== "" && !_exists
+    onAccepted: {
+        if (_newPath !== oldPath) {
+            FileEngine.rename(oldPath, _newPath)
+        }
+    }
 }

@@ -40,12 +40,14 @@ Column {
 
     TextField {
         id: emailaddressField
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhEmailCharactersOnly
         //% "Email address"
         label: qsTrId("components_accounts-la-activesync_emailaddress")
-        placeholderText: label
         errorHighlight: !text && checkMandatoryFields
+
+        //% "Email address is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-activesync_emailaddress_required") : ""
+
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: {
             if (usernameField.visible) {
@@ -58,13 +60,15 @@ Column {
 
     TextField {
         id: usernameField
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
         //: Account username
         //% "Username"
         label: qsTrId("components_accounts-la-activesync_username")
-        placeholderText: label
         errorHighlight: !text && checkMandatoryFields
+
+        //% "Username is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-activesync_username_required") : ""
+
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: passwordField.focus = true
         visible: !limitedMode
@@ -79,6 +83,10 @@ Column {
             }
         }
         errorHighlight: !text && checkMandatoryFields
+
+        //% "Password is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-activesync_password_required") : ""
+
         EnterKey.iconSource: domainField.visible ? "image://theme/icon-m-enter-next"
                                                  : "image://theme/icon-m-enter-close"
         EnterKey.onClicked: {
@@ -98,11 +106,10 @@ Column {
 
     TextField {
         id: domainField
-        width: parent.width
+
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
         //% "Domain"
         label: qsTrId("components_accounts-la-activesync_domain")
-        placeholderText: label
         EnterKey.iconSource: editMode ? "image://theme/icon-m-enter-next"
                                       : "image://theme/icon-m-enter-close"
         EnterKey.onClicked: {
@@ -127,24 +134,32 @@ Column {
 
         TextField {
             id: serverField
-            width: parent.width
-            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+
             //% "Address"
             label: qsTrId("components_accounts-la-activesync_server_address")
-            placeholderText: label
             errorHighlight: !text && checkMandatoryFields
+            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+
+            //% "Server address is required"
+            description: errorHighlight ? qsTrId("components_accounts-la-activesync_server_address_required") : ""
+
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: portField.focus = true
         }
 
         TextField {
             id: portField
-            width: parent.width
-            inputMethodHints: Qt.ImhDigitsOnly
+
             //: Server port
             //% "Port"
             label: qsTrId("components_accounts-la-activesync_server_port")
-            placeholderText: label
+
+            inputMethodHints: Qt.ImhDigitsOnly
+            validator: IntValidator { bottom: 1; top: 65535 }
+
+            //% "Port number must be a value between 1 and 65535"
+            description: errorHighlight ? qsTrId("settings_network_la-proxy_port_number_error") : ""
+
             EnterKey.iconSource: "image://theme/icon-m-enter-next"
             EnterKey.onClicked: secureConnectionSwitch.focus = true
             text: secureConnection ? "443" : "80"

@@ -19,10 +19,6 @@ Page {
 
     ApplicationData {
         id: appData
-
-        property bool packageInstalled: state === ApplicationState.Installed
-                                        || state === ApplicationState.Updatable
-                                        || state === ApplicationState.Updating
     }
 
     AppLauncher {

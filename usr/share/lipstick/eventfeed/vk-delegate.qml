@@ -1,3 +1,10 @@
+/****************************************************************************
+ **
+ ** Copyright (C) 2014 - 2015 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.social 1.0
@@ -24,7 +31,6 @@ SocialMediaAccountDelegate {
         accountId: model.accounts[0]
         userRemovable: true
         animateRemoval: defaultAnimateRemoval || delegateItem.removeAllInProgress
-        animationDuration: delegateItem.animationDuration
 
         onRemoveRequested: {
             delegateItem.model.remove(model.vkId)
@@ -40,6 +46,7 @@ SocialMediaAccountDelegate {
             eventsColumnMaxWidth = Qt.binding(function() { return delegateItem.eventsColumnMaxWidth })
         }
     }
+
     //% "Show more in VK"
     expandedLabel: qsTrId("lipstick-jolla-home-la-show-more-in-vk")
     userRemovable: true
@@ -47,8 +54,8 @@ SocialMediaAccountDelegate {
     onHeaderClicked: Qt.openUrlExternally("https://m.vk.com/feed")
     onExpandedClicked: Qt.openUrlExternally("https://m.vk.com/feed")
 
-    onShowingInActiveViewChanged: {
-        if (showingInActiveView) {
+    onViewVisibleChanged: {
+        if (viewVisible) {
             delegateItem.resetHasSyncableAccounts()
             delegateItem.model.refresh()
         }

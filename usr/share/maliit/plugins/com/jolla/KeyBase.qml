@@ -28,9 +28,10 @@
  */
 
 import QtQuick 2.0
+import Sailfish.Silica 1.0
 import com.jolla.keyboard 1.0
 
-Item {
+SilicaControl {
     property int leftPadding: 2
     property int rightPadding: 2
     property bool pressed
@@ -44,4 +45,6 @@ Item {
     property bool active: true // button in use and shown
 
     signal clicked
+
+    highlighted: pressed
 }

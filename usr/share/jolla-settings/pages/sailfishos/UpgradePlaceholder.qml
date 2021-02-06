@@ -57,5 +57,5 @@ ViewPlaceholder {
 
     _hintLabel.textFormat: Text.StyledText
     _hintLabel.linkColor: Theme.primaryColor
-    _hintLabel.onLinkActivated: pageStack.animatorPush(Qt.resolvedUrl("../accounts/mainpage.qml"))
+    _hintLabel.onLinkActivated: pageStack.animatorPush("com.jolla.settings.accounts.AccountsPage")
 }

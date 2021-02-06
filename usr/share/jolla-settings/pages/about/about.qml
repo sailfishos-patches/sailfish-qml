@@ -16,6 +16,8 @@ import org.nemomobile.dbus 2.0
 Page {
     id: aboutPage
 
+    highContrast: true
+
     AboutSettings {
         id: aboutSettings
     }

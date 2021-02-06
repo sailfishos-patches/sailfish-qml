@@ -145,11 +145,8 @@ let Util = {
   getHrefForElement: function getHrefForElement(target) {
     let link = null;
     while (target) {
-      if (target instanceof Ci.nsIDOMHTMLAnchorElement ||
-          target instanceof Ci.nsIDOMHTMLAreaElement ||
-          target instanceof Ci.nsIDOMHTMLLinkElement) {
-          if (target.hasAttribute("href"))
-            link = target;
+      if (this.isLink(target) && target.hasAttribute("href")) {
+        link = target;
       }
       target = target.parentNode;
     }
@@ -161,9 +158,9 @@ let Util = {
   },
 
   isTextInput: function isTextInput(aElement) {
-    return ((aElement instanceof Ci.nsIDOMHTMLInputElement &&
+    return ((aElement instanceof content.HTMLInputElement &&
              aElement.mozIsTextField(false)) ||
-            aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
+            aElement instanceof content.HTMLTextAreaElement);
   },
 
   /**
@@ -188,8 +185,8 @@ let Util = {
 
     // If a body element is editable and the body is the child of an
     // iframe or div we can assume this is an advanced HTML editor
-    if ((aElement instanceof Ci.nsIDOMHTMLIFrameElement ||
-         this.isTypeOf(aElement, "HTMLDivElement")) &&
+    if ((aElement instanceof content.HTMLIFrameElement ||
+         ChromeUtils.getClassName(aElement) === "HTMLDivElement") &&
         aElement.contentDocument &&
         this.isEditableContent(aElement.contentDocument.body)) {
       return true;
@@ -207,35 +204,30 @@ let Util = {
   },
 
   isMultilineInput: function isMultilineInput(aElement) {
-    return (aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
+    return (aElement instanceof content.HTMLTextAreaElement);
   },
 
-  isLink: function isLink(aElement) {
-    return ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
-            (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
-            aElement instanceof Ci.nsIDOMHTMLLinkElement ||
-            aElement.getAttributeNS(kXLinkNamespace, "type") == "simple");
+  isLink: function isLink(aNode) {
+    return ((aNode instanceof content.HTMLAnchorElement && aNode.href) ||
+            (aNode instanceof content.HTMLAreaElement && aNode.href) ||
+            aNode instanceof content.HTMLLinkElement);
   },
 
   isText: function isText(aElement) {
-    return (aElement instanceof Ci.nsIDOMHTMLParagraphElement ||
-            aElement instanceof Ci.nsIDOMHTMLLIElement ||
-            aElement instanceof Ci.nsIDOMHTMLPreElement ||
-            aElement instanceof Ci.nsIDOMHTMLBodyElement ||
-            this.isTypeOf(aElement, "HTMLDivElement") ||
-            this.isTypeOf(aElement, "HTMLHeadingElement") ||
-            this.isTypeOf(aElement, "HTMLTableCellElement"));
+    let className = ChromeUtils.getClassName(aElement)
+    return (className === "HTMLParagraphElement" ||
+            className === "HTMLLIElement" ||
+            className === "HTMLPreElement" ||
+            aElement instanceof content.HTMLBodyElement ||
+            className === "HTMLDivElement" ||
+            className === "HTMLHeadingElement" ||
+            className === "HTMLTableCellElement");
   },
 
   isMedia: function isMedia(aElement) {
-    return (aElement instanceof Ci.nsIDOMHTMLMediaElement ||
-            this.isTypeOf(aElement, "HTMLVideoElement") ||
+    return (aElement instanceof content.HTMLMediaElement ||
+            ChromeUtils.getClassName(aElement) === "HTMLVideoElement" ||
             aElement.getAttribute("playable") == "true")
-  },
-
-  isTypeOf: function isTypeOf(aElement, type) {
-    let protoType = Object.prototype.toString.call(aElement);
-    return protoType === "[object " + type + "]";
   },
 
   /*

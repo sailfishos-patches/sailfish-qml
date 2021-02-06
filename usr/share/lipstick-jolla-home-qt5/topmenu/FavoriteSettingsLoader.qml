@@ -257,6 +257,7 @@ Loader {
                             onTriggered: {
                                 if (model.object.type == "action") {
                                     gridFavModel.triggerAction(model.index)
+                                    Lipstick.compositor.topMenuLayer.hide()
                                 } else {
                                     pageOrActionDelegate.item.goToSettings()
                                 }

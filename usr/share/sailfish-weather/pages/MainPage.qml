@@ -227,10 +227,10 @@ Page {
     }
 
     DBusAdaptor {
-        service: "com.jolla.weather"
-        path: "/com/jolla/weather"
-        iface: "com.jolla.weather"
-        xml: "  <interface name=\"com.jolla.weather\">\n" +
+        service: "org.sailfishos.weather"
+        path: "/org/sailfishos/weather"
+        iface: "org.sailfishos.weather"
+        xml: "  <interface name=\"org.sailfishos.weather\">\n" +
              "    <method name=\"newLocation\"/>\n" +
              "  </interface>\n"
 

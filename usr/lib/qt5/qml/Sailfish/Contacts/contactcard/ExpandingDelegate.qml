@@ -1,4 +1,5 @@
 import QtQuick 2.6
+import Nemo.Notifications 1.0
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as SailfishContacts
 import org.nemomobile.contacts 1.0
@@ -9,6 +10,7 @@ ListItem {
 
     property string previousDetailType
     property string detailType
+    property int detailIndex
     property string detailValue
     property string detailMetadata
     property var detailData
@@ -28,7 +30,11 @@ ListItem {
                 && primaryContentLoader.item.collapsed) {
             primaryContentLoader.item.expand()
         } else if (_primaryActionAvailable) {
-            detailItem.actionClicked(detailActions[0].actionType)
+            if (detailActions[0].actionType == null || detailActions[0].actionType == undefined) {
+                actionNotification.publish()
+            } else {
+                detailItem.actionClicked(detailActions[0].actionType)
+            }
         } else {
             detailItem.actionClicked("")
         }
@@ -51,6 +57,7 @@ ListItem {
             source: visible ? detailActions[0].actionIcon
                             : "image://theme/icon-m-clear" // only used for size determination
             visible: detailType != previousDetailType && detailActions.length > 0
+            opacity: detailActions.length > 0 && detailActions[0].actionDisabled ? Theme.opacityLow : 1.0
         }
 
         Column {
@@ -96,7 +103,13 @@ ListItem {
         propagateComposedEvents: true
         highlighted: down || menuOpen
         highlightedColor: menuOpen ? "transparent" : detailItem.highlightedColor
-        onClicked: detailItem.actionClicked(detailActions[1].actionType)
+        onClicked: {
+            if (detailActions[1].actionType == null || detailActions[1].actionType == undefined) {
+                actionNotification.publish()
+            } else {
+                detailItem.actionClicked(detailActions[1].actionType)
+            }
+        }
 
         HighlightImage {
             id: secondaryActionButton
@@ -107,7 +120,18 @@ ListItem {
             anchors.rightMargin: Theme.horizontalPageMargin
             highlighted: secondaryActionBackground.highlighted
             source: iconSource
+            opacity: detailActions.length > 1 && detailActions[1].actionDisabled ? Theme.opacityLow : 1.0
         }
+    }
+
+    Notification {
+        id: actionNotification
+
+        //: Displayed notification if user activates a disabled action
+        //% "Operation is currently unavailable"
+        summary: qsTrId("components_contacts-la-operation_is_currently_unavailable")
+        appIcon: "image://theme/icon-system-warning"
+        isTransient: true
     }
 
     Component {

@@ -9,6 +9,6 @@ import QtQuick 2.0
 VerificationCellular {
     //% "3G information"
     pageTitle: qsTrId("csd-he-3g_information")
-    testTechnology: "umts"
+    testTechnology: ["umts", "hspa"]
     requireAllModems: false
 }

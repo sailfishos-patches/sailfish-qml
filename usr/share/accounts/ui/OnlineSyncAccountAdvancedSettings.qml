@@ -91,9 +91,8 @@ Column {
     TextField {
         id: webdavPathField
 
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        placeholderText: label
+
         //: The field where the user can enter their WebDAV path
         //% "WebDAV path"
         label: qsTrId("components_accounts-la-webdav_path")
@@ -109,10 +108,8 @@ Column {
     TextField {
         id: addressbookPathField
 
-        width: parent.width
         visible: false
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        placeholderText: label
         //: The field where the user can enter their addressbook home set path.  It is optional and can normally be automatically discovered.
         //% "Address book path (optional)"
         label: qsTrId("components_accounts-la-optional_addressbook_path")
@@ -128,10 +125,8 @@ Column {
     TextField {
         id: calendarPathField
 
-        width: parent.width
         visible: false
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        placeholderText: label
         //: The field where the user can enter their calendar home set path.  It is optional and can normally be automatically discovered.
         //% "Calendar path (optional)"
         label: qsTrId("components_accounts-la-optional_calendar_path")
@@ -157,11 +152,9 @@ Column {
     TextField {
         id: imagesPathField
 
-        width: parent.width
         visible: false
         //% "Images path"
         label: qsTrId("components_accounts-la-images_path")
-        placeholderText: label
 
         // If the user edits the text, break any bindings that automatically change it
         onTextChanged: if (activeFocus) text = text
@@ -175,11 +168,9 @@ Column {
     TextField {
         id: backupsPathField
 
-        width: parent.width
         visible: false
         //% "Backups path"
         label: qsTrId("components_accounts-la-backups_path")
-        placeholderText: label
 
         // If the user edits the text, break any bindings that automatically change it
         onTextChanged: if (activeFocus) text = text

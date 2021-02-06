@@ -48,42 +48,31 @@ Column {
         text: qsTrId("settings_phone-he-voicemail_setting_not_available")
     }
 
-    Item {
-        width: parent.width
-        height: mailboxEditor.height
-        visible: ofonoMessageWaiting.ready && ofonoSimManager.present
-        TextField {
-            id: mailboxEditor
-            anchors {
-                left: parent.left
-                right: resetButton.left
-            }
+    TextField {
+        id: mailboxEditor
 
-            text: voiceMailboxNumber
-            inputMethodHints: Qt.ImhDialableCharactersOnly
-            //% "Enter voicemail number"
-            placeholderText: qsTrId("settings_phone-la-enter_voicemail_number")
-            //% "Voicemail number"
-            label: qsTrId("settings_phone-la-voicemail_number")
-            EnterKey.iconSource: "image://theme/icon-m-enter-close"
-            EnterKey.onClicked: focus = false
-            onActiveFocusChanged: applySettings()
-            textRightMargin: Theme.paddingMedium
-        }
-        IconButton {
-            id: resetButton
-            anchors {
-                top: parent.top
-                topMargin: -Theme.paddingSmall
-                right: parent.right
-                rightMargin: Theme.horizontalPageMargin - Theme.paddingMedium
-            }
-            enabled: mailboxEditor.text != ofonoMessageWaiting.voicemailMailboxNumber
-            icon.source: "image://theme/icon-m-clear"
+        text: voiceMailboxNumber
+        inputMethodHints: Qt.ImhDialableCharactersOnly
+        //% "Voicemail number"
+        label: qsTrId("settings_phone-la-voicemail_number")
+        visible: ofonoMessageWaiting.ready && ofonoSimManager.present
+
+        EnterKey.iconSource: "image://theme/icon-m-enter-close"
+        EnterKey.onClicked: focus = false
+        onActiveFocusChanged: applySettings()
+
+        rightItem: IconButton {
             onClicked: {
                 mailboxConfig.value = ""
                 mailboxEditor.text = voiceMailboxNumber
             }
+
+            width: icon.width
+            height: icon.height
+            icon.source: "image://theme/icon-splus-clear"
+            enabled: mailboxEditor.text != ofonoMessageWaiting.voicemailMailboxNumber
+            opacity: enabled ? 1.0 : 0.0
+            Behavior on opacity { FadeAnimation {} }
         }
     }
 

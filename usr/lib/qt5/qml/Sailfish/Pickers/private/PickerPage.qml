@@ -35,7 +35,6 @@ Page {
     function _handleSelectionProperties(properties) {
         _updateSelectedContent(properties, properties.url)
         if (popOnSelection) {
-            _navigation = PageNavigation.Forward
             if (_lastAppPage) {
                 pageStack.pop(_lastAppPage)
             } else {

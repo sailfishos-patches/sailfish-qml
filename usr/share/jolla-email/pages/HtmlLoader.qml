@@ -21,6 +21,7 @@ Loader {
     property bool portrait
     property bool isOutgoing
     property bool isLocalFile
+    property string initialAction
     readonly property bool showImages: app.accountsManagerActive || downloadImagesConfig.value
 
     property bool _wasLoaded
@@ -42,6 +43,11 @@ Loader {
 
         _email = email
 
+        if (initialAction) {
+            _openComposer(initialAction, email, true)
+            initialAction = ""
+        }
+
         _finishLoad()
     }
 
@@ -61,7 +67,7 @@ Loader {
     }
 
     function markAsRead() {
-        if (item && _email) {
+        if (_email) {
             if (!_email.read && _email.requestReadReceipt) {
                 needToSendReadReceipt()
             }
@@ -87,6 +93,13 @@ Loader {
         return "<html><body><div style=\"white-space: pre-wrap; word-wrap: break-word;\">" + parser.linkedText + "</div></body></html>"
     }
 
+    function _openComposer(action, immediately) {
+        pageStack.animatorPush(
+                    Qt.resolvedUrl("ComposerPage.qml"),
+                    { popDestination: previousPage, action: action, originalMessageId: _email.messageId },
+                    immediately ? PageStackAction.Immediate : PageStackAction.Animated)
+    }
+
     Component.onCompleted: {
         WebEngineSettings.autoLoadImages = Qt.binding(function() {
             return showImages
@@ -107,10 +120,6 @@ Loader {
         onVisuallyCommittedChanged: {
             if (visuallyCommitted) {
                 showLoadProgress = false
-                if (!_email.read && _email.requestReadReceipt) {
-                    needToSendReadReceipt()
-                }
-                _email.read = true
                 if (pageStatus == PageStatus.Active && (!loadingTimer.running || loaded)) {
                     messageViewPage.loaded = true
                     loadingTimer.stop()
@@ -118,6 +127,7 @@ Loader {
             }
         }
 
+        onComposerRequested: htmlLoader._openComposer(action, false)
         onRemoveRequested: htmlLoader.removeRequested()
     }
 

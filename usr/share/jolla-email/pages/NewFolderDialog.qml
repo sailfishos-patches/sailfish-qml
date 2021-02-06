@@ -15,7 +15,14 @@ Dialog {
     property string parentFolderName
     property FolderListModel folderModel
 
-    canAccept: folderNameField.text.length > 0
+    canAccept: folderNameField.acceptableInput
+
+    onAcceptBlocked: {
+        if (!folderNameField.acceptableInput) {
+            folderNameField.errorHighlight = true
+        }
+    }
+
     onAccepted: {
         emailAgent.createFolder(folderNameField.text, folderModel.accountKey, parentFolderId)
     }
@@ -32,15 +39,22 @@ Dialog {
             }
             TextField {
                 id: folderNameField
-                width: parent.width
+
                 //% "Folder name"
-                placeholderText: qsTrId("jolla-email-newfolder_folder_name_placeholder")
-                label: placeholderText
+                label: qsTrId("jolla-email-newfolder_folder_name_placeholder")
+                //% "Folder name required"
+                description: errorHighlight ? qsTrId("jolla-email-newfolder_folder_name_placeholder_error") : ""
+
+                acceptableInput: text.length > 0
+                onActiveFocusChanged: if (!activeFocus) errorHighlight = !acceptableInput
+                onAcceptableInputChanged: if (acceptableInput) errorHighlight = false
+
                 focus: true
                 EnterKey.enabled: root.canAccept
                 EnterKey.iconSource: "image://theme/icon-m-enter-accept"
                 EnterKey.onClicked: root.accept()
             }
+
             ValueButton {
                 id: valueButton
                 //% "Parent folder"

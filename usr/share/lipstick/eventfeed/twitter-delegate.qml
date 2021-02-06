@@ -1,9 +1,10 @@
 /****************************************************************************
-**
-** Copyright (C) 2014-2015 Jolla Ltd.
-** Contact: Antti Seppälä <antti.seppala@jollamobile.com>
-**
-****************************************************************************/
+ **
+ ** Copyright (C) 2014 - 2015 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.social 1.0
@@ -18,7 +19,7 @@ SocialMediaAccountDelegate {
     //% "Tweets"
     headerText: qsTrId("lipstick-jolla-home-la-twitter_tweets")
     headerIcon: "image://theme/graphic-service-twitter"
-    showHeaderItemCount: false
+    showRemainingCount: false
 
     services: ["Posts", "Notifications"]
     socialNetwork: SocialSync.Twitter
@@ -42,7 +43,6 @@ SocialMediaAccountDelegate {
         avatarSource: delegateItem.convertUrl(model.icon)
         fallbackAvatarSource: model.icon
         accountId: model.accounts[0]
-        animationDuration: delegateItem.animationDuration
 
         onTriggered: {
             Qt.openUrlExternally("https://mobile.twitter.com/" + model.screenName + "/status/" + model.twitterId)
@@ -60,8 +60,8 @@ SocialMediaAccountDelegate {
     onHeaderClicked: Qt.openUrlExternally("https://m.twitter.com/")
     onExpandedClicked: Qt.openUrlExternally("https://m.twitter.com/")
 
-    onShowingInActiveViewChanged: {
-        if (showingInActiveView) {
+    onViewVisibleChanged: {
+        if (viewVisible) {
             delegateItem.resetHasSyncableAccounts()
             delegateItem.model.refresh()
             if (delegateItem.hasSyncableAccounts && !updateTimer.running) {
@@ -73,7 +73,7 @@ SocialMediaAccountDelegate {
     }
 
     onConnectedToNetworkChanged: {
-        if (showingInActiveView) {
+        if (viewVisible) {
             if (!updateTimer.running) {
                 shortUpdateTimer.start()
             }
@@ -98,7 +98,7 @@ SocialMediaAccountDelegate {
         interval: 60000
         repeat: true
         onTriggered: {
-            if (delegateItem.showingInActiveView) {
+            if (delegateItem.viewVisible) {
                 delegateItem.sync()
             } else {
                 stop()

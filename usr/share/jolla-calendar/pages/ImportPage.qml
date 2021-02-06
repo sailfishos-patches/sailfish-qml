@@ -1,3 +1,10 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 - 2019 Jolla Ltd.
+** Copyright (C) 2020 Open Mobile Platform LLC.
+**
+****************************************************************************/
+
 import QtQuick 2.0
 import org.nemomobile.calendar 1.0
 import Sailfish.Silica 1.0
@@ -5,25 +12,28 @@ import Sailfish.Calendar 1.0
 import org.nemomobile.notifications 1.0 as SystemNotifications
 
 Dialog {
+    // Set one of fileName or icsString, but not both
     property alias fileName: importModel.fileName
+    property alias icsString: importModel.icsString
 
     width: parent.width
     height: parent.height
     objectName: "ImportPage"
+    canAccept: !importModel.error
     onAccepted: {
         var importSuccess = importModel.importToNotebook(query.targetUid)
-        systemNotification.previewBody = importSuccess
-        //% "Import successful"
-                ? qsTrId("jolla-calendar-import-successfull")
-                  //% "Import failed"
-                : qsTrId("jolla-calendar-import-failed")
+        systemNotification.body = importSuccess
+                ? //% "Import successful"
+                  qsTrId("jolla-calendar-import-successfull")
+                : //% "Import failed"
+                  qsTrId("jolla-calendar-import-failed")
         systemNotification.publish()
     }
 
     SystemNotifications.Notification {
         id: systemNotification
 
-        icon: "icon-lock-calendar"
+        appIcon: "icon-lock-calendar"
         isTransient: true
     }
 
@@ -41,6 +51,7 @@ Dialog {
         id: calendarPicker
 
         CalendarPicker {
+            hideExcludedCalendars: true
             onCalendarClicked: {
                 query.targetUid = uid
                 selectedCalendarUid = uid
@@ -72,12 +83,13 @@ Dialog {
 
         header: Item {
             width: listView.width
-            height: calendarSelector.height + Theme.paddingLarge
+            height: (importModel.error ? errorLabel.height : calendarSelector.height) + Theme.paddingLarge
             onHeightChanged: listView.contentY = -height
 
             CalendarSelector {
                 id: calendarSelector
 
+                visible: !importModel.error
                 anchors.bottom: parent.bottom
                 //: Shown as placeholder for non-existant notebook, e.g. when default notebook has been deleted
                 //% "(none)"
@@ -88,6 +100,21 @@ Dialog {
                 color: listView.color
 
                 onClicked: pageStack.animatorPush(calendarPicker, {"selectedCalendarUid": query.targetUid})
+            }
+            Label {
+                id: errorLabel
+
+                visible: importModel.error
+                anchors.bottom: parent.bottom
+                text: fileName !== ""
+                      //% "Error importing calendar file: %1"
+                      ? qsTrId("calendar-error_importing_file").arg(fileName)
+                      // Duplicated string from above: "Import failed"
+                      : qsTrId("jolla-calendar-import-failed")
+                color: Theme.highlightColor
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2*x
+                wrapMode: Text.Wrap
             }
         }
 

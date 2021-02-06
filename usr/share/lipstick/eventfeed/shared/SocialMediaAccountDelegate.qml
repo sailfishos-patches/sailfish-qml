@@ -1,44 +1,42 @@
 /****************************************************************************
-**
-** Copyright (C) 2014-2015 Jolla Ltd.
-** Contact: Antti Seppälä <antti.seppala@jollamobile.com>
-**
-****************************************************************************/
+ **
+ ** Copyright (C) 2014 - 2019 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0 as Private
 import Sailfish.Lipstick 1.0
 import Nemo.Connectivity 1.0
 import Nemo.DBus 2.0
 import org.nemomobile.socialcache 1.0
 import QtQml.Models 2.1
-import org.nemomobile.lipstick 0.1
 
-Item {
-    id: item
+NotificationGroupItem {
+    id: root
 
-    property alias headerText: headerItem.name
+    property alias headerText: groupHeader.name
     property string headerIcon
-    property alias showHeaderItemCount: headerItem.showTotalItemCount
+    property alias showRemainingCount: expansionToggle.showRemainingCount
     property alias delegate: delegateModel.delegate
     property alias model: delegateModel.model
+    property alias boundedModel: delegateModel
 
     property alias socialNetwork: syncHelper.socialNetwork
     property alias dataType: syncHelper.dataType
     property var services: []
 
-    property bool showingInActiveView
+    property bool viewVisible
     // ALL other connectedToNetwork properties in other pages
     // are bound to this property, directly or indirectly.
     property alias connectedToNetwork: connectionHelper.online
     property int refreshTimeCount: 1 // Increment this to trigger feed items to refresh times.
 
-    // This is bound to "collapsed" value in lipstick-jolla-home and notifies us when user-expanded
-    // lists should be automatically collapsed
-    property bool collapsed: true
     property SocialImageCache downloader
     property string providerName
     property Item subviewModel
-    property int animationDuration
 
     property int expansionThreshold: 5
     property int expansionMaximum: 10
@@ -48,31 +46,35 @@ Item {
     property alias mainContentHeight: listView.contentHeight
     property bool removeAllInProgress
     property bool hasSyncableAccounts
+    property bool hasOnlyOneItem: model.count === 1
+    property alias contentLeftMargin: groupHeader.textLeftMargin
+    property bool collapsed: true
 
     property real eventsColumnMaxWidth
+    property int __account_delegate
 
     signal headerClicked()
     signal expandedClicked()
     signal expanded(int itemPosY)
 
     function findMatchingRemovableItems(filterFunc, matchingResults) {
-        if (!userRemovable || !filterFunc(headerItem)) {
+        if (!userRemovable || !filterFunc(groupHeader)) {
             return
         }
-        matchingResults.push(headerItem)
+        matchingResults.push(groupHeader)
         var yPos = listView.contentY
         while (yPos < listView.contentHeight) {
             var item = listView.itemAt(0, yPos)
             if (!item) {
                 break
             }
-            if (item.userRemovable === true) {
+            if (root.userRemovable === true) {
                 if (!filterFunc(item)) {
                     return false
                 }
                 matchingResults.push(item)
             }
-            yPos += item.height
+            yPos += root.height
         }
     }
 
@@ -88,13 +90,12 @@ Item {
     property QtObject _addAnimation
     property QtObject _removeAnimation
     property bool _needToSync
-    property bool _manuallyExpanded
     property var _syncableAccountProfiles: []
 
-    width: parent.width
     height: model.count == 0 ? 0 : expansionToggle.y + expansionToggle.height
     opacity: 0
     enabled: model.count > 0
+    draggable: groupHeader.draggable
 
     Component.onCompleted: {
         // prefill view with initial content
@@ -104,16 +105,12 @@ Item {
         }
     }
 
+    onSwipedAway: if (model) model.clear()
+
     onConnectedToNetworkChanged: {
         if (connectedToNetwork && _needToSync) {
             _needToSync = false
             sync()
-        }
-    }
-
-    onCollapsedChanged: {
-        if (!collapsed) {
-            item._manuallyExpanded = false
         }
     }
 
@@ -122,8 +119,8 @@ Item {
         dataType: SocialSync.Posts
         onLoadingChanged: {
             if (!loading) {
-                if (item.model) {
-                    item.model.refresh()
+                if (root.model) {
+                    root.model.refresh()
                 }
             }
         }
@@ -134,32 +131,31 @@ Item {
     }
 
     NotificationGroupHeader {
-        id: headerItem
+        id: groupHeader
 
         property int pauseBeforeRemoval
 
-        indicator.iconSource: item.headerIcon
-        indicator.busy: syncHelper.loading
+        onTriggered: headerClicked()
 
-        memberCount: totalItemCount
-        totalItemCount: item.model.count
-        userRemovable: item.userRemovable
-        animationDuration: item.animationDuration
+        iconSource: root.headerIcon
+        icon.opacity: syncHelper.loading ? Theme.opacityHigh : 1.0
+        Behavior on icon.opacity { FadeAnimator {} }
 
-        onRemoveRequested: {
-            if (item.model) {
-                item.model.clear()
-            }
-        }
+        userRemovable: root.userRemovable
+        extraBackgroundPadding: root.hasOnlyOneItem
+        groupHighlighted: root.highlighted
+        enabled: !housekeeping
 
-        onTriggered: {
-            headerClicked()
+        BusyIndicator {
+            anchors.verticalCenter: parent.verticalCenter
+            size: BusyIndicatorSize.ExtraSmall
+            running: syncHelper.loading
         }
     }
 
     ListView {
         id: listView
-        anchors.top: headerItem.bottom
+        anchors.top: groupHeader.bottom
         width: parent.width
         height: Screen.height * 1000 // Ensures the view is fully populated without needing to bind height: contentHeight
         model: delegateModel
@@ -168,18 +164,20 @@ Item {
 
     NotificationExpansionButton {
         id: expansionToggle
-        y: headerItem.height + listView.contentHeight
+        y: groupHeader.height + listView.contentHeight
 
-        title: !item._manuallyExpanded ? defaultTitle : item.expandedLabel
-        expandable: item.model.count > expansionThreshold
+        title: root.collapsed ? defaultTitle : root.expandedLabel
+        expandable: root.model.count > expansionThreshold
+        enabled: expandable && !groupHeader.drag.active
+        remainingCount: root.model.count - delegateModel.count
 
         onClicked: {
-            if (!item._manuallyExpanded) {
-                var itemPosY = listView.contentHeight + headerItem.height - Theme.paddingLarge
-                item._manuallyExpanded = true
-                item.expanded(itemPosY)
+            if (root.collapsed) {
+                var itemPosY = listView.contentHeight + groupHeader.height - Theme.paddingLarge
+                root.collapsed = false
+                root.expanded(itemPosY)
             } else {
-                item.expandedClicked()
+                root.expandedClicked()
             }
         }
     }
@@ -193,35 +191,35 @@ Item {
 
     BoundedModel {
         id: delegateModel
-        maximumCount: item._manuallyExpanded ? item.expansionMaximum : item.expansionThreshold
+        maximumCount: !root.collapsed ? root.expansionMaximum : root.expansionThreshold
     }
 
     // Increases refreshTimeCount once per minute, which triggers timestamp string refresh
     Timer {
         interval: 60000
         repeat: true
-        running: item.model.count > 0
-        onTriggered: item.refreshTimeCount++
+        running: root.model.count > 0
+        onTriggered: root.refreshTimeCount++
     }
 
     Connections {
-        target: item.model
+        target: root.model
         onCountChanged: {
-            if (item._prevCount <= 0 && item.model.count > 0) {
-                if (!item._addAnimation) {
-                    item._addAnimation = addAnimationComponent.createObject(item)
+            if (root._prevCount <= 0 && root.model.count > 0) {
+                if (!root._addAnimation) {
+                    root._addAnimation = addAnimationComponent.createObject(root)
                 }
-                item.enabled = true
-                item._addAnimation.start()
+                root.enabled = true
+                root._addAnimation.start()
                 refreshTimeCount++
-            } else if (item._prevCount > 0 && item.model.count == 0) {
-                if (!item._removeAnimation) {
-                    item._removeAnimation = removeAnimationComponent.createObject(item)
+            } else if (root._prevCount > 0 && root.model.count == 0) {
+                if (!root._removeAnimation) {
+                    root._removeAnimation = removeAnimationComponent.createObject(root)
                 }
-                item.enabled = false
-                item._removeAnimation.start()
+                root.enabled = false
+                root._removeAnimation.start()
             }
-            item._prevCount = item.model.count
+            root._prevCount = root.model.count
         }
     }
 
@@ -229,9 +227,8 @@ Item {
         id: addAnimationComponent
 
         NotificationAddAnimation {
-            target: item
+            target: root
             toHeight: expansionToggle.y + expansionToggle.height
-            animationDuration: item.animationDuration
         }
     }
 
@@ -240,47 +237,46 @@ Item {
 
         SequentialAnimation {
             PauseAnimation {
-                duration: headerItem.pauseBeforeRemoval
+                duration: groupHeader.pauseBeforeRemoval
             }
             NotificationRemoveAnimation {
-                target: item
-                animationDuration: item.animationDuration
+                target: root
             }
         }
     }
 
     function resetHasSyncableAccounts() {
         var accountIds = []
-        item._syncableAccountProfiles = []
-        var accounts = subviewModel.accountList(item.providerName)
+        root._syncableAccountProfiles = []
+        var accounts = subviewModel.accountList(root.providerName)
         for (var i = 0; i < accounts.length; ++i) {
             accountIds.push(accounts[i].identifier)
             if (!subviewModel.shouldAutoSyncAccount(accounts[i].identifier)) {
                 continue
             }
-            for (var j = 0; j < item.services.length; ++j) {
-                var perAccountProfile = item.providerName + "." + item.services[j] + "-" + accounts[i].identifier
-                item._syncableAccountProfiles.push(perAccountProfile)
+            for (var j = 0; j < root.services.length; ++j) {
+                var perAccountProfile = root.providerName + "." + root.services[j] + "-" + accounts[i].identifier
+                root._syncableAccountProfiles.push(perAccountProfile)
             }
         }
         model.accountIdFilter = accountIds
-        item.hasSyncableAccounts = item._syncableAccountProfiles.length > 0
+        root.hasSyncableAccounts = root._syncableAccountProfiles.length > 0
     }
 
     function sync() {
-        if (item.connectedToNetwork) {
-            for (var i = 0; i< item._syncableAccountProfiles.length; ++i) {
-                syncInterface.call("startSync", item._syncableAccountProfiles[i])
+        if (root.connectedToNetwork) {
+            for (var i = 0; i< root._syncableAccountProfiles.length; ++i) {
+                syncInterface.call("startSync", root._syncableAccountProfiles[i])
             }
         } else {
-            if (item.model) {
+            if (root.model) {
                 // we may have old data in the database anyway.
                 // attempt to refresh the list model with that data.
-                item.model.refresh()
+                root.model.refresh()
             }
 
             // queue a sync for when (if) it succeeds.
-            item._needToSync = true
+            root._needToSync = true
         }
     }
 }

@@ -15,11 +15,7 @@ ListModel {
                 continue
             }
 
-            contact[detail.propertyName] = rightTrim(detail.value)
+            contact[detail.propertyName] = detail.value.trim()
         }
-    }
-
-    function rightTrim(s) {
-        return s.replace(/\s+$/g, '')
     }
 }

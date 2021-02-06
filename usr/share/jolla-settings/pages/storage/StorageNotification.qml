@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 – 2019 Jolla Ltd.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import Nemo.Notifications 1.0
 
 Notification {
@@ -6,11 +13,9 @@ Notification {
         isTransient = true
         summary = ""
         body = ""
-        previewSummary = ""
-        previewBody = ""
     }
 
     isTransient: true
     urgency: Notification.Critical
-    icon: "icon-s-sd-card"
+    appIcon: "icon-s-sd-card"
 }

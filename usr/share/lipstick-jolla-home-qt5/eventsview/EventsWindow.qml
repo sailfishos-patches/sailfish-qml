@@ -1,4 +1,11 @@
-﻿import QtQuick 2.1
+﻿/*
+ * Copyright (c) 2015 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
+import QtQuick 2.1
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
@@ -13,7 +20,7 @@ ApplicationWindow {
 
     Binding {
         when: window._dimScreen
-        target: Lipstick.compositor.homeLayer.dimmer
+        target: Lipstick.compositor.wallpaper.dimmer
         property: "dimmed"
         value: true
     }
@@ -23,10 +30,14 @@ ApplicationWindow {
 
         allowedOrientations: Orientation.All
 
-        property bool eventsViewVisible: Lipstick.compositor.eventsLayer.visible
+        readonly property Item lockScreenLayer: Lipstick.compositor.lockScreenLayer
+        readonly property Item eventsContainer: lockScreenLayer && lockScreenLayer.eventsContainer
+        property bool lockScreenEventsActive: Lipstick.compositor.lockScreenLayer.visible && eventsContainer && eventsContainer.isCurrentItem
+
+        property bool eventsViewVisible: Lipstick.compositor.eventsLayer.visible || lockScreenEventsActive
         onEventsViewVisibleChanged: Desktop.eventsViewVisible = eventsViewVisible
 
-        property bool eventsViewActive: (Lipstick.compositor.homeActive || Lipstick.compositor.homePeeking) && Lipstick.compositor.eventsLayer.isCurrentItem
+        property bool eventsViewActive: Lipstick.compositor.homeActive || Lipstick.compositor.homePeeking || lockScreenEventsActive
         onEventsViewActiveChanged: eventsViewActive ? eventsViewInactiveTimer.stop() : eventsViewInactiveTimer.start()
 
         property bool screenLocked: Lipstick.compositor.notificationOverviewLayer.lockScreenLocked
@@ -37,7 +48,7 @@ ApplicationWindow {
             } else {
                 screenBlankTimer.stop()
                 if (Lipstick.compositor.lockScreenLayer.exposed && !Lipstick.compositor.lockScreenLayer.peekedAt) {
-                    eventsView.shown(Lipstick.compositor.lockScreenLayer.notificationAnimation === "immediate")
+                    eventsView.shown()
                 } else {
                     eventsView.peeked()
                 }
@@ -50,13 +61,19 @@ ApplicationWindow {
 
         EventsView {
             id: eventsView
-            anchors.fill: desktop
+            anchors {
+                topMargin: -eventsView.topMargin
+                fill: desktop
+            }
+            parent: lockScreenLayer && lockScreenLayer.lockScreenEventsEnabled ? eventsContainer : desktop
         }
 
         Timer {
             id: eventsViewInactiveTimer
             interval: 5 * 60 * 1000 // 5 mins
-            onTriggered: eventsView.deactivated()
+            onTriggered: {
+                Lipstick.compositor.eventsLayer.deactivated()
+            }
         }
 
         Timer {
@@ -68,7 +85,7 @@ ApplicationWindow {
         Binding {
             target: Lipstick.compositor.eventsLayer
             property: "contentY"
-            value: eventsView.contentY
+            value: eventsView.contentY + eventsView.topMargin
         }
         Binding {
             target: Lipstick.compositor.eventsLayer

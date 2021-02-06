@@ -79,6 +79,7 @@ Page {
                     icon: model ? model.icon : ""
                     appState: model ? model.appState : ApplicationState.Normal
                     progress: model ? model.progress : 100
+                    appSize: model ? model.appSize : 0
 
                     function confirmUninstall() {
                         var uuid = model.uuid

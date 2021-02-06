@@ -24,11 +24,6 @@ BaseEditor {
 
         // Add an empty field to act as the 'Add new x' button
         addEmptyField()
-
-        if (prepopulate && detailEditors.count === 1) {
-            // Set the first field to input mode.
-            detailEditors.itemAt(detailEditors.count - 1).buttonMode = false
-        }
     }
 
     function aboutToSave() {
@@ -109,19 +104,33 @@ BaseEditor {
         showDetailLabelCombo: root.canChangeLabelType
         editor: root
 
+        buttonMode: (!root.prepopulate
+                     || (root.detailModel.count > 1 && model.index === root.detailModel.count - 1))
+                    && model.value.length === 0
+        focus: root.initialFocusIndex === model.index
+
         onModified: {
             var wasEmpty = model.value.length === 0
-            var isEmpty = value.length === 0
+            var isEmpty = value.trim().length === 0
             root.detailModel.setProperty(model.index, "value", value)
 
-            var lastItem = detailEditors.itemAt(root.detailModel.count - 1)
+            var lastRowData
             if (wasEmpty && !isEmpty) {
-                if (!lastItem.buttonMode) {
+                if (root.detailEditors.count === 1) {
                     root.addEmptyField()
+                } else {
+                    lastRowData = root.detailModel.get(root.detailModel.count - 1)
+                    if (lastRowData.value.length !== 0) {
+                        root.addEmptyField()
+                    }
                 }
-            } else if (!wasEmpty && isEmpty && model.index > 0) {
-                if (lastItem.buttonMode) {
-                    root.animateAndRemove(root.detailModel.count - 1, lastItem)
+            } else if (!wasEmpty && isEmpty) {
+                var lastItem = detailEditors.itemAt(root.detailModel.count - 1)
+                if (!lastItem.buttonMode) {
+                    lastRowData = root.detailModel.get(root.detailModel.count - 1)
+                    if (lastRowData.value.length === 0) {
+                        lastItem.buttonMode = true
+                    }
                 }
             }
 

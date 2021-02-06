@@ -74,7 +74,8 @@ SystemDialog {
 
             Expander {
                 property int availableSpace: flickable.parent.parent.height - contentBelowHeader.height
-                collapsedHeight: availableSpace < Theme.itemSizeHuge ? expandedHeight : Math.min(expandedHeight, availableSpace)
+                collapsedHeight: availableSpace < Theme.itemSizeHuge ? expandedHeight
+                                                                     : Math.min(expandedHeight, availableSpace)
                 expandedHeight: header.height
 
                 SystemDialogHeader {
@@ -89,7 +90,9 @@ SystemDialog {
 
                 Label {
                     id: descriptionLabel
-                    width: parent.width
+
+                    x: (Screen.sizeCategory < Screen.Large) ? Theme.horizontalPageMargin : 0
+                    width: header.width - 2*x
                     color: Theme.highlightColor
                     font.pixelSize: Theme.fontSizeMedium
                     wrapMode: Text.Wrap
@@ -205,7 +208,7 @@ SystemDialog {
                         onClicked: root.canceled()
 
                         //% "Cancel"
-                        text: qsTrId("lipstick-jolla-home-security-ui-bt-cancel");
+                        text: qsTrId("lipstick-jolla-home-security-ui-bt-cancel")
                     }
 
                     SystemDialogTextButton {
@@ -218,7 +221,7 @@ SystemDialog {
                         onClicked: root.confirmed()
 
                         //% "Ok"
-                        text: qsTrId("lipstick-jolla-home-security-ui-bt-ok");
+                        text: qsTrId("lipstick-jolla-home-security-ui-bt-ok")
                     }
                 }
             }

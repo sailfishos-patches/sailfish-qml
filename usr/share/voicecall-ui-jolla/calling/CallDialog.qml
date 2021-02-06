@@ -1,6 +1,7 @@
 import QtQuick 2.1
 import QtQuick.Window 2.1
 import Sailfish.Silica 1.0
+import Sailfish.Silica.Background 1.0
 import Sailfish.Lipstick 1.0
 
 SystemDialogWindow {
@@ -69,10 +70,38 @@ SystemDialogWindow {
         _persistentOpenGLContext: true
         _persistentSceneGraph: true
         cover: undefined
+        background.image: {
+            if (main.state === "incoming") {
+                return telephony.incomingCallerDetails ? telephony.incomingCallerDetails.avatar : ""
+            } else if (main.state === "silenced") {
+                return telephony.silencedCallerDetails ? telephony.silencedCallerDetails.avatar : ""
+            } else {
+                return telephony.primaryCallerDetails ? telephony.primaryCallerDetails.avatar : ""
+            }
+        }
+        background.wallpaper: background.image != "" ? wallpaperComponent : undefined
+        palette.colorScheme: background.image != "" ? Theme.LightOnDark : undefined
+
         initialPage: Component {
             CallingView {
                 onCompleteAnimation: main.hangupAnimation.complete()
                 onSetAudioRecording: main.setAudioRecording(recording)
+            }
+        }
+
+        Component {
+            id: wallpaperComponent
+
+            ThemeImageWallpaper {
+                id: avatarImage
+
+                explicitFilters: GlassBlur {
+                    kernel: Kernel.gaussian(Kernel.SampleSize9)
+
+                    repetitions: 2
+                }
+
+                sourceSize.height: Screen.width / (4 * Theme.pixelRatio)
             }
         }
     }

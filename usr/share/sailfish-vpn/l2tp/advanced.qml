@@ -49,7 +49,7 @@ Column {
     }
 
     function updateProperties(providerProperties) {
-        updateProvider('L2TP.Port', l2tpPort.text)
+        updateProvider('L2TP.Port', l2tpPort.filteredText)
         updateProvider('L2TP.ListenAddr', l2tpListenAddress.text)
         updateProvider('L2TP.AuthFile', l2tpAuthFile.path)
         updateProvider('L2TP.IPsecSaref', l2tpIPsecSaref.checked ? 'yes' : 'no')
@@ -69,10 +69,10 @@ Column {
         updateProvider('L2TP.FlowBit', l2tpFlowBit.checked ? 'yes' : 'no')
         updateProvider('L2TP.TunnelRWS', l2tpTunnelRWS.text)
         updateProvider('L2TP.Redial', l2tpRedial.checked ? 'yes' : 'no')
-        updateProvider('L2TP.RedialTimeout', l2tpRedialTimeout.text)
-        updateProvider('L2TP.MaxRedials', l2tpMaxRedials.text)
-        updateProvider('L2TP.TXBPS', l2tpTxBPS.text)
-        updateProvider('L2TP.RXBPS', l2tpRxBPS.text)
+        updateProvider('L2TP.RedialTimeout', l2tpRedialTimeout.filteredText)
+        updateProvider('L2TP.MaxRedials', l2tpMaxRedials.filteredText)
+        updateProvider('L2TP.TXBPS', l2tpTxBPS.filteredText)
+        updateProvider('L2TP.RXBPS', l2tpRxBPS.filteredText)
 
         pppdOptions.updateProperties(providerProperties)
     }
@@ -144,31 +144,38 @@ Column {
         text: qsTrId("settings_network-la-vpn_l2tp_flow_bit")
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: l2tpTunnelRWS
+        intUpperLimit: 65535
 
         //% "Window size"
         label: qsTrId("settings_network-la-vpn_l2tp_tunnel_rws")
-        inputMethodHints: Qt.ImhDigitsOnly
+        //% "Window size must be a value between 1 and 65535"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_l2tp_tunnel_rws_error") : ""
+
         nextFocusItem: l2tpTxBPS
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: l2tpTxBPS
 
         //% "Maximum receive bits/second"
         label: qsTrId("settings_network-la-vpn_l2tp_tx_bps")
-        inputMethodHints: Qt.ImhDigitsOnly
         nextFocusItem: l2tpRxBPS
+
+        //% "Maximum receiving speed must be above 0"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_l2tp_tx_bps_error") : ""
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: l2tpRxBPS
 
         //% "Maximum transmit bits/second"
         label: qsTrId("settings_network-la-vpn_l2tp_rx_bps")
-        inputMethodHints: Qt.ImhDigitsOnly
         nextFocusItem: l2tpPort
+
+        //% "Maximum transmit speed must be above 0"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_l2tp_rx_bps_error") : ""
     }
 
     SectionHeader {
@@ -177,12 +184,16 @@ Column {
         text: qsTrId("settings_network-he-vpn_l2tp_service")
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: l2tpPort
+        intLowerLimit: 1024
+        intUpperLimit: 65535
 
         //% "Listen port"
         label: qsTrId("settings_network-la-vpn_l2tp_port")
-        inputMethodHints: Qt.ImhDigitsOnly
+        //% "Listen port must be a value between 1024 and 65535"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_l2tp_port_error") : ""
+
         nextFocusItem: l2tpListenAddress
     }
 
@@ -226,21 +237,24 @@ Column {
         Behavior on opacity { NumberAnimation {}}
         height: opacity * implicitHeight
 
-        ConfigTextField {
+        ConfigIntField {
             id: l2tpRedialTimeout
+            intUpperLimit: 86400
 
             //% "Seconds before redial"
             label: qsTrId("settings_network-la-vpn_l2tp_redial_timeout")
-            inputMethodHints: Qt.ImhDigitsOnly
+            //% "Select redial waiting time between 1 and 86400 seconds"
+            description: errorHighlight ? qsTrId("settings_network_la-vpn_l2tp_redial_timeout_error") : ""
+
             nextFocusItem: l2tpMaxRedials
         }
 
-        ConfigTextField {
+        ConfigIntField {
             id: l2tpMaxRedials
+            intUpperLimit: 1024
 
             //% "Maximum attempts"
             label: qsTrId("settings_network-la-vpn_l2tp_max_redials")
-            inputMethodHints: Qt.ImhDigitsOnly
         }
     }
 

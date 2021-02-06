@@ -10,8 +10,6 @@ import Nemo.Email 0.1
 
 MessageItem {
     // About to be deleted
-    hidden: model.selected && removeRemorse.active
-
     onEmailViewerRequested: {
         pageStack.animatorPush(app.getMessageViewerComponent(), {
                                    "messageId": messageId,

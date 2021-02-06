@@ -188,6 +188,8 @@ Lesson {
 
         y: parent.height
 
+        backgroundItem: homescreen
+
         Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
     }
 
@@ -238,19 +240,25 @@ Lesson {
         Behavior on opacity { FadeAnimation { duration: 500 } }
     }
 
-    BackgroundImage {
-        id: appMainPage
+    Item {
+        id: homescreen
 
-        anchors.top: parent.top
-        parent: applicationBackground
-        source: Screen.sizeCategory >= Screen.Large
-                ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.jpg")
-                : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-app-background.jpg")
+        anchors.fill: parent
 
-        // Centering vertically
-        y: (parent.height - height)/2
+        BackgroundImage {
+            id: appMainPage
 
-        opacity: 0.0
+            anchors.top: parent.top
+            parent: applicationBackground
+            source: Screen.sizeCategory >= Screen.Large
+                    ? Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-tablet-app-background.jpg")
+                    : Qt.resolvedUrl("file:///usr/share/sailfish-tutorial/graphics/tutorial-phone-app-background.jpg")
+
+            // Centering vertically
+            y: (parent.height - height)/2
+
+            opacity: 0.0
+        }
     }
 
     SilicaFlickable {
@@ -281,28 +289,11 @@ Lesson {
 
                 anchors.fill: parent
                 currentIndex: 1
-                yOffset: -1
+                _headerBackgroundVisible: false
 
-                header: TabButtonRow {
-                    Repeater {
-                        model: [
-                            //: Title of Timers tab page showing saved timers
-                            //% "Timers"
-                            qsTrId("clock-he-timers"),
-                            //: Title of Alarms tab page showing saved alarms
-                            //% "Alarms"
-                            qsTrId("clock-he-alarms"),
-                            //: Title of Stopwatch tab page with stopwatch counter
-                            //% "Stopwatch"
-                            qsTrId("clock-he-stopwatch"),
-                        ]
-
-                        TabButton {
-                            enabled: false
-                            title: modelData
-                            tabIndex: model.index
-                        }
-                    }
+                header: TabBar {
+                    model: tabBarModel
+                    enabled: false
                 }
 
                 model: [emptyView, emptyView, emptyView]
@@ -312,13 +303,35 @@ Lesson {
                     TabItem {}
                 }
             }
+
+            ListModel {
+                id: tabBarModel
+
+                ListElement {
+                    //: Title of Timers tab page showing saved timers
+                    //% "Timers"
+                    title: qsTrId("clock-he-timers")
+                }
+                ListElement {
+                    //: Title of Alarms tab page showing saved alarms
+                    //% "Alarms"
+                    title: qsTrId("clock-he-alarms")
+                }
+                ListElement {
+                    //: Title of Stopwatch tab page with stopwatch counter
+                    //% "Stopwatch"
+                    title: qsTrId("clock-he-stopwatch")
+                }
+            }
         }
 
         Column {
             id: content
 
-            y: tabs.headerHeight - Theme.paddingLarge
-            width: parent.width
+            x: Theme.horizontalPageMargin - Theme.paddingLarge
+            width: parent.width - 2*x
+
+            Item { width: 1; height: tabs.tabBarHeight }
 
             ClockItem {
                 anchors.horizontalCenter: parent.horizontalCenter

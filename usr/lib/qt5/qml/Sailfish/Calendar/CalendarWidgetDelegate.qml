@@ -12,70 +12,57 @@ import org.nemomobile.calendar.lightweight 1.0
 BackgroundItem {
     id: delegate
 
-    property int dateLabelPixelSize     // the size of the font used for date/time labels
-    property real maxDateLabelWidth     // calculated via font metrics on long day names / time strings
-    property real dateLabelLeftMargin   // the margin to use, left of the date/time labels
+    property int pixelSize              // the size of the font used for date/time labels
+    property real maxTimeLabelWidth     // calculated via font metrics on long day names / time strings
+    property real labelLeftMargin       // the margin to use, left of the date/time labels
     property bool isToday               // whether the date of the event is today
 
-    property real dateWidth: Math.max(dateLabel.implicitWidth, timeLabel.implicitWidth)
-
-    CalendarColorBar {
-        color: model.color
+    property real timeWidth: timeLabel.implicitWidth
+    property string dateLabel: {
+        if (isToday) {
+            //% "Today"
+            return qsTrId("sailfish_calendar-la-today")
+        } else {
+            var weekday = Format.formatDate(startTime, Formatter.WeekdayNameStandalone)
+            return weekday.charAt(0).toUpperCase() + weekday.substr(1)
+        }
     }
 
-    Label {
-        id: timeLabel
+    width: parent.width
+    height: row.height + 2*Theme.paddingMedium
 
-        width: maxDateLabelWidth
-        anchors {
-            left: parent.left
-            leftMargin: dateLabelLeftMargin
-            bottom: parent.verticalCenter
-        }
-        color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-        font.pixelSize: dateLabelPixelSize
-        //% "All day"
-        text: allDay ? qsTrId("sailfish_calendar-la-all_day")
-                     : Format.formatDate(startTime, Formatter.TimeValue)
-        horizontalAlignment: Text.AlignRight
-    }
+    Row {
+        id: row
+        x: labelLeftMargin
+        width: parent.width - x
+        spacing: Theme.paddingSmall
+        anchors.verticalCenter: parent.verticalCenter
+        Label {
+            id: timeLabel
 
-    Label {
-        id: dateLabel
-
-        width: maxDateLabelWidth
-        anchors {
-            left: parent.left
-            leftMargin: dateLabelLeftMargin
-            top: timeLabel.bottom
-        }
-        color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-        font.pixelSize: dateLabelPixelSize
-        text: {
-            if (isToday) {
-                //% "Today"
-                return qsTrId("sailfish_calendar-la-today")
-            } else {
-                var weekday = Format.formatDate(startTime, Formatter.WeekdayNameStandalone)
-                return weekday.charAt(0).toUpperCase() + weekday.substr(1)
-            }
+            width: Math.max(maxTimeLabelWidth, implicitWidth)
+            color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
+            font.pixelSize: delegate.pixelSize
+            //% "All day"
+            text: allDay ? qsTrId("sailfish_calendar-la-all_day")
+                         : Format.formatDate(startTime, Formatter.TimeValue)
         }
 
-        horizontalAlignment: Text.AlignRight
-    }
-
-    Label {
-        id: nameLabel
-
-        anchors {
-            left: timeLabel.right
-            leftMargin: Theme.paddingLarge
-            verticalCenter: parent.verticalCenter
-            right: parent.right
-            rightMargin: Theme.paddingLarge
+        CalendarColorBar {
+            id: colorBar
+            color: model.color
+            height: Math.max(timeLabel.height, nameLabel.height)
         }
-        color: highlighted ? Theme.highlightColor : Theme.primaryColor
-        text: displayLabel
-        truncationMode: TruncationMode.Fade
+
+        Label {
+            id: nameLabel
+
+            width: parent.width - timeLabel.width - colorBar.width - 2*parent.spacing
+
+            color: highlighted ? Theme.highlightColor : Theme.primaryColor
+            text: displayLabel
+            truncationMode: TruncationMode.Fade
+            font.pixelSize: delegate.pixelSize
+        }
     }
 }

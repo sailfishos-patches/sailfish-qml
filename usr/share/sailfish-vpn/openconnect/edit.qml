@@ -5,10 +5,21 @@ import Sailfish.Settings.Networking 1.0
 import Sailfish.Settings.Networking.Vpn 1.0
 
 VpnPlatformEditDialog {
-                           //% "Add new OpenConnect connection"
-    title: newConnection ? qsTrId("settings_network-he-vpn_add_new_openconnect")
-                           //% "Edit OpenConnect connection"
-                         : qsTrId("settings_network-he-vpn_edit_openconnect")
+    //% "Add new OpenConnect connection"
+    newTitle: qsTrId("settings_network-he-vpn_add_new_openconnect")
+    //% "OpenConnect set up is ready!"
+    importTitle: qsTrId("settings_network-he-vpn_import_oc_success")
+    //% "Edit OpenConnect connection"
+    editTitle: qsTrId("settings_network-he-vpn_edit_openconnect")
+
+    Binding on subtitle {
+        when: newConnection && importPath
+
+        //% "Settings have been imported. You can change the settings now or later after saving the"
+        //% " connection. If username and password are required, they will be requested after turning"
+        //% " on the connection."
+        value: qsTrId("settings_network-he-vpn_import_openvpn_message")
+    }
 
     vpnType: "openconnect"
 
@@ -37,6 +48,10 @@ VpnPlatformEditDialog {
     }
 
     canAccept: {
+        if (!validSettings) {
+            return false
+        }
+
         switch (openConnectAuthType.currentIndex) {
         case 0:
             // Manually set cookie is not mandatory, it is queried with VPN agent

@@ -1,27 +1,36 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
+import Sailfish.Silica.Background 1.0
 import Sailfish.Silica.private 1.0
 
 Item {
+    property alias backgroundItem: backgroundSource.sourceItem
+
     width: parent.width
     height: parent.height
 
-    property Item _applicationWindow: __silica_applicationwindow_instance
+    ShaderEffectSource {
+        id: backgroundSource
+        visible: false
+        sourceItem: background
 
-    GlassBackgroundBase {
-        id: glassBackground
-
-
-        backgroundItem: _applicationWindow && _applicationWindow._applicationBlur
-        //	Homescreen values
-        //        color: Theme.rgba(root.palette.overlayBackgroundColor, 0.65)
-        color: Theme.rgba(Theme.overlayBackgroundColor, 0.65)
-        anchors.fill: parent
-        blending: true
+        live: false
     }
 
-    OverlayBackground.source: _applicationWindow && _applicationWindow._overlayBackgroundSource
-    OverlayBackground.capture: parent && visible
+    ThemeWallpaper {
+        id: blur
+
+        visible: false
+
+        sourceItem: backgroundSource
+    }
+
+    ThemeBackground {
+        width: parent.width
+        height: parent.height
+
+        sourceItem: blur
+    }
 
     IconGridViewBase {
         id: grid

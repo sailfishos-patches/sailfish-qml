@@ -3,6 +3,7 @@ import Sailfish.Silica 1.0
 import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
+import org.nemomobile.configuration 1.0
 import QtFeedback 5.0
 
 Page {
@@ -142,6 +143,26 @@ Page {
                 //% "Vibrates when action is made on touch screen"
                 description: qsTrId("settings_sounds-la-touch_screen_feedback_description")
                 onClicked: soundSettings.touchscreenVibrationLevel = !soundSettings.touchscreenVibrationLevel
+            }
+
+            SectionHeader {
+                //% "Do not disturb"
+                text: qsTrId("settings_sounds-la-do_not_disturb")
+            }
+            TextSwitch {
+                automaticCheck: false
+                checked: !!doNotDisturb.value
+                //% "Enable do not disturb mode"
+                text: qsTrId("settings_sounds-la-enable_do_not_disturb")
+                //% "When on, the notifications will not play sound or feedback"
+                description: qsTrId("settings_sounds-la-do_not_disturb_description")
+                onClicked: doNotDisturb.value = !doNotDisturb.value
+            }
+
+            ConfigurationValue {
+                id: doNotDisturb
+                defaultValue: false
+                key: "/lipstick/do_not_disturb"
             }
         }
         VerticalScrollDecorator {}

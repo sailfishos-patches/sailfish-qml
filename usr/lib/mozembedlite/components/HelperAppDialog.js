@@ -14,7 +14,27 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+ChromeUtils.import("resource://gre/modules/DownloadPaths.jsm");
+ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+
 Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
+
+///////////////////////////////////////////////////////////////////////////////
+//// Helper Functions
+
+/**
+ * Determines if a given directory is able to be used to download to.
+ *
+ * @param aDirectory
+ *        The directory to check.
+ * @return true if we can use the directory, false otherwise.
+ */
+function isUsableDirectory(aDirectory)
+{
+  return aDirectory.exists() && aDirectory.isDirectory() &&
+         aDirectory.isWritable();
+}
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -22,6 +42,8 @@ Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
 
 function HelperAppLauncherDialog() {
   Logger.debug("JSComp: HelperAppDialog.js loaded");
+  // Initialize data properties.
+  this.mLauncher = null;
 }
 
 HelperAppLauncherDialog.prototype = {
@@ -47,19 +69,28 @@ HelperAppLauncherDialog.prototype = {
                                   aForcePrompt) {
     Logger.debug("HelperAppLauncherDialog promptForSaveToFileAsync");
 
-    // Even if aForcePrompt is set, we don't know what to do with it, so just ignore it
-    Task.spawn(function* () {
-      let file = null;
-      try {
-        let dnldMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-        let defaultFolder = dnldMgr.userDownloadsDirectory;
+    let file = null;
+    this.mLauncher = aLauncher;
 
-        file = this.validateLeafName(defaultFolder, aDefaultFileName, aSuggestedFileExtension);
-      } finally {
-        // The file argument will be null in case any exception occurred.
-        aLauncher.saveDestinationAvailable(file);
-      }
-    }.bind(this)).catch(Cu.reportError);
+    (async () => {
+       // Retrieve the user's default download directory
+       let preferredDir = await Downloads.getPreferredDownloadsDirectory();
+       let defaultFolder = new FileUtils.File(preferredDir);
+       try {
+         file = this.validateLeafName(defaultFolder, aDefaultFileName,
+                                      aSuggestedFileExtension);
+       } catch (e) {
+         // When the default download directory is write-protected,
+         // prompt the user for a different target file.
+         Logger.warn(e);
+       }
+
+       // Check to make sure we have a valid directory, otherwise, prompt
+       if (file) {
+         // This path is taken when we have a writable default download directory.
+         aLauncher.saveDestinationAvailable(file);
+       }
+     })().catch(Cu.reportError);
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
@@ -67,66 +98,27 @@ HelperAppLauncherDialog.prototype = {
     throw Cr.NS_ERROR_NOT_AVAILABLE;
   },
 
-  validateLeafName: function hald_validateLeafName(aLocalFile, aLeafName, aFileExt) {
+  getFinalLeafName: function (aLeafName, aFileExt) {
+    return DownloadPaths.sanitize(aLeafName) ||
+        "unnamed" + (aFileExt ? "." + aFileExt : "");
+  },
+
+  validateLeafName: function hald_validateLeafName(aLocalFolder, aLeafName, aFileExt) {
     Logger.debug("HelperAppLauncherDialog validateLeafName");
 
-    if (!(aLocalFile && this.isUsableDirectory(aLocalFile)))
-      return null;
-
-    // Remove any leading periods, since we don't want to save hidden files
-    // automatically.
-    aLeafName = aLeafName.replace(/^\.+/, "");
-
-    if (aLeafName == "")
-      aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
-    aLocalFile.append(aLeafName);
-
-    this.makeFileUnique(aLocalFile);
-    return aLocalFile;
-  },
-
-  makeFileUnique: function hald_makeFileUnique(aLocalFile) {
-    Logger.debug("HelperAppLauncherDialog makeFileUnique");
-    try {
-      // Note - this code is identical to that in
-      //   toolkit/content/contentAreaUtils.js.
-      // If you are updating this code, update that code too! We can't share code
-      // here since this is called in a js component.
-      var collisionCount = 0;
-      while (aLocalFile.exists()) {
-        collisionCount++;
-        if (collisionCount == 1) {
-          // Append "(2)" before the last dot in (or at the end of) the filename
-          // special case .ext.gz etc files so we don't wind up with .tar(2).gz
-          if (aLocalFile.leafName.match(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i))
-            aLocalFile.leafName = aLocalFile.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
-          else
-            aLocalFile.leafName = aLocalFile.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
-        }
-        else {
-          // replace the last (n) in the filename with (n+1)
-          aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
-        }
-      }
-      aLocalFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+    if (!(aLocalFolder && isUsableDirectory(aLocalFolder))) {
+      throw new Components.Exception("Destination directory non-existing or permission error",
+                                     Cr.NS_ERROR_FILE_ACCESS_DENIED);
     }
-    catch (e) {
-      Logger.debug("*** HelperAppLauncherDialog exception in validateLeafName:", e);
 
-      if (e.result == Cr.NS_ERROR_FILE_ACCESS_DENIED)
-        throw e;
+    aLeafName = this.getFinalLeafName(aLeafName, aFileExt);
+    aLocalFolder.append(aLeafName);
 
-      if (aLocalFile.leafName == "" || aLocalFile.isDirectory()) {
-        aLocalFile.append("unnamed");
-        if (aLocalFile.exists())
-          aLocalFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-      }
-    }
-  },
+    // The following assignment can throw an exception, but
+    // is now caught properly in the caller of validateLeafName.
+    var createdFile = DownloadPaths.createNiceUniqueFile(aLocalFolder);
 
-  isUsableDirectory: function hald_isUsableDirectory(aDirectory) {
-    Logger.debug("HelperAppLauncherDialog isUsableDirectory");
-    return aDirectory.exists() && aDirectory.isDirectory() && aDirectory.isWritable();
+    return createdFile;
   },
 
   _notify: function hald_notify(aLauncher, aCallback) {

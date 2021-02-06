@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 – 2019 Jolla Ltd.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.notifications 1.0
@@ -27,7 +34,7 @@ Column {
         case OfonoSimManager.UnknownError:
             //: Indicates that the entered PIN was not accepted due to a SIM error.
             //% "PIN entry error"
-            notification.previewBody = qsTrId("settings_pin-la-notify_general_error")
+            notification.body = qsTrId("settings_pin-la-notify_general_error")
             notification.publish()
             pageStack.pop()
             _pinInputPage = null
@@ -40,7 +47,7 @@ Column {
             if (_pinInputPage.pinAction === "change") {
                 //: Indicates that the user entered an incorrect PIN.
                 //% "Incorrect PIN code"
-                notification.previewBody = qsTrId("settings_pin-la-notify_incorrect_pin")
+                notification.body = qsTrId("settings_pin-la-notify_incorrect_pin")
                 notification.publish()
             }
             _pinInputPage.retry()
@@ -49,7 +56,7 @@ Column {
             if (_pinInputPage.pinAction === "change") {
                 //: Indicates that the PIN was successfully changed.
                 //% "PIN code changed"
-                notification.previewBody = qsTrId("settings_pin-la-notify_pin_changed")
+                notification.body = qsTrId("settings_pin-la-notify_pin_changed")
                 notification.publish()
             }
             pageStack.pop()
@@ -125,6 +132,6 @@ Column {
 
         isTransient: true
         urgency: Notification.Critical
-        icon: "icon-system-resources"
+        appIcon: "icon-system-resources"
     }
 }

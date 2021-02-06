@@ -6,6 +6,7 @@ import MeeGo.Connman 0.2
 import com.jolla.settings.system 1.0
 import Nemo.Configuration 1.0
 import org.nemomobile.systemsettings 1.0
+import Sailfish.AccessControl 1.0
 
 Page {
     id: mainPage
@@ -15,6 +16,7 @@ Page {
     property date pendingResetTime
     property var resetCellularServices
     property bool pageReady: sailfishSimManager.ready || status == PageStatus.Active
+    readonly property bool phoneUser: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-phone")
     onPageReadyChanged: if (pageReady) pageReady = true // remove binding
 
     function clearCounter() {
@@ -102,6 +104,7 @@ Page {
                     }
 
                     SectionHeader {
+                        visible: mainPage.phoneUser
                         text: mobileDataRepeater.count == 1
                                 //% "Mobile data"
                               ? qsTrId("settings_network-he-mobile_data")
@@ -110,6 +113,7 @@ Page {
 
                     SimSectionPlaceholder {
                         id: simPlaceholder
+                        visible: mainPage.phoneUser
                         modemPath: modelData
                         multiSimManager: sailfishSimManager
                     }
@@ -146,7 +150,7 @@ Page {
                             }
                         }
 
-                        active: !simPlaceholder.enabled
+                        active: !simPlaceholder.enabled && mainPage.phoneUser
                         opacity: 1 - simPlaceholder.opacity
                         onLoaded: {
                             item.simPresent = Qt.binding(function() { return ofonoSimManager.present })

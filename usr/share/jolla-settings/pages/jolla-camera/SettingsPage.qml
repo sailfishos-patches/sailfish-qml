@@ -4,16 +4,11 @@ import Sailfish.Silica 1.0
 import com.jolla.camera 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.systemsettings 1.0
+import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 import Sailfish.Policy 1.0
 
-Page {
-    onStatusChanged: {
-        if (status == PageStatus.Activating) {
-            Settings.updateLocation()
-        }
-    }
-
+ApplicationSettings {
     ConfigurationGroup {
         id: globalSettings
 
@@ -46,6 +41,8 @@ Page {
         }
     }
 
+    LocationSettings { id: locationSettings }
+
     function resolutionText(ratioHorizontal, ratioVertical, resolution) {
         var dimensions = resolution.split("x")
         var megaPixels = dimensions.length == 2 ? (Math.round((dimensions[0] * dimensions[1]) / 1000000))
@@ -55,170 +52,168 @@ Page {
         return qsTrId("camera_settings-me-resolution_template").arg(ratioHorizontal).arg(ratioVertical).arg(megaPixels)
     }
 
-    SilicaFlickable {
-        id: panel
+    DisabledByMdmBanner {
+        active: !AccessPolicy.cameraEnabled
+    }
 
-        width: parent.width
-        height: parent.height
+    IconTextSwitch {
+        automaticCheck: false
+        icon.source: "image://theme/icon-m-gps"
+        //: Save GPS coordinates in photos.
+        //% "Save location"
+        text: qsTrId("camera_settings-la-save_location")
+        //% "Save current GPS coordinates in captured photos."
+        description: qsTrId("camera_settings-la-save_location_description")
+        enabled: AccessPolicy.cameraEnabled
+        checked: Settings.global.saveLocationInfo
+        onClicked: Settings.global.saveLocationInfo = !Settings.global.saveLocationInfo
+    }
 
-        contentHeight: column.height
+    IconTextSwitch {
+        automaticCheck: false
+        icon.source: "image://theme/icon-m-qr"
+        //% "Enable QR-code recognition"
+        text: qsTrId("camera_settings-la-enable_qr")
+        //% "Detect QR-code via camera."
+        description: qsTrId("camera_settings-la-detect_qr_description")
+        enabled: AccessPolicy.cameraEnabled
+        checked: Settings.global.qrFilterEnabled
+        onClicked: Settings.global.qrFilterEnabled = !Settings.global.qrFilterEnabled
+    }
 
-        VerticalScrollDecorator {}
+    Label {
+        //% "Positioning is turned off. Enable it in Settings | Connectivity | Location"
+        text: qsTrId("camera_settings-la-enable_location")
+        wrapMode: Text.Wrap
+        x: Theme.horizontalPageMargin
+        width: parent.width - 2*x
+        color: Theme.highlightColor
+        font.pixelSize: Theme.fontSizeSmall
+        visible: !locationSettings.locationEnabled
+    }
 
-        Column {
-            PageHeader {
-                //% "Camera"
-                title: qsTrId("camera_settings-ph-camera")
-            }
+    ComboBox {
+        id: storageCombo
+        readonly property int storageStatus: Settings.storagePathStatus
+        readonly property string storagePath: Settings.storagePath
 
-            id: column
-            width: parent.width
+        function updateCurrentIndex() {
+            if (!partitions.externalStoragesPopulated)
+                return
 
-            DisabledByMdmBanner {
-                active: !AccessPolicy.cameraEnabled
-            }
-
-            IconTextSwitch {
-                automaticCheck: false
-                icon.source: "image://theme/icon-m-gps"
-                //: Save GPS coordinates in photos.
-                //% "Save location"
-                text: qsTrId("camera_settings-la-save_location")
-                description: Settings.locationEnabled
-                            //% "Save current GPS coordinates in captured photos."
-                            ? qsTrId("camera_settings-la-save_location_description")
-                            //% "Positioning is turned off.  Enable it in Settings | Connectivity | Location"
-                            : qsTrId("camera_settings-la-enable_location")
-
-                enabled: Settings.locationEnabled && AccessPolicy.cameraEnabled
-                checked: Settings.global.saveLocationInfo && Settings.locationEnabled
-                onClicked: Settings.global.saveLocationInfo = !Settings.global.saveLocationInfo
-            }
-
-            ComboBox {
-                id: storageCombo
-                readonly property int storageStatus: Settings.storagePathStatus
-                readonly property string storagePath: Settings.storagePath
-
-                function updateCurrentIndex() {
-                    if (!partitions.externalStoragesPopulated)
-                        return
-
-                    for (var i = 0; i < menu.children.length; ++i) {
-                        var item = menu.children[i]
-                        if (item.hasOwnProperty("__silica_menuitem") && item.visible && item.mountPath == Settings.storagePath) {
-                            currentIndex = i
-                            currentItem = item
-                            return
-                        }
-                    }
-                    currentIndex = -1
-                }
-
-                onStorageStatusChanged: updateCurrentIndex()
-                onStoragePathChanged: updateCurrentIndex()
-                Component.onCompleted: updateCurrentIndex()
-
-                //% "Storage"
-                label: qsTrId("camera_settings-cb-storage")
-                enabled: AccessPolicy.cameraEnabled
-                menu: ContextMenu {
-                    MenuItem {
-                        property string mountPath: ""
-                        //% "Device memory"
-                        text: qsTrId("camera_settings-la-device_memory")
-                        onClicked: Settings.storagePath = ""
-                    }
-                    MenuItem {
-                        // This is a placeholder for a card that was previously selected, but is no longer inserted
-                        property string mountPath: Settings.storagePath
-                        text: qsTrId("camera_settings-la-memory_card_not_inserted")
-                        visible: partitions.externalStoragesPopulated && partitions.count == 0 && Settings.storagePath !== ""
-                        onVisibleChanged: storageCombo.updateCurrentIndex()
-                        opacity: Theme.opacityLow
-                    }
-                    Repeater {
-                        model: partitions
-                        delegate: MenuItem {
-                            property string mountPath: model.mountPath
-                            onMountPathChanged: storageCombo.updateCurrentIndex()
-                            enabled: model.status === PartitionModel.Mounted && model.devicePath !== ""
-                            text: model.status === PartitionModel.Mounted
-                                    //: the parameter is the capacity of the memory card, e.g. "4.2 GB"
-                                    //% "Memory card %1"
-                                  ? qsTrId("camera_settings-la-memory_card").arg(Format.formatFileSize(model.bytesAvailable))
-                                  : model.devicePath !== ""
-                                        //% "Memory card not mounted"
-                                      ? qsTrId("camera_settings-la-unmounted_memory_card")
-                                        //% "Memory card not inserted"
-                                      : qsTrId("camera_settings-la-memory_card_not_inserted")
-                            onClicked: Settings.storagePath = model.mountPath
-                        }
-                    }
+            for (var i = 0; i < menu.children.length; ++i) {
+                var item = menu.children[i]
+                if (item.hasOwnProperty("__silica_menuitem") && item.visible && item.mountPath == Settings.storagePath) {
+                    currentIndex = i
+                    currentItem = item
+                    return
                 }
             }
+            currentIndex = -1
+        }
 
-            Label {
-                //% "The selected storage is not available. Device memory will be used instead."
-                text: qsTrId("camera_settings-la-unwritable")
-                visible: Settings.storagePathStatus == Settings.Unavailable
-                x: Theme.horizontalPageMargin
-                width: parent.width - x*2
-                color: Theme.secondaryColor
-                font.pixelSize: Theme.fontSizeExtraSmall
-                wrapMode: Text.Wrap
+        onStorageStatusChanged: updateCurrentIndex()
+        onStoragePathChanged: updateCurrentIndex()
+        Component.onCompleted: updateCurrentIndex()
+
+        //% "Storage"
+        label: qsTrId("camera_settings-cb-storage")
+        enabled: AccessPolicy.cameraEnabled
+        menu: ContextMenu {
+            MenuItem {
+                property string mountPath: ""
+                //% "Device memory"
+                text: qsTrId("camera_settings-la-device_memory")
+                onClicked: Settings.storagePath = ""
             }
-
-            SectionHeader {
-                //% "Back camera"
-                text: qsTrId("camera-ph-back-camera")
-                opacity: AccessPolicy.cameraEnabled ? 1.0 : Theme.opacityLow
+            MenuItem {
+                // This is a placeholder for a card that was previously selected, but is no longer inserted
+                property string mountPath: Settings.storagePath
+                text: qsTrId("camera_settings-la-memory_card_not_inserted")
+                visible: partitions.externalStoragesPopulated && partitions.count == 0 && Settings.storagePath !== ""
+                onVisibleChanged: storageCombo.updateCurrentIndex()
+                opacity: Theme.opacityLow
             }
-
-            ResolutionComboBox {
-                settings: primaryImageSettings
-
-                //% "Photo resolution"
-                label: qsTrId("camera_settings-cb-photo-resolution")
-                enabled: AccessPolicy.cameraEnabled
-                menu: ContextMenu {
-                    ResolutionComboItem {
-                        text: resolutionText(16, 9, imageResolution)
-                        imageResolution: primaryImageSettings.imageResolution_16_9
-                        viewfinderResolution: primaryImageSettings.viewfinderResolution_16_9
-
-                    }
-                    ResolutionComboItem {
-                        text: resolutionText(4, 3, imageResolution)
-                        imageResolution: primaryImageSettings.imageResolution_4_3
-                        viewfinderResolution: primaryImageSettings.viewfinderResolution_4_3
-                    }
+            Repeater {
+                model: partitions
+                delegate: MenuItem {
+                    property string mountPath: model.mountPath
+                    onMountPathChanged: storageCombo.updateCurrentIndex()
+                    enabled: model.status === PartitionModel.Mounted && model.devicePath !== ""
+                    text: model.status === PartitionModel.Mounted
+                            //: the parameter is the capacity of the memory card, e.g. "4.2 GB"
+                            //% "Memory card %1"
+                          ? qsTrId("camera_settings-la-memory_card").arg(Format.formatFileSize(model.bytesAvailable))
+                          : model.devicePath !== ""
+                                //% "Memory card not mounted"
+                              ? qsTrId("camera_settings-la-unmounted_memory_card")
+                                //% "Memory card not inserted"
+                              : qsTrId("camera_settings-la-memory_card_not_inserted")
+                    onClicked: Settings.storagePath = model.mountPath
                 }
             }
+        }
+    }
 
-            SectionHeader {
-                //% "Front camera"
-                text: qsTrId("camera-ph-front-camera")
-                opacity: AccessPolicy.cameraEnabled ? 1.0 : Theme.opacityLow
+    Label {
+        //% "The selected storage is not available. Device memory will be used instead."
+        text: qsTrId("camera_settings-la-unwritable")
+        visible: Settings.storagePathStatus == Settings.Unavailable
+        x: Theme.horizontalPageMargin
+        width: parent.width - x*2
+        color: Theme.secondaryColor
+        font.pixelSize: Theme.fontSizeExtraSmall
+        wrapMode: Text.Wrap
+    }
+
+    SectionHeader {
+        //% "Back camera"
+        text: qsTrId("camera-ph-back-camera")
+        opacity: AccessPolicy.cameraEnabled ? 1.0 : Theme.opacityLow
+    }
+
+    ResolutionComboBox {
+        settings: primaryImageSettings
+
+        //% "Photo resolution"
+        label: qsTrId("camera_settings-cb-photo-resolution")
+        enabled: AccessPolicy.cameraEnabled
+        menu: ContextMenu {
+            ResolutionComboItem {
+                text: resolutionText(16, 9, imageResolution)
+                imageResolution: primaryImageSettings.imageResolution_16_9
+                viewfinderResolution: primaryImageSettings.viewfinderResolution_16_9
+
             }
+            ResolutionComboItem {
+                text: resolutionText(4, 3, imageResolution)
+                imageResolution: primaryImageSettings.imageResolution_4_3
+                viewfinderResolution: primaryImageSettings.viewfinderResolution_4_3
+            }
+        }
+    }
 
-            ResolutionComboBox {
-                settings: secondaryImageSettings
+    SectionHeader {
+        //% "Front camera"
+        text: qsTrId("camera-ph-front-camera")
+        opacity: AccessPolicy.cameraEnabled ? 1.0 : Theme.opacityLow
+    }
 
-                label: qsTrId("camera_settings-cb-photo-resolution")
-                enabled: AccessPolicy.cameraEnabled
-                menu: ContextMenu {
-                    ResolutionComboItem {
-                        text: resolutionText(16, 9, imageResolution)
-                        imageResolution: secondaryImageSettings.imageResolution_16_9
-                        viewfinderResolution: secondaryImageSettings.viewfinderResolution_16_9
-                    }
-                    ResolutionComboItem {
-                        text: resolutionText(4, 3, imageResolution)
-                        imageResolution: secondaryImageSettings.imageResolution_4_3
-                        viewfinderResolution: secondaryImageSettings.viewfinderResolution_4_3
-                    }
-                }
+    ResolutionComboBox {
+        settings: secondaryImageSettings
+
+        label: qsTrId("camera_settings-cb-photo-resolution")
+        enabled: AccessPolicy.cameraEnabled
+        menu: ContextMenu {
+            ResolutionComboItem {
+                text: resolutionText(16, 9, imageResolution)
+                imageResolution: secondaryImageSettings.imageResolution_16_9
+                viewfinderResolution: secondaryImageSettings.viewfinderResolution_16_9
+            }
+            ResolutionComboItem {
+                text: resolutionText(4, 3, imageResolution)
+                imageResolution: secondaryImageSettings.imageResolution_4_3
+                viewfinderResolution: secondaryImageSettings.viewfinderResolution_4_3
             }
         }
     }

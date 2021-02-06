@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2012 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.alarms 1.0
@@ -46,7 +53,8 @@ ApplicationWindow {
             mainWindow.activate()
         }
 
-        function activateWindow(arg) {
+        function activateWindow(tabName) {
+            mainPage.showTab(tabName)
             mainWindow.activate()
         }
     }

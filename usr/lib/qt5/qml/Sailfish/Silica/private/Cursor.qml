@@ -57,7 +57,7 @@ Private.SilicaRectangle {
 
     visible: active && (toggled || !_blinkEnabled)
     color: palette.primaryColor
-    width: Math.floor(2 * Theme.pixelRatio)
+    width: Math.floor(Theme.dp(2))
 
     Timer {
         id: timer

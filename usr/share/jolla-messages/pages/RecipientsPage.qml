@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Messages 1.0
@@ -37,8 +44,7 @@ Page {
             presenceState: person.globalPresenceState
 
             onClicked: {
-                var pageId = person.id ? "Sailfish.Contacts.ContactCardPage" : "Sailfish.Contacts.TemporaryContactCardPage"
-                pageStack.animatorPush(pageId, { "contact": person })
+                pageStack.animatorPush("Sailfish.Contacts.ContactCardPage", { "contact": person })
             }
         }
     }

@@ -1,7 +1,7 @@
 ﻿/****************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Petri M. Gerdt <petri.gerdt@jollamobile.com>
+** Copyright (c) 2013 - 2020 Jolla Ltd.
+** Copyright (c) 2020 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -50,7 +50,7 @@ ApplicationWindow {
 
     Binding {
         when: window._dimScreen
-        target: Lipstick.compositor.homeLayer.dimmer
+        target: Lipstick.compositor.wallpaper.dimmer
         property: "dimmed"
         value: true
     }

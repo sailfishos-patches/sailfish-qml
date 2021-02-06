@@ -22,6 +22,7 @@ Item {
 
     signal clicked()
     signal enteredButtonMode()
+    signal exitedButtonMode()
 
     width: parent.width
     height: Theme.itemSizeMedium
@@ -125,6 +126,9 @@ Item {
             FadeAnimation {
                 targets: [buttonLabel, iconContainer]
                 duration: root.animationDuration / 2
+            }
+            ScriptAction {
+                script: root.exitedButtonMode()
             }
         },
         Transition {

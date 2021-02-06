@@ -1,6 +1,14 @@
+/*
+ * Copyright (c) 2015 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
+import "../backgrounds"
 
 Layer {
     id: layer
@@ -35,22 +43,24 @@ Layer {
 
     onClosed: {
         _closeDeferred = false
-        switchTimer.execute = false
 
         if (closing || closingToHome || (_effectiveDelaySwitch && !locked
-                    && contentItem.children.length > (window ? 1 : 0))) {
+                    && contentItem.children.length > (window && window != _ignoreCloseFor ? 1 : 0))) {
             // If the other PeekArea is closing or the window switch is being deferred; remove the
             // outgoing window from the scene but do the actual close later.
             if (window && window != _ignoreCloseFor) {
                 _closeDeferred = true
                 window.parent = null
                 window.exposed = false
+            } else {
+                switchTimer.execute = false
             }
             return
         }
 
         var previousWindow = window
 
+        switchTimer.execute = false
         showAnimation.cancel()
         opacity = 0
 
@@ -326,6 +336,19 @@ Layer {
                 layer.cacheWindow(layer.window)
             }
         }
+    }
+
+    underlayItem.children: ApplicationBackground {
+        visible: layer.renderBackground
+        x: layer.backgroundRect.x
+        y: layer.backgroundRect.y
+        width: layer.backgroundRect.width
+        height: layer.backgroundRect.height
+
+        sourceItem: layer.window
+                ? layer.window.wallpaper || applicationWallpaperItem
+                : applicationWallpaperItem
+        applicationProperties: layer.window ? layer.window.backgroundProperties : undefined
     }
 
     SequentialAnimation {

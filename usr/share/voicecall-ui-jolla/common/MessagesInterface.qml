@@ -1,9 +1,9 @@
 import org.nemomobile.dbus 2.0
 
 DBusInterface {
-    service: "org.nemomobile.qmlmessages"
+    service: "org.sailfishos.Messages"
     path: "/"
-    iface: "org.nemomobile.qmlmessages"
+    iface: "org.sailfishos.Messages"
 
     function startSMS(phoneNumber) {
         typedCall('startSMS', [

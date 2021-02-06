@@ -23,6 +23,7 @@ SimPinBackground {
     readonly property bool _needsPin: ofonoSimManager.simPresent &&
                                       (ofonoSimManager.pinRequired === OfonoSimManager.SimPin ||
                                        ofonoSimManager.pinRequired === OfonoSimManager.SimPuk)
+    property bool emergency
 
     signal pinConfirmed
     signal skipped
@@ -118,6 +119,8 @@ SimPinBackground {
         SimPinWrapper {
             objectName: "pinQuery"
             SimPinQuery {
+                id: pinQuery
+
                 modemPath: root.modemPath
                 showCancelButton: true
                 showBackgroundGradient: false
@@ -136,6 +139,11 @@ SimPinBackground {
                 onSimPermanentlyLocked: {
                     clear()
                     root.replace(pinLockedNoticeComponent)
+                }
+                Binding {
+                    target: root
+                    property: "emergency"
+                    value: pinQuery.emergency
                 }
             }
         }

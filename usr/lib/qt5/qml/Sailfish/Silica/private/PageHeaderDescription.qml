@@ -36,14 +36,16 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 Label {
-    width: parent.width - parent.leftMargin - parent.rightMargin
+    width: Math.min(implicitWidth, parent.width - parent.leftMargin - parent.rightMargin)
     anchors {
         top: parent._titleItem.bottom
         right: parent.right
-        rightMargin: parent.rightMargin
+        rightMargin: parent.descriptionRightMargin
     }
     font.pixelSize: Theme.fontSizeSmall
-    color: highlighted ? palette.secondaryColor : palette.secondaryHighlightColor
+    color: parent.interactive
+           ? (highlighted ? palette.secondaryHighlightColor : palette.secondaryColor)
+           : (highlighted ? palette.secondaryColor : palette.secondaryHighlightColor)
     horizontalAlignment: wrapMode === Text.NoWrap && implicitWidth > width ? Text.AlignLeft : Text.AlignRight
     truncationMode: TruncationMode.Fade
     text: pageHeader.description

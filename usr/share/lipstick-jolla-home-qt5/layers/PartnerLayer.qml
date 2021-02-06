@@ -1,10 +1,17 @@
+/*
+ * Copyright (c) 2015 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.2
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
 import Sailfish.Lipstick 1.0
-import "../compositor"
+import "../backgrounds"
 import "../switcher"
 
 PannableLayer {
@@ -298,7 +305,7 @@ PannableLayer {
             Item {
                 anchors.fill: parent
 
-                GlassBackground {
+                ApplicationBackground {
                     anchors.fill: parent
                     radius: Theme.paddingSmall
                     scale: partnerSpace.scale

@@ -29,6 +29,7 @@ SilicaFlickable {
     property CurrentBluetoothAudioDevice bluetoothAudio
     property bool bluetoothAudioAvailable: bluetoothAudio != null && bluetoothAudio.available
     property bool keypadOpen: inCallKeypad && inCallKeypad.open
+    property QtObject caller: telephony.primaryCall ? telephony.primaryCallerDetails : telephony.silencedCallerDetails
 
     signal completeAnimation()
     signal setAudioRecording(bool recording)
@@ -56,6 +57,29 @@ SilicaFlickable {
                 bluetoothAudio = null
             }
             dtmfLabelTimer.stop()
+
+            // Dismiss the notice about premium or toll-free number
+            Notices._dismissCurrent()
+        }
+
+        // Show a notice when calling a premium-rate or toll-free phone number
+        if (callState === "alerting") {
+            // Position the notice above the end call button
+            var endCallPos = root.mapFromItem(endCallButton, 0, 0)
+            var noticeVerticalCenterOffset = -(root.height - endCallPos.y)
+            var noticeText = ""
+
+            if (phoneNumberParser.numberType === PhoneNumber.NumberTypePremium) {
+                //% "Calling this number may cost you extra."
+                noticeText = qsTrId("voicecall-no-incall_premium")
+            } else if (phoneNumberParser.numberType === PhoneNumber.NumberTypeTollFree) {
+                //% "This number is toll-free."
+                noticeText = qsTrId("voicecall-no-incall_tollfree")
+            }
+
+            if (noticeText !== "") {
+                Notices.show(noticeText, Notice.Long, Notice.Bottom, 0, noticeVerticalCenterOffset)
+            }
         }
     }
 
@@ -103,6 +127,12 @@ SilicaFlickable {
     }
 
     Behavior on opacity { FadeAnimator { duration: 400 } }
+
+    PhoneNumber {
+        id: phoneNumberParser
+        defaultRegionCode: telephony.country
+        rawPhoneNumber: caller ? caller.remoteUid : ""
+    }
 
     MouseArea {
         function dismiss() {
@@ -507,11 +537,11 @@ SilicaFlickable {
 
                 isTransient: true
                 urgency: Notification.Critical
-                icon: "icon-system-warning"
+                appIcon: "icon-system-warning"
                 //: System notification when MDM policy prevents microphone usage.
                 //: %1 is an operating system name without the OS suffix
                 //% "Microphone disabled by %1 Device Manager"
-                previewBody: qsTrId("voicecall-la-microphone_disallowed_by_policy")
+                body: qsTrId("voicecall-la-microphone_disallowed_by_policy")
                     .arg(aboutSettings.baseOperatingSystemName)
             }
         }

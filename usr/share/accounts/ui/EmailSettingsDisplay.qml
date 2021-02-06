@@ -149,7 +149,7 @@ Column {
             account.setConfigurationValue(_defaultServiceName, "crypto/signByDefault", false)
         }
 
-        if (settings.serverTypeIndex === 0) {
+        if (settings && settings.serverTypeIndex === 0) {
             account.setConfigurationValue("", "folderSyncPolicy", folderSyncSettings.policy)
         }
     }

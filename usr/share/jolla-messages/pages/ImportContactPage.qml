@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Messages 1.0
@@ -16,16 +23,16 @@ Page {
                 //% "Save"
                 text: qsTrId("messages-me-save_contact")
                 onClicked: {
-                    var previewBody
+                    var body
                     if (MessageUtils.peopleModel.savePerson(contact)) {
                         //% "Saved contact"
-                        previewBody = qsTrId("messages-la-saved_contact")
+                        body = qsTrId("messages-la-saved_contact")
                         pageStack.pop()
                     } else {
                         //% "Error saving contact"
-                        previewBody = qsTrId("messages-la-error_saving_contact")
+                        body = qsTrId("messages-la-error_saving_contact")
                     }
-                    mainPage.publishNotification(previewBody)
+                    mainPage.publishNotification(body)
                 }
             }
 

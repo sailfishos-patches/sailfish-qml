@@ -121,10 +121,10 @@ Dialog {
 
             TextField {
                 id: serverAddressField
-                width: parent.width
+
                 visible: root.showAdvancedSettings
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-                placeholderText: label
+
                 //% "Server address"
                 label: qsTrId("components_accounts-la-server_address")
 

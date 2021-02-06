@@ -70,9 +70,7 @@ ContentPermissionPrompt.prototype = {
       // If the user checked "Don't ask again", make a permanent exception
       if (ret.checkedDontAsk) {
         Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION);
-      } else if (entityName == "desktopNotification") {
-        // For notifications, it doesn't make sense to grant permission once. So when the user clicks allow,
-        // we let the requestor create notifications for the session.
+      } else {
         Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION,
                                         Ci.nsIPermissionManager.EXPIRE_SESSION);
       }
@@ -81,6 +79,9 @@ ContentPermissionPrompt.prototype = {
       // If the user checked "Don't ask again", make a permanent exception
       if (ret.checkedDontAsk) {
         Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION);
+      } else {
+        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION,
+                                        Ci.nsIPermissionManager.EXPIRE_SESSION);
       }
       cachedreqs.forEach(function(r) { r.cancel(); });
     }

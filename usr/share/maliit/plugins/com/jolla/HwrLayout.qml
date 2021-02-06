@@ -3,6 +3,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0
 import com.jolla.hwr 1.0
 import com.jolla.keyboard 1.0
 import "."
@@ -76,7 +77,9 @@ KeyboardLayout {
         CharacterKey { symView: "？"; symView2: "?" }
     }
 
-    Item {
+    SilicaItem {
+        id: paletteItem
+
         height: !keyboard.inSymView ? hwrCanvas.height
                                     : hwrLayout.smallWidthMode ? 0
                                                                : hwrLayout.keyHeight
@@ -89,12 +92,12 @@ KeyboardLayout {
             width: parent.width * .75
             x: parent.width * .25
             gradient: Gradient {
-                GradientStop { position: 0; color: Theme.rgba(Theme.highlightBackgroundColor, .10) }
-                GradientStop { position: 1; color: Theme.rgba(Theme.highlightBackgroundColor, .0) }
+                GradientStop { position: 0; color: Theme.rgba(paletteItem.palette.highlightBackgroundColor, .10) }
+                GradientStop { position: 1; color: Theme.rgba(paletteItem.palette.highlightBackgroundColor, .0) }
             }
         }
 
-        HwrCanvas {
+        DrawingArea {
             id: hwrCanvas
 
             property bool trackingSymbol
@@ -106,7 +109,7 @@ KeyboardLayout {
             lineWidth: geometry.hwrLineWidth
             threshold: geometry.hwrSampleThresholdSquared
             mask: hwrLayout.smallWidthMode ? null : maskItem
-            color: Theme.highlightColor
+            color: paletteItem.palette.highlightColor
             visible: !keyboard.inSymView
 
             onArcStarted: {
@@ -282,10 +285,9 @@ KeyboardLayout {
                             width: Math.min(Math.max(gridView.width / 3, candidateText.paintedWidth), gridView.width)
                             height: Theme.itemSizeSmall
 
-                            Text {
+                            Label {
                                 id: candidateText
                                 anchors.centerIn: parent
-                                color: highlighted ? Theme.highlightColor : Theme.primaryColor
                                 font { pixelSize: Theme.fontSizeSmall; family: Theme.fontFamily }
                                 text: model.text
                             }

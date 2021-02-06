@@ -36,12 +36,12 @@ import com.meego.maliitquick 1.0
 import org.nemomobile.configuration 1.0
 import com.jolla.keyboard 1.0
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0 as SilicaPrivate
+import Sailfish.Silica.Background 1.0
 import com.jolla.keyboard.translations 1.0
 import org.nemomobile.dbus 2.0
 import org.nemomobile.systemsettings 1.0
 
-Item {
+SilicaControl {
     id: canvas
 
     KeyboardGeometry { id: geometry }
@@ -60,11 +60,31 @@ Item {
 
     property Item phraseEngine // for hwr
 
+    property string paletteJson: MInputMethodQuick.extensions.palette || ""
+    property var editorPalette: ({})
+
+    palette {
+        colorScheme: editorPalette.colorScheme
+        highlightColor: editorPalette.highlightColor
+    }
+
     Component.onCompleted: {
         activeIndex = Math.max(_layoutModel.getLayoutIndex(layoutConfig.value), 0)
     }
 
+    onPaletteJsonChanged: {
+        if (paletteJson !== "") {
+            editorPalette = JSON.parse(paletteJson)
+        }
+    }
+
     onPortraitLayoutChanged: keyboard.updateLayoutIfAllowed(true)
+
+    Timer {
+        running: canvas.paletteJson === ""
+        interval: 300
+        onTriggered: canvas.editorPalette = {}
+    }
 
     function updateIMArea() {
         if (!MInputMethodQuick.active)
@@ -304,19 +324,17 @@ Item {
             effect: ThemeEffect.PressWeak
         }
 
-        SilicaPrivate.GlassBackground {
+        KeyboardBackground {
             id: currentLayoutBackground
             width: keyboard.width + _layoutRow.switchTransitionPadding
             height: inputItems.effectiveHeight
             x: (_layoutRow.layout ? _layoutRow.layout.x : 0) - _layoutRow.switchTransitionPadding / 2
             anchors.bottom: parent.top
             opacity: inputItems.opacity
-            color: Theme.colorScheme == Theme.LightOnDark
-                   ? Theme.rgba(palette.highlightDimmerColor, 1.0)
-                   : Qt.lighter(Theme.rgba(palette.highlightDimmerColor, 1.0), 1.5)
+            transformItem: root
         }
 
-        SilicaPrivate.GlassBackground {
+        KeyboardBackground {
             id: newLayoutBackground
             width: keyboard.width + _layoutRow.switchTransitionPadding
             visible: _layoutRow.nextLoader && _layoutRow.nextLoader.item && _layoutRow.nextLoader.item.visible
@@ -324,7 +342,7 @@ Item {
             x: (visible ? _layoutRow.nextLoader.item.x : 0) - _layoutRow.switchTransitionPadding / 2
             anchors.bottom: parent.top
             opacity: inputItems.opacity
-            color: currentLayoutBackground.color
+            transformItem: root
         }
 
         Column {
@@ -343,9 +361,9 @@ Item {
             KeyboardBase {
                 id: keyboard
 
-                property color popperBackgroundColor: Theme.colorScheme === Theme.LightOnDark
-                                                      ? Qt.darker(Theme.highlightBackgroundColor, 1.2)
-                                                      : Qt.lighter(Theme.highlightBackgroundColor, 1.4)
+                property color popperBackgroundColor: canvas.palette.colorScheme === Theme.LightOnDark
+                                                      ? Qt.darker(canvas.palette.highlightBackgroundColor, 1.45)
+                                                      : Qt.lighter(canvas.palette.highlightBackgroundColor, 1.45)
                 property bool allowLayoutChanges
                 property string mode: "common"
 

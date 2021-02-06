@@ -1,3 +1,12 @@
+/****************************************************************************
+**
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2020 Open Mobile Platform LLC.
+**
+** License: Proprietary
+**
+****************************************************************************/
+
 import QtQuick 2.0
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0
@@ -60,15 +69,15 @@ SystemDialog {
     NemoNotifications.Notification {
         id: notification
 
-        previewSummary: connectionBus === "usb"
+        summary: connectionBus === "usb"
                           //% "USB storage inserted"
                         ? qsTrId("lipstick-jolla-home-la-usb_storage_inserted")
                           //% "Memory card inserted"
                         : qsTrId("lipstick-jolla-home-la-memory_card_inserted")
-        previewBody: root.title
+        body: root.title
 
         isTransient: true
-        icon: "icon-m-sd-card"
+        appIcon: "icon-m-sd-card"
         appName: Lipstick.notificationSystemApplicationName
         remoteActions: [ {
                 "name": "default",
@@ -88,7 +97,7 @@ SystemDialog {
         NemoNotifications.Notification {
             isTransient: true
             urgency: NemoNotifications.Notification.Critical
-            icon: "icon-s-sd-card"
+            appIcon: "icon-s-sd-card"
         }
     }
 
@@ -213,14 +222,14 @@ SystemDialog {
                     if (error === "org.freedesktop.UDisks2.Error.NotAuthorized" ||
                             error === "org.freedesktop.UDisks2.Error.NotAuthorizedCanObtain" ||
                             error === "org.freedesktop.UDisks2.Error.NotAuthorizedDismissed") {
-                        errorNotification.previewBody = connectionBus === "usb"
+                        errorNotification.body = connectionBus === "usb"
                                   //% "USB storage unlocking not authorized"
                                 ? qsTrId("lipstick-jolla-home-la-usb_storage_unlocking_not_authorized")
                                   //% "Memory card unlocking not authorized"
                                 : qsTrId("lipstick-jolla-home-la-memory_card_unlocking_not_authorized")
                     } else {
                         // org.freedesktop.UDisks2.Error.Failed
-                        errorNotification.previewBody = connectionBus === "usb"
+                        errorNotification.body = connectionBus === "usb"
                                   //% "USB storage unlocking not permitted"
                                 ? qsTrId("lipstick-jolla-home-la-usb_storage_unlocking_not_permitted")
                                   //% "Memory card unlocking not permitted"

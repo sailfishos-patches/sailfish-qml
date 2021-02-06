@@ -9,10 +9,11 @@ import "numberutils.js" as NumberUtils
 ExpandingDelegate {
     id: detailItem
 
+    property int constituentId
     property bool hidePhoneActions
     property bool disablePhoneActions
 
-    property bool _disableActionButtons
+    property var _constituent
 
     // Signals to tell that some contact card action item has been clicked.
     // Yep, it's a string because the phone number can start with the '+' char.
@@ -24,10 +25,9 @@ ExpandingDelegate {
     signal copyToClipboardClicked(string detailValue, variant detailParts)
     signal websiteClicked(string url)
     signal dateClicked(variant date)
-    signal editDetailClicked()
 
-    function updateDetailActions() {
-        detailActions = ModelFactory.getDetailsActions(detailType)
+    function updateDetailActions(actionMode) {
+        detailActions = ModelFactory.getDetailsActions(detailType, actionMode)
     }
 
     function handleActionClicked(actionType) {
@@ -65,15 +65,46 @@ ExpandingDelegate {
             dateClicked(detailData.date)
             break;
         case "editDetail":
-            editDetailClicked()
+            _editDetail()
             break;
         }
     }
 
-    Component.onCompleted: {
-        if (!hidePhoneActions || detailType !== "phone") {
-            updateDetailActions()
+    function _editDetail() {
+        if (constituentId === 0) {
+            return
         }
+        if (!_constituent) {
+            _constituent = ContactModelCache.unfilteredModel().personById(detailItem.constituentId)
+        }
+        if (!_constituent) {
+            console.warn("Cannot find contact for id:", constituentId)
+            return
+        }
+
+        if (_constituent.complete) {
+            _doEditDetail()
+        } else {
+            _constituent.completeChanged.connect(_doEditDetail)
+        }
+    }
+
+    function _doEditDetail() {
+        _constituent.completeChanged.disconnect(_doEditDetail)
+        var extraProperties = {
+            "focusField": {
+                "detailType": detailItem.detailType,
+                "detailIndex": detailItem.detailIndex
+            }
+        }
+        ContactsUtil.editContact(_constituent,
+                                 ContactModelCache.unfilteredModel(),
+                                 pageStack,
+                                 extraProperties)
+    }
+
+    Component.onCompleted: {
+        updateDetailActions(_actionsMode(detailType))
     }
 
     openMenuOnPressAndHold: false
@@ -94,14 +125,26 @@ ExpandingDelegate {
 
     // In case modem/SIM is ready later
     onHidePhoneActionsChanged: {
-        if (!hidePhoneActions && detailType === "phone" && detailActions.length == 0) {
-            updateDetailActions()
+        if (detailActions.length == 0) {
+            updateDetailActions(_actionsMode(detailType))
         }
     }
     onDisablePhoneActionsChanged: {
         if (detailType === "phone") {
-            _disableActionButtons = disablePhoneActions
+            updateDetailActions(_actionsMode(detailType))
         }
+    }
+
+    function _actionsMode(detailType) {
+        if (detailType === "phone") {
+            if (hidePhoneActions) {
+                return ModelFactory.ACTIONS_MODE_HIDDEN
+            } else if (disablePhoneActions) {
+                return ModelFactory.ACTIONS_MODE_DISABLED
+            }
+        }
+
+        return ModelFactory.ACTIONS_MODE_ENABLED
     }
 
     Component {

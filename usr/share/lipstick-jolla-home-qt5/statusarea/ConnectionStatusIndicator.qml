@@ -98,7 +98,7 @@ Item {
         return ""
     }
 
-    Image {
+    Icon {
         id: primaryIcon
 
         opacity: blinkIconTimer.primaryIconVisible ? 1 : 0
@@ -117,7 +117,7 @@ Item {
         anchors.bottom: parent.bottom
     }
 
-    Image {
+    Icon {
         id: secondaryIcon
         source: {
             if (wlanStatus.connected && _cellularIconId !== "")
@@ -132,7 +132,7 @@ Item {
         anchors.bottom: parent.bottom
     }
 
-    Image {
+    Icon {
         id: tetheringOverlay
         source: "image://theme/icon-status-data-share" + mobileDataIconSuffix
         visible: tethering.enabled

@@ -28,7 +28,7 @@ CharacterKey {
 
     Rectangle {
         id: background
-        color: parent.pressed ? Theme.highlightBackgroundColor : Theme.primaryColor
+        color: parent.pressed ? characterKey.palette.highlightBackgroundColor : characterKey.palette.primaryColor
         opacity: parent.pressed ? _pressedOpacity : _normalOpacity
         radius: geometry.keyRadius
 
@@ -36,7 +36,7 @@ CharacterKey {
         anchors.margins: Theme.paddingMedium
     }
 
-    Text {
+    Label {
         id: textField
         x: Theme.paddingMedium + 2
         width: parent.width - 2*x
@@ -44,7 +44,7 @@ CharacterKey {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         text: languageCode
-        color: Theme.primaryColor
+        color: palette.primaryColor
         opacity: .4
         font.pixelSize: Theme.fontSizeSmall
         fontSizeMode: Text.Fit
@@ -70,8 +70,8 @@ CharacterKey {
                 ColorAnimation {
                     target: background
                     duration: 120
-                    from: Theme.primaryColor
-                    to: Theme.highlightBackgroundColor
+                    from: characterKey.palette.primaryColor
+                    to: characterKey.palette.highlightBackgroundColor
                 }
             }
             ParallelAnimation {
@@ -84,8 +84,8 @@ CharacterKey {
                 ColorAnimation {
                     target: background
                     duration: 60
-                    from: Theme.highlightBackgroundColor
-                    to: Theme.primaryColor
+                    from: characterKey.palette.highlightBackgroundColor
+                    to: characterKey.palette.primaryColor
                 }
             }
             ParallelAnimation {
@@ -98,8 +98,8 @@ CharacterKey {
                 ColorAnimation {
                     target: background
                     duration: 120
-                    from: Theme.primaryColor
-                    to: Theme.highlightBackgroundColor
+                    from: characterKey.palette.primaryColor
+                    to: characterKey.palette.highlightBackgroundColor
                 }
             }
             ParallelAnimation {
@@ -112,8 +112,8 @@ CharacterKey {
                 ColorAnimation {
                     target: background
                     duration: 60
-                    from: Theme.highlightBackgroundColor
-                    to: Theme.primaryColor
+                    from: characterKey.palette.highlightBackgroundColor
+                    to: characterKey.palette.primaryColor
                 }
             }
 
@@ -121,7 +121,7 @@ CharacterKey {
                 script: {
                     // The above animations messed up these bindings, so re-connect them here
                     background.opacity = Qt.binding(function() { return characterKey.pressed ? _pressedOpacity : _normalOpacity })
-                    background.color = Qt.binding(function() { return characterKey.pressed ? Theme.highlightBackgroundColor : Theme.primaryColor })
+                    background.color = Qt.binding(function() { return characterKey.pressed ? characterKey.palette.highlightBackgroundColor : characterKey.palette.primaryColor })
 
                     // Destroy dynamically created transition instance
                     destroy()

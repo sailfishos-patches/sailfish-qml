@@ -52,6 +52,7 @@ FocusScope {
                 anchors {
                     left: parent.left
                     right: contactButton.left
+                    rightMargin: -Theme.paddingLarge
                     verticalCenter: parent.verticalCenter
                 }
                 inputMethodHints: Qt.ImhDialableCharactersOnly
@@ -65,8 +66,8 @@ FocusScope {
                 anchors {
                     right: parent.right
                     rightMargin: Theme.horizontalPageMargin - Theme.paddingLarge
-                    verticalCenter: textField.verticalCenter
-                    verticalCenterOffset: -Theme.paddingMedium
+                    verticalCenter: textField.top
+                    verticalCenterOffset: textField.textVerticalCenterOffset
                 }
                 icon.source: "image://theme/icon-m-add"
                 onClicked: {

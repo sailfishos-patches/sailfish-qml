@@ -11,14 +11,13 @@
 
 import QtQuick 2.1
 import Sailfish.Silica 1.0
-import "." as Browser
+import "../../shared" as Shared
 
-Browser.IconButton {
+Shared.IconButton {
     property alias label: label
     property int horizontalOffset
     // Don't pass touch events through if opaque
     enabled: opacity === 1.0
-    icon.source: "image://theme/icon-m-tabs"
     icon.anchors.horizontalCenterOffset: horizontalOffset
 
     Label {

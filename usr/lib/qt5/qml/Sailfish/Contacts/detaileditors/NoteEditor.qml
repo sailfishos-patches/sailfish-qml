@@ -47,22 +47,21 @@ MultiTypeFieldEditor {
 
             onClicked: {
                 offscreen = true
-                noteDelegate.forceActiveFocus(animationDuration)
+                inputField.forceActiveFocus()
             }
         }
 
         TextArea {
             id: inputField
 
-            width: parent.width - clearButton.width
             height: implicitHeight  // explicit binding needed to trigger height Behavior
-            textRightMargin: 0
             textLeftMargin: addFieldButton.offscreenPeekWidth
 
             activeFocusOnTab: addFieldButton.offscreen
             highlighted: activeFocus || addFieldButton.highlighted
             opacity: addFieldButton.revealedContentOpacity
             enabled: addFieldButton.offscreen
+            focus: root.initialFocusIndex === model.index
 
             text: model.value
             label: model.name
@@ -92,44 +91,33 @@ MultiTypeFieldEditor {
                     onRunningChanged: noteHeightAnimation.enabled = false
                 }
             }
-        }
 
-        FontMetrics {
-            id: fontMetrics
-            font: inputField.font
-        }
-
-        IconButton {
-            id: clearButton
-
-            x: parent.width - width - Theme.paddingMedium
-            y: fontMetrics.height/2 - height/2 + inputField.textTopMargin
-            icon.source: (inputField.activeFocus && inputField.text.length > 0)
-                         ? "image://theme/icon-m-input-clear"
-                         : "image://theme/icon-m-input-remove"
-            enabled: addFieldButton.offscreen && icon.status === Image.Ready
-            opacity: enabled ? addFieldButton.revealedContentOpacity : 0
-
-            onClicked: {
-                root.detailModel.userModified = true
-                if (inputField.text.length > 0) {
-                    noteHeightAnimation.enabled = true
-                    root.detailModel.setProperty(model.index, "value", "")
-                    inputField.text = ""
-                } else {
-                    root.detailModel.setProperty(model.index, "value", "")
-                    if (!root.animateAndRemove(model.index, noteDelegate)) {
-                        addFieldButton.offscreen = false
+            rightItem: IconButton {
+                onClicked: {
+                    root.detailModel.userModified = true
+                    if (inputField.text.length > 0) {
+                        noteHeightAnimation.enabled = true
+                        root.detailModel.setProperty(model.index, "value", "")
+                        inputField.text = ""
+                    } else {
+                        root.detailModel.setProperty(model.index, "value", "")
+                        if (!root.animateAndRemove(model.index, noteDelegate)) {
+                            addFieldButton.offscreen = false
+                        }
                     }
                 }
+
+                width: icon.width
+                height: icon.height
+
+                icon.source: inputField.text.length > 0
+                             ? "image://theme/icon-splus-clear"
+                             : "image://theme/icon-splus-remove"
+                enabled: addFieldButton.offscreen
+                opacity: enabled ? addFieldButton.revealedContentOpacity : 0
+                Behavior on opacity { FadeAnimation {} }
             }
         }
-
-        Timer {
-            id: focusTimer
-            onTriggered: inputField.forceActiveFocus()
-        }
     }
-
 }
 

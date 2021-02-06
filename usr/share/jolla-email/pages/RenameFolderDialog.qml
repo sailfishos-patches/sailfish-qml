@@ -13,7 +13,14 @@ Dialog {
 
     property int folderId
     property string folderName
-    canAccept: nameEdit.text.length > 0 && nameEdit.text !== folderName
+    canAccept: nameEdit.acceptableInput
+
+    onAcceptBlocked: {
+        if (!nameEdit.acceptableInput) {
+            nameEdit.errorHighlight = true
+        }
+    }
+
     onAccepted: {
         emailAgent.renameFolder(folderId, nameEdit.text)
     }
@@ -27,11 +34,18 @@ Dialog {
 
         TextField {
             id: nameEdit
-            width: parent.width
             text: folderName
             focus: true
-            //% "Enter folder name"
-            placeholderText: qsTrId("email-ph-folder_rename")
+
+            //% "Folder name"
+            label: qsTrId("email-la-folder_rename")
+            //% "New folder name required"
+            description: errorHighlight ? qsTrId("email-la-folder_rename_error") : ""
+
+            acceptableInput: text.length > 0 && text !== folderName
+            onActiveFocusChanged: if (!activeFocus) errorHighlight = !acceptableInput
+            onAcceptableInputChanged: if (acceptableInput) errorHighlight = false
+
             EnterKey.enabled: root.canAccept
             EnterKey.iconSource: "image://theme/icon-m-enter-accept"
             EnterKey.onClicked: root.accept()

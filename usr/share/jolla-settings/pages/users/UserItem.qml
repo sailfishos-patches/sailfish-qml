@@ -215,7 +215,7 @@ ListItem {
                     return _editor.implicitWidth
                 }
             }
-            _wrapMode: !activeFocus ? TextInput.Wrap : TextInput.NoWrap
+            wrapMode: !activeFocus ? TextInput.Wrap : TextInput.NoWrap
 
             onActiveFocusChanged: minimumHeight = implicitHeight
 

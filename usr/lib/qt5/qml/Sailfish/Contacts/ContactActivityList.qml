@@ -1,6 +1,13 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Pty Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+*/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Contacts 1.0
+import Sailfish.Contacts 1.0 as SailfishContacts
 import Sailfish.Telephony 1.0
 import org.nemomobile.contacts 1.0
 import org.nemomobile.commhistory 1.0
@@ -12,6 +19,7 @@ Column {
     property var modelFactory
     property bool hidePhoneActions
     property date today
+    property var simManager
 
     property int limit
     property int reducedLimit
@@ -34,7 +42,7 @@ Column {
 
         delegate: ContactActivityDelegate {
             width: parent.width
-            simManager: _simManager
+            simManager: root.simManager
             hidePhoneActions: root.hidePhoneActions
             modelFactory: root.modelFactory
             contact: root.contact
@@ -49,13 +57,13 @@ Column {
         }
     }
 
-    CommContactEventModel {
+    CommRecipientEventModel {
         id: contactEventModel
-        contactId: root.contact ? root.contact.id : 0
-        limit: root.limit > 0 ? root.limit : 0
-    }
 
-    SimManager {
-        id: _simManager
+        contactId: root.contact ? root.contact.id : 0
+        remoteUid: root.contact && root.contact.id === 0
+                   ? SailfishContacts.ContactsUtil.firstPhoneNumber(root.contact)
+                   : ""
+        limit: root.limit > 0 ? root.limit : 0
     }
 }

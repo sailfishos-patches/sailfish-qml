@@ -28,6 +28,14 @@ AccountCreationAgent {
     initialPage: OnlineSyncAccountCreationDialog {
         id: authDialog
         acceptDestination: busyComponent
+
+        onStatusChanged: {
+            if (status == PageStatus.Active && _accountCreator != null) {
+                _accountCreator.cleanUp()
+                _accountCreator.destroy()
+                _accountCreator = null
+            }
+        }
     }
 
     Component {

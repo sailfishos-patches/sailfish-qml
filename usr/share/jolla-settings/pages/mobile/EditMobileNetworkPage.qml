@@ -203,12 +203,9 @@ Page {
 
             TextField {
                 id: connectionNameInput
-                width: parent.width
                 inputMethodHints: Qt.ImhNoPredictiveText
                 //% "Connection name"
                 label: qsTrId("settings_network-la-connection_name")
-                //% "Enter connection name"
-                placeholderText: qsTrId("settings_network-ph-enter_connection_name")
                 EnterKey.iconSource: "image://theme/icon-m-enter-next"
                 EnterKey.onClicked: apnInput.focus = true
                 onTextChanged: if (_initialized) _contextChanged = true
@@ -216,12 +213,9 @@ Page {
 
             TextField {
                 id: apnInput
-                width: parent.width
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
                 //% "Access point name"
                 label: qsTrId("settings_network-la-access_point_name")
-                //% "Enter access point name"
-                placeholderText: qsTrId("settings_network-ph-enter_access_point_name")
                 EnterKey.iconSource: "image://theme/icon-m-enter-next"
                 EnterKey.onClicked: usernameInput.focus = true
                 onTextChanged: if (_initialized) _contextChanged = true
@@ -282,12 +276,9 @@ Page {
                 Behavior on opacity { FadeAnimation {} }
                 TextField {
                     id: usernameInput
-                    width: parent.width
                     inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
                     //% "Username"
                     label: qsTrId("settings_network-la-username")
-                    //% "Enter username"
-                    placeholderText: qsTrId("settings_network-ph-enter_username")
                     EnterKey.iconSource: "image://theme/icon-m-enter-next"
                     EnterKey.onClicked: passwordInput.focus = true
                     onTextChanged: if (_initialized) _contextChanged = true
@@ -326,8 +317,6 @@ Page {
                     inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
                     //% "Proxy address"
                     label: qsTrId("settings_network-la-proxy_address")
-                    //% "Enter proxy address"
-                    placeholderText: qsTrId("settings_network-ph-enter_proxy_address")
                     EnterKey.iconSource: "image://theme/icon-m-enter-next"
                     EnterKey.onClicked: proxyPort.focus = true
                     onTextChanged: if (_initialized) _contextChanged = true
@@ -335,12 +324,9 @@ Page {
 
                 TextField {
                     id: proxyPort
-                    width: parent.width
                     inputMethodHints: Qt.ImhDigitsOnly
                     //% "Proxy port"
                     label: qsTrId("settings_network-la-proxy_port")
-                    //% "Enter proxy port"
-                    placeholderText: qsTrId("settings_network-la-enter_proxy_port")
                     EnterKey.iconSource: "image://theme/icon-m-enter-next"
                     EnterKey.onClicked: mmscAddress.focus = true
                     onTextChanged: if (_initialized) _contextChanged = true
@@ -354,12 +340,9 @@ Page {
 
                 TextField {
                     id: mmscAddress
-                    width: parent.width
                     inputMethodHints: Qt.ImhUrlCharactersOnly
                     //% "MMSC address"
                     label: qsTrId("settings_network-la-mmsc_address")
-                    //% "Enter MMSC address"
-                    placeholderText: qsTrId("settings_network-ph-enter_mmsc_address")
                     EnterKey.iconSource: "image://theme/icon-m-enter-close"
                     EnterKey.onClicked: parent.focus = true
                     onTextChanged: if (_initialized) _contextChanged = true

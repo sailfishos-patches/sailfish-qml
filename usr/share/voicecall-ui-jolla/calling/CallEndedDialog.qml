@@ -6,7 +6,7 @@
 
 import QtQuick 2.6
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0 as SilicaPrivate
+import Sailfish.Silica.Background 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Telephony 1.0
 import com.jolla.voicecall 1.0
@@ -184,7 +184,7 @@ SystemDialog {
                 text: qsTrId("voicecall-bt-send_message")
                 visible: !telephony.callEndedLocally && telephony.messagingPermitted
                 iconSource: "image://theme/icon-m-message"
-                roundedCorners: SilicaPrivate.BubbleBackground.BottomLeft
+                roundedCorners: Corners.BottomLeft
 
                 onPressed: {
                     if (_simPicker) {
@@ -210,7 +210,7 @@ SystemDialog {
                         //% "Reminder removed"
                       : qsTrId("voicecall-bt-reminder_removed")
                 iconSource: "image://theme/icon-m-alarm"
-                roundedCorners: SilicaPrivate.BubbleBackground.NoCorners
+                roundedCorners: Corners.None
 
                 visible: false
                 enabled: reminder.exists
@@ -234,7 +234,7 @@ SystemDialog {
                 iconSource: "image://theme/icon-m-call"
                 visible: !telephony.callEndedLocally && telephony.callingPermitted
                 enabled: !_simPicker || !_simPicker.visible
-                roundedCorners: SilicaPrivate.BubbleBackground.BottomRight
+                roundedCorners: Corners.BottomRight
 
                 onClicked: {
                     if (telephony.promptForSim(root.remoteUid)) {

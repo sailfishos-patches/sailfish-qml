@@ -11,7 +11,9 @@ Row {
     }
     Label {
         id: label
-        property int duration: (model.endTime.valueOf() - model.startTime.valueOf())/1000
+        property int duration: model.endTime && model.startTime
+                               ? (model.endTime.valueOf() - model.startTime.valueOf()) / 1000
+                               : 0
 
         color: highlighted ? palette.secondaryHighlightColor : palette.secondaryColor
         font.pixelSize: Theme.fontSizeSmall

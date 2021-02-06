@@ -1,7 +1,7 @@
 /****************************************************************************
  **
- ** Copyright (C) 2013-2014 Jolla Ltd.
- ** Contact: Vesa Halttunen <vesa.halttunen@jollamobile.com>
+ ** Copyright (C) 2013-2017 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
  **
  ****************************************************************************/
 
@@ -17,24 +17,13 @@ ListView {
     signal clicked
     signal displayed(int id)
     signal expanded(Item item)
+    signal collapseMembers
 
-    readonly property int maxGroupCount: 4
-    readonly property int collapsedCount: Math.min(count, maxGroupCount)
     property QtObject sourceModel
-    property bool collapsed
-    property bool animateExpansion
-    property bool showApplicationName: true
-    property bool showCount: true
-    property color textColor: Theme.primaryColor
-    property string iconSuffix
-    property alias notificationLimit: boundedModel.maximumCount
-    property bool timestampUpdatesEnabled: true
-    property int animationDuration: 250
-    readonly property real collapsedNotificationHeight: Theme.fontSizeLarge + Theme.paddingSmall * 2 + Theme.paddingMedium
-    readonly property real collapsedHeight: Math.max(collapsedNotificationHeight * collapsedCount, 0)
-    readonly property real indicatorWidth: Theme.iconSizeSmall + 2*Theme.paddingLarge
 
-    // This is not the flickable that NotificationItem's context menus should reposition
+    property bool viewVisible: true
+
+    // This is not the flickable that NotificationStandardGroupItem's context menus should reposition
     property bool __silica_hidden_flickable
 
     property var _hasRemovableMember: ({})
@@ -46,7 +35,7 @@ ListView {
 
     function removeAll() {
         _removeAllInProgress = true
-        sourceModel.clearRequested()
+        model.clearRequested()
         _removeAllInProgress = false
     }
 
@@ -98,159 +87,96 @@ ListView {
     Timer {
         id: refreshTimer
         interval: 60000
-        running: timestampUpdatesEnabled
+        running: viewVisible
         repeat: true
     }
 
-    model: sourceModel && sourceModel.populated ? boundedModel : null
+    delegate: NotificationStandardGroupItem {
+        id: delegate
 
-    BoundedModel {
-        id: boundedModel
+        property int pauseBeforeRemoval
+        property bool userRemovable: modelData.userRemovable
+        property alias childNotifications: delegate.notificationListView
 
-        model: notificationList.sourceModel
+        onCollapseMembersRequested: notificationList.collapseMembers()
 
-        delegate: Item {
-            id: notificationDelegate
+        enabled: notificationList.enabled
+        viewVisible: notificationList.viewVisible
+        removeAllInProgress: notificationList._removeAllInProgress
+        onExpanded: notificationList.expanded(delegate)
 
-            property real _height: notificationItem.height + Theme.paddingMedium
+        Component.onCompleted: {
+            notificationList.displayed(modelData.id)
+            notificationList._updateHasRemovable(delegate, hasRemovableMember)
+        }
+        onHasRemovableMemberChanged: notificationList._updateHasRemovable(delegate, hasRemovableMember)
 
-            property alias removableCount: notificationItem.removableCount
-            property bool userRemovable: modelData.userRemovable
-            property int pauseBeforeRemoval
-            property alias childNotifications: notificationItem.notificationListView
+        Connections {
+            target: refreshTimer
+            onTriggered: delegate.updateTimestamp()
+            onRunningChanged: if (refreshTimer.running) delegate.updateTimestamp()
+        }
+        Connections {
+            target: object
+            onTimestampChanged: delegate.updateTimestamp()
+        }
 
-            Component.onCompleted: notificationList.displayed(modelData.id)
+        ListView.delayRemove: true
+        ListView.onAdd: addAnimation.start()
+        ListView.onRemove: {
+            delegate.animatedOpacity = 1
+            delegate.animatedHeight = delegate.height
+            removeAnimation.start()
+            notificationList._updateHasRemovable(delegate, false)
+        }
 
-            width: notificationList.width
-            height: _height
-            enabled: notificationList.enabled && !notificationList.collapsed
+        property real animatedHeight
+        property real animatedOpacity
 
-            state: {
-                if (!notificationList.collapsed) {
-                    return ""
-                } else if (notificationList.animateExpansion) {
-                    return "animate-from-collapsed"
-                } else {
-                    return "collapsed"
-                }
+        Binding {
+            when: addAnimation.running || removeAnimation.running
+            target: delegate
+            property: "height"
+            value: delegate.animatedHeight
+        }
+        Binding {
+            when: addAnimation.running || removeAnimation.running
+            target: delegate
+            property: "opacity"
+            value: delegate.animatedOpacity
+        }
+
+        NotificationAddAnimation {
+            id: addAnimation
+
+            target: delegate
+            heightProperty: "animatedHeight"
+            opacityProperty: "animatedOpacity"
+            toHeight: delegate.implicitHeight
+            onStopped: delegate.height = undefined
+        }
+
+        SequentialAnimation {
+            id: removeAnimation
+
+            PauseAnimation {
+                duration: delegate.pauseBeforeRemoval
             }
-
-            states: [
-                State {
-                    name: "collapsed"
-                    PropertyChanges {
-                        target: notificationDelegate
-                        height: notificationItem.collapsedHeight
-                    }
-                    PropertyChanges {
-                        target: notificationItem
-                        collapsed: true
-                    }
-                }, State {
-                    name: "animate-from-collapsed"
-                    extend: "collapsed"
-                }
-            ]
-            transitions: Transition {
-                from: "animate-from-collapsed"
-                to: ""
-                SequentialAnimation {
-                    SmoothedAnimation {
-                        target: notificationDelegate
-                        properties: "height"
-                        duration: animationDuration
-                        velocity: -1
-                        easing.type: Easing.InOutQuad
-                    }
-                    ScriptAction {
-                        script: {
-                            if (!notificationList.collapsed) {
-                                notificationItem.collapsed = false
-                            }
-                        }
-                    }
-                }
-            }
-
-            NotificationItem {
-                id: notificationItem
-
-                indicatorTextColor: notificationList.textColor
-                indicatorIconSuffix: notificationList.iconSuffix
-                animationDuration: notificationList.animationDuration
-                collapsedHeight: notificationList.collapsedNotificationHeight
-                showApplicationName: notificationList.showApplicationName
-                showCount: notificationList.showCount
-                removeAllInProgress: notificationList._removeAllInProgress
-                onExpanded: notificationList.expanded(notificationDelegate)
-
-                Connections {
-                    target: refreshTimer
-                    onTriggered: notificationItem.updateTimestamp()
-                    onRunningChanged: if (refreshTimer.running) notificationItem.updateTimestamp()
-                }
-                Connections {
-                    target: object
-                    onTimestampChanged: notificationItem.updateTimestamp()
-                }
-
-                Component.onCompleted: notificationList._updateHasRemovable(notificationDelegate, hasRemovableMember)
-                onHasRemovableMemberChanged: notificationList._updateHasRemovable(notificationDelegate, hasRemovableMember)
-            }
-
-            ListView.delayRemove: true
-            ListView.onAdd: addAnimation.start()
-            ListView.onRemove: {
-                notificationDelegate.animatedOpacity = 1
-                notificationDelegate.animatedHeight = notificationDelegate._height
-                removeAnimation.start()
-                notificationList._updateHasRemovable(notificationDelegate, false)
-            }
-
-            property real animatedHeight
-            property real animatedOpacity
-
-            Binding {
-                when: addAnimation.running || removeAnimation.running
-                target: notificationDelegate
-                property: "height"
-                value: notificationDelegate.animatedHeight
-            }
-            Binding {
-                when: addAnimation.running || removeAnimation.running
-                target: notificationDelegate
-                property: "opacity"
-                value: notificationDelegate.animatedOpacity
-            }
-
-            NotificationAddAnimation {
-                id: addAnimation
-
-                target: notificationDelegate
+            NotificationRemoveAnimation {
+                target: delegate
                 heightProperty: "animatedHeight"
                 opacityProperty: "animatedOpacity"
-                toHeight: notificationDelegate._height
-                animationDuration: notificationList.animationDuration
             }
-
-            SequentialAnimation {
-                id: removeAnimation
-
-                PauseAnimation {
-                    duration: notificationDelegate.pauseBeforeRemoval
-                }
-                NotificationRemoveAnimation {
-                    target: notificationDelegate
-                    heightProperty: "animatedHeight"
-                    opacityProperty: "animatedOpacity"
-                    animationDuration: notificationList.animationDuration
-                }
-                PropertyAction {
-                    target: notificationDelegate
-                    property: "ListView.delayRemove"
-                    value: false
-                }
+            PropertyAction {
+                target: delegate
+                property: "ListView.delayRemove"
+                value: false
             }
+        }
+
+        Connections {
+            target: notificationList
+            onCollapseMembers: delegate.collapseMembers()
         }
     }
 }

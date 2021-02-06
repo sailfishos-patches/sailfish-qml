@@ -67,10 +67,9 @@ KeyboardLayout {
                              : 0.3
             key: Qt.Key_Paste
 
-            Image {
+            Silica.Icon {
                 anchors.centerIn: parent
-                source: "image://theme/icon-m-clipboard?"
-                        + (parent.pressed ? Silica.Theme.highlightColor : Silica.Theme.primaryColor)
+                source: "image://theme/icon-m-clipboard"
             }
         }
         NumberKey {

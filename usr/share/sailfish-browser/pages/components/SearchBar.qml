@@ -13,6 +13,7 @@ import QtQuick 2.2
 import Sailfish.Silica 1.0
 import Sailfish.Browser 1.0
 import "." as Browser
+import "../../" as Shared
 import QtQuick 2.0
 
 Item {
@@ -27,7 +28,7 @@ Item {
         height: parent.height
         spacing: Theme.paddingMedium
 
-        Browser.IconButton {
+        Shared.IconButton {
             id: backIcon
             width: Theme.iconSizeMedium + 2 * Theme.paddingMedium
             height: searchBar.height
@@ -54,7 +55,7 @@ Item {
             onClicked: overlayAnimator.showOverlay()
         }
 
-        Browser.IconButton {
+        Shared.IconButton {
             id: forwardIcon
             width: Theme.iconSizeMedium + 2 * Theme.paddingMedium
             height: searchBar.height
@@ -66,7 +67,7 @@ Item {
         }
     }
 
-    Browser.IconButton {
+    Shared.IconButton {
         anchors {
             right: parent.right
             rightMargin: Theme.paddingMedium

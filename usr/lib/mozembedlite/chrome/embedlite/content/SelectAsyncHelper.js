@@ -13,7 +13,7 @@ function debug(msg) {
 }
 
 function isMenu(aElement) {
-  return (aElement instanceof Ci.nsIDOMHTMLSelectElement ||
+  return (aElement instanceof content.HTMLSelectElement ||
           aElement instanceof Ci.nsIDOMXULMenuListElement);
 }
 
@@ -40,13 +40,13 @@ function getOptionList(aElement, aProps, aIndexFunction) {
       "group": aProps.group || ""
     };
 
-    if (child instanceof Ci.nsIDOMHTMLOptionElement ||
+    if (child instanceof content.HTMLOptionElement ||
         child instanceof Ci.nsIDOMXULSelectControlItemElement) {
       if (aIndexFunction) {
         item["index"] = aIndexFunction(child);
       }
       list.push(item);
-    } else if (child instanceof Ci.nsIDOMHTMLOptGroupElement) {
+    } else if (child instanceof content.HTMLOptGroupElement) {
       let props = {
         "group": item["label"],
         "disabled": item["disabled"]
@@ -166,7 +166,7 @@ SelectHelper.prototype = {
           break;
         }
       }
-    } else if (aElement instanceof Ci.nsIDOMHTMLSelectElement) {
+    } else if (aElement instanceof content.HTMLSelectElement) {
       let that = this;
       aOptions.forEach(function (option) {
           that._nodeMap[option.index].selected = option.selected;

@@ -13,7 +13,7 @@ AllModemsPage {
     id: page
 
     property alias pageTitle: header.title
-    property string testTechnology
+    property var testTechnology
     property bool requireAllModems
 
     property int techCount
@@ -28,8 +28,12 @@ AllModemsPage {
     function updateTechCount() {
         var count = 0
         for (var i = 0; i<availableModems.length; i++) {
-            if (simList.itemAt(i).technology === testTechnology) {
-                count++
+            var item = simList.itemAt(i)
+            for (var j = 0; j < testTechnology.length; j++) {
+                if (item.technology === testTechnology[j]) {
+                    count++
+                    break
+                }
             }
         }
         techCount = count
@@ -105,7 +109,7 @@ AllModemsPage {
                 onValidChanged: {
                     if (valid && !savedTechnologyPreference) {
                         savedTechnologyPreference = technologyPreference
-                        technologyPreference = testTechnology
+                        technologyPreference = testTechnology[0]
                     }
                 }
                 Component.onDestruction: {

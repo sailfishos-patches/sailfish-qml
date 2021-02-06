@@ -12,7 +12,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
 
 // -----------------------------------------------------------------------
-// Download Manager UI
+// Interface for requesting information on prefs values ​​and setting them
 // -----------------------------------------------------------------------
 
 function EmbedPrefService()
@@ -52,10 +52,7 @@ EmbedPrefService.prototype = {
           break;
         default:
         case Ci.nsIPrefBranch.PREF_STRING:
-          pref.value = Services.prefs.getComplexValue(aPrefName, Ci.nsISupportsString).data;
-          // Try in case it's a localized string (will throw an exception if not)
-          if (pref.default && /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.value))
-            pref.value = Services.prefs.getComplexValue(aPrefName, Ci.nsIPrefLocalizedString).data;
+          pref.value = Services.prefs.getStringPref(aPrefName);
           break;
       }
     } catch (e) {}
@@ -91,7 +88,7 @@ EmbedPrefService.prototype = {
                     retPrefs.push({ name: pref, value: Services.prefs.getIntPref(pref)});
                     break;
                 case Services.prefs.PREF_STRING:
-                    retPrefs.push({ name: pref, value: Services.prefs.getCharPref(pref)});
+                    retPrefs.push({ name: pref, value: Services.prefs.getStringPref(pref)});
                     break;
                 case Services.prefs.PREF_INVALID:
                     continue;
@@ -111,7 +108,7 @@ EmbedPrefService.prototype = {
       }
       case "embedui:clearprefs": {
         let prefs = JSON.parse(aData).prefs;
-        for (var i = 0; i < prefs.length; i++) {
+        for (var i in prefs) {
           Services.prefs.clearUserPref(prefs[i]);
         }
         break;
@@ -133,19 +130,19 @@ EmbedPrefService.prototype = {
       }
       case "embedui:setprefs": {
         let prefs = JSON.parse(aData).prefs;
-        for (var i = 0; i < prefs.length; i++) {
-          switch (typeof(prefs[i].v)) {
+        for (var i in prefs) {
+          switch (typeof(prefs[i].value)) {
             case "string":
-            Services.prefs.setCharPref(prefs[i].n, prefs[i].v);
+            Services.prefs.setStringPref(prefs[i].name, prefs[i].value);
             break;
           case "number":
-            Services.prefs.setIntPref(prefs[i].n, prefs[i].v);
+            Services.prefs.setIntPref(prefs[i].name, prefs[i].value);
             break;
           case "boolean":
-            Services.prefs.setBoolPref(prefs[i].n, prefs[i].v);
+            Services.prefs.setBoolPref(prefs[i].name, prefs[i].value);
             break;
           default:
-            throw new Error("Unexpected value type: " + typeof(prefs[i].v));
+            throw new Error("Unexpected value type: " + typeof(prefs[i].value));
           }
         }
         break;

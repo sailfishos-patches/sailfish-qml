@@ -50,7 +50,10 @@ Dialog {
                 delegate: Loader {
                     source: filePath + "/" + "listitem.qml"
                     width: root.width
-                    onItemChanged: if (item) item._mainPage = mainPage
+                    onItemChanged: if (item) {
+                        item._mainPage = mainPage
+                        item._vpnType = fileName
+                    }
                 }
             }
         }

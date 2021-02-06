@@ -31,7 +31,7 @@ Column {
         if (!_completed)
             return
 
-        if (urlField.validInput)
+        if (urlField.acceptableInput)
             _updateRequired = true
 
         if (!updating && _updateRequired)

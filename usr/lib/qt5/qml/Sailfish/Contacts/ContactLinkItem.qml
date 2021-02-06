@@ -1,44 +1,54 @@
-import QtQuick 2.0
+/*
+* Copyright (c) 2020 Open Mobile Platform LLC.
+*
+* License: Proprietary
+*/
+import QtQuick 2.6
 import Sailfish.Silica 1.0
-import Sailfish.Contacts 1.0 as Contacts
 import org.nemomobile.contacts 1.0
 
-ListItem {
-    width: root.width
-    height: Theme.itemSizeSmall
+BackgroundItem {
+    id: root
+
+    property alias contactPrimaryName: addressBookItem.contactPrimaryName
+    property alias contactSecondaryName: addressBookItem.contactSecondaryName
+    property alias addressBook: addressBookItem.addressBook
+    property alias icon: buttonIcon
+
+    function animateRemoval() {
+        removeComponent.createObject(root, { "target": root })
+    }
+
+    width: parent.width
+    height: Theme.itemSizeMedium
     opacity: enabled ? 1.0 : Theme.opacityLow
 
-    property Person person: model.person
+    ContactAddressBookItem {
+        id: addressBookItem
 
-    Image {
-        id: icon
-        x: Theme.horizontalPageMargin - Theme.paddingMedium
-        anchors.verticalCenter: parent.verticalCenter
-        source: person ? ContactsUtil.syncTargetIcon(person) + "?" + (highlighted ? Theme.highlightColor : Theme.primaryColor)
-                       : ""
-    }
-    Label {
-        id: nameLabel
         anchors {
-            left: icon.right
-            leftMargin: Theme.paddingSmall
-            verticalCenter: parent.verticalCenter
-            verticalCenterOffset: syncTargetLabel.text !== ""
-                                  ? -(syncTargetLabel.implicitHeight/2)
-                                  : 0
+            left: parent.left
+            right: buttonIcon.left
         }
-        color: highlighted ? Theme.highlightColor : Theme.primaryColor
-        text: person ? person.displayLabel : ''
+        rightMargin: Theme.paddingMedium
+        opacity: root.opacity
     }
-    Label {
-        id: syncTargetLabel
+
+    HighlightImage {
+        id: buttonIcon
+
         anchors {
-            left: icon.right
-            leftMargin: Theme.paddingSmall
-            top: nameLabel.bottom
+            verticalCenter: addressBookItem.verticalCenter
+            right: parent.right
+            rightMargin: Theme.horizontalPageMargin
         }
-        text: person ? ContactsUtil.syncTargetDisplayName(person) : ''
-        font.pixelSize: Theme.fontSizeExtraSmall
-        color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
+    }
+
+    Component {
+        id: removeComponent
+
+        RemoveAnimation {
+            running: true
+        }
     }
 }

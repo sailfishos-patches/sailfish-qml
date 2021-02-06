@@ -19,7 +19,7 @@ SilicaListView {
     property alias messageCount: messageModel.count
     readonly property alias folderId: folder.folderId
     readonly property alias folderType: folder.folderType
-    readonly property bool isDraftsFolder: folderType == EmailFolder.DraftsFolder
+    readonly property bool isDraftsFolder: folderType === EmailFolder.DraftsFolder
     readonly property bool isOutboxFolder: folderType === EmailFolder.OutboxFolder
     readonly property alias isOutgoingFolder: folder.isOutgoingFolder
     readonly property bool showGetMoreMails: !(mailAccountListModel.customFieldFromAccountId("showMoreMails", accountId) == "false")
@@ -28,7 +28,7 @@ SilicaListView {
     property bool waitToFetchMore
     property bool errorOccurred
     property string lastErrorText
-
+    readonly property bool updating: emailAgent.currentSynchronizingAccountId === accountId
 
     function sendAll() {
         if (isOutboxFolder) {
@@ -65,25 +65,16 @@ SilicaListView {
     }
 
     anchors.fill: parent
-    model: EmailMessageListModel {
-        id: messageModel
-
-        limit: app.defaultMessageListLimit
-        // reset limit upon content change
-        onFolderAccessorChanged: {
-            limit = app.defaultMessageListLimit
-            messageListView.contentY = messageListView.originY
-        }
-    }
 
     header: MessageListHeader {
-        folderName: emailAgent.currentSynchronizingAccountId === accountId
+        folderName: messageListView.updating
                     //: Updating header
                     //% "Updating..."
                     ? qsTrId("jolla-email-he-updating")
                     : Utils.standardFolderName(folder.folderType, folder.displayName)
-        count: emailAgent.currentSynchronizingAccountId === accountId ? 0 : folder.folderUnreadCount
-        errorText: errorOccurred ? lastErrorText : ""
+        count: messageListView.updating ? 0 : folder.folderUnreadCount
+        errorText: messageListView.errorOccurred ? messageListView.lastErrorText : ""
+
         onHeightChanged: {
             // If an error message causes the header height to change, compensate by moving the scroll position
             if ((messageListView.contentY >= messageListView.originY)
@@ -107,12 +98,12 @@ SilicaListView {
             text: _sectionDelegateText(section)
             height: text === "" ? 0 : Theme.itemSizeSmall
             horizontalAlignment: Text.AlignHCenter
-            font.capitalization: (messageListView.model.sortBy == EmailMessageListModel.Sender
-                                  || messageListView.model.sortBy == EmailMessageListModel.Subject)
+            font.capitalization: (messageModel.sortBy == EmailMessageListModel.Sender
+                                  || messageModel.sortBy == EmailMessageListModel.Subject)
                                  ? Font.AllUppercase : Font.MixedCase
 
             function _sectionDelegateText(section) {
-                var sortBy = messageListView.model.sortBy
+                var sortBy = messageModel.sortBy
                 if (sortBy === EmailMessageListModel.Time) {
                     return Format.formatDate(section, Formatter.TimepointSectionRelative)
                 } else if (sortBy === EmailMessageListModel.Size) {
@@ -230,7 +221,8 @@ SilicaListView {
                                            removeRemorse: removeRemorse,
                                            selectionModel: messageModel,
                                            accountId: accountId,
-                                           folderId: folder.folderId
+                                           folderId: folder.folderId,
+                                           deletionModel: deletionModel
                                        })
             }
         }
@@ -305,11 +297,26 @@ SilicaListView {
         }
     }
 
-    delegate: messageModel.sortBy == EmailMessageListModel.Subject
-                ? subjectSortedDelegate
-                : (messageModel.sortBy == EmailMessageListModel.Time
-                    ? timeSortedDelegate
-                    : defaultSortedDelegate)
+    model: DeletionDelegateModel {
+        id: deletionModel
+
+        model: EmailMessageListModel {
+            id: messageModel
+
+            limit: app.defaultMessageListLimit
+            // reset limit upon content change
+            onFolderAccessorChanged: {
+                limit = app.defaultMessageListLimit
+                messageListView.contentY = messageListView.originY
+            }
+        }
+
+        delegate: messageModel.sortBy == EmailMessageListModel.Subject
+                    ? subjectSortedDelegate
+                    : (messageModel.sortBy == EmailMessageListModel.Time
+                        ? timeSortedDelegate
+                        : defaultSortedDelegate)
+    }
 
     Component {
         id: subjectSortedDelegate
@@ -361,7 +368,7 @@ SilicaListView {
     }
 
     function _sectionCriteria() {
-        var sortBy = messageListView.model.sortBy
+        var sortBy = messageModel.sortBy
         if (sortBy === EmailMessageListModel.Sender || sortBy === EmailMessageListModel.Subject
                 || sortBy === EmailMessageListModel.Recipients) {
             return ViewSection.FirstCharacter
@@ -375,14 +382,14 @@ SilicaListView {
 
         onCurrentSynchronizingAccountIdChanged: {
             if (emailAgent.currentSynchronizingAccountId === folder.parentAccountId) {
-                errorOccurred = false
+                messageListView.errorOccurred = false
             }
         }
 
         onError: {
-            if (accountId === folder.parentAccountId) {
-                errorOccurred = true
-                lastErrorText = Utils.syncErrorText(syncError)
+            if (accountId === 0 || accountId === folder.parentAccountId) {
+                messageListView.lastErrorText = Utils.syncErrorText(syncError)
+                messageListView.errorOccurred = true
             }
         }
     }

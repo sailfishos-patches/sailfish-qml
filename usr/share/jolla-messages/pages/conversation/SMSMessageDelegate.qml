@@ -1,6 +1,14 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
+import Sailfish.Silica.Background 1.0
 import Sailfish.Messages 1.0
 import Sailfish.TextLinking 1.0
 import org.nemomobile.commhistory 1.0
@@ -91,7 +99,7 @@ ListItem {
         return qsTrId("messages-la-date_time").arg(dateString).arg(timeString)
     }
 
-    BubbleBackground {
+    ColorBackground {
         id: bubble
 
         property int fullMessageWidth: (hasText ? (messageText.contentWidth + 2 * messageText.horizontalMargin) : 0)
@@ -124,10 +132,10 @@ ListItem {
         radius: Theme.paddingLarge
         roundedCorners: {
             // Note: MessagesView has a BottomToTop layout direction, so groupFirst is the bottom-most
-            var result = BubbleBackground.NoCorners
-            result |= inbound ? BubbleBackground.BottomRight : BubbleBackground.BottomLeft
+            var result = Corners.None
+            result |= inbound ? Corners.BottomRight : Corners.BottomLeft
             if (message.groupLast) {
-                result |= inbound ? BubbleBackground.TopLeft : BubbleBackground.TopRight
+                result |= inbound ? Corners.TopLeft : Corners.TopRight
             }
             return result
         }

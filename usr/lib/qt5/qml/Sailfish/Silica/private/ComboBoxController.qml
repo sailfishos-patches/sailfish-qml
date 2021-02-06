@@ -1,10 +1,7 @@
 /****************************************************************************************
 **
-** Copyright (c) 2013-2019 Jolla Ltd.
-** Copyright (c) 2019 Open Mobile Platform LLC.
-** Contact: Bea Lam <bea.lam@jollamobile.com>
-** Contact: Timur Kristóf <timur.kristof@jollamobile.com>
-** All rights reserved.
+** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
 **
 ** This file is part of Sailfish Silica UI component package.
 **
@@ -263,11 +260,15 @@ Item {
             allowedOrientations: _page ? _page.allowedOrientations : Orientation.All
 
             Component.onCompleted: {
+                var menuIndex = 0
                 var menuItems = controller.menu.children
                 for (var i = 0; i < menuItems.length; i++) {
                     var child = menuItems[i]
-                    if (child && child.visible && child.hasOwnProperty("__silica_menuitem")) {
-                        items.append( {"item": child } )
+                    if (child && child.hasOwnProperty("__silica_menuitem")) {
+                        if (child.visible) {
+                            items.append( {"item": child, "menuIndex": menuIndex } )
+                        }
+                        menuIndex++
                     }
                 }
             }
@@ -287,21 +288,72 @@ Item {
                 delegate: BackgroundItem {
                     id: delegateItem
 
+                    readonly property bool _isMultiLine: descriptionLabel.text.length || mainLabel.lineCount > 1
+
+                    height: Math.max(labelColumn.height + Theme.paddingMedium*2, Theme.itemSizeSmall)
+
                     onClicked: {
                         model.item.clicked()
-                        controller.menu.activated(index)
+                        controller.menu.activated(model.menuIndex)
                         pageStack.pop()
                     }
 
-                    Label {
-                        x: Theme.horizontalPageMargin
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - x*2
-                        wrapMode: Text.Wrap
-                        text: model.item.text
-                        highlighted: delegateItem.highlighted || model.item === controller.currentItem
+                    HighlightImage {
+                        id: icon
+
+                        anchors {
+                            left: parent.left
+                            leftMargin: Theme.horizontalPageMargin
+
+                            // If there is only one line of text, vertically center the icon.
+                            // Otherwise, anchor it to the delegate's top, with a small padding.
+                            top: _isMultiLine ? parent.top : undefined
+                            topMargin: Theme.paddingMedium + Theme.paddingSmall
+                            verticalCenter: _isMultiLine ? undefined : parent.verticalCenter
+                        }
+                        sourceSize.width: Theme.iconSizeMedium
+                        sourceSize.height: Theme.iconSizeMedium
+                        source: model.item.icon ? model.item.icon.source : ""
+                        highlighted: mainLabel.highlighted
+                        monochromeWeight: !!model.item.icon && model.item.icon.monochromeWeight !== undefined
+                                          ? model.item.icon.monochromeWeight
+                                          : 1.0
+                    }
+
+                    Column {
+                        id: labelColumn
+
+                        anchors {
+                            left: model.item.icon ? icon.right : parent.left
+                            leftMargin: model.item.icon ? Theme.paddingMedium : Theme.horizontalPageMargin
+                            right: parent.right
+                            rightMargin: Theme.horizontalPageMargin
+                            verticalCenter: parent.verticalCenter
+                        }
+
+                        Label {
+                            id: mainLabel
+
+                            width: parent.width
+                            wrapMode: Text.Wrap
+                            text: model.item.text
+                            highlighted: delegateItem.highlighted || model.item === controller.currentItem
+                        }
+
+                        Label {
+                            id: descriptionLabel
+
+                            width: parent.width
+                            height: text.length ? implicitHeight : 0
+                            font.pixelSize: Theme.fontSizeExtraSmall
+                            wrapMode: Text.Wrap
+                            text: model.item.description || ""
+                            highlighted: mainLabel.highlighted
+                            color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
+                        }
                     }
                 }
+
                 VerticalScrollDecorator {}
             }
         }

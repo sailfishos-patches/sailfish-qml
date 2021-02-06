@@ -322,10 +322,14 @@ SelectionPrototype.prototype = {
     this._cache.text = isPhoneNumber ? this._getSelectedPhoneNumber() : this._getSelectedText();
     this._cache.isPhoneNumber = !!isPhoneNumber;
 
-    let searchEngine = Services.search.currentEngine;
     let searchUri = "";
-    if (searchEngine) {
-      searchUri = Services.search.currentEngine.getSubmission(this._cache.text).uri.spec;
+    try {
+      let searchEngine = Services.search.currentEngine;
+      if (searchEngine) {
+        searchUri = Services.search.currentEngine.getSubmission(this._cache.text).uri.spec;
+      }
+    } catch (e) {
+      Logger.warn("Failed to get current search engine:", e)
     }
     this._cache.searchUri =  searchUri;
 

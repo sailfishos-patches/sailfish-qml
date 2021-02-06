@@ -35,6 +35,9 @@ QtObject {
 
     property int state: ApplicationState.Normal
     property int progress
+    property bool packageInstalled: state === ApplicationState.Installed
+                                    || state === ApplicationState.Updatable
+                                    || state === ApplicationState.Updating
 
     // whether valid data was loaded
     property bool valid
@@ -156,7 +159,10 @@ QtObject {
         }
     }
 
-    onApplicationChanged: refresh()
+    onApplicationChanged: {
+        valid = false
+        refresh()
+    }
     onCompanyChanged: refreshCompany()
 }
 

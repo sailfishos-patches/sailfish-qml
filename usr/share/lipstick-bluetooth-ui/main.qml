@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Jolla Ltd.
-** Contact: Bea Lam <bea.lam@jollamobile.com>
+** Copyright (C) 2016 - 2020 Jolla Ltd.
+** Copyright (C) 2020 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -9,6 +9,7 @@ import QtQuick 2.0
 import QtQuick.Window 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
+import Sailfish.Lipstick 1.0
 import Nemo.DBus 2.0
 import org.nemomobile.notifications 1.0 as Nemo
 import org.kde.bluezqt 1.0 as BluezQt
@@ -22,7 +23,12 @@ ApplicationWindow {
     property bool monitorManagerObjectChanges: true
     property bool windowsVisible: pairing._windowVisible
                                    || (_serviceAuthWindow && _serviceAuthWindow.windowVisible)
-    readonly property bool keepAlive: windowsVisible || bluetoothSession.active
+    readonly property bool keepAlive: windowsVisible
+                                      || bluetoothSession.sessionCount > 0
+                                      || bluetoothRemorseShowTimer.running
+                                      || (!!_bluetoothOffRemorse && _bluetoothOffRemorse.active)
+
+    property var _bluetoothOffRemorse
 
     function _agentServiceAuthorizationRequest(deviceAddress, deviceName, uuid, requestId) {
         if (!_serviceAuthWindow) {
@@ -60,7 +66,6 @@ ApplicationWindow {
     _defaultLabelFormat: Text.PlainText
     cover: undefined
 
-
     Timer {
         id: delayedQuit
 
@@ -77,16 +82,95 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: remorseComponent
+
+        SystemDialog {
+            function execute() {
+                //% "Turning Bluetooth off"
+                remorse.execute(qsTrId("lipstick-jolla-home-la-bluetoothoff"));
+            }
+
+            function cancel() {
+                remorse.cancel()
+            }
+
+            contentHeight: remorse.height
+            visible: true
+
+            onDismissed: remorse.trigger()
+
+            RemorsePopup {
+                id: remorse
+
+                onCanceled: {
+                    dismiss()
+                }
+                onTriggered: {
+                    bluetoothSession.remorseTriggered()
+                    dismiss()
+                }
+            }
+        }
+    }
+
     BluetoothSession {
         id: bluetoothSession
+
         onTurningBluetoothOn: bluetoothEnabledNotification.publish()
+
+        onSessionCountChanged: {
+            if (sessionCount > 0) {
+                if (!!root._bluetoothOffRemorse) {
+                    root._bluetoothOffRemorse.cancel()
+                }
+                bluetoothRemorseShowTimer.stop()
+            } else if (sessionCount === 0 && autoPowerOff) {
+                bluetoothRemorseShowTimer.start()
+            }
+        }
+    }
+
+    Connections {
+        target: BluezQt.Manager.usableAdapter
+
+        onPoweredChanged: {
+            if (!BluezQt.Manager.usableAdapter.powered) {
+                if (!!root._bluetoothOffRemorse) {
+                    root._bluetoothOffRemorse.cancel()
+                }
+                bluetoothRemorseShowTimer.stop()
+            }
+        }
+    }
+
+    Timer {
+        id: bluetoothRemorseShowTimer
+
+        // Wait 10 seconds before turning off Bluetooth in case it is used again
+        interval: 10 * 1000
+
+        onTriggered: {
+            if (bluetoothSession.sessionCount > 0 || !bluetoothSession.autoPowerOff) {
+                return
+            }
+            if (!!root._bluetoothOffRemorse) {
+                root._bluetoothOffRemorse.destroy()
+            }
+            root._bluetoothOffRemorse = remorseComponent.createObject(root)
+            root._bluetoothOffRemorse.execute()
+        }
     }
 
     Nemo.Notification {
         id: bluetoothEnabledNotification
-        category: "x-jolla.lipstick.bluetooth"
+
+        appIcon: "icon-s-bluetooth"
+        urgency: Nemo.Notification.Critical
+        isTransient: true
+
         //% "Turning Bluetooth on"
-        previewBody: qsTrId("lipstick-jolla-home-la-bluetoothon")
+        body: qsTrId("lipstick-jolla-home-la-bluetoothon")
     }
 
     BluetoothPairing {

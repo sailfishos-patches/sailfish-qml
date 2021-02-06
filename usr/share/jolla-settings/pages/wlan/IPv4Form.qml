@@ -53,7 +53,7 @@ Column {
         if (!_completed)
             return
 
-        if (field.validInput && checkIp(field.text))
+        if (field.acceptableInput && checkIp(field.text))
             _ipv4UpdateRequired = true
 
         if (!_updating && _ipv4UpdateRequired)
@@ -65,7 +65,7 @@ Column {
         var isOk = true
 
         var updateConfig = function(field, key) {
-            if (field.validInput && checkIp(field.text)) {
+            if (field.acceptableInput && checkIp(field.text)) {
                 config[key] = field.text
             } else {
                 isOk = false
@@ -87,7 +87,7 @@ Column {
         if (!_completed)
             return
 
-        if (dnsField.validInput)
+        if (dnsField.acceptableInput)
             _nameserversUpdateRequired = true
 
         if (!_updating && _nameserversUpdateRequired)
@@ -99,7 +99,7 @@ Column {
         var updateList = function(dnsField) {
             var text = dnsField.text
 
-            if (dnsField.validInput) {
+            if (dnsField.acceptableInput) {
                 dnslist.push(text)
             }
         }
@@ -116,7 +116,7 @@ Column {
         if (!_completed)
             return
 
-        if (domainsField.validInput)
+        if (domainsField.acceptableInput)
             _domainsUpdateRequired = true
 
         if (!_updating && _domainsUpdateRequired)
@@ -127,7 +127,7 @@ Column {
         _updating = true
         _domainsUpdateRequired = false
 
-        if (domainsField.validInput) {
+        if (domainsField.acceptableInput) {
             network.domainsConfig = domainsField.text.replace(" ", "").split(",")
         } else {
             network.domainsConfig = []
@@ -222,8 +222,6 @@ Column {
     NetworkField {
         id: domainsField
 
-        width: parent.width
-
         //: Keep short, placeholder label that cannot wrap
         //% "E.g. example.com, domain.com"
         placeholderText: qsTrId("settings_network-ph-default_domain_names_example")
@@ -231,6 +229,9 @@ Column {
         //% "Default domain names"
         label: qsTrId("settings_network-la-default_domain_names")
         regExp: new RegExp(/^[\w- \.,]*$/)
+
+        //% "List valid domain names separated by commas"
+        description: errorHighlight ? qsTrId("settings_network_la-default_domain_names_error") : ""
 
         Component.onCompleted: text = WlanUtils.maybeJoin(network.domainsConfig) || WlanUtils.maybeJoin(network.domains)
         onActiveFocusChanged: if (!activeFocus) updateDomainsIfValid(domainsField)

@@ -36,8 +36,9 @@
 import QtQuick 2.6
 import Sailfish.Silica.private 1.0
 import Sailfish.Silica 1.0
+import Sailfish.Silica.Background 1.0
 
-BackgroundItem {
+SwipeItem {
     id: root
 
     //% "Deleted"
@@ -62,44 +63,24 @@ BackgroundItem {
     property int _seconds: (_timeout + 999) / 1000
     property int _secsRemaining: (_msRemaining + 999) / 1000
     property real _msRemaining: _timeout
-    property Item _page
     property bool _triggered
     property real _contentOpacity
     property alias _countdown: countdown
     property bool _wideMode
     property bool _belowGridItem
-    property bool _longPress
 
-    readonly property bool _showSwipeHintLabel: pressed && !_narrowMode && (_longPress || drag.active || _triggeredWithGesture)
-    readonly property bool _twoLines: secondaryLabel.text.length > 0 && !_showSwipeHintLabel
+    readonly property bool _twoLines: secondaryLabel.text.length > 0 && !(showSwipeHint && !_narrowMode)
     readonly property bool _narrowMode: width <= Screen.width/2
-    property bool _triggeredWithGesture
     readonly property alias _labels: labels
 
     signal canceled
     signal triggered
 
-    drag.minimumX: -drag.maximumX
-    drag.maximumX: _page ? _page.width : Screen.width
-    drag.target: contentItem
-    drag.axis: Drag.XAxis
-    drag.onActiveChanged: if (!drag.active) _triggeredWithGesture = dismissAnimation.animate(contentItem, 0, _page ? _page.width : width)
-
-    DismissAnimation {
-        id: dismissAnimation
-        onCompleted: {
-            _trigger()
-            _triggeredWithGesture = false
-        }
-    }
+    onClicked: cancel()
+    onSwipedAway: _trigger()
 
     visible: false
-    width: parent ? parent.width : Screen.width
     _showPress: false
-
-    onClicked: if (!_longPress) cancel()
-    onPressed: _longPress = false
-    onVisibleChanged: if (!visible) dismissAnimation.reset()
 
     BannerBackground {
         id: background
@@ -108,11 +89,11 @@ BackgroundItem {
         property int margin: Theme.paddingMedium
         highlighted: root.highlighted
         height: parent.height - 2 * y
-        x: margin + offset + (root.leftMargin - Theme.horizontalPageMargin)
+        x: margin + (root.leftMargin - Theme.horizontalPageMargin)
         y: _narrowMode || parent.height > Theme.itemSizeMedium || _belowGridItem ? margin : 0
         width: parent.width - 2 * margin - (root.leftMargin - Theme.horizontalPageMargin) - (root.rightMargin - Theme.horizontalPageMargin)
 
-        BubbleBackground {
+        ColorBackground {
             anchors {
                 top: parent.top
                 bottom: parent.bottom
@@ -121,8 +102,8 @@ BackgroundItem {
 
             radius: background.radius
             width: Math.round((_seconds - _secsRemaining)/_seconds * background.width)
-            roundedCorners: _secsRemaining === 0 ? BubbleBackground.AllCorners
-                                                 : BubbleBackground.TopRight | BubbleBackground.BottomRight
+            roundedCorners: _secsRemaining === 0 ? Corners.All
+                                                 : Corners.TopRight | Corners.BottomRight
 
             opacity: root.palette.colorScheme === Theme.LightOnDark ? Theme.opacityLow : 1.0
             color: Theme.highlightDimmerColor
@@ -135,10 +116,9 @@ BackgroundItem {
         opacity: root._contentOpacity
         anchors {
             left: background.left
-            right: iconButton.enabled && parent.height <= Theme.itemSizeExtraLarge ? iconButton.left : parent.right
+            right: parent.right
             leftMargin: root.leftMargin
-            rightMargin: iconButton.enabled && !_narrowMode ? Theme.paddingMedium
-                                                            : root.rightMargin
+            rightMargin: root.rightMargin
             verticalCenter: parent.verticalCenter
         }
 
@@ -146,8 +126,8 @@ BackgroundItem {
             id: textLabel
 
             //% "Swipe to hide"
-            text: _showSwipeHintLabel ? qsTrId("components-la-swipe-to-hide")
-                                      : cancelText
+            text: showSwipeHint && !_narrowMode ? qsTrId("components-la-swipe-to-hide")
+                                                : cancelText
 
             width: _wideMode ? Math.min(contentWidth, parent.width)
                              : parent.width
@@ -173,113 +153,52 @@ BackgroundItem {
         }
     }
 
-    IconButton {
-        id: iconButton
-        icon.source: enabled ? "image://theme/icon-m-input-remove" : ""
-        y: parent.height > Theme.itemSizeExtraLarge ? background.y : parent.height/2 - height/2
-        enabled: hint.state === ""
-        opacity: enabled ? 1.0 : 0.0
-        Behavior on opacity { FadeAnimator {}}
-        anchors.right: background.right
-        onClicked: {
-            if (hint.disappearHint.active && !_narrowMode) {
-                hint.state = "disappearHint"
-                hint.disappearHint.increase()
-            } else {
-                if (_narrowMode) {
-                    _trigger()
-                } else {
-                    dismissAnimation.dismiss(root.contentItem, _page ? _page.width : root.width)
-                }
-            }
-        }
-    }
-
     Item {
         id: hint
 
-        property FirstTimeUseCounter swipeHint: FirstTimeUseCounter {
+        onVisibleChanged: if (!visible) state = ""
+
+        states: State {
+            name: "swipeHint"
+
+            PropertyChanges {
+                target: countdown
+                paused: countdown.running
+            }
+            PropertyChanges {
+                target: secondaryLabel
+                visible: false
+            }
+            PropertyChanges {
+                target: textLabel
+                wrapMode: Text.Wrap
+                font.pixelSize: Theme.fontSizeExtraSmall
+                //% "You may also swipe to hide the Undo banner"
+                text: qsTrId("components-la-remorse_swipe_hint")
+            }
+            PropertyChanges {
+                target: root
+                _seconds: 0
+                onClicked: {
+                    swipeHint.exhaust()
+                    _trigger()
+                }
+            }
+        }
+
+        FirstTimeUseCounter {
+            id: swipeHint
+
             limit: 1
             key: "/desktop/sailfish/hints/remorse_swipe_hint_count"
             ignoreSystemHints: true
         }
-        property FirstTimeUseCounter disappearHint: FirstTimeUseCounter {
-            limit: 1
-            key: "/desktop/sailfish/hints/remorse_disappear_hint_count"
-            ignoreSystemHints: true
-        }
-
-        onVisibleChanged: if (!visible) state = ""
-        states: [
-            State {
-                name: "hint"
-                PropertyChanges {
-                    target: countdown
-                    paused: countdown.running
-                }
-                PropertyChanges {
-                    target: secondaryLabel
-                    visible: false
-                }
-            },
-            State {
-                name: "disappearHint"
-                extend: "hint"
-                PropertyChanges {
-                    target: textLabel
-                    wrapMode: Text.Wrap
-                    font.pixelSize: Theme.fontSizeExtraSmall
-                    //% "Undo banner will also disappear automatically"
-                    text: qsTrId("components-la-remorse_disappear_hint")
-                }
-                PropertyChanges {
-                    target: root
-                    _seconds: 0
-                    onClicked: {
-                        hint.disappearHint.exhaust()
-                        _trigger()
-                    }
-                }
-            },
-            State {
-                name: "swipeHint"
-                extend: "hint"
-                PropertyChanges {
-                    target: textLabel
-                    wrapMode: Text.Wrap
-                    font.pixelSize: Theme.fontSizeExtraSmall
-                    //% "You may also swipe to hide the Undo banner"
-                    text: qsTrId("components-la-remorse_swipe_hint")
-                }
-                PropertyChanges {
-                    target: root
-                    _seconds: 0
-                    onClicked: {
-                        hint.swipeHint.exhaust()
-                        _trigger()
-                    }
-                }
-            }
-        ]
 
         Timer {
             interval: 2000
             running: hint.state !== ""
             onTriggered: _trigger()
         }
-    }
-
-    Timer {
-        running: root.down
-        interval: 400
-        onTriggered: _longPress = true
-    }
-
-    // wiggle the banner when pressed to hint it can be swiped away
-    GestureHintAnimation {
-        target: background
-        running: root.down && _longPress && !root.drag.active
-        property: "offset"
     }
 
     NumberAnimation {
@@ -292,14 +211,14 @@ BackgroundItem {
         duration: _timeout
         onRunningChanged: {
             if (!running && _msRemaining == 0) {
-                if (hint.swipeHint.active && !_narrowMode) {
+                if (swipeHint.active && !_narrowMode) {
                     hint.state = "swipeHint"
-                    hint.swipeHint.increase()
+                    swipeHint.increase()
                 } else {
                     if (_narrowMode) {
                         _trigger()
                     } else {
-                        dismissAnimation.dismiss(root.contentItem, _page ? _page.width : root.width)
+                        root.swipeAway()
                     }
                 }
             }

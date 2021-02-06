@@ -211,6 +211,36 @@ Page {
                     onClicked: apkInterface.typedCall("controlService", [{ "type": "b", "value": false }])
                 }
             }
+
+            SectionHeader {
+                //% "Licensing"
+                text: qsTrId("android_settings-la-licensing")
+            }
+
+            Label {
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2*Theme.horizontalPageMargin
+                //% "View software licenses for Android components. This requires "
+                //% "Android App Support to be running."
+                text: qsTrId("android_settings-la-android_settings_licensing_desc")
+                wrapMode: Text.Wrap
+                font.pixelSize: Theme.fontSizeExtraSmall
+                color: Theme.secondaryHighlightColor
+            }
+
+            Item {
+                width: 1
+                height: Theme.paddingLarge
+            }
+
+            ButtonLayout {
+                Button {
+                    enabled: root.alienDalvikState == "active"
+                    //% "Show licenses"
+                    text: qsTrId("android_settings-bt-android_settings_licenses")
+                    onClicked: apkInterface.call("viewLicenses")
+                }
+            }
         }
     }
 }

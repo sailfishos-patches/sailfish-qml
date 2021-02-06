@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2014 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
@@ -18,7 +25,6 @@ Pannable {
     property alias switcher: switcherLayer
     property alias statusBar: statusBar
     property alias partnerspaces: partnerspaces
-    property alias dimmer: wallpaperDimmer
 
     readonly property Item window: currentItem.window
     readonly property bool active: currentItem.active
@@ -133,18 +139,8 @@ Pannable {
         }
     }
 
-    WallpaperDimmer {
-        id: wallpaperDimmer
-
-        anchors.fill: parent
-
-        offset: Math.abs(eventsLayer.offset)
-        distance: homescreen._transposed ? eventsLayer.height : eventsLayer.width
-        relativeDim: eventsLayer.visible
-        z: -2000
-    }
-
     PageBusyIndicator {
+        y: parent.height/4
         running: !Lipstick.compositor.systemInitComplete
     }
 

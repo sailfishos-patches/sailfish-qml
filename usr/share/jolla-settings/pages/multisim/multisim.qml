@@ -1,10 +1,17 @@
+/****************************************************************************
+**
+** Copyright (c) 2016 - 2019 Jolla Ltd.
+** Copyright (c) 2020 Open Mobile Platform LLC.
+** License: Proprietary
+**
+****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0 as Telephony
 import Sailfish.Settings.Networking 1.0
 import Sailfish.AccessControl 1.0
 import com.jolla.settings.system 1.0
-import Nemo.Notifications 1.0
 
 Page {
     id: root
@@ -54,7 +61,9 @@ Page {
                         // JB#43226 Remove once emergency call list can be obtained from disabled SIM
                         if (modemEnabled && voiceSimSelector.modemManager.enabledModems.length === 1) {
                             // If the user only has one active modem, disallow it from being disabled
-                            atLeastOneSimNotification.publish()
+                            //: Notification that is shown when the user tries to disable the last active SIM card.
+                            //% "You must have at least one SIM slot enabled"
+                            Notices.show(qsTrId("settings_networking-no-at_least_one_sim"))
                             return
                         }
 
@@ -106,16 +115,5 @@ Page {
                 text: qsTrId("settings_networking-non_active_sim_note")
             }
         }
-    }
-
-    // JB#43226 Remove once emergency call list can be obtained from disabled SIM
-    Notification {
-        id: atLeastOneSimNotification
-        icon: "icon-lock-warning"
-        isTransient: true
-
-        //: Notification that is shown when the user tries to disable the last active SIM card.
-        //% "You must have at least one SIM slot enabled"
-        previewSummary: qsTrId("settings_networking-no-at_least_one_sim")
     }
 }

@@ -1,10 +1,17 @@
+/****************************************************************************
+**
+** Copyright (C) 2018 - 2019 Jolla Ltd.
+** Copyright (C) 2020 Open Mobile Platform LLC.
+**
+****************************************************************************/
+
 import QtQuick 2.5
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import Sailfish.Ambience 1.0
 import Sailfish.Gallery 1.0
 import Nemo.DBus 2.0
-import org.nemomobile.thumbnailer 1.0
+import Nemo.Thumbnailer 1.0
 import org.nemomobile.notifications 1.0 as SystemNotifications
 import org.nemomobile.configuration 1.0
 import org.nemomobile.lipstick 0.1
@@ -84,8 +91,8 @@ Item {
             }
 
             onAmbienceInstalling: {
-                ambiencePreviewNotification.previewSummary = displayName
-                ambiencePreviewNotification.previewBody = coverImage
+                ambiencePreviewNotification.summary = displayName
+                ambiencePreviewNotification.body = coverImage
                 // Give some time for the TOH dialog to fade out
                 ambiencePreviewTimer.restart()
             }

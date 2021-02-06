@@ -11,6 +11,7 @@ import QtQuick 2.2
 import Sailfish.Silica 1.0
 import Sailfish.Browser 1.0
 import "." as Browser
+import "../../shared" as Shared
 
 Column {
     id: toolBarRow
@@ -26,7 +27,8 @@ Column {
     property real certOverlayPreferedHeight: 4 * toolBarRow.height
     readonly property bool showFindButtons: webView.findInPageHasResult && findInPageActive
     property alias bookmarked: secondaryBar.bookmarked
-    readonly property alias toolsHeight: toolsRow.height
+    readonly property alias rowHeight: toolsRow.height
+    readonly property int maxRowCount: 5
 
     readonly property int horizontalOffset: largeScreen ? Theme.paddingLarge : Theme.paddingSmall
     readonly property int buttonPadding: largeScreen || orientation === Orientation.Landscape || orientation === Orientation.LandscapeInverted
@@ -57,6 +59,7 @@ Column {
     signal showChrome
     signal closeActiveTab
     signal showCertDetail
+    signal loadPage(string url)
 
     // Used from SecondaryBar
     signal enterNewTabUrl
@@ -64,6 +67,7 @@ Column {
     signal shareActivePage
     signal bookmarkActivePage
     signal removeActivePageFromBookmarks
+    signal savePageAsPDF
 
     function resetFind() {
         webView.sendAsyncMessage("embedui:find", { text: "", backwards: false, again: false })
@@ -85,18 +89,18 @@ Column {
 
     Item {
         id: certOverlay
+
+        readonly property bool canDestroy: !visible && !certOverlayActive
+        onCanDestroyChanged: {
+            if (canDestroy) certOverlayLoader.active = false
+        }
+
         visible: opacity > 0.0 || height > 0.0
         opacity: certOverlayActive ? 1.0 : 0.0
         height: certOverlayHeight
         width: parent.width
 
         Behavior on opacity { FadeAnimation {} }
-
-        onVisibleChanged: {
-            if (!visible && !certOverlayActive) {
-                certOverlayLoader.active = false
-            }
-        }
 
         Loader {
             id: certOverlayLoader
@@ -105,7 +109,6 @@ Column {
                 security: webView.security
                 width: certOverlay.width
                 height: certOverlayHeight
-                portrait: browserPage.isPortrait
                 opacity: Math.max((certOverlayAnimPos * 2.0) - 1.0, 0)
 
                 onShowCertDetail: toolBarRow.showCertDetail()
@@ -147,6 +150,7 @@ Column {
             Browser.TabButton {
                 id: tabs
 
+                icon.source: webView.privateMode ? "image://theme/icon-m-incognito" : "image://theme/icon-m-tabs"
                 opacity: secondaryToolsActive || findInPageActive ? 0.0 : 1.0
                 horizontalOffset: toolBarRow.horizontalOffset
                 label.text: webView.tabModel.count
@@ -156,30 +160,29 @@ Column {
                     id: rotationAnimator
                     target: tabs.icon
                     duration: 1500
-                    easing.type: Easing.InOutQuad
                     alwaysRunToEnd: true
                 }
 
                 Connections {
                     target: webView.tabModel
                     onNewTabRequested: {
-                        // New tab request triggers 90 degrees clockwise rotation
+                        // New tab request triggers 360 degrees clockwise rotation
                         // for the tab icon.
-                        rotationAnimator.from = rotationAnimator.to
-                        rotationAnimator.to = rotationAnimator.from + 90
+                        rotationAnimator.from = 0
+                        rotationAnimator.to = 360
                         rotationAnimator.restart()
                     }
 
                     onTabClosed: {
                         // Counter closewise when closing.
-                        rotationAnimator.from = rotationAnimator.to
-                        rotationAnimator.to = rotationAnimator.from - 90
+                        rotationAnimator.from = 0
+                        rotationAnimator.to = -360
                         rotationAnimator.restart()
                     }
                 }
             }
 
-            Browser.IconButton {
+            Shared.IconButton {
                 opacity: secondaryToolsActive && !findInPageActive ? 1.0 : 0.0
                 icon.source: "image://theme/icon-m-tab-close"
                 icon.anchors.horizontalCenterOffset: toolBarRow.horizontalOffset
@@ -187,7 +190,7 @@ Column {
                 onTapped: closeActiveTab()
             }
 
-            Browser.IconButton {
+            Shared.IconButton {
                 opacity: !secondaryToolsActive && findInPageActive ? 1.0 : 0.0
                 icon.source: "image://theme/icon-m-search"
                 icon.anchors.horizontalCenterOffset: toolBarRow.horizontalOffset
@@ -198,7 +201,7 @@ Column {
             }
         }
 
-        Browser.ExpandingButton {
+        Shared.ExpandingButton {
             id: backIcon
             expandedWidth: toolBarRow.iconWidth
             icon.source: "image://theme/icon-m-back"
@@ -206,7 +209,7 @@ Column {
             onTapped: webView.goBack()
         }
 
-        Browser.ExpandingButton {
+        Shared.ExpandingButton {
             id: padlockIcon
             property bool danger: webView.security && webView.security.validState && !webView.security.allGood
             property real glow
@@ -300,7 +303,7 @@ Column {
                 Behavior on opacity { FadeAnimation {} }
             }
 
-            Browser.ExpandingButton {
+            Shared.ExpandingButton {
                 id: previousFindResult
                 active: showFindButtons
                 expandedWidth: (toolBarRow.width - menuButton.width - tabButton.width) / 2
@@ -314,7 +317,7 @@ Column {
                 }
             }
 
-            Browser.ExpandingButton {
+            Shared.ExpandingButton {
                 active: showFindButtons
                 expandedWidth: previousFindResult.width
                 anchors.left: previousFindResult.right
@@ -329,7 +332,7 @@ Column {
             }
         }
 
-        Browser.ExpandingButton {
+        Shared.ExpandingButton {
             id: reloadButton
             expandedWidth: toolBarRow.iconWidth
             icon.source: webView.loading ? "image://theme/icon-m-reset" : "image://theme/icon-m-refresh"
@@ -350,7 +353,7 @@ Column {
             width: toolBarRow.iconWidth + toolBarRow.horizontalOffset
             height: parent.height
 
-            Browser.IconButton {
+            Shared.IconButton {
                 icon.source: "image://theme/icon-m-menu"
                 icon.anchors.horizontalCenterOffset: - toolBarRow.horizontalOffset
                 width: parent.width
@@ -358,7 +361,7 @@ Column {
                 onTapped: showSecondaryTools()
             }
 
-            Browser.IconButton {
+            Shared.IconButton {
                 icon.source: "image://theme/icon-m-menu"
                 icon.anchors.horizontalCenterOffset: toolBarRow.horizontalOffset
                 width: parent.width
@@ -367,7 +370,7 @@ Column {
                 onTapped: showChrome()
             }
 
-            Browser.IconButton {
+            Shared.IconButton {
                 icon.source: "image://theme/icon-m-reset"
                 icon.anchors.horizontalCenterOffset: - toolBarRow.horizontalOffset
                 width: parent.width

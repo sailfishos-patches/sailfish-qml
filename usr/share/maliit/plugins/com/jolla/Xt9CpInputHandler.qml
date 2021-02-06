@@ -56,7 +56,7 @@ InputHandler {
                 Rectangle {
                     id: background
                     anchors.fill: parent
-                    color: Theme.highlightBackgroundColor
+                    color: handler.palette.highlightBackgroundColor
                     opacity: .05
                 }
 
@@ -96,8 +96,9 @@ InputHandler {
                             source: "image://theme/icon-lock-more"
                             anchors.verticalCenter: parent.verticalCenter
                         }
-                        Image {
-                            source: "image://theme/icon-lock-more?" + Theme.highlightColor
+                        Icon {
+                            source: "image://theme/icon-lock-more"
+                            color: palette.highlightColor
                             anchors.verticalCenter: parent.verticalCenter
                             opacity: listView.dragging && listView.atXEnd ? 1.0 : 0.0
                             Behavior on opacity { FadeAnimation {} }
@@ -110,11 +111,10 @@ InputHandler {
                         width: candidateText.width + Theme.paddingLarge * 2
                         height: listTopItem.height
 
-                        Text {
+                        Label {
                             id: candidateText
                             anchors.centerIn: parent
-                            color: (backGround.down || (index === 0 && xt9CpModel.inputString.length > 0))
-                                   ? Theme.highlightColor : Theme.primaryColor
+                            highlighted: backGround.down || (index === 0 && xt9CpModel.inputString.length > 0)
                             font { pixelSize: Theme.fontSizeSmall; family: Theme.fontFamily }
                             text: model.text
                         }
@@ -204,9 +204,10 @@ InputHandler {
                         anchors.verticalCenter: parent.bottom
                         anchors.verticalCenterOffset: -Theme.paddingSmall
                     }
-                    Image {
-                        source: "image://theme/icon-lock-more?" + Theme.highlightColor
+                    Icon {
+                        source: "image://theme/icon-lock-more"
                         anchors.centerIn: moreIcon
+                        color: palette.highlightColor
                         opacity: verticalList.dragging && verticalList.atYEnd ? 1.0 : 0.0
                         Behavior on opacity { FadeAnimation {} }
                     }
@@ -218,14 +219,13 @@ InputHandler {
                     width: parent.width
                     height: geometry.keyHeightLandscape * candidateText.lineCount
 
-                    Text {
+                    Label {
                         id: candidateText
 
                         width: background.width
                         horizontalAlignment: Text.AlignHCenter
                         anchors.verticalCenter: parent.verticalCenter
-                        color: (background.down || (index === 0 && xt9CpModel.inputString.length > 0))
-                               ? Theme.highlightColor : Theme.primaryColor
+                        highlighted: background.down || (index === 0 && xt9CpModel.inputString.length > 0)
                         font { pixelSize: Theme.fontSizeSmall; family: Theme.fontFamily }
                         text: model.text
                         wrapMode: Text.Wrap
@@ -296,7 +296,7 @@ InputHandler {
         height: inputItems.height
 
         visible: xt9CpModel.fetchMany
-        color: Theme.highlightDimmerColor
+        color: handler.palette.highlightDimmerColor
         opacity: 0.9
         clip: true
 
@@ -334,11 +334,10 @@ InputHandler {
 
                         onClicked: selectPhraseAndShrink(model.text, model.index)
 
-                        Text {
+                        Label {
                             id: gridText
                             anchors.verticalCenter: parent.verticalCenter
                             x: Theme.paddingMedium
-                            color: gridItemBackground.down ? Theme.highlightColor : Theme.primaryColor
                             font { pixelSize: Theme.fontSizeSmall; family: Theme.fontFamily }
                             text: model.text
                         }

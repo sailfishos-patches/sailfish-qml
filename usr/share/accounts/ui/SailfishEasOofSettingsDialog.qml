@@ -102,6 +102,7 @@ Dialog {
                     //% "Message inside my organization"
                     label: qsTrId("settings-accounts-ph-message_for_internal_description")
                     text: oofSettings.internalMessage
+                    backgroundStyle: TextEditor.FilledBackground
                 }
 
                 SectionHeader {
@@ -149,6 +150,7 @@ Dialog {
                     label: qsTrId("settings-accounts-ph-message_for_external_description")
                     text: oofSettings.externalMessage
                     enabled: replyExternalSwitch.checked
+                    backgroundStyle: TextEditor.FilledBackground
                 }
             }
         }

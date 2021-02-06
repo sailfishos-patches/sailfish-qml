@@ -14,6 +14,20 @@ SilicaListView {
     currentIndex: -1
     _quickScrollItem.directionsEnabled: QuickScrollDirection.Down
 
+    BackgroundRectangle {
+        width: parent.width
+        height: stickyHeader.height
+        z: 1
+
+        SectionHeader {
+            id: stickyHeader
+            property var date: undefined
+            text: date !== undefined && Qt.application.active ? Format.formatDate(date, Formatter.TimepointSectionRelative) : ""
+            horizontalAlignment: Text.AlignHCenter
+            color: Theme.secondaryColor
+        }
+    }
+
     delegate: Item {
         id: wrapper
 
@@ -34,6 +48,9 @@ SilicaListView {
             }
             return model.status
         }
+
+        property bool lastVisibleItem: messagesView.contentY > y && messagesView.contentY < y + height
+        onLastVisibleItemChanged: if (lastVisibleItem) stickyHeader.date = model.startTime
 
         height: loader.y + loader.height
         width: parent.width
@@ -96,18 +113,35 @@ SilicaListView {
             property string nextSection
             property bool accountsMatch: nextSection && section.substring(11) === nextSection.substring(11)
             property bool datesMatch: nextSection && section.substring(0, 10) === nextSection.substring(0, 10)
+            property bool reparent: messagesView.contentY > header.parent.y - height
 
             width: messagesView.width
 
-            SectionHeader {
+            Item {
+                id: sectionDelegate
+
+                width: parent.width
+                height: dateSection.height
                 visible: !datesMatch
-                horizontalAlignment: Text.AlignHCenter
-                color: Theme.secondaryColor
-                text: {
-                    if (modelData && Qt.application.active) { // force refresh
-                        return Format.formatDate(modelData.startTime, Formatter.TimepointSectionRelative)
-                    } else {
-                        return ""
+
+                BackgroundRectangle {
+                    width: parent.width
+                    height: dateSection.height
+                    parent: reparent ?  messagesView : sectionDelegate
+                    y: reparent ? Math.max(0, header.parent.y - messagesView.contentY) : 0
+                    z: messagesView.contentHeight - Math.abs(header.parent.y)
+
+                    SectionHeader {
+                        id: dateSection
+                        horizontalAlignment: Text.AlignHCenter
+                        color: Theme.secondaryColor
+                        text: {
+                            if (modelData && Qt.application.active) { // force refresh
+                                return Format.formatDate(modelData.startTime, Formatter.TimepointSectionRelative)
+                            } else {
+                                return ""
+                            }
+                        }
                     }
                 }
             }

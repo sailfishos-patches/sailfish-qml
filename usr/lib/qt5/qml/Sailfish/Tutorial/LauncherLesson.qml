@@ -132,6 +132,8 @@ Lesson {
         id: applicationGrid
 
         y: parent.height
+
+        backgroundItem: background
     }
 
     HintLabel {

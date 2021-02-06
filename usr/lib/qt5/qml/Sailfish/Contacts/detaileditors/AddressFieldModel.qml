@@ -24,7 +24,7 @@ ListModel {
 
     function allFieldsEmpty() {
         for (var i = 0; i < count; i++) {
-            if (get(i).value.length > 0) {
+            if (get(i).value.trim().length > 0) {
                 return false
             }
         }

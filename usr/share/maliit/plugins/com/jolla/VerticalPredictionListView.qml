@@ -66,8 +66,6 @@ PredictionListView {
             elide: Text.ElideRight
             textFormat: Text.StyledText
             fontSizeMode: Text.HorizontalFit
-
-            color: highlighted ? Theme.highlightColor : Theme.primaryColor
         }
 
         IconButton {

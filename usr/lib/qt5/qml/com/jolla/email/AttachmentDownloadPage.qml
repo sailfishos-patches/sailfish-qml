@@ -71,17 +71,19 @@ Page {
             //: Download attachments button
             //% "Download"
             text: qsTrId("jolla-email-la-download_attachments_forward")
+            icon.source: "image://theme/icon-splus-cloud-download"
             onClicked: {
                 busyLabel.running = true
                 downloadInProgress = true
                 email.downloadMessage()
             }
         }
-        Button {
+        SecondaryButton {
             visible: !busyLabel.running
             //: Discard not downloaded attachments button
             //% "Discard"
             text: qsTrId("jolla-email-la-discard_not_downloaded_attachments")
+            icon.source: "image://theme/icon-splus-cancel"
             onClicked: {
                 composerItem.removeUndownloadedAttachments()
                 composerItem.discardUndownloadedAttachments = true

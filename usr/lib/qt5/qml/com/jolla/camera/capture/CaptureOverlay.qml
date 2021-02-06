@@ -10,6 +10,7 @@ import org.nemomobile.policy 1.0
 import org.nemomobile.ngf 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.notifications 1.0
+import org.nemomobile.systemsettings 1.0
 import QtSensors 5.0
 
 import "../settings"
@@ -23,6 +24,12 @@ SettingsOverlay {
     property Item focusArea
 
     property int _recordingDuration: clock.enabled ? ((clock.time - _startTime) / 1000) : 0
+    property int _recSecsRemaining: {
+        var totalBitRate = (camera.videoRecorder.videoBitRate + camera.videoRecorder.audioBitRate) * 1.05
+        var maxDuration = Settings.storageMaxFileSize * 8 / totalBitRate
+        return maxDuration - _recordingDuration
+    }
+
     property var _startTime: new Date()
 
     width: captureView.width
@@ -107,6 +114,12 @@ SettingsOverlay {
             notification.publishMessage(qsTrId("camera-me-storage-mounting"))
         }
         previousStoragePathStatus.value = Settings.storagePathStatus
+
+        // Refresh the remaining storage space, in case it was modified while we weren't active
+        // TODO: Do this regularly throughout recording, if it doesn't interfere.
+        if (!captureView.recording) {
+            Settings.refreshMaxFileSize()
+        }
     }
 
     PositionSource {
@@ -115,7 +128,9 @@ SettingsOverlay {
         // The internal position source may not be initialised until the component completes,
         // and in that instance the active property may be reset.
         // So, initialise the property after component completion to ensure correct behaviour.
-        Component.onCompleted: positionSource.active = Qt.binding(function() { return captureView.effectiveActive && Settings.locationEnabled && Settings.global.saveLocationInfo })
+        Component.onCompleted: positionSource.active = Qt.binding(function() {
+            return captureView.effectiveActive && locationSettings.locationEnabled && Settings.global.saveLocationInfo
+        })
     }
 
     opacity: 0.0
@@ -273,6 +288,41 @@ SettingsOverlay {
         styleColor: "#20000000"
     }
 
+    Label {
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            top: timerLabel.bottom
+        }
+        opacity: {
+            if (captureView.recording)
+                return _recSecsRemaining < 300 || (_recordingDuration > 120 && _recSecsRemaining < 3600) ? 1.0 : 0.0
+            else 
+                return camera.captureMode == Camera.CaptureVideo && _recSecsRemaining < 300 ? 1.0 : 0.0
+        }
+        Behavior on opacity { FadeAnimator {} }
+        text: {
+            if (captureView.recording) {
+                if (_recSecsRemaining >= 60) {
+                    //% "Recording stops in %n min"
+                    return qsTrId("camera-la-rec-remain_min_countdown", Math.floor(_recSecsRemaining/60))
+                } else {
+                    //% "Recording stops in %n sec"
+                    return qsTrId("camera-la-rec-remain_sec_countdown", _recSecsRemaining)
+                }
+            } else if (_recSecsRemaining == 0) {
+                //% "Storage full"
+                return qsTrId("camera-la-storage_full")
+            } else {
+                //% "%n min estimated recording time left"
+                return qsTrId("camera-la-video_rec_remain", Math.floor(_recSecsRemaining/60))
+            }
+        }
+        font.pixelSize: Theme.fontSizeExtraSmall
+        color: Theme.lightPrimaryColor
+        style: Text.Outline
+        styleColor: "#20000000"
+    }
+
     WallClock {
         id: clock
         updateFrequency: WallClock.Second
@@ -280,6 +330,11 @@ SettingsOverlay {
         onEnabledChanged: {
             if (enabled) {
                 _startTime = clock.time
+            }
+        }
+        onTimeChanged: {
+            if (enabled && _recSecsRemaining <= 0 && camera) {
+                camera.videoRecorder.stop()
             }
         }
     }
@@ -364,6 +419,8 @@ SettingsOverlay {
         isTransient: true
         urgency: Notification.Critical
     }
+
+    LocationSettings { id: locationSettings }
 
     ConfigurationValue {
         id: previousStoragePathStatus

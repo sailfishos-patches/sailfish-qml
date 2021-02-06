@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 – 2019 Jolla Ltd.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.settings 1.0
@@ -5,7 +12,6 @@ import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.lipstick 0.1
-import Nemo.Notifications 1.0
 
 Page {
     id: page
@@ -112,8 +118,7 @@ Page {
                             value = 0
                         }
                         //% "Resetting some hints may require a reboot"
-                        notification.previewBody = qsTrId("settings_shortcuts-la-reseting_may_require_reboot")
-                        notification.publish()
+                        Notices.show(qsTrId("settings_shortcuts-la-reseting_may_require_reboot"))
                     }
 
                     property var hints: [
@@ -155,11 +160,4 @@ Page {
     }
 
     DisplaySettings { id: displaySettings }
-
-    Notification {
-        id: notification
-
-        icon: "icon-system-warning"
-        isTransient: true
-    }
 }

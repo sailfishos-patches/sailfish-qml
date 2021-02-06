@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Pty Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+*/
+
 .pragma library
 .import org.nemomobile.contacts 1.0 as Contacts
 .import Sailfish.Silica 1.0 as Silica
@@ -5,6 +12,10 @@
 
 var CommonJs
 var isInitialized = false
+
+var ACTIONS_MODE_HIDDEN = 0
+var ACTIONS_MODE_DISABLED = 1
+var ACTIONS_MODE_ENABLED = 2
 
 function init(common) // should be called by top-level contacts.qml
 {
@@ -16,10 +27,12 @@ function init(common) // should be called by top-level contacts.qml
     CommonJs = common
 }
 
-function getDetailsActions(detailType)
+function getDetailsActions(detailType, actionsMode)
 {
     var actions = []
-    var action = {}
+    if (actionsMode == ACTIONS_MODE_HIDDEN) {
+        return actions
+    }
 
     switch (detailType) {
     case "phone":
@@ -95,6 +108,12 @@ function getDetailsActions(detailType)
             "actionIcon": "image://theme/icon-m-note"
         })
         break
+    }
+
+    if (actions.length && actionsMode == ACTIONS_MODE_DISABLED) {
+        for (var i = 0; i < actions.length; ++i) {
+            actions[i] = { "actionIcon": actions[i].actionIcon, "actionDisabled": true }
+        }
     }
 
     return actions
@@ -201,10 +220,17 @@ function phoneDetails(details, contact)
 {
     var detail
     var minimizedNumbers = contact.removeDuplicatePhoneNumbers(contact.phoneDetails)
+    var originDetailIndex = {}
+
     for (var i = 0; i < minimizedNumbers.length; ++i) {
         detail = minimizedNumbers[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         details.push({
             "detailsType": "phone",
+            "detailsIndex": originDetailIndex[detail.originId]++,
+            "detailsOriginId": detail.originId,
             "detailsLabel": CommonJs.getNameForDetailSubType(detail.type, detail.subTypes, detail.label),
             "detailsValue": detail.number,
             "detailsData": {}
@@ -216,10 +242,17 @@ function fullPhoneDetails(details, contact)
 {
     var detail
     var fullNumbers = contact.phoneDetails
+    var originDetailIndex = {}
+
     for (var i = 0; i < fullNumbers.length; ++i) {
         detail = fullNumbers[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         details.push({
             "detailsType": "phone",
+            "detailsIndex": originDetailIndex[detail.originId]++,
+            "detailsOriginId": detail.originId,
             "detailsLabel": CommonJs.getNameForDetailSubType(detail.type, detail.subTypes, detail.label),
             "detailsValue": detail.number,
             "detailsData": {}
@@ -231,10 +264,17 @@ function emailDetails(details, contact)
 {
     var detail
     var emailDetails = contact.removeDuplicateEmailAddresses(contact.emailDetails)
+    var originDetailIndex = {}
+
     for (var i = 0; i < emailDetails.length; ++i) {
         detail = emailDetails[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         details.push({
             "detailsType": "email",
+            "detailsIndex": originDetailIndex[detail.originId]++,
+            "detailsOriginId": detail.originId,
             "detailsLabel": CommonJs.getNameForDetailType(detail.type, detail.label),
             "detailsValue": detail.address,
             "detailsData": {}
@@ -246,11 +286,18 @@ function imDetails(details, contact)
 {
     var nonvalidDetails = []
     var accountDetails = contact.removeDuplicateOnlineAccounts(contact.accountDetails)
+    var originDetailIndex = {}
+
     for (var i = 0; i < accountDetails.length; ++i) {
         var detail = accountDetails[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         var valid = detail.accountPath.length > 0
         var result = {
             "detailsType": (valid ? "im" : ""),
+            "detailsIndex": originDetailIndex[detail.originId]++,
+            "detailsOriginId": detail.originId,
             "detailsLabel": CommonJs.getNameForImProvider(detail.serviceProviderDisplayName, detail.serviceProvider, detail.label),
             "detailsValue": detail.accountUri,
             "detailsData": (valid ? { 'localUid': detail.accountPath, 'remoteUid': detail.accountUri, 'presenceState': detail.presenceState } : {} )
@@ -269,11 +316,18 @@ function imDetails(details, contact)
 
 function addressDetails(details, contact)
 {
+    var originDetailIndex = {}
+
     for (var i = 0; i < contact.addressDetails.length; ++i) {
         var detail = contact.addressDetails[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         var addressParts = CommonJs.addressStringToMap(detail.address)
         details.push({
             "detailsType": "address",
+            "detailsIndex": originDetailIndex[detail.originId]++,
+            "detailsOriginId": detail.originId,
             "detailsLabel": CommonJs.getNameForDetailSubType(detail.type, detail.subTypes, detail.label),
             "detailsValue": CommonJs.getAddressSummary(detail.address),
             "detailsData": {
@@ -290,10 +344,17 @@ function addressDetails(details, contact)
 
 function websiteDetails(details, contact)
 {
+    var originDetailIndex = {}
+
     for (var i = 0; i < contact.websiteDetails.length; ++i) {
         var detail = contact.websiteDetails[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         details.push({
             "detailsType": "website",
+            "detailsIndex": originDetailIndex[detail.originId]++,
+            "detailsOriginId": detail.originId,
             "detailsLabel": CommonJs.getNameForDetailSubType(detail.type, detail.subType, detail.label),
             "detailsValue": detail.url,
             "detailsData": {}
@@ -305,19 +366,29 @@ function dateDetails(details, contact)
 {
     var currentDetail = {}
 
-    if (!isNaN(contact.birthday)) {
+    var birthdayDetail = contact.birthdayDetail
+    if (!isNaN(birthdayDetail.date)) {
         details.push({
             "detailsType": "date",
+            "detailsIndex": 0,
+            "detailsOriginId": birthdayDetail.originId,
             "detailsLabel": CommonJs.getNameForDetailType(Contacts.Person.BirthdayType, undefined),
-            "detailsValue": Silica.Format.formatDate(contact.birthday, Silica.Format.DateLong),
-            "detailsData": { "date": contact.birthday }
+            "detailsValue": Silica.Format.formatDate(birthdayDetail.date, Silica.Format.DateLong),
+            "detailsData": { "date": birthdayDetail.date }
         })
     }
+
+    var originDetailIndex = {}
     for (var i = 0; i < contact.anniversaryDetails.length; ++i) {
         var detail = contact.anniversaryDetails[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         if (!isNaN(detail.originalDate)) {
             details.push({
                 "detailsType": "date",
+                "detailsIndex": originDetailIndex[detail.originId]++,
+                "detailsOriginId": detail.originId,
                 "detailsLabel": CommonJs.getNameForDetailSubType(detail.type, detail.subType, undefined),
                 "detailsValue": Silica.Format.formatDate(detail.originalDate, Silica.Format.DateLong),
                 "detailsData": { "date": detail.originalDate }
@@ -328,10 +399,17 @@ function dateDetails(details, contact)
 
 function noteDetails(details, contact)
 {
+    var originDetailIndex = {}
+
     for (var i = 0; i < contact.noteDetails.length; ++i) {
         var detail = contact.noteDetails[i]
+        if (originDetailIndex[detail.originId] === undefined) {
+            originDetailIndex[detail.originId] = 0
+        }
         details.push({
             "detailsType": "note",
+            "detailsIndex": originDetailIndex[detail.originId]++,
+            "detailsOriginId": detail.originId,
             "detailsLabel": CommonJs.getNameForDetailType(Contacts.Person.NoteType, undefined),
             "detailsValue": detail.note,
             "detailsData": {}
@@ -349,6 +427,7 @@ function activityDetails(details, contact)
         if (type == "phone" || type == "im") {
             details.push({
                 "detailsType": "activity",
+                "detailsIndex": -1,
                 //% "Activity"
                 "detailsLabel": qsTrId("components_contacts-la-activity"),
                 //% "Past communication events"

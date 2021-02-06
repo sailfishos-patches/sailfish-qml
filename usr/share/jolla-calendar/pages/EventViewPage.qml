@@ -175,5 +175,12 @@ Page {
             }
         }
         VerticalScrollDecorator {}
+
+        ViewPlaceholder {
+            id: eventErrorPlaceholder
+            enabled: query.eventError
+            //% "Event could not be loaded, it may no longer exist"
+            text: qsTrId("calendar-la-event_could_not_be_loaded")
+        }
     }
 }

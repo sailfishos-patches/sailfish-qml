@@ -1,15 +1,15 @@
 /****************************************************************************
-**
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Petri M. Gerdt <petri.gerdt@jollamobile.com>
-**
-****************************************************************************/
+ **
+ ** Copyright (c) 2013 - 2019 Jolla Ltd.
+ ** Copyright (c) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import org.nemomobile.lipstick 0.1
-import "../compositor"
+import "../backgrounds"
 
 SystemDialogLayout {
     id: root
@@ -18,10 +18,9 @@ SystemDialogLayout {
 
     contentHeight: content.height
 
-    BlurredBackground {
+    MenuBackground {
         width: content.width
         height: content.height
-        backgroundItem: Lipstick.compositor.blurSource
     }
 
     Column {

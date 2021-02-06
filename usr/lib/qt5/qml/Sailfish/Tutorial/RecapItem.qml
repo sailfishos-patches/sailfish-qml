@@ -40,12 +40,19 @@ SilicaItem {
             //% "Well done!"
             label.text = qsTrId("tutorial-la-well_done")
             againButton.visible = true
-            continueButton.text = lessonCounter === maxLessons
-                    //: The button text shown at the end of the tutorial. Pressing this quits the tutorial.
-                    //% "Close tutorial"
-                    ? qsTrId("tutorial-bt-close_tutorial")
-                    //% "Continue"
-                    : qsTrId("tutorial-bt-continue")
+
+            if (lessonCounter === maxLessons) {
+                //: The button text shown at the end of the tutorial. Pressing this quits the tutorial.
+                //% "Close tutorial"
+                continueButton.text = qsTrId("tutorial-bt-close_tutorial")
+                continueButton.icon.source = ""
+            } else {
+                continueButton.icon.source = "image://theme/icon-splus-right"
+                //% "Continue"
+                continueButton.text = qsTrId("tutorial-bt-continue")
+                continueButton.layoutDirection = Qt.RightToLeft
+            }
+
             completedLessons = lessonCounter
         }
 
@@ -144,25 +151,28 @@ SilicaItem {
             bottomMargin: 4*Theme.paddingLarge
         }
         preferredWidth: Theme.buttonWidthMedium
+
         Button {
+            id: continueButton
+            enabled: buttonsEnabled
+
+            onClicked: {
+                lessonCounter++
+                retryLessonIndex = lessonCounter
+                hideAnimation.restart()
+            }
+        }
+
+        SecondaryButton {
             id: againButton
+
+            ButtonLayout.newLine: true
             enabled: buttonsEnabled
             //% "Try again"
             text: qsTrId("tutorial-bt-try_again")
 
             onClicked: {
                 lessonCounter = retryLessonIndex
-                hideAnimation.restart()
-            }
-        }
-        Button {
-            id: continueButton
-            ButtonLayout.newLine: true
-            enabled: buttonsEnabled
-
-            onClicked: {
-                lessonCounter++
-                retryLessonIndex = lessonCounter
                 hideAnimation.restart()
             }
         }

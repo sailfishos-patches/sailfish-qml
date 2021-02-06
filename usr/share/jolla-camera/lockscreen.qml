@@ -1,5 +1,6 @@
 import QtQuick 2.1
 import QtQuick.Window 2.1
+import Sailfish.QrFilter 1.0
 import Sailfish.Silica 1.0
 import com.jolla.camera 1.0
 import QtMultimedia 5.0
@@ -47,12 +48,13 @@ ApplicationWindow {
 
             width: window.width
             height: window.height
+            // filters: [ qrFilter ]
         }
-    }
 
-    onApplicationActiveChanged: {
-        if (applicationActive) {
-            Settings.updateLocation()
+        QrFilter {
+            id: qrFilter
+            // TODO: trigger result url clicking only after unlocking and enable with such
+            active: false
         }
     }
 }

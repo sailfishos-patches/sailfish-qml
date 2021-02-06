@@ -1,5 +1,6 @@
 import QtQuick 2.1
 import QtMultimedia 5.0
+import Sailfish.QrFilter 1.0
 import Sailfish.Silica 1.0
 import com.jolla.camera 1.0
 import "pages"
@@ -30,7 +31,7 @@ ApplicationWindow {
         anchors.fill: parent
         z: -1
         color: "black"
-        visible: pageStack.depth < 2 && !pageStack.busy
+        visible: (pageStack.depth < 2 && !pageStack.busy) || !galleryActive
     }
 
     VideoOutput {
@@ -44,10 +45,16 @@ ApplicationWindow {
             enabled: !galleryVisible
             NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
         }
+
+        filters: [ qrFilter ]
     }
 
-    onApplicationActiveChanged: {
-        if (applicationActive)
-            Settings.updateLocation()
+    QrFilter {
+        id: qrFilter
+        active: Settings.global.qrFilterEnabled
+                && Settings.global.captureMode === "image"
+                && Settings.cameraDevice === "primary"
+
+        onActiveChanged: qrFilter.clearResult()
     }
 }

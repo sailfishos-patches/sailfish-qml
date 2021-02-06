@@ -1,3 +1,10 @@
+/****************************************************************************
+ **
+ ** Copyright (C) 2014 - 2016 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.TextLinking 1.0
@@ -5,7 +12,8 @@ import "shared"
 
 SocialMediaFeedItem {
     id: item
-    height: Math.max(content.height, avatar.height) + Theme.paddingMedium * 3
+
+    contentHeight: Math.max(content.height, avatar.height) + Theme.paddingMedium * 3
     width: parent.width
     avatarSource: model.icon
 
@@ -19,7 +27,7 @@ SocialMediaFeedItem {
         id: content
         x: item.avatar.width + Theme.paddingMedium
         y: item.topMargin
-        width: parent.width - (item.avatar.width + Theme.paddingMedium*2)
+        width: parent.width - x - Theme.horizontalPageMargin
 
         SocialMediaPreviewRow {
             downloader: item.downloader
@@ -28,20 +36,17 @@ SocialMediaFeedItem {
             eventsColumnMaxWidth: item.eventsColumnMaxWidth - item.avatar.width
         }
 
-        Text {
+        Label {
             width: parent.width
-            elide: Text.ElideRight
-            opacity: .6
+            truncationMode: TruncationMode.Fade
             text: model.name
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.primaryColor
             textFormat: Text.PlainText
         }
 
-        Text {
+        Label {
             id: repostType
             width: parent.width
-            elide: Text.ElideRight
+            truncationMode: TruncationMode.Fade
             opacity: .6
             text: item.repostTypeText(model.repostType)
             font.pixelSize: Theme.fontSizeSmall
@@ -57,7 +62,6 @@ SocialMediaFeedItem {
             wrapMode: Text.Wrap
             font.pixelSize: Theme.fontSizeSmall
             shortenUrl: true
-            color: item.pressed ? Theme.highlightColor : Theme.primaryColor
             linkColor: Theme.highlightColor
             plainText: model.body
             visible: plainText !== ""

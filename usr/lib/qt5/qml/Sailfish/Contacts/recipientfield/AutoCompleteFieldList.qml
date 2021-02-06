@@ -42,15 +42,16 @@ Item {
     function saveNewContacts() {
         var newContacts = []
         for (var i = 0; i < recipientsModel.count; ++i) {
-            if (recipientsModel.get(i).propertyType != "emailAddress") {
+            var data = recipientsModel.get(i)
+            if (data.propertyType != "emailAddress") {
                 continue
             }
-            var email = recipientsModel.get(i).property
+            var email = data.property
             if (email == undefined || contactSearchModel.personByEmailAddress(email)) {
                 continue
             }
-            if (recipientsModel.get(i).temporary != undefined) {
-                newContacts[newContacts.length] = recipientsModel.get(i).temporary
+            if (data.temporary != undefined) {
+                newContacts[newContacts.length] = data.temporary
             }
         }
         if (newContacts.length) {

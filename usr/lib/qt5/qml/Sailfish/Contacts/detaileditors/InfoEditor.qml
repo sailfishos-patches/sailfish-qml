@@ -39,7 +39,7 @@ BaseEditor {
                 "name": ContactsUtil.getNameForDetailType(detail.type),
                 "propertyName": detail.propertyName,
                 "autoFillField": detail.autoFillField,
-                "canAdd": value.length === 0
+                "canAdd": value.trim().length === 0
             }
             addableTypesModel.append(properties)
         }
@@ -134,18 +134,21 @@ BaseEditor {
             exitButtonModeWhenClicked: false
             editor: root
             suggestionField: model.autoFillField
+            focus: root.initialFocusIndex === model.index
 
             onModified: {
                 var wasEmpty = model.value.length === 0
-                root.detailModel.setProperty(model.index, "value", value)
 
-                if (wasEmpty && value.length > 0 && model.index === root.detailModel.count - 1
+                var trimmedValue = value.trim()
+                root.detailModel.setProperty(model.index, "value", trimmedValue)
+
+                if (wasEmpty && trimmedValue.length > 0 && model.index === root.detailModel.count - 1
                         && addableTypesModel.count > 0) {
                     // Add an empty field to act as the 'add new x' button
                     root._addEmptyInfoDetailField()
                 }
 
-                root.hasContent = value.length > 0 || root.testHasContent()
+                root.hasContent = trimmedValue.length > 0 || root.testHasContent()
             }
 
             onRemoveClicked: {

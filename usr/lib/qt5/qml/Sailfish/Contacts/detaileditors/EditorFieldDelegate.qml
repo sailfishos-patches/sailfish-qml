@@ -28,9 +28,8 @@ StringDetailEntry {
                       ? root.inputMethodHints
                       : model.inputMethodHints
 
-    animate: !!editor && editor.ready
     buttonModeText: !!editor ? editor.fieldAdditionText : ""
-    buttonMode: buttonModeText.length > 0 && value.length === 0
+    buttonMode: buttonModeText.length > 0 && value.trim().length === 0
                 && editor && model.index === editor.detailModel.count-1
     activeFocusOnTab: !buttonMode
 
@@ -50,10 +49,10 @@ StringDetailEntry {
     }
 
     onAccepted: {
-        if (!!_nextItemToFocus) {
+        if (_nextItemToFocus) {
             _nextItemToFocus.forceActiveFocus()
         } else {
-            focus = true
+            clearFocus()
         }
     }
 
@@ -72,12 +71,6 @@ StringDetailEntry {
     onDetailLabelModified: {
         if (!!editor) {
             editor.detailModel.userModified = true
-        }
-    }
-
-    onButtonModeChanged: {
-        if (!buttonMode && editor && editor.ready) {
-            forceActiveFocus(animationDuration)
         }
     }
 

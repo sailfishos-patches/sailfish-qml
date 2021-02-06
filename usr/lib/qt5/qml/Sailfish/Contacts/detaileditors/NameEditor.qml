@@ -33,7 +33,7 @@ BaseEditor {
             } else {
                 var value = contact[detail.propertyName]
                 if (detail.type === Person.MiddleNameType
-                        && value.length === 0) {
+                        && value.trim().length === 0) {
                     // If middle name is initially set, it is displayed here. Otherwise, it is added
                     // from the 'Add other detail' editor.
                     continue
@@ -63,9 +63,9 @@ BaseEditor {
     }
 
     fieldDelegate: EditorFieldDelegate {
-
         editor: root
         leftMargin: 0
+        focus: root.initialFocusIndex === model.index
 
         onHasFocusChanged: {
             if (hasFocus) {
@@ -76,16 +76,17 @@ BaseEditor {
         }
 
         onModified: {
-            root.detailModel.setProperty(model.index, "value", value)
+            var trimmedValue = value.trim()
+            root.detailModel.setProperty(model.index, "value", trimmedValue)
             if (model.type === Person.NicknameType) {
                 var nicknameIndex = nicknameModel.findNicknameWithSourceIndex(model.sourceIndex)
                 if (nicknameIndex >= 0) {
                     nicknameModel.userModified = true
-                    nicknameModel.setProperty(nicknameIndex, "value", value)
+                    nicknameModel.setProperty(nicknameIndex, "value", trimmedValue)
                 }
             }
 
-            root.hasContent = value.length > 0 || root.testHasContent()
+            root.hasContent = trimmedValue.length > 0 || root.testHasContent()
         }
     }
 }

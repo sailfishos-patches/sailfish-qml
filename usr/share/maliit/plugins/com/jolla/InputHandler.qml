@@ -35,7 +35,7 @@ import com.meego.maliitquick 1.0
 import com.jolla.keyboard 1.0
 import Sailfish.Silica 1.0 as Silica
 
-Item {
+Silica.SilicaItem {
     property Item pressedKey
     property Component topItem
     property Component verticalItem

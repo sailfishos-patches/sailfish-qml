@@ -13,12 +13,14 @@ import Sailfish.Lipstick 1.0
 import Sailfish.Telephony 1.0
 import Sailfish.Settings.Networking 1.0
 import com.jolla.lipstick 0.1
+import org.nemomobile.devicelock 1.0
 import org.nemomobile.lipstick 0.1
 import org.nemomobile.time 1.0
 import "../lockscreen"
 import "../main"
+import "../backgrounds"
 
-Item {
+ContrastBackground {
     id: statusArea
     property bool updatesEnabled: true
     property bool recentlyOnDisplay: true
@@ -56,6 +58,10 @@ Item {
             }
 
             ProfileStatusIndicator {
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            DoNotDisturbIndicator {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -104,7 +110,7 @@ Item {
                 // If possible position this item centrally within the iconBar
                 x: Math.max((iconBar.width - width)/2 - parent.x, 0)
                 y: (parent.height - height)/2
-                sourceComponent: lockscreenMode ? (Telephony.multiSimSupported ? null : operatorName) : timeText
+                sourceComponent: lockscreenMode ? lockIcon : timeText
             }
         }
 
@@ -115,7 +121,7 @@ Item {
 
                 width: Math.min(implicitWidth, centralArea.width)
                 updatesEnabled: recentlyOnDisplay
-                color: Theme.primaryColor
+                color: statusArea.color
                 font { pixelSize: Theme.fontSizeMedium; family: Theme.fontFamilyHeading }
 
                 Connections {
@@ -124,12 +130,14 @@ Item {
                 }
             }
         }
+
         Component {
-            id: operatorName
-            CellularNetworkNameStatusIndicator {
-                modemPath: Desktop.simManager.enabledModems[0] || ""
-                maxWidth: centralArea.width
+            id: lockIcon
+            Icon {
                 color: statusArea.color
+                visible: Desktop.deviceLockState >= DeviceLock.Locked
+                source: "image://theme/icon-s-secure"
+                anchors.centerIn: parent
             }
         }
 
@@ -170,7 +178,7 @@ Item {
                     id: cellularStatusLoader
                     height: parent.height
                     active: Desktop.simManager.availableModemCount > 0
-                    readonly property color mobileDataColor: item ? item.mobileDataColor : Theme.primaryColor
+                    readonly property color mobileDataColor: item ? item.mobileDataColor : statusArea.color
                     sourceComponent: Row {
                         property alias mobileDataColor: cellularNetworkTypeStatusIndicator.color
                         height: parent.height
@@ -179,9 +187,12 @@ Item {
                         CellularNetworkTypeStatusIndicator {
                             id: cellularNetworkTypeStatusIndicator
                             anchors.verticalCenter: parent.verticalCenter
-                            color: Desktop.simManager.indexOfModem(Desktop.simManager.defaultDataModem) === 1 && networkStatusRepeater.count > 1
-                                   ? networkStatusRepeater.itemAt(1).iconColor
-                                   : networkStatusRepeater.itemAt(0).iconColor
+                            color: {
+                                var repeaterItem = Desktop.simManager.indexOfModem(Desktop.simManager.defaultDataModem) === 1 && networkStatusRepeater.count > 1
+                                        ? networkStatusRepeater.itemAt(1)
+                                        : networkStatusRepeater.itemAt(0)
+                                return !!repeaterItem ? repeaterItem.iconColor : statusArea.color
+                            }
                         }
 
                         Repeater {

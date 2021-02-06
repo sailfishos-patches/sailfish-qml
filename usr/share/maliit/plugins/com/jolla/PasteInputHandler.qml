@@ -9,7 +9,7 @@ InputHandler {
     id: pasteHandler
 
     function formatText(text) {
-        return Theme.highlightText(text, MInputMethodQuick.surroundingText, Theme.highlightColor)
+        return Theme.highlightText(text, MInputMethodQuick.surroundingText, palette.highlightColor)
     }
 
     onSelect: {

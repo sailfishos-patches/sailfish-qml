@@ -10,6 +10,8 @@ import Sailfish.Silica 1.0
 import Nemo.Email 0.1
 
 Page {
+    id: page
+
     readonly property int selectionCount: selectionModel ? selectionModel.selectedMessageCount : 0
     // these two for move to page
     property int accountId
@@ -18,12 +20,14 @@ Page {
     property bool showMove: accountId != 0
     property MessageRemorsePopup removeRemorse
     property EmailMessageListModel selectionModel
+    property DeletionDelegateModel deletionModel
 
     onStatusChanged: {
         if (status === PageStatus.Deactivating) {
             if (!actionInProgress) {
                 selectionModel.deselectAllMessages()
             }
+            deletionModel.clearSelected()
         } else if (status === PageStatus.Active) {
             // we want to have all messages available here for the mass operations
             selectionModel.limit = 0
@@ -32,7 +36,9 @@ Page {
 
     function _deleteClicked() {
         actionInProgress = true
+        deletionModel.hideSelected()
         removeRemorse.selectionModel = selectionModel
+        removeRemorse.deletionModel = deletionModel
         removeRemorse.startDeleteSelectedMessages()
         pageStack.pop()
     }
@@ -81,8 +87,10 @@ Page {
             function _toggleSelection() {
                 if (model.selected) {
                     selectionModel.deselectMessage(model.index)
+                    page.deletionModel.deselectItem(model.index)
                 } else {
                     selectionModel.selectMessage(model.index)
+                    page.deletionModel.selectItem(model.index)
                 }
             }
 
@@ -101,7 +109,10 @@ Page {
                 //% "Deselect all"
                 text: qsTrId("jolla-email-me-deselect_all_messages")
                 visible: selectionCount
-                onClicked: selectionModel.deselectAllMessages()
+                onClicked: {
+                    selectionModel.deselectAllMessages()
+                    page.deletionModel.clearSelected()
+                }
             }
 
             MenuItem {
@@ -109,7 +120,10 @@ Page {
                 //% "Select all"
                 text: qsTrId("jolla-email-me-select_all_messages")
                 visible: selectionModel.count > 0 && selectionCount < selectionModel.count
-                onClicked: selectionModel.selectAllMessages()
+                onClicked: {
+                    selectionModel.selectAllMessages()
+                    page.deletionModel.selectAll()
+                }
             }
         }
 

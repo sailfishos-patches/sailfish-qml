@@ -124,7 +124,8 @@ ApplicationWindow {
                 pageStack.animatorPush(app.getMessageViewerComponent(),
                                        {
                                            "messageId": messageId,
-                                           "removeCallback": pageStack.currentPage.removeMessage
+                                           "removeCallback": pageStack.currentPage.removeMessage,
+                                           "messageAction": messageAction,
                                        },
                                        PageStackAction.Immediate)
             } else {
@@ -209,15 +210,17 @@ ApplicationWindow {
 
     function showSingleLineNotification(text) {
         if (text.length > 0) {
-            var n = notificationComponent.createObject(null, { 'previewSummary': text,
-                                                               'icon': "image://theme/icon-system-warning" })
+            var n = notificationComponent.createObject(null, { 'summary': text,
+                                                               'appIcon': "image://theme/icon-system-warning" })
             n.publish()
         }
     }
 
     Component {
         id: notificationComponent
-        Notification { }
+        Notification {
+            isTransient: true
+        }
     }
 
     EmailAgent {

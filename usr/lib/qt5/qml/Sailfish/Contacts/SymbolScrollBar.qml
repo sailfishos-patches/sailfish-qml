@@ -141,6 +141,7 @@ Item {
         }
     }
 
+    // Keep in sync with AvatarSize.symbolScrollBarWidth
     implicitWidth: leftPadding + symbolColumn.width + rightPadding
 
     Rectangle {

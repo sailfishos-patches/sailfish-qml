@@ -19,12 +19,13 @@ Column {
     TextField {
         id: emailAddress
 
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhEmailCharactersOnly
 
-        placeholderText: label
         //% "Email address"
         label: qsTrId("components_accounts-la-genericemail_email_address")
+
+        //% "Email address is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-email_address_required") : ""
     }
 
     ValidatedTextInput {

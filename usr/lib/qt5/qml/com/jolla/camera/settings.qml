@@ -66,6 +66,8 @@ SettingsBase {
 
         property bool saveLocationInfo
 
+        property bool qrFilterEnabled: false
+
         property int exposureCompensation: 0
         property int whiteBalance: CameraImageProcessing.WhiteBalanceAuto
 

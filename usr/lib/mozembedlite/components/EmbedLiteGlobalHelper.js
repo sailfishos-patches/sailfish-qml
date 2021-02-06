@@ -40,10 +40,23 @@ EmbedLiteGlobalHelper.prototype = {
         // Init LoginManager
         try {
           Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+          var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+
+          // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LIST IN BrowserCLH.js AND WITH THE DESKTOP LIST IN nsBrowserGlue.js
+          // https://git.sailfishos.org/mer-core/gecko-dev/blob/f2e8f311/browser/components/nsBrowserGlue.js#L219
+          // https://git.sailfishos.org/mer-core/gecko-dev/blob/f2e8f311/mobile/android/components/BrowserCLH.js#L86
+          // SHA1: f2e8f3117a814098cef28ef1000139b836d33a08
+          globalMM.addMessageListener("RemoteLogins:findLogins", LoginManagerParent);
+          globalMM.addMessageListener("RemoteLogins:findRecipes", LoginManagerParent);
+          globalMM.addMessageListener("RemoteLogins:onFormSubmit", LoginManagerParent);
+          globalMM.addMessageListener("RemoteLogins:autoCompleteLogins", LoginManagerParent);
+          globalMM.addMessageListener("RemoteLogins:removeLogin", LoginManagerParent);
+          globalMM.addMessageListener("RemoteLogins:insecureLoginFormPresent", LoginManagerParent);
+          // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LIST IN BrowserCLH.js AND WITH THE DESKTOP LIST IN nsBrowserGlue.js
+
         } catch (e) {
           Logger.warn("E login manager:", e);
         }
-        LoginManagerParent.init();
         break;
       }
       case "xpcom-shutdown": {

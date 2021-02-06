@@ -141,7 +141,9 @@ AccountSettingsAgent {
     }
 
     initialPage: Page {
+        id: settingsPage
         property bool _deletionRequest
+
         onPageContainerChanged: {
             if (!pageContainer && !_deletionRequest) {
                 msyncd.call("updateProfile", settings.toXML())
@@ -159,7 +161,7 @@ AccountSettingsAgent {
                     text: qsTrId("accounts-me-delete_account")
                     onClicked: {
                         agent.accountDeletionRequested()
-                        _deletionRequest = true
+                        settingsPage._deletionRequest = true
                         pageStack.pop()
                     }
                 }

@@ -69,23 +69,23 @@ ApplicationWindow {
             function dialogHidden(status) {
                 switch(status) {
                 case AlarmDialogStatus.Dismissed:
+                    notificationManager.closeNotification(displayedAlarm.id)
                     displayedAlarm.dismiss()
                     break
                 case AlarmDialogStatus.Snoozed:
+                    publishMissedNotification(true)
                     displayedAlarm.snooze()
                     break
                 case AlarmDialogStatus.Closed:
                     if (!displayedAlarm.maximalTimeoutSnoozeCount) {
                         // The alarm has no limit for snoozes, dismiss it on first automatic close
-                        publishMissedNotification()
+                        publishMissedNotification(false)
                         displayedAlarm.dismiss()
                         break
                     }
-                    if (displayedAlarm.timeoutSnoozeCounter === displayedAlarm.maximalTimeoutSnoozeCount) {
-                        // This will be the last automatic close, the alarm will be dismissed,
-                        // publish a notification to let the user know about the missed alarm.
-                        publishMissedNotification()
-                    }
+
+                    publishMissedNotification(displayedAlarm.timeoutSnoozeCounter !== displayedAlarm.maximalTimeoutSnoozeCount)
+
                     displayedAlarm.close()
                     break
                 case AlarmDialogStatus.Invalid:
@@ -102,19 +102,19 @@ ApplicationWindow {
                 handleNextAlarm()
             }
 
-            function publishMissedNotification() {
+            function publishMissedNotification(snoozed) {
                 var date = new Date
                 if (displayedAlarm.type === Alarm.Clock) {
                     date.setHours(displayedAlarm.hour)
                     date.setMinutes(displayedAlarm.minute)
                     date.setSeconds(0)
-                    notificationManager.publishMissedClockNotification(date, displayedAlarm.title)
+                    notificationManager.publishMissedClockNotification(date, displayedAlarm.title, displayedAlarm.id, !!snoozed)
                 } else if (displayedAlarm.type === Alarm.Calendar) {
                     var occurrence = displayedAlarm.startDate
                     notificationManager.publishMissedCalendarNotification(occurrence, displayedAlarm.calendarEventUid,
                                                                           displayedAlarm.calendarEventRecurrenceId,
                                                                           Qt.formatDateTime(occurrence, Qt.ISODate),
-                                                                          displayedAlarm.title)
+                                                                          displayedAlarm.title, displayedAlarm.id, !!snoozed)
                 }
             }
 
@@ -207,6 +207,31 @@ ApplicationWindow {
                         } else {
                             page.currentDialog.closeDialog(AlarmDialogStatus.Snoozed)
                         }
+                    }
+                }
+            }
+
+            // Relay a dismiss request from the session bus to the system bus.
+            NemoDBus.DBusInterface {
+                id: timed
+
+                bus: NemoDBus.DBus.SystemBus
+                service: 'com.nokia.time'
+                path: '/com/nokia/time'
+                iface: 'com.nokia.time'
+            }
+
+            NemoDBus.DBusAdaptor {
+                service: 'com.jolla.alarm.ui'
+                path: '/com/jolla/alarm/ui'
+                iface: 'com.jolla.alarm.ui'
+
+                function dismiss(cookie) {
+                    timed.typedCall("dismiss", [
+                        { "type": "u", value: cookie },
+                    ])
+                    if (!page.displayedAlarm) {
+                        page.handleNextAlarm()
                     }
                 }
             }

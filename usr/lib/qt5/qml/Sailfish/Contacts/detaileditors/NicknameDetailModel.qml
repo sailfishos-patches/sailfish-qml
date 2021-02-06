@@ -3,6 +3,7 @@ import QtQuick 2.5
 MultiTypeDetailModel {
     id: nicknameModel
 
+    property var contact
     readonly property string propertyAccessor: "nicknameDetails"
 
     function findNicknameWithSourceIndex(sourceIndex) {
@@ -16,4 +17,10 @@ MultiTypeDetailModel {
 
     valueField: "nickname"
     subTypesExclusive: false
+
+    onContactChanged: {
+        if (contact) {
+            nicknames.reload(contact[nicknames.propertyAccessor])
+        }
+    }
 }

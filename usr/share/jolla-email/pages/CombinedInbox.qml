@@ -62,7 +62,8 @@ Page {
                 onClicked: {
                     pageStack.animatorPush(Qt.resolvedUrl("MultiSelectionPage.qml"), {
                                                removeRemorse: multiItemRemoveRemorse,
-                                               selectionModel: combinedInboxModel
+                                               selectionModel: combinedInboxModel,
+                                               deletionModel: deletionModel
                                            })
                 }
             }
@@ -146,8 +147,6 @@ Page {
             height: Theme.paddingLarge
         }
 
-        model: combinedInboxModel
-
         section {
             property: 'timeSection'
 
@@ -158,17 +157,18 @@ Page {
             }
         }
 
-        delegate: MessageItem {
-            // Hide selected delegates that are under remove threat (i.e. deleted from selection page, not gotten read)
-            // Not applicable for single message deletion, it's started from message viewer so it's more or less
-            // guaranteed that the main combined inbox model, having only unread messages, doesn't include it.
-            hidden: model.selected && multiItemRemoveRemorse.active
+        model: DeletionDelegateModel {
+            id: deletionModel
 
-            onEmailViewerRequested: {
-                pageStack.animatorPush(app.getMessageViewerComponent(), {
-                                           "messageId": messageId,
-                                           "removeCallback": removeSingleRemorse.startRemoveSingle
-                                       })
+            model: combinedInboxModel
+
+            delegate: MessageItem {
+                onEmailViewerRequested: {
+                    pageStack.animatorPush(app.getMessageViewerComponent(), {
+                                               "messageId": messageId,
+                                               "removeCallback": removeSingleRemorse.startRemoveSingle
+                                           })
+                }
             }
         }
 

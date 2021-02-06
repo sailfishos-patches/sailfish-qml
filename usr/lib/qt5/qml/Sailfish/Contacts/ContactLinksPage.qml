@@ -1,6 +1,11 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Pty Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+*/
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Contacts 1.0 as SailfishContacts
 import org.nemomobile.contacts 1.0
 
 Page {
@@ -9,170 +14,66 @@ Page {
     property Person person
     property var peopleModel
 
-    property var _peopleModel: peopleModel || SailfishContacts.ContactModelCache.unfilteredModel()
-    property bool _pendingLinkOperation
-    property bool _fetchedConstituents
-    property bool _fetchedMergeCandidates
+    property bool _busy
 
-    property var _aggregationIds
-    property var _disaggregationIds
+    // These are only used when aggregating multiple contacts selected from the ContactsMultiSelectDialog.
+    property var _pendingAggregations: []
+    property int _pendingAggregationCount
 
-    function _addContactIdsToModel(contactIds, model) {
-        for (var i=0; i<contactIds.length; i++) {
-            var p = _peopleModel.personById(contactIds[i])
-            if (p == null) {
-                console.log("Cannot load person for id:", contactIds[i])
+    function _runPendingAggregations() {
+        _pendingAggregationCount = _pendingAggregations.length
+        for (var i = 0; i < _pendingAggregations.length; ++i) {
+            if (_pendingAggregations[i] === person.id) {
+                // Ignore, cannot aggregate a contact into itself
+                _pendingAggregationCount--
                 continue
             }
-            model.append({"person": p})
-        }
-    }
 
-    function _aggregate(otherPerson) {
-        if (otherPerson.id == person.id) {
-            console.log("Cannot aggregate person with self")
-        } else {
-            otherPerson.aggregateInto(person)
-            _pendingLinkOperation = true
-        }
-    }
-
-    function _disaggregate(otherPerson) {
-        var constituents = root.person.constituents
-        if (!constituents || constituents.length < 2) {
-            console.log("Cannot disaggregate without constituents")
-        } else {
-            for (var i = 0; i < constituents.length; ++i) {
-                if (otherPerson.id == constituents[i]) {
-                    otherPerson.disaggregateFrom(person)
-                    _pendingLinkOperation = true
-                    return
-                }
+            var aggregate = peopleModel.personById(_pendingAggregations[i])
+            if (aggregate) {
+                _busy = true
+                aggregate.aggregateInto(person)
             }
-            console.log("Cannot disaggregate person that is not a constituent")
         }
-    }
-
-    function _tryAggregateContact() {
-        if (_aggregationIds && _aggregationIds.length) {
-            var id = _aggregationIds[0]
-            _aggregationIds.splice(0, 1)
-            _aggregate(_peopleModel.personById(id))
-            return true
-        }
-        return false
-    }
-
-    function _tryDisaggregateContact() {
-        if (_disaggregationIds && _disaggregationIds.length) {
-            var id = _disaggregationIds[0]
-            _disaggregationIds.splice(0, 1)
-            _disaggregate(_peopleModel.personById(id))
-            return true
-        }
-        return false
-    }
-
-    function _applyAllPendingChanges() {
-        if (!_tryDisaggregateContact()) {
-            _tryAggregateContact()
-        }
-    }
-
-    onPersonChanged: {
-        person.fetchConstituents()
-        person.fetchMergeCandidates()
     }
 
     onStatusChanged: {
-        if (status == PageStatus.Deactivating) {
-            _applyAllPendingChanges()
+        if (status === PageStatus.Active && _pendingAggregations.length > 0) {
+            _runPendingAggregations()
         }
     }
 
-    ListModel {
-        id: constituentsModel
+    ConstituentModel {
+        id: constituentModel
+
+        person: root.person
     }
 
-    ListModel {
-        id: mergeCandidatesModel
+    MergeCandidateModel {
+        id: mergeCandidateModel
+
+        person: root.person
     }
 
     Connections {
         target: root.person
 
-        onConstituentsChanged: {
-            root._fetchedConstituents = true
-            constituentsModel.clear()
-            root._addContactIdsToModel(root.person.constituents, constituentsModel)
-
-            if (status == PageStatus.Active) {
-                // Update the possible merge candidates
-                root.person.fetchMergeCandidates()
-            }
-        }
-
         onAggregationOperationFinished: {
-            // this signal is emitted twice for each link operation, so avoid unnecessary calls
-            // to fetchConstituents()
-            root._fetchedMergeCandidates = true
-            if (root._pendingLinkOperation) {
-                root._pendingLinkOperation = false
-                // If we have any pending disaggregations, process them
-                if (!_tryDisaggregateContact()) {
-                    // If we have any pending aggregations, process them
-                    if (!_tryAggregateContact()) {
-                        // Fetch the updated constituent/candidate data
-                        root.person.fetchConstituents()
-                    }
-                }
+            root._busy = false
+            _pendingAggregationCount = Math.max(0, _pendingAggregationCount - 1)
+            if (_pendingAggregationCount === 0) {
+                _pendingAggregations = []
             }
         }
-
-        onMergeCandidatesChanged: {
-            mergeCandidatesModel.clear()
-            root._addContactIdsToModel(root.person.mergeCandidates, mergeCandidatesModel)
-        }
-    }
-
-    BusyLabel {
-        //: Displayed while the page is in the process of loading links (i.e. associated contacts with similar details)
-        //% "Finding links..."
-        text: qsTrId("components_contacts-la-finding_links")
-        running: !root._fetchedConstituents && !root._fetchedMergeCandidates
     }
 
     SilicaListView {
+        id: mainListView
+
         anchors.fill: parent
-        visible: !busyIndicator.running
-
-        PullDownMenu {
-            MenuItem {
-                //: Allows user to choose more contacts to be linked to this one
-                //% "Add more links"
-                text: qsTrId("components_contacts-me-add_links")
-                onClicked: {
-                    var obj = pageStack.animatorPush(Qt.resolvedUrl("ContactsMultiSelectDialog.qml"))
-                    obj.pageCompleted.connect(function(picker) {
-
-                        picker.accepted.connect(function() {
-                            for (var i=0; i<picker.selectedContacts.count; i++) {
-                                var id = picker.selectedContacts.get(i)
-                                if (root._aggregationIds === undefined) {
-                                    root._aggregationIds = [ id ]
-                                } else {
-                                    root._aggregationIds.push(id)
-                                }
-                            }
-                            _tryAggregateContact()
-                        })
-                    })
-                }
-            }
-        }
+        opacity: 1 - busyLabel.opacity
 
         header: Column {
-            id: contentColumn
             width: parent.width
 
             PageHeader {
@@ -182,47 +83,110 @@ Page {
             }
 
             Column {
+                property real _prevHeight: height
+
+                width: parent.width
+
+                onHeightChanged: {
+                    // Default ListView behavior pushes the header upwards and out of sight, so
+                    // move it back down to ensure the header is visible when page is loaded.
+                    var delta = (height - _prevHeight)
+                    _prevHeight = height
+                    if (delta > 0) {
+                        mainListView.contentY -= delta
+                    }
+                }
+
                 Repeater {
-                    width: parent.width
-                    model: constituentsModel
+                    model: constituentModel
+
                     delegate: ContactLinkItem {
-                        enabled: constituentsModel.count > 1
+                        icon.source: "image://theme/icon-m-remove"
+                        contactPrimaryName: model.primaryName
+                        contactSecondaryName: model.secondaryName
+                        addressBook: model.addressBook
+
+                        // Disallow removing all constituents from an aggregate
+                        enabled: constituentModel.count > 1
+
                         onClicked: {
-                            animateRemoval()  // animate before removal to avoid waiting for model to update
-
-                            if (root._disaggregationIds === undefined) {
-                                root._disaggregationIds = [ model.person.id ]
-                            } else {
-                                root._disaggregationIds.push(model.person.id)
+                            if (root._busy) {
+                                return
                             }
-
-                            _tryDisaggregateContact()
+                            var constituent = root.peopleModel.personById(model.id)
+                            if (constituent) {
+                                root._busy = true
+                                animateRemoval()
+                                constituent.disaggregateFrom(root.person)
+                            }
                         }
                     }
                 }
             }
 
             SectionHeader {
-                //: List of suggestions for contacts that could be linked to this one as they have similar details
-                //% "Link suggestions"
-                text: qsTrId("components_contacts-la-link_suggestions")
+                //: List of contacts with similar details that could be linked to this contact
+                //% "Similar contacts"
+                text: qsTrId("components_contacts-la-similar_contacts")
+            }
+
+            InfoLabel {
+                //: Could not find any contacts with similar details to this one
+                //% "No similar contacts found"
+                text: qsTrId("components_contacts-la-no_similar_contacts_found")
+                font.pixelSize: Theme.fontSizeMedium
+                visible: mergeCandidateModel.populated && mergeCandidateModel.count === 0
             }
         }
 
-        model: mergeCandidatesModel
+        model: mergeCandidateModel
+
         delegate: ContactLinkItem {
+            icon.source: "image://theme/icon-m-add"
+            contactPrimaryName: model.primaryName
+            contactSecondaryName: model.secondaryName
+            addressBook: model.addressBook
+
             onClicked: {
-                animateRemoval()  // animate before removal to avoid waiting for model to update
-
-                if (root._aggregationIds === undefined) {
-                    root._aggregationIds = [ model.person.id ]
-                } else {
-                    root._aggregationIds.push(model.person.id)
+                if (root._busy) {
+                    return
                 }
-
-                _applyAllPendingChanges()
+                var aggregate = root.peopleModel.personById(model.id)
+                if (aggregate) {
+                    root._busy = true
+                    animateRemoval()
+                    aggregate.aggregateInto(root.person)
+                }
             }
         }
+
+        PullDownMenu {
+            MenuItem {
+                //: Allows user to choose more contacts to be linked to this one
+                //% "Add more links"
+                text: qsTrId("components_contacts-me-add_links")
+                enabled: !root._busy
+
+                onClicked: {
+                    var obj = pageStack.animatorPush(Qt.resolvedUrl("ContactsMultiSelectDialog.qml"))
+                    obj.pageCompleted.connect(function(picker) {
+                        picker.accepted.connect(function() {
+                            root._pendingAggregations = picker.selectedContacts.allContactIds()
+                            root._pendingAggregationCount = root._pendingAggregations.length
+                        })
+                    })
+                }
+            }
+        }
+
         VerticalScrollDecorator {}
+    }
+
+    BusyLabel {
+        id: busyLabel
+
+        running: root._pendingAggregationCount > 0
+                 || (!constituentModel.populated && !mergeCandidateModel.populated)
+                 || root.status !== PageStatus.Active
     }
 }

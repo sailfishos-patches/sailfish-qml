@@ -24,10 +24,13 @@ Column {
         default:
             openConnectProtocol.currentIndex = 0
         }
-        openConnectMTU.text = getProperty('VPN.MTU')
+        openConnectMTU.text = getProperty('OpenConnect.MTU')
         openConnectDisableIPv6.checked = getProperty('OpenConnect.DisableIPv6') === 'true'
         openConnectNoHTTPKeepAlive.checked = getProperty('OpenConnect.NoHTTPKeepalive') === 'true'
         openConnectNoDTLS.checked = getProperty('OpenConnect.NoDTLS') === 'true'
+        var dpd = getProperty('OpenConnect.ForceDPD')
+        openConnectForceDPD.checked = dpd && dpd !== '0'
+        openConnectDPDInterval.text = dpd
     }
 
     function updateProperties(providerProperties) {
@@ -48,10 +51,11 @@ Column {
             break
         }
 
-        updateProvider('VPN.MTU', openConnectMTU.text)
+        updateProvider('OpenConnect.MTU', openConnectMTU.filteredText)
         updateProvider('OpenConnect.DisableIPv6', openConnectDisableIPv6.checked.toString())
         updateProvider('OpenConnect.NoHTTPKeepalive', openConnectNoHTTPKeepAlive.checked.toString())
         updateProvider('OpenConnect.NoDTLS', openConnectNoDTLS.checked.toString())
+        updateProvider('OpenConnect.ForceDPD', openConnectForceDPD.checked ? openConnectDPDInterval.filteredText : '')
     }
 
     width: parent.width
@@ -113,12 +117,16 @@ Column {
         }
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: openConnectMTU
+        intUpperLimit: 65535
 
         //% "Packet MTU size"
         label: qsTrId("settings_network-la-vpn_openconnect_mtu")
-        inputMethodHints: Qt.ImhDigitsOnly
+        //% "MTU size must be a value between 1 and 65535"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_openconnect_mtu_error") : ""
+
+        nextFocusItem: openConnectForceDPD.checked ? openConnectDPDInterval : null
     }
 
     TextSwitch {
@@ -140,5 +148,34 @@ Column {
 
         //% "Disable DTLS and ESP"
         text: qsTrId("settings_network-la-vpn_openconnect_no_dtls_and_esp")
+    }
+
+    TextSwitch {
+        id: openConnectForceDPD
+
+        //: DPD is an acronym for Dead Peer Detection
+        //% "Force DPD"
+        text: qsTrId("settings_network-la-vpn_openconnect_force_dpd")
+        onClicked: {
+            if (checked) {
+                openConnectDPDInterval.forceActiveFocus()
+            }
+        }
+    }
+
+    ConfigIntField {
+        id: openConnectDPDInterval
+        visible: openConnectForceDPD.checked
+        opacity: visible ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation {}}
+        height: opacity * implicitHeight
+        VerticalAutoScroll.keepVisible: animation && animation.running && _autoScroll
+        intUpperLimit: 86400
+
+        //% "DPD interval (seconds)"
+        label: qsTrId("settings_network-la-vpn_openconnect_dpd_interval")
+
+        //% "DPD interval must be a value between 1 and 86400"
+        description: errorHighlight ? qsTrId("settings_network-la-vpn_openconnect_dpd_interval_error") : ""
     }
 }

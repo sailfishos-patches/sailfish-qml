@@ -4,6 +4,7 @@ import Sailfish.Lipstick 1.0
 import MeeGo.Connman 0.2
 import Nemo.DBus 2.0
 import com.jolla.settings 1.0
+import Sailfish.Policy 1.0
 
 SettingsToggle {
     id: pwrSwitch
@@ -28,6 +29,7 @@ SettingsToggle {
         }
     }
 
+    available: AccessPolicy.bluetoothToggleEnabled
     active: bluetoothStatus.connected
     icon.source: "image://theme/icon-m-bluetooth"
     checked: btTechModel.powered && bluetoothStatus.powered
@@ -40,6 +42,7 @@ SettingsToggle {
         MenuItem {
             //% "Search for devices"
             text: qsTrId("settings_bluetooth-me-search-for-devices")
+            enabled: AccessPolicy.bluetoothToggleEnabled || pwrSwitch.checked
             onClicked: settingsApp.call("findBluetoothDevices")
         }
     }
@@ -70,6 +73,10 @@ SettingsToggle {
     }
 
     onToggled: {
+        if (!AccessPolicy.bluetoothToggleEnabled) {
+            errorNotification.notify(SettingsControlError.BlockedByAccessPolicy)
+            return
+        }
         btTechModel.powered = !btTechModel.powered
         busy = true
     }

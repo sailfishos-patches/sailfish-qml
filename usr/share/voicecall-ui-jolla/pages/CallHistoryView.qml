@@ -36,14 +36,9 @@ SilicaListView {
     }
 
     function openContactCard(person, remoteUid) {
-        if (person) {
-            pageStack.animatorPush("Sailfish.Contacts.ContactCardPage",
-                                   { "contact": person, "activeDetail": remoteUid })
-        } else {
-            var contact = ContactCreator.createContact({"phoneNumbers": [remoteUid]})
-            pageStack.animatorPush("Sailfish.Contacts.TemporaryContactCardPage",
-                                   { "contact": contact, "activeDetail": remoteUid })
-        }
+        var personObject = !!person ? person : ContactCreator.createContact({"phoneNumbers": [remoteUid]})
+        pageStack.animatorPush("Sailfish.Contacts.ContactCardPage",
+                               { "contact": personObject, "activeDetail": remoteUid })
     }
 
     function dial(remoteUid, modemPath) {

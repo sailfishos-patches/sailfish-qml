@@ -10,6 +10,9 @@ NetworkField {
 
     regExp: (emptyInputOk && length === 0) ? null : inputRegExp
 
+    //% "Valid IPv4 address is required"
+    description: errorHighlight ? qsTrId("settings_network_la-ipv4_address_field_error") : ""
+
     // During typing only validate characters
     property var weakRegExp: new RegExp(/^[0-9\.]*$/)
     onTextChanged: errorHighlight = (length > 0 && !weakRegExp.test(text))

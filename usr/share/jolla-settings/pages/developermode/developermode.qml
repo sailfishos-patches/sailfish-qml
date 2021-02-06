@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Nemo.DBus 2.0
 import com.jolla.settings.system 1.0
@@ -130,7 +130,7 @@ Page {
         id: notification
 
         isTransient: true
-        icon: "icon-system-resources"
+        appIcon: "icon-system-resources"
         urgency: Notification.Critical
     }
 
@@ -153,6 +153,27 @@ Page {
             deviceLockQuery.cachedAuth = false
         }
     }
+
+    Timer {
+        id: repoRefreshTimer
+        interval: 20000
+        onRunningChanged: {
+            if (running) {
+                repoRefresher.refreshRepos()
+                //% "Refreshing"
+                refreshStatusText.text = qsTrId("settings_developermode-la-refresh_started")
+            }
+        }
+        onTriggered: {
+            //% "Timeout"
+            refreshStatusText.text = qsTrId("settings_developermode-la-timeout_on_refresh")
+        }
+    }
+
+    RepositoryRefresh {
+        id: repoRefresher
+    }
+
     Connections {
         target: Qt.application
         onActiveChanged: {
@@ -298,7 +319,7 @@ Page {
                 if (errorStatus) {
                     ssuDBus.typedCall('lastError', [], function (message) {
                         console.log('SSU Error: ' + message)
-                        notification.previewBody = message
+                        notification.body = message
                         notification.publish()
                     })
                 }
@@ -377,6 +398,7 @@ Page {
         Column {
             id: column
             width: parent.width
+            bottomPadding: Theme.paddingLarge
 
             PageHeader {
                 //% "Developer tools"
@@ -441,17 +463,17 @@ Page {
                         if (!ssu.registered && developerModeSettings.repositoryAccessRequired) {
                             if (ssu.rndMode) {
                                 //% "Device in R&D mode, enable developer updates below"
-                                notification.previewBody = qsTrId("settings_developermode-la-rnd_enable_developer_updates")
+                                notification.body = qsTrId("settings_developermode-la-rnd_enable_developer_updates")
                                 notification.publish()
                                 return
                             } else if (ssu.currentDomain === "cbeta") {
                                 //% "Device in CBeta domain, enable developer updates below"
-                                notification.previewBody = qsTrId("settings_developermode-la-cbeta_enable_developer_updates")
+                                notification.body = qsTrId("settings_developermode-la-cbeta_enable_developer_updates")
                                 notification.publish()
                                 return
                             } else if (ssu.currentDomain !== "sales") {
                                 //% "Device in '%0' domain, enable developer updates below"
-                                notification.previewBody = qsTrId("settings_developermode-la-custom_domain_enable_developer_updates").arg(ssu.currentDomain)
+                                notification.body = qsTrId("settings_developermode-la-custom_domain_enable_developer_updates").arg(ssu.currentDomain)
                                 notification.publish()
                                 return
                             }
@@ -835,6 +857,57 @@ Page {
                 Item {
                     width: parent.width
                     height: Theme.paddingLarge
+                }
+            }
+
+            Column {
+                width: parent.width
+                visible: repoRefresher.enabled
+                spacing: Theme.paddingMedium
+
+                Connections {
+                    target: repoRefresher
+                    onReposRefreshed: {
+                        //% "Repositories refreshed"
+                        refreshStatusText.text = qsTrId("settings_developermode-la-repositories_refreshed")
+                        repoRefreshTimer.running = false
+                    }
+                    onRefreshFailed: {
+                        //% "Repository refresh failed"
+                        refreshStatusText.text = qsTrId("settings_developermode-la-refresh_failed")
+                        repoRefreshTimer.running = false
+                    }
+                }
+
+                SectionHeader {
+                    //% "Repositories"
+                    text: qsTrId("settings_developermode-la-repos")
+                }
+
+                Label {
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+                    wrapMode: Text.Wrap
+                    color: Theme.highlightColor
+                    //% "Refresh package repositories"
+                    text: qsTrId("settings_developermode-la-refresh_repos")
+                }
+
+                Button {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    //% "Refresh"
+                    text: qsTrId("settings_developermode-bu-refresh_repos")
+                    onClicked: {
+                        repoRefreshTimer.running = true
+                    }
+                }
+
+                Label {
+                    id: refreshStatusText
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - 2*x
+                    wrapMode: Text.Wrap
+                    color: Theme.highlightColor
                 }
             }
         }

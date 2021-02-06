@@ -102,7 +102,7 @@ ComboBox {
     }
 
     //: Whether this bluetooth device is visible to other bluetooth devices
-    //% "Visibility:"
+    //% "Visibility"
     label: qsTrId("settings_bluetooth-la-device-visibility")
 
     value: !_discoverable

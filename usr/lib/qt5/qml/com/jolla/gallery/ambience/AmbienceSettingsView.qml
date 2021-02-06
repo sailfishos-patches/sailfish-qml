@@ -1,13 +1,14 @@
 /****************************************************************************
 **
 ** Copyright (c) 2013-2019 Jolla Ltd.
-** Copyright (c) 2019 Open Mobile Platform LLC.
+** Copyright (c) 2019-2020 Open Mobile Platform LLC.
 ** License: Proprietary
 **
 ****************************************************************************/
 import QtQuick 2.3
 import QtQml.Models 2.1
 import Sailfish.Silica 1.0
+import Sailfish.Silica.Background 1.0
 import Sailfish.Silica.private 1.0 as SilicaPrivate
 import Sailfish.Gallery 1.0
 import Sailfish.Ambience 1.0
@@ -22,6 +23,7 @@ SilicaFlickable {
     property alias contentId: ambience.contentId
     property alias source: ambience.url
     property alias ambience: ambience
+    property alias applicationWallpaper: applicationWallpaper
     property Component topHeader
     property bool showWallpaper: true
     property color _originalHighlightColor
@@ -66,6 +68,14 @@ SilicaFlickable {
         onAvailableModemsChanged: {
             ambience.changed()
         }
+    }
+
+    ThemeImageWallpaper {
+        id: applicationWallpaper
+
+        visible: false
+        imageUrl: ambience.wallpaperUrl
+        colorScheme: ambience.colorScheme
     }
 
     AmbienceActions {
@@ -152,7 +162,6 @@ SilicaFlickable {
         }
     }
 
-    anchors.fill: parent
     Column {
         id: settingsList
         width: root.width
@@ -199,13 +208,10 @@ SilicaFlickable {
             Loader {
                 active: root.showWallpaper
                 anchors.fill: parent
-                sourceComponent: SilicaPrivate.Wallpaper {
+                sourceComponent: Wallpaper {
                     anchors.fill: parent
-                    source: ambience.applicationWallpaperUrl
+                    sourceItem: applicationWallpaper
                     palette.colorScheme: ambience.colorScheme
-                    color: palette._wallpaperOverlayColor
-
-                    windowRotation: -page.rotation
                 }
             }
 

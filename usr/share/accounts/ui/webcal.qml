@@ -37,6 +37,7 @@ AccountCreationAgent {
         acceptDestination: busyComponent
         canAccept: calendarUrl.acceptableInput
         onAccepted: remoteUrl = calendarUrl.url()
+        onAcceptBlocked: calendarUrl.errorHighlight = true
 
         Column {
             width: parent.width
@@ -78,6 +79,8 @@ AccountCreationAgent {
                     // startsWith() was added in Qt5.8
                     if (text.slice(0,7) == 'http://' || text.slice(0,8) == 'https://') {
                         return text
+                    } else if (text.slice(0,10) == 'webcals://') {
+                        return 'https://' + text.slice(10)
                     } else if (text.slice(0,9) == 'webcal://') {
                         return 'http://' + text.slice(9)
                     } else {
@@ -85,15 +88,28 @@ AccountCreationAgent {
                     }
                 }
 
-                width: parent.width
+                focus: true
                 text: agent.remoteUrl
-                //% "URL of the web calendar"
-                placeholderText: qsTrId("accounts-settings-lb-webcal_add_url")
-                label: placeholderText
+                //% "Web address"
+                label: qsTrId("accounts-settings-la-web_address")
                 validator: RegExpValidator { regExp: /^[^.]*\.[^/]*\/.+$/ }
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-                errorHighlight: false
-                focus: true
+
+                onTextChanged: errorHighlight = false
+                onActiveFocusChanged: if (!activeFocus) errorHighlight = !acceptableInput
+
+                description: {
+                    if (errorHighlight) {
+                        if (text.length === 0) {
+                            //% "Web address is required"
+                            return qsTrId("components_accounts-la-web_address_required")
+                        } else {
+                            //% "Valid web address is required"
+                            return qsTrId("components_accounts-la-valid_web_address_required")
+                        }
+                    }
+                    return ""
+                }
             }
         }
     }
@@ -127,7 +143,13 @@ AccountCreationAgent {
                                     label = calRequest.responseText.slice(at + 13, end)
                                 }
                             }
-                            pageStack.animatorPush(settingComponent, {"calendarLabel": label})
+                            if (calRequest.responseText.indexOf("BEGIN:VCALENDAR") == 0) {
+                                pageStack.animatorPush(settingComponent, {"calendarLabel": label})
+                            } else {
+                                busy.state = "info"
+                                //% "Cannot find a calendar. Check that the given URL points to ICS data."
+                                busy.infoExtraDescription = qsTrId("accounts-settings-lb-webcal_no_calendar_data")
+                            }
                         } else {
                             busy.state = "info"
                             //% "Cannot find any data at given URL."
@@ -185,7 +207,7 @@ AccountCreationAgent {
             Account {
                 id: account
                 Component.onDestruction: {
-                    if (settingDialog.status == PageStatus.Active
+                    if (settingDialog && settingDialog.status == PageStatus.Active
                         && account.identifier > 0) {
                         sync()
                     }

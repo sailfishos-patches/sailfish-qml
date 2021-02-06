@@ -1,9 +1,10 @@
 /****************************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Andrew den Exter <andrew.den.exter@jollamobile.com>
+** Copyright (C) 2013-2018 Jolla Ltd.
+** Copyright (C) 2020 Open Mobile Platform LLC.
+**
 ** All rights reserved.
-** 
+**
 ** This file is part of Sailfish Silica UI component package.
 **
 ** You may use this file under the terms of BSD license as follows:
@@ -18,7 +19,7 @@
 **     * Neither the name of the Jolla Ltd nor the
 **       names of its contributors may be used to endorse or promote products
 **       derived from this software without specific prior written permission.
-** 
+**
 ** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ** ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 ** WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -43,23 +44,17 @@ With labelVisible: true (default)
   | - - - - - - - - - - - |
   |                       |
   |                       |
-  |                       |
   |      contentItem      |
   |                       |
   |                       |
-  |                       |
-  | - - - - - - - - - - - |
-  | Theme.paddingSmall/2  |
   ------------------------- background rule
-  | Theme.paddingSmall/2  |
+  |  Theme.paddingSmall   |
   | - - - - - - - - - - - |
   |                       |
   |       labelItem       |
   |                       |
   | - - - - - - - - - - - |
-  |                       |
-  |   Theme.paddingSmall  |
-  |                       |
+  |  Theme.paddingSmall   |
   -------------------------
 
 
@@ -77,19 +72,15 @@ With labelVisible: false
   |                       |
   |                       |
   |                       |
-  | - - - - - - - - - - - |
-  | Theme.paddingSmall/2  |
   ------------------------- background rule
-  | Theme.paddingSmall/2  |
+  |  Theme.paddingSmall   |
   | - - - - - - - - - - - |
-  |                       |
-  |   Theme.paddingSmall  |
-  |                       |
+  |  Theme.paddingSmall   |
   -------------------------
 
 */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import "Util.js" as Util
@@ -98,50 +89,98 @@ TextBaseItem {
     id: textBase
 
     property string label
-    property color color: textBase.errorHighlight ? palette.errorColor
-                                                  : (textBase.highlighted ? palette.highlightColor : palette.primaryColor)
+    property color color: textBase.highlighted ? palette.highlightColor : palette.primaryColor
+
     property color cursorColor: palette.primaryColor
     property alias placeholderText: placeholderTextLabel.text
     property alias placeholderColor: placeholderTextLabel.color
+
+    property string description
 
     // internal
     property alias placeholderAnimationEnabled: placeholderBehavior.enabled
     property bool softwareInputPanelEnabled: true
     property bool errorHighlight: false
+    // margins indicate the area around filled or underlined editor area
     property real textMargin: Theme.horizontalPageMargin
-    property real textLeftMargin: textMargin
+    property real textLeftMargin: textMargin + (leftItemContainer.active ? leftItemContainer.width + Theme.paddingMedium : 0)
     property real textRightMargin: textMargin
+
     property real textTopMargin: Theme.paddingSmall
+    // paddings indicate how much space there is around text to the filled or underlined area
+    property real textTopPadding: _filled ? Theme.paddingMedium : 0
+    property real textLeftPadding: _filled ? Theme.paddingMedium : 0
+    // note: not applied to rightItem.
+    // if it's interactive, it can make sense to cover all the area to the end of the underline
+    property real textRightPadding: _filled ? Theme.paddingMedium : 0
+
     // TODO: Change to use "placeholderTextLabel.lineHeight once merge request #298 is merged.
-    readonly property real textVerticalCenterOffset: textTopMargin + placeholderTextLabel.height / 2
+    readonly property real textVerticalCenterOffset: _totalTopMargins + placeholderTextLabel.height / 2
     property int selectionMode: TextInput.SelectCharacters
     property alias font: placeholderTextLabel.font
     property int focusOutBehavior: FocusBehavior.ClearItemFocus
     property bool autoScrollEnabled: true
-    property Component background: Separator {
+    property int backgroundStyle: TextEditor.UnderlineBackground
+
+    property Component background: Rectangle {
         x: textLeftMargin
-        anchors {
-            bottom: contentContainer.bottom
-            bottomMargin: -Theme.paddingSmall/2
+        anchors.top: contentContainer.bottom
+        width: parent.width - x - textRightMargin
+        height: Math.round(Theme.pixelRatio)
+        color: Theme.rgba(textBase._colorWithError, Theme.opacityHigh)
+        visible: backgroundStyle != TextEditor.NoBackground
+
+        Rectangle {
+            id: focusHighlight
+
+            property real focusLevel
+
+            color: textBase._colorWithError
+            height: parent.height + (_editor.activeFocus
+                                     ? Math.round(Theme.pixelRatio) + (palette.colorScheme === Theme.DarkOnLight ? 1 : 0)
+                                     : 0)
+            width: focusLevel * parent.width
+            states: State {
+                name: "focused"
+                when: _editor.activeFocus
+                PropertyChanges {
+                    target: focusHighlight
+                    focusLevel: 1.0
+                }
+            }
+            transitions: Transition {
+                to: "focused"
+                NumberAnimation { property: "focusLevel"; duration: 150 }
+            }
         }
-        width: contentContainer.width
-        color: textBase.color
-        horizontalAlignment: placeholderTextLabel.horizontalAlignment
+
+        Rectangle {
+            visible: textBase._filled
+            anchors.bottom: parent.top
+            width: parent.width
+            height: contentContainer.height
+            color: _editor.activeFocus ? Theme.highlightColor : Theme.primaryColor
+            opacity: 0.1
+        }
     }
+
+    property alias leftItem: leftItemContainer.item
+    property alias rightItem: rightItemContainer.item
 
     // TODO: Remove this wrongly-formulated property name once users have been migrated, and version incremented
     property alias enableSoftwareInputPanel: textBase.softwareInputPanelEnabled
 
     property bool _suppressPressAndHoldOnText
     property Item _backgroundItem
+    readonly property bool _filled: backgroundStyle == TextEditor.FilledBackground
     property QtObject _feedbackEffect
     property var _appWindow: __silica_applicationwindow_instance
     property Item _flickable
+    property alias _errorIcon: errorIcon
 
     property alias _flickableDirection: flickable.flickableDirection
     property rect _autoScrollCursorRect: Qt.rect(0, 0, 0, 0)
 
-    property Item _editor
     property Item _scopeItem: textBase
     property alias editor: textBase._editor  //XXX Deprecated
 
@@ -152,24 +191,24 @@ TextBaseItem {
     property Component labelComponent: defaultLabelComponent
 
     property Component defaultLabelComponent: Component {
-        TextBaseLabel {
-            anchors {
-                left: labelItemContainer.left
-                right: labelItemContainer.right
-            }
-            textBaseItem: textBase
+        TextEditorLabel {
+            width: parent.width
+            editor: textBase
         }
     }
+
     property Item _labelItem
+    readonly property color _colorWithError: textBase.errorHighlight ? palette.errorColor : color
 
     default property alias _children: contentContainer.data
-    property alias _contentItem: contentContainer
+    property alias contentItem: contentContainer
     property alias _placeholderTextLabel: placeholderTextLabel
     property bool focusOnClick: !readOnly
     property bool _singleLine
+    readonly property bool _isEmpty: text.length === 0 && !_editor.inputMethodComposing
     readonly property real _bottomMargin: Theme.paddingSmall + (labelVisible
                                                                 ? labelItemContainer.height + labelItemContainer.anchors.bottomMargin
-                                                                : Theme.paddingSmall)
+                                                                : Theme.paddingSmall) + descriptionLabel.height
 
     function forceActiveFocus() { _editor.forceActiveFocus() }
     function cut() { _editor.cut() }
@@ -253,7 +292,29 @@ TextBaseItem {
     highlighted: _editor.activeFocus
 
     opacity: enabled ? 1.0 : Theme.opacityLow
-    implicitHeight: _editor.height + Theme.paddingMedium + textTopMargin + (labelVisible ? labelItemContainer.height : 0) + Theme.paddingSmall
+
+    property int _totalTopMargins: textTopMargin + textTopPadding
+    property int _totalLeftMargins: textLeftMargin + textLeftPadding
+    property int _totalRightMargins: textRightMargin + textRightPadding
+    property int _rightItemWidth: rightItemContainer.active ? rightItemContainer.width : 0
+    property int _totalVerticalMargins: Theme.paddingMedium + _totalTopMargins
+                                        + (labelVisible ? labelItemContainer.height : 0)
+                                        + (descriptionLabel.text.length > 0 ? descriptionLabel.height : Theme.paddingSmall)
+
+    implicitHeight: _editor.height + _totalVerticalMargins
+    implicitWidth: parent ? parent.width : Screen.width
+
+    _keyboardPalette: {
+        if (palette.colorScheme !== Theme.colorScheme
+                    || palette.highlightColor !== Theme.highlightColor) {
+            return JSON.stringify({
+                "colorScheme": palette.colorScheme,
+                "highlightColor": palette.highlightColor.toString()
+            })
+        } else {
+            return ""
+        }
+    }
 
     onBackgroundChanged: _updateBackground()
     onLabelComponentChanged: _updateLabelItem()
@@ -288,10 +349,10 @@ TextBaseItem {
         clip: flickable.interactive
 
         anchors {
-            left: parent.left; top: parent.top
-            right: parent.right; bottom: parent.bottom
-            leftMargin: textLeftMargin; topMargin: textTopMargin
-            rightMargin: textRightMargin
+            fill: parent
+            leftMargin: textLeftMargin
+            topMargin: textTopMargin
+            rightMargin: textRightMargin + _rightItemWidth
             bottomMargin: textBase._bottomMargin
         }
     }
@@ -299,11 +360,10 @@ TextBaseItem {
     Label {
         id: placeholderTextLabel
 
-        color: textBase.errorHighlight
-               ? palette.errorColor
-               : (textBase.highlighted ? palette.secondaryHighlightColor : palette.secondaryColor)
+        text: textBase.label
+        color: textBase.highlighted ? palette.secondaryHighlightColor : palette.secondaryColor
 
-        opacity: (textBase.text.length === 0 && !_editor.inputMethodComposing) ? 1.0 : 0.0
+        opacity: textBase._isEmpty ? 1.0 : 0.0
         Behavior on opacity {
             id: placeholderBehavior
             FadeAnimation {}
@@ -311,30 +371,80 @@ TextBaseItem {
         truncationMode: TruncationMode.Fade
         anchors {
             left: parent.left; top: parent.top; right: parent.right
-            leftMargin: textLeftMargin; topMargin: textTopMargin; rightMargin: textRightMargin
+            leftMargin: _totalLeftMargins
+            topMargin: _totalTopMargins
+            rightMargin: _totalRightMargins + _rightItemWidth
         }
+    }
+
+    OpacityRampEffect {
+        id: rampEffect
+        offset: 1 - 1 / slope
+
+        states: [
+            State {
+                name: "verticalOpacityRamp"
+                when: flickable.verticalFlick
+                PropertyChanges {
+                    target: rampEffect
+                    sourceItem: contentItem
+                    transformOrigin: Item.Center
+                    slope: 1 + 10 * textBase.width / Screen.width
+                    direction: {
+                        if (flickable.contentY === flickable.originY) {
+                            return OpacityRamp.TopToBottom
+                        } else if (flickable.contentHeight - flickable.height <= flickable.contentY) {
+                            return OpacityRamp.BottomToTop
+                        } else {
+                            return OpacityRamp.BothEnds
+                        }
+                    }
+                }
+            },
+            State {
+                name: "horizontalOpacityRamp"
+                when: flickable.horizontalFlick
+                PropertyChanges {
+                    target: rampEffect
+                    sourceItem: contentItem
+                    slope: 1 + 20 * textBase.width / Screen.width
+                    direction: {
+                        if (flickable.contentX === flickable.originX) {
+                            return OpacityRamp.LeftToRight
+                        } else if (flickable.contentWidth - flickable.width <= flickable.contentX) {
+                            return OpacityRamp.RightToLeft
+                        } else {
+                            return OpacityRamp.BothSides
+                        }
+                    }
+                }
+            }
+        ]
     }
 
     Flickable {
         id: flickable
 
+        readonly property bool verticalFlick: _editor.height > (contentContainer.height - textTopPadding)
+        readonly property bool horizontalFlick: _editor.width > (contentContainer.width - textLeftPadding - textRightPadding)
+
         anchors {
-            left: parent.left; top: parent.top
-            right: parent.right; bottom: parent.bottom
-            leftMargin: textLeftMargin; topMargin: textTopMargin
-            rightMargin: textRightMargin
+            fill: parent
+            leftMargin: textLeftMargin
+            topMargin: textTopMargin
+            rightMargin: textRightMargin +  _rightItemWidth
         }
 
         pixelAligned: true
         contentHeight: scrollProxy.height + textBase._bottomMargin
         contentWidth: scrollProxy.width + Theme.paddingSmall
-        interactive: _editor.height > contentContainer.height || _editor.width > contentContainer.width
+        interactive: verticalFlick || horizontalFlick
         boundsBehavior: Flickable.StopAtBounds
 
         Item {
             id: scrollProxy
-            width: textBase._editor.width
-            height: textBase._editor.height
+            width: textBase._editor.width + textLeftPadding + textRightPadding
+            height: textBase._editor.height + textTopPadding
 
             HorizontalAutoScroll.animated: false
             HorizontalAutoScroll.cursorRectangle: textBase._editor.activeFocus && autoScrollEnabled
@@ -596,13 +706,50 @@ TextBaseItem {
         id: labelItemContainer
 
         anchors {
-            left: parent.left; bottom: parent.bottom; right: parent.right
-            leftMargin: textLeftMargin
-            bottomMargin: readOnly ? Theme.paddingMedium : Theme.paddingSmall
-            rightMargin: textRightMargin
+            left: parent.left; bottom: descriptionLabel.top; right: parent.right
+            leftMargin: _totalLeftMargins
+            rightMargin: _totalRightMargins
+            bottomMargin: {
+                if (descriptionLabel.text.length > 0) {
+                    return 0
+                } else {
+                    return readOnly ? Theme.paddingMedium : Theme.paddingSmall
+                }
+            }
         }
         visible: labelVisible
         height: children.length > 0 ? children[0].height : 0
+    }
+
+    onDescriptionChanged: if (description.length > 0) descriptionLabel.text = description
+
+    Label {
+        id: descriptionLabel
+
+        text: description
+        wrapMode: Text.Wrap
+
+        color: textBase.errorHighlight ? palette.errorColor
+                                       : placeholderTextLabel.color
+
+        font.pixelSize: Theme.fontSizeExtraSmall
+
+        opacity: description.length > 0 ? 1.0 : 0.0
+        Behavior on opacity { FadeAnimator {}}
+        height: description.length > 0 ? implicitHeight : 0
+        Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+
+        bottomPadding: readOnly ? Theme.paddingMedium : Theme.paddingSmall
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+            leftMargin: _totalLeftMargins
+            rightMargin: textRightMargin
+            bottomMargin: description.length > 0 && (textBase._isEmpty && textBase.hideLabelOnEmptyField) ? labelItemContainer.height
+                                                                      : 0
+        }
+        Behavior on anchors.bottomMargin { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
     }
 
     Timer {
@@ -703,6 +850,40 @@ TextBaseItem {
             }
             _editor.focus = true
         }
+    }
+
+    Icon {
+        id: errorIcon
+        parent: null
+        color: Theme.errorColor
+        highlightColor: Theme.errorColor
+        source: textBase.errorHighlight ? "image://theme/icon-splus-error" : ""
+    }
+
+    FontMetrics {
+        id: fontMetrics
+        font: _editor.font
+    }
+
+    TextBaseExtensionContainer {
+        id: leftItemContainer
+
+        x: textBase.textLeftMargin - (leftItemContainer.active ? leftItemContainer.width + Theme.paddingMedium : 0)
+        y: (fontMetrics.height + _totalVerticalMargins - height)/2
+        parent: textBase
+    }
+
+    TextBaseExtensionContainer {
+        id: rightItemContainer
+
+        y: ((_editor.y - textTopPadding) + fontMetrics.height)/2 - height/2 + _totalTopMargins
+        parent: textBase
+        anchors {
+            right: parent.right
+            rightMargin: textBase.textRightMargin
+        }
+
+        item: errorHighlight ? errorIcon : null
     }
 
     StateGroup {

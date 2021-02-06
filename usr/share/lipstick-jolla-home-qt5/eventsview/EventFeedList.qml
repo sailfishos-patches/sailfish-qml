@@ -1,8 +1,9 @@
 /****************************************************************************
-**
-** Copyright (C) 2013-2014 Jolla Ltd.
-**
-****************************************************************************/
+ **
+ ** Copyright (C) 2013-2019 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
@@ -15,11 +16,9 @@ import org.nemomobile.socialcache 1.0
 Column {
     id: column
 
-    property bool collapsed
     property bool hasVisibleFeeds: height > 0
     property bool hasRemovableNotifications
     property bool showingRemovableContent   // will be true if there are no notifications, but removal animations are still running
-    property int animationDuration
 
     signal expanded(Item item, real itemYOffset)
 
@@ -69,14 +68,6 @@ Column {
         showingRemovableContent = false
     }
 
-    opacity: collapsed ? 0 : 1
-
-    Behavior on opacity {
-        FadeAnimation {
-            duration: column.animationDuration
-        }
-    }
-
     EventFeedSocialSubviewModel {
         id: eventFeedListModel
         manager: accountManager
@@ -104,9 +95,7 @@ Column {
                     "downloader": downloader,
                     "providerName": providerName,
                     "subviewModel": eventFeedListModel,
-                    "animationDuration": Qt.binding(function() { return column.animationDuration }),
-                    "collapsed": Qt.binding(function() { return column.collapsed }),
-                    "showingInActiveView": Qt.binding(function() { return Desktop.eventsViewVisible }),
+                    "viewVisible": Qt.binding(function() { return Desktop.eventsViewVisible }),
                     "eventsColumnMaxWidth": Math.min(Screen.width, Screen.height)
                 }
                 setSource(Qt.resolvedUrl("file:///usr/share/lipstick/eventfeed/" + providerName + "-delegate.qml"), props)
@@ -114,6 +103,15 @@ Column {
 
             onLoaded: {
                 column._reloadHasRemovableNotifications()
+            }
+
+            Connections {
+                target: Lipstick.compositor.eventsLayer
+                onDeactivated: {
+                    if (loader.item && loader.item.hasOwnProperty("collapsed")) {
+                        loader.item.collapsed = true
+                    }
+                }
             }
 
             Connections {

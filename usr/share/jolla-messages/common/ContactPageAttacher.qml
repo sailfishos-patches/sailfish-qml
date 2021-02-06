@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Messages 1.0
@@ -40,7 +47,7 @@ Item {
             if (page.status === PageStatus.Active) {
                 if (page.hasOwnProperty('recipients')) {
                     page.recipients = people
-                } else if (page.hasOwnProperty('contact')) {
+                } else if (page.hasOwnProperty('contact') && page.contact == null) {
                     page.contact = people[0].id === 0 ? people[0] : MessageUtils.peopleModel.personById(people[0].id)
                 }
             }
@@ -70,9 +77,6 @@ Item {
             if (placeholderPage.status === PageStatus.Activating) {
                 // Create the component to replace this page, if necessary
                 createAttachedPageComponent(Component.Asynchronous)
-            } else if (placeholderPage.status === PageStatus.Inactive) {
-                placeholderPage.destroy()
-                placeholderPage = null
             }
         }
     }
@@ -129,13 +133,12 @@ Item {
         } else {
             var person = people[0].id === 0 ? people[0] : MessageUtils.peopleModel.personById(people[0].id)
             if (page === null || !page.hasOwnProperty('contact')) {
-                attachedPageSource = pageStack.resolveImportPage('Sailfish.Contacts.TemporaryContactCardPage')
+                attachedPageSource = pageStack.resolveImportPage('Sailfish.Contacts.ContactCardPage')
                 attachedPageProperties = {
                     'contact': person,
-                    'exitAfterSave': false,
                     'activeDetail': conversation.message.remoteUids[0]
                 }
-            } else if (page !== null) {
+            } else if (page !== null && page.contact == null) {
                 page.contact = person
                 return
             }

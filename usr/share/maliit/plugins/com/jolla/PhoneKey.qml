@@ -21,20 +21,18 @@ KeyBase {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.paddingSmall
 
-        Text {
+        Label {
             id: mainLabel
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeLarge
-            color: pressed ? Theme.highlightColor : Theme.primaryColor
             text: caption
         }
-        Text {
+        Label {
             id: secondaryLabel
             verticalAlignment: Text.AlignVCenter
             anchors.verticalCenter: parent.verticalCenter
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeExtraSmall
-            color: pressed ? Theme.highlightColor : Theme.primaryColor
         }
     }
 
@@ -45,7 +43,7 @@ KeyBase {
     Rectangle {
         anchors.fill: parent
         z: -1
-        color: Theme.highlightBackgroundColor
+        color: aCharKey.palette.highlightBackgroundColor
         opacity: 0.5
         visible: pressed
     }

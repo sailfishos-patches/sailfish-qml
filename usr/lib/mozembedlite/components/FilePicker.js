@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cc = Components.classes;
+// Ported from Android FF esr60 sha1 c714053d73ac408ab402bb4d7e906e718f4ecb7e
 
-// Ported from Android FF esr52 sha1 2aba798852e4c1976f09181ceeebd68cef372cf1
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 Cu.importGlobalProperties(['File']);
 
@@ -29,9 +25,11 @@ FilePicker.prototype = {
   _extensionsFilter: "",
   _defaultString: "",
   _domWin: null,
+  _domFiles: [],
   _defaultExtension: null,
   _displayDirectory: null,
-  _fileItems: null,
+  _displaySpecialDirectory: null,
+  _filePath: null,
   _promptActive: false,
   _filterIndex: 0,
   _addToRecentDocs: false,
@@ -47,7 +45,7 @@ FilePicker.prototype = {
     this.guid = idService.generateUUID().toString();
 
     if (aMode != Ci.nsIFilePicker.modeOpen && aMode != Ci.nsIFilePicker.modeOpenMultiple)
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   appendFilters: function(aFilterMask) {
@@ -130,12 +128,20 @@ FilePicker.prototype = {
     this._displayDirectory = dir;
   },
 
+  get displaySpecialDirectory() {
+    return this._displaySpecialDirectory;
+  },
+
+  set displaySpecialDirectory(dir) {
+    this._displaySpecialDirectory = dir;
+  },
+
   get file() {
-    if (!this._fileItems) {
+    if (!this._filePath) {
         return null;
     }
 
-    return new FileUtils.File(this._fileItems);
+    return new FileUtils.File(this._filePath);
   },
 
   get fileURL() {
@@ -144,37 +150,16 @@ FilePicker.prototype = {
   },
 
   get files() {
-    return this.getEnumerator(this._fileItems, function(file) {
-      return file;
-    });
+    return this.getEnumerator(this._filePath);
   },
 
   // We don't support directory selection yet.
   get domFileOrDirectory() {
-    let f = this.file;
-    if (!f) {
-        return null;
-    }
-
-    let win = this._domWin;
-    if (win) {
-      let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      return utils.wrapDOMFile(f);
-    }
-
-    return File.createFromNsIFile(f);
+    return this._domFiles.length > 0 ? this._domFiles[0] : null;
   },
 
   get domFileOrDirectoryEnumerator() {
-    let win = this._domWin;
-    return this.getEnumerator(this._fileItems, function(file) {
-      if (win) {
-        let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        return utils.wrapDOMFile(file);
-      }
-
-      return File.createFromNsIFile(file);
-    });
+    return this.getEnumerator(this._domFiles);
   },
 
   get addToRecentDocs() {
@@ -199,9 +184,7 @@ FilePicker.prototype = {
     this._promptActive = true;
     this._sendMessage();
 
-    let thread = Services.tm.currentThread;
-    while (this._promptActive)
-      thread.processNextEvent(true);
+    Services.tm.spinEventLoopUntil(() => !this._promptActive);
     delete this._promptActive;
 
     Services.embedlite.removeMessageListener("filepickerresponse", this);
@@ -212,7 +195,7 @@ FilePicker.prototype = {
       this.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
 
-    if (this._fileItems)
+    if (this._filePath)
       return Ci.nsIFilePicker.returnOK;
 
     return Ci.nsIFilePicker.returnCancel;
@@ -250,27 +233,44 @@ FilePicker.prototype = {
 
   onMessageReceived: function(aMessageName, aData) {
     let data = JSON.parse(aData);
-
-    let winId = data.winId;
     let accepted = data.accepted;
-    let items = data.items;
 
-    this._fileItems = null;
+    this._filePath = null;
+    this._domFiles = []
 
     // Only store filePath if items contains data.
     if (data.items && data.items.length > 0 && data.items[0])
-      this._fileItems = data.items;
+      this._filePath = data.items;
 
     this._promptActive = false;
 
-    if (this._callback) {
-      this._callback.done(this._fileItems && accepted ? Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
-      Services.embedlite.removeMessageListener("filepickerresponse", this);
+    if (!this._filePath) {
+      return;
     }
-    delete this._callback;
+
+    let enumerator = this.files;
+    while (enumerator.hasMoreElements()) {
+      let file = new FileUtils.File(enumerator.getNext());
+      let promise = null;
+      if (this._domWin) {
+        promise = this._domWin.File.createFromNsIFile(file, { existenceCheck: false });
+      } else {
+        promise = File.createFromNsIFile(file, { existenceCheck: false });
+      }
+
+      promise.then(domFile => {
+                     this._domFiles.push(domFile);
+                     if (this._callback && (this._domFiles.length === this._filePath.length)) {
+                       this._callback.done(this._filePath && accepted ?
+                                             Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
+                       Services.embedlite.removeMessageListener("filepickerresponse", this);
+                       delete this._callback;
+                     }
+                   }, Cu.reportError);
+    }
   },
 
-  getEnumerator: function(files, mapFunction) {
+  getEnumerator: function(files) {
     return {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
       mFiles: files,
@@ -280,9 +280,9 @@ FilePicker.prototype = {
       },
       getNext: function() {
         if (this.mIndex >= this.mFiles.length) {
-          throw Components.results.NS_ERROR_FAILURE;
+          throw Cr.NS_ERROR_FAILURE;
         }
-        return mapFunction(new FileUtils.File(this.mFiles[this.mIndex++]));
+        return this.mFiles[this.mIndex++];
       }
     };
   },

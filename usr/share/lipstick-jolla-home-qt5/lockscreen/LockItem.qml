@@ -15,6 +15,7 @@ import Nemo.DBus 2.0
 import com.jolla.lipstick 0.1
 import com.jolla.settings.system 1.0
 import org.nemomobile.lipstick 0.1
+import "../backgrounds"
 import "../main"
 import "../statusarea"
 
@@ -27,7 +28,7 @@ SilicaFlickable {
     property alias leftIndicator: leftIndicator
     property alias rightIndicator: rightIndicator
     property string iconSuffix
-    property alias contentTopMargin: contentItem.y
+    property real contentTopMargin
     property int statusBarHeight
 
     readonly property real verticalOffset: contentTopMargin / 2
@@ -100,7 +101,7 @@ SilicaFlickable {
             } else if (menuAction) {
                 lockItem.reset()
                 if ('exec' in menuAction) {
-                    Desktop.instance.switcher.activateWindowFor(menuAction, true)
+                    Desktop.instance.switcher.activateWindowFor(menuAction, true, true)
                 }
                 menuAction = undefined
             }
@@ -114,11 +115,18 @@ SilicaFlickable {
         onClicked: hintEdges()
     }
 
-    Item {
-        id: contentItem
+    ContrastBackground {
+        id: centerBackground
 
-        width: lockItem.width
-        height: lockItem.height - y
+        x: (lockItem.width - width) / 2
+        y: lockItem.contentTopMargin - clock.offset + (clock.cannotCenter
+                ? Theme.paddingLarge
+                : (lockItem.height - lockItem.contentTopMargin - height) / 2)
+
+        width: Math.max(clock.width, weatherIndicator.width)
+        height: clock.height + weatherIndicator.height
+
+        opacity: Math.min(clock.transitionOpacity, clock.unlockOpacity)
 
         Clock {
             id: clock
@@ -126,12 +134,14 @@ SilicaFlickable {
             property bool cannotCenter: Screen.sizeCategory <= Screen.Medium && lockScreenPage.isPortrait
 
             property real peekOffset: clock.followPeekPosition
-                        ? lockScreen.progress * (lockItem.contentTopMargin - lockItem.statusBarHeight)
-                        : 0
+                    ? lockScreen.progress * (lockItem.contentTopMargin - lockItem.statusBarHeight)
+                    : 0
             property real animationOffset
             readonly property real offset: Math.max(peekOffset, animationOffset)
             property real transitionOpacity: 1.0
-            property real unlockOpacity: lockScreen.locked ? 1 - lockScreen.progress : 0.0
+
+            property real pannableProgress: Math.min(1.0, Math.abs(lockContainer.offset) / lockScreen.peekFilter.threshold)
+            property real unlockOpacity: lockScreen.locked ? 1 - (deviceLockItem.locked ? pannableProgress : lockScreen.progress) : 0.0
 
             property string positionState: {
                 if (lockScreen.lowPowerMode) {
@@ -145,7 +155,7 @@ SilicaFlickable {
                 } else if (lockScreen.panning) {
                     return "panning"
                 } else if ((!lockScreen.locked && !Lipstick.compositor.cameraLayer.exposed)
-                            || Lipstick.compositor.notificationOverviewLayer.revealingEventsView) {
+                           || Lipstick.compositor.notificationOverviewLayer.revealingEventsView) {
                     return "raised"
                 } else {
                     return "center"
@@ -194,62 +204,51 @@ SilicaFlickable {
                 easing.type: Easing.InOutQuad
             }
 
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                topMargin: cannotCenter ? Theme.paddingLarge - offset : 0
-                verticalCenterOffset: !cannotCenter ? -offset : 0
-            }
+            anchors.horizontalCenter: parent.horizontalCenter
 
             color: lockScreen.textColor
             updatesEnabled: visible
-            opacity: Math.min(transitionOpacity, unlockOpacity)
-            Behavior on unlockOpacity {
-                enabled: lockScreen.locked
-                SmoothedAnimation { duration: 100; velocity: 1000 / duration }
-            }
-
-            states: [
-                State {
-                    when: clock.cannotCenter
-                    AnchorChanges {
-                        target: clock
-                        anchors { top: contentItem.top; verticalCenter: undefined }
-                    }
-                }, State {
-                    when: !clock.cannotCenter
-                    AnchorChanges {
-                        target: clock
-                        anchors { top: undefined; verticalCenter: contentItem.verticalCenter }
-                    }
-                }
-            ]
         }
 
         WeatherIndicatorLoader {
+            id: weatherIndicator
+
             anchors {
                 top: clock.bottom
                 horizontalCenter: clock.horizontalCenter
             }
-            opacity: clock.opacity
             temperatureFontPixelSize: clock.weekdayFont.pixelSize
             active: visible
         }
+    }
+
+    ContrastBackground {
+        id: mprisBackground
+
+        visible: mpris.item && mpris.item.enabled
+
+        x: (lockItem.width - width) / 2
+        y: bottomBackground.y - height - Theme.paddingMedium
+
+        width: Screen.sizeCategory > Screen.Medium ? 4 * Theme.itemSizeExtraLarge : 0.75 * lockItem.width
+        height: mpris.item ? mpris.item.height : 0
+
+        opacity: centerBackground.opacity
 
         MprisPlayerControls {
             id: mpris
 
-            onItemChanged: if (item) {
-                item.textColor = Qt.binding(function() { return lockScreen.textColor })
-                item.width = Screen.sizeCategory > Screen.Medium ? 4 * Theme.itemSizeExtraLarge : 0.75 * parent.width
-                item.anchors.horizontalCenter = Qt.binding(function () { return parent.horizontalCenter })
-                item.anchors.bottom = Qt.binding(function () { return bottomControls.top })
-                item.anchors.bottomMargin = Theme.paddingMedium
-                item.opacity = Qt.binding(function() { return item && item.enabled ? clock.opacity : 0.0 })
-                item.buttonSize = Screen.sizeCategory > Screen.Medium ? Theme.iconSizeExtraLarge : Theme.iconSizeLarge
+            onItemChanged: {
+                if (item) {
+                    item.textColor = Qt.binding(function() { return lockScreen.textColor })
+                    item.width = Qt.binding(function() { return mprisBackground.width })
 
-                item.playPauseRequested.connect(mce.startBlankDelay)
-                item.nextRequested.connect(mce.startBlankDelay)
-                item.previousRequested.connect(mce.startBlankDelay)
+                    item.buttonSize = Screen.sizeCategory > Screen.Medium ? Theme.iconSizeExtraLarge : Theme.iconSizeLarge
+
+                    item.playPauseRequested.connect(mce.startBlankDelay)
+                    item.nextRequested.connect(mce.startBlankDelay)
+                    item.previousRequested.connect(mce.startBlankDelay)
+                }
             }
 
             Timer {
@@ -288,61 +287,65 @@ SilicaFlickable {
                 mce.call("notification_end_req", ["mpris_lock_blank_delay", 0])
             }
         }
+    }
+
+    ContrastBackground {
+        id: bottomBackground
+
+        y: lockItem.height - height - Theme.paddingSmall
+        width: lockItem.width
+        height: bottomControls.height
+
+        visible: clock.visible
+        opacity: clock.transitionOpacity
 
         Column {
             id: bottomControls
-            anchors {
-                bottom: parent.bottom
-                bottomMargin: Theme.paddingSmall
-            }
-            width: parent.width
+
             spacing: Theme.paddingSmall
-            visible: clock.visible
-            opacity: clock.transitionOpacity
+
+            width: bottomBackground.width
 
             OngoingCall {
             }
 
-            Loader {
-                active: Telephony.multiSimSupported
-                opacity: lipstickSettings.lowPowerMode ? 0.0 : 1.0
-                visible: active
+            Row {
+                id: cellInfoContainer
+
                 anchors.horizontalCenter: parent.horizontalCenter
-                sourceComponent: Row {
-                    id: cellInfoContainer
+                opacity: lipstickSettings.lowPowerMode ? 0.0 : 1.0
 
-                    // Pressable coloring doesn't make sense here rather active modem should get emphasized (more prominent)
-                    // => higher contrast should indicate the selected sim.
-                    // => on always ask mode, keep sim indicator in highlight color
-                    function color(modemPath) {
-                        return (!Telephony.promptForVoiceSim && Desktop.simManager.activeModem === modemPath)
-                                ? lockScreen.textColor
-                                : Theme.highlightColor
-                    }
+                // Pressable coloring doesn't make sense here rather active modem should get emphasized (more prominent)
+                // => higher contrast should indicate the selected sim.
+                // => on always ask mode, keep sim indicator in highlight color
+                function color(modemPath) {
+                    return (!Telephony.promptForVoiceSim && Desktop.simManager.activeModem === modemPath)
+                            ? lockScreen.textColor
+                            : Theme.highlightColor
+                }
 
-                    CellularNetworkNameStatusIndicator {
-                        id: cellName1
-                        modemPath: Desktop.simManager.enabledModems[0] || ""
-                        maxWidth: Desktop.showDualSim
-                                  ? contentItem.width/2 - Theme.horizontalPageMargin - Theme.paddingMedium
-                                  : contentItem.width - 2*Theme.horizontalPageMargin
+                CellularNetworkNameStatusIndicator {
+                    id: cellName1
+                    modemPath: Desktop.simManager.enabledModems[0] || ""
+                    maxWidth: Desktop.showDualSim
+                              ? lockItem.width/2 - Theme.horizontalPageMargin - Theme.paddingMedium
+                              : lockItem.width - 2*Theme.horizontalPageMargin
+                    color: cellInfoContainer.color(modemPath)
+                }
+                Label {
+                    id: separator
+                    text: " | "
+                    visible: Desktop.showDualSim && cellName1.visible && cellName2.visible
+                    color: Telephony.promptForVoiceSim ? Theme.highlightColor : Theme.primaryColor
+                }
+                Loader {
+                    id: cellName2
+                    active: Desktop.showDualSim
+                    visible: item && item.textVisible
+                    sourceComponent: CellularNetworkNameStatusIndicator {
+                        modemPath: Desktop.simManager.enabledModems[1] || ""
+                        maxWidth: lockItem.width/2 - Theme.horizontalPageMargin - Theme.paddingMedium
                         color: cellInfoContainer.color(modemPath)
-                    }
-                    Label {
-                        id: separator
-                        text: " | "
-                        visible: Desktop.showDualSim && cellName1.visible && cellName2.visible
-                        color: Telephony.promptForVoiceSim ? Theme.highlightColor : Theme.primaryColor
-                    }
-                    Loader {
-                        id: cellName2
-                        active: Desktop.showDualSim
-                        visible: item && item.textVisible
-                        sourceComponent: CellularNetworkNameStatusIndicator {
-                            modemPath: Desktop.simManager.enabledModems[1] || ""
-                            maxWidth: contentItem.width/2 - Theme.horizontalPageMargin - Theme.paddingMedium
-                            color: cellInfoContainer.color(modemPath)
-                        }
                     }
                 }
             }
@@ -355,54 +358,49 @@ SilicaFlickable {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
         }
+    }
 
-        EdgeIndicator {
-            id: leftIndicator
+    EdgeIndicator {
+        id: leftIndicator
 
-            objectName: "leftIndicator"
+        objectName: "leftIndicator"
 
-            anchors {
-                verticalCenter: parent.verticalCenter
-                verticalCenterOffset: -lockItem.verticalOffset
-                left: parent.left
-            }
+        y: lockItem.contentTopMargin
+           + ((lockItem.height - lockItem.contentTopMargin - height) / 2)
+           - lockItem.verticalOffset
 
-            active: lockItem.allowAnimations
-            rotation: 90
-            peeking: lockScreen.panning && lockScreen.absoluteProgress > 0 && lockContainer.isCurrentItem
-            peekProgress: lockScreen.progress * lockScreen.peekFilter.threshold
-            locked: lockScreen.locked && !Lipstick.compositor.notificationOverviewLayer.animating
-            fadeoutWhenHiding: lockContainer.leftItem || lockContainer.rightItem
+        active: lockItem.allowAnimations
+        rotation: 90
+        peeking: lockScreen.panning && lockScreen.absoluteProgress > 0 && lockContainer.isCurrentItem
+        peekProgress: lockScreen.progress * lockScreen.peekFilter.threshold
+        locked: lockScreen.locked && !Lipstick.compositor.notificationOverviewLayer.animating
+        fadeoutWhenHiding: lockContainer.leftItem || lockContainer.rightItem
 
-            onPeekingChanged: {
-                if (peeking) {
-                    rightIndicator.hinting = false
-                }
+        onPeekingChanged: {
+            if (peeking) {
+                rightIndicator.hinting = false
             }
         }
+    }
 
-        EdgeIndicator {
-            id: rightIndicator
+    EdgeIndicator {
+        id: rightIndicator
 
-            objectName: "rightIndicator"
+        objectName: "rightIndicator"
 
-            anchors {
-                verticalCenter: parent.verticalCenter
-                verticalCenterOffset: -lockItem.verticalOffset
-                right: parent.right
-            }
+        x: lockItem.width - width
+        y: leftIndicator.y
 
-            active: lockItem.allowAnimations && !Lipstick.compositor.notificationsAnimating
-            rotation: -90
-            peeking: lockScreen.panning && lockScreen.absoluteProgress < 0 && lockContainer.isCurrentItem
-            peekProgress: lockScreen.progress * lockScreen.peekFilter.threshold
-            locked: lockScreen.locked
-            fadeoutWhenHiding: lockContainer.leftItem || lockContainer.rightItem
+        active: lockItem.allowAnimations && !Lipstick.compositor.notificationsAnimating
+        rotation: -90
+        peeking: lockScreen.panning && lockScreen.absoluteProgress < 0 && lockContainer.isCurrentItem
+        peekProgress: lockScreen.progress * lockScreen.peekFilter.threshold
+        locked: lockScreen.locked
+        fadeoutWhenHiding: lockContainer.leftItem || lockContainer.rightItem
 
-            onPeekingChanged: {
-                if (peeking) {
-                    leftIndicator.hinting = false
-                }
+        onPeekingChanged: {
+            if (peeking) {
+                leftIndicator.hinting = false
             }
         }
     }

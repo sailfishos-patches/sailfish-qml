@@ -3,7 +3,16 @@ import Sailfish.Silica 1.0
 
 Dialog {
     id: registerSSUDialog
-    canAccept: usernameField.text.length > 0 && passwordField.text.length > 0
+    canAccept: usernameField.acceptableInput && passwordField.acceptableInput
+    onAcceptBlocked: {
+        if (!usernameField.acceptableInput) {
+            usernameField.errorHighlight = true
+        }
+
+        if (!passwordField.acceptableInput) {
+            passwordField.errorHighlight = true
+        }
+    }
 
     property alias domain: domainField.text
     property alias username: usernameField.text
@@ -22,21 +31,25 @@ Dialog {
 
             DialogHeader {
                 //% "Login"
-                acceptText: qsTrId("settings_developermode-bu-login")
+                acceptText: qsTrId("settings_developermode-bt-login")
             }
 
             TextField {
                 id: usernameField
 
                 //% "Username"
-                placeholderText: qsTrId("settings_developermode-ph-username")
+                label: qsTrId("settings_developermode-la-username")
 
-                //% "Username"
-                label: qsTrId("settings_developermode-lb-username")
-
+                acceptableInput: text.length > 0
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
                 width: parent.width
                 focus: true
+
+                //% "Username is required"
+                description: errorHighlight ? qsTrId("settings_developermode-la-username_required") : ""
+
+                onAcceptableInputChanged: if (acceptableInput) errorHighlight = false
+                onActiveFocusChanged: if (!activeFocus) errorHighlight = !acceptableInput
 
                 EnterKey.iconSource: "image://theme/icon-m-enter-next"
                 EnterKey.enabled: text != ""
@@ -46,6 +59,13 @@ Dialog {
 
             PasswordField {
                 id: passwordField
+
+                //% "Password is required"
+                description: errorHighlight ? qsTrId("settings_developermode-la-password_required") : ""
+                acceptableInput: text.length > 0
+
+                onAcceptableInputChanged: if (acceptableInput) errorHighlight = false
+                onActiveFocusChanged: if (!activeFocus) errorHighlight = !acceptableInput
 
                 EnterKey.iconSource: "image://theme/icon-m-enter-next"
                 EnterKey.enabled: text != ""
@@ -57,13 +77,9 @@ Dialog {
                 id: domainField
 
                 //% "SSU Domain"
-                placeholderText: qsTrId("settings_developermode-ph-domain")
-
-                //% "SSU Domain"
-                label: qsTrId("settings_developermode-lb-domain")
+                label: qsTrId("settings_developermode-la-domain")
 
                 inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-                width: parent.width
 
                 EnterKey.iconSource: "image://theme/icon-m-enter-next"
                 EnterKey.highlighted: text != ""

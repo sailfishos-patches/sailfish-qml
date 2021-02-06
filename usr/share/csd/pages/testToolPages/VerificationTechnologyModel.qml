@@ -28,7 +28,7 @@ TechnologyModel {
                 || (techModel.name == "wifi" && !wlanPolicy.value)) {
             return // policy prevents changing the power state of these technologies.
         }
-        if (powered != wasInitiallyPowered) {
+        if (techModel.name != "gps" && powered != wasInitiallyPowered) {
             powered = wasInitiallyPowered
         }
     }

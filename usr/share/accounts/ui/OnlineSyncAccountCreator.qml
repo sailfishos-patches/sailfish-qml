@@ -88,6 +88,12 @@ QtObject {
                 "Jolla")  // credentialsName
     }
 
+    function cleanUp() {
+        if (_newAccount.identifier > 0) {
+            _newAccount.remove()
+        }
+    }
+
     function _findCalendarService() {
         for (var i = 0; i < services.length; ++i) {
             var service = services[i]

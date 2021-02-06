@@ -1,6 +1,13 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Pty Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+*/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Contacts 1.0
+import Sailfish.Contacts 1.0 as SailfishContacts
 import Sailfish.Telephony 1.0
 import org.nemomobile.contacts 1.0
 import org.nemomobile.commhistory 1.0
@@ -11,6 +18,7 @@ Page {
     property var contact
     property bool hidePhoneActions
     property var modelFactory
+    property var simManager
 
     signal startPhoneCall(string number, string modemPath)
     signal startSms(string number)
@@ -32,8 +40,12 @@ Page {
         }
 
         model: FormattingProxyModel {
-            sourceModel: CommContactEventModel {
-                contactId: root.contact.id
+            sourceModel: CommRecipientEventModel {
+                contactId: root.contact ? root.contact.id : 0
+                remoteUid: root.contact && root.contact.id === 0
+                           ? SailfishContacts.ContactsUtil.firstPhoneNumber(root.contact)
+                           : ""
+
                 onReadyChanged: {
                     if (ready) {
                         // Update opacity here instead of using a binding, as model ready value
@@ -62,7 +74,7 @@ Page {
         delegate: ContactActivityDelegate {
             width: parent.width
             leftMargin: Theme.paddingSmall + Theme.iconSizeMedium + Theme.paddingSmall
-            simManager: _simManager
+            simManager: root.simManager
             hidePhoneActions: root.hidePhoneActions
             modelFactory: root.modelFactory
             contact: root.contact
@@ -73,9 +85,5 @@ Page {
         }
 
         VerticalScrollDecorator {}
-    }
-
-    SimManager {
-        id: _simManager
     }
 }

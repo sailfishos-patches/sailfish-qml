@@ -20,13 +20,16 @@ Column {
         openVpnAuth.text = getProperty('OpenVPN.Auth')
         openVpnMTU.text = getProperty('OpenVPN.MTU')
         openVpnDeviceType.setValue(getProperty('OpenVPN.DeviceType'))
+        openVpnPing.text = getProperty('OpenVPN.Ping')
+        openVpnPingExit.text = getProperty('OpenVPN.PingExit')
+        openVpnRemapUsr.setValue(getProperty('OpenVPN.RemapUsr1'))
         // OpenVPN.TLSRemote deprecated in openvpn 2.3+
     }
 
     function updateProperties(providerProperties) {
         updateProvider('OpenVPN.Cert', openVpnCert.path)
         updateProvider('OpenVPN.Key', openVpnKey.path)
-        updateProvider('OpenVPN.Port', openVpnPort.text)
+        updateProvider('OpenVPN.Port', openVpnPort.filteredText)
         updateProvider('OpenVPN.Proto', openVpnProto.selection)
         updateProvider('OpenVPN.CompLZO', openVpnCompLZO.selection)
         updateProvider('OpenVPN.ConfigFile', openVpnConfigFile.path)
@@ -38,8 +41,11 @@ Column {
         updateProvider('OpenVPN.RemoteCertTls', openVpnRemoteCertTLS.selection)
         updateProvider('OpenVPN.Cipher', openVpnCipher.text)
         updateProvider('OpenVPN.Auth', openVpnAuth.text)
-        updateProvider('OpenVPN.MTU', openVpnMTU.text)
+        updateProvider('OpenVPN.MTU', openVpnMTU.filteredText)
         updateProvider('OpenVPN.DeviceType', openVpnDeviceType.selection)
+        updateProvider('OpenVPN.Ping', openVpnPing.filteredText)
+        updateProvider('OpenVPN.PingExit', openVpnPingExit.filteredText)
+        updateProvider('OpenVPN.RemapUsr1', openVpnRemapUsr.selection)
     }
 
     width: parent.width
@@ -110,12 +116,15 @@ Column {
         label: qsTrId("settings_network-la-vpn_openvpn_proto")
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: openVpnPort
+        intUpperLimit: 65535
 
         //% "Port"
         label: qsTrId("settings_network-la-vpn_openvpn_port")
-        inputMethodHints: Qt.ImhDigitsOnly
+
+        //% "Port must be a value between 1 and 65535"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_openvpn_port_error") : ""
     }
 
     ConfigComboBox {
@@ -143,12 +152,43 @@ Column {
         nextFocusItem: openVpnMTU
     }
 
-    ConfigTextField {
+    ConfigIntField {
         id: openVpnMTU
+        intUpperLimit: 65535
 
         //% "Packet MTU size"
         label: qsTrId("settings_network-la-vpn_openvpn_mtu")
-        inputMethodHints: Qt.ImhDigitsOnly
+        //% "MTU size must be a value between 1 and 65535"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_openvpn_error") : ""
+    }
+
+    ConfigIntField {
+        id: openVpnPing
+        intUpperLimit: 86400
+
+        //% "Interval to ping server (seconds)"
+        label: qsTrId("settings_network-la-vpn_openvpn_ping")
+        //% "Select server ping interval between 1 and 86400 seconds"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_openvpn_ping_error") : ""
+    }
+
+    ConfigIntField {
+        id: openVpnPingExit
+        intUpperLimit: 86400
+
+        //% "Exit if no ping reply from server (seconds)"
+        label: qsTrId("settings_network-la-vpn_openvpn_ping_exit")
+        //% "Select exit timeout between 1 and 86400 seconds"
+        description: errorHighlight ? qsTrId("settings_network_la-vpn_openvpn_ping_exit_error") : ""
+    }
+
+    ConfigComboBox {
+        id: openVpnRemapUsr
+
+        values: [ "_default", "SIGTERM", "SIGHUP" ]
+
+        //% "Remap restart signal to"
+        label: qsTrId("settings_network-la-vpn_openvpn_restart_on_comm_error")
     }
 
     SectionHeader {

@@ -65,8 +65,6 @@ PredictionListView {
 
             truncationMode: TruncationMode.Fade
             textFormat: Text.StyledText
-
-            color: highlighted ? Theme.highlightColor : Theme.primaryColor
         }
 
         IconButton {

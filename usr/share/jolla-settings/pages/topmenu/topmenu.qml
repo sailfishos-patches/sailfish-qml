@@ -57,7 +57,7 @@ Page {
                     //% "Favorite ambiences"
                     text: qsTrId("settings_topmenu-bt-favorite_ambiences")
                     onClicked: {
-                        var obj = _frontPage.model.objectForPath("system_settings/look_and_feel/ambiences")
+                        var obj = _mainPage.objectForPath("system_settings/look_and_feel/ambiences")
                         if (obj && obj.type == "page") {
                             var params = obj.data()["params"]
                             if (params["source"]) {

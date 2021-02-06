@@ -86,7 +86,7 @@ Column {
         // can't read 'password' from DB, so initialising it with some placeholder value
         connectionSettings.password = "default"
 
-        _credentialsUpdateCounter = parseInt(accountGlobalSettings["credentials_update_counter"])
+        _credentialsUpdateCounter = parseInt(accountEmailSettings["credentials_update_counter"])
     }
 
     function saveAccount(blockingSave, saveConnectionSettings) {
@@ -197,7 +197,7 @@ Column {
     function increaseCredentialsCounter() {
         _credentialsUpdateCounter++
         // Save a string since double is not supported in c++ side:  'Account::setConfigurationValues(): variant type  QVariant::double'
-        account.setConfigurationValue("", "credentials_update_counter", _credentialsUpdateCounter.toString())
+        account.setConfigurationValue("sailfisheas-email", "credentials_update_counter", _credentialsUpdateCounter.toString())
     }
 
     CheckProvision {
@@ -232,13 +232,8 @@ Column {
             if (root.busyPage !== null) {
                 if (error === CheckProvision.CHECKPROVISION_ERROR_PROTOCOL) {
                     console.log("[jsa-eas] CheckProvision - Server doesn't support provisioning request for the used protocol")
-                    easSettings.provision = false
-                    root.busyPage.provisioningDisabled = true
-                    root.saveSettings()
-                    account.sync()
-                } else {
-                    root.busyPage.operationFailed("ProvCheck failed")
                 }
+                root.busyPage.operationFailed("ProvCheck failed")
             }
             root._provisioningChecked = false
         }

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2012 - 2019 Jolla Ltd.
- * Copyright (c) 2019 Open Mobile Platform LLC.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -9,7 +9,6 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import com.jolla.settings.system 1.0
-import org.nemomobile.notifications 1.0
 import "../common/DateUtils.js" as DateUtils
 
 Page {
@@ -19,6 +18,16 @@ Page {
 
     function reset(index, operationType) {
         tabs.moveTo(1, TabViewAction.Immediate)
+    }
+
+    function showTab(name) {
+        var index = 1
+        if (name == 'timers') {
+            index = 0
+        } else if (name == 'stopwatch') {
+            index = 2
+        }
+        tabs.moveTo(index, TabViewAction.Immediate)
     }
 
     function newTimer(operationType) {
@@ -49,28 +58,23 @@ Page {
         //% "%0 minute(s)"
         var minutesText = qsTrId("clock-la-minutes", minutes).arg(minutes)
 
+        var text
+
         if (days > 0) {
             //: E.g. Expiring in 2 days, 3 hours and 1 minute, time measurements are localized separately
             //% "Expiring in %0, %1 and %2"
-            notification.previewBody =
+            text =
                     qsTrId("clock-la-expiring_in_days_hours_minutes").arg(daysText).arg(hoursText).arg(minutesText)
         } else if (hours > 0) {
             //: E.g. Expiring in 1 hour and 13 minutes, time measurements are localized separately
             //% "Expiring in %0 and %1"
-            notification.previewBody = qsTrId("clock-la-expiring_in_hours_minutes").arg(hoursText).arg(minutesText)
+            text = qsTrId("clock-la-expiring_in_hours_minutes").arg(hoursText).arg(minutesText)
         } else {
             //: E.g. Expiring in 26 minutes, time measurements are localized separately
             //% "Expiring in %0"
-            notification.previewBody = qsTrId("clock-la-expiring_in_minutes").arg(minutesText)
+            text = qsTrId("clock-la-expiring_in_minutes").arg(minutesText)
         }
-        notification.publish()
-    }
-
-    Notification {
-        id: notification
-
-        icon: "icon-system-alarm"
-        isTransient: true
+        Notices.show(text)
     }
 
     Component.onCompleted: mainPage = root
@@ -82,40 +86,21 @@ Page {
         anchors.fill: parent
         currentIndex: 1
 
-        header: TabButtonRow {
-            Repeater {
-                model: [
-                    //: Title of Timers tab page showing saved timers
-                    //% "Timers"
-                    qsTrId("clock-he-timers"),
-                    //: Title of Alarms tab page showing saved alarms
-                    //% "Alarms"
-                    qsTrId("clock-he-alarms"),
-                    //: Title of Stopwatch tab page with stopwatch counter
-                    //% "Stopwatch"
-                    qsTrId("clock-he-stopwatch"),
-                ]
-
-                TabButton {
-                    onClicked: tabs.moveTo(model.index)
-
-                    title: modelData
-                    tabIndex: model.index
-                }
-            }
+        header: TabBar {
+            model: tabBarModel
         }
 
         model: [timerView, alarmView, stopwatchView]
         Component {
             id: timerView
             TimerView {
-                topMargin: tabs.headerHeight
+                topMargin: tabs.tabBarHeight
             }
         }
         Component {
             id: alarmView
             AlarmView {
-                topMargin: tabs.headerHeight
+                topMargin: tabs.tabBarHeight
             }
         }
         Component {
@@ -124,6 +109,26 @@ Page {
                 allowDeletion: false
                 StopwatchView {}
             }
+        }
+    }
+
+    ListModel {
+        id: tabBarModel
+
+        ListElement {
+            //: Title of Timers tab page showing saved timers
+            //% "Timers"
+            title: qsTrId("clock-he-timers")
+        }
+        ListElement {
+            //: Title of Alarms tab page showing saved alarms
+            //% "Alarms"
+            title: qsTrId("clock-he-alarms")
+        }
+        ListElement {
+            //: Title of Stopwatch tab page with stopwatch counter
+            //% "Stopwatch"
+            title: qsTrId("clock-he-stopwatch")
         }
     }
 }

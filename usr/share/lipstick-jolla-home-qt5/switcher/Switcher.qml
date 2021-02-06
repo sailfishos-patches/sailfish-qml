@@ -68,7 +68,7 @@ SilicaFlickable {
         Lipstick.compositor.appLayer.clearPendingWindows()
     }
 
-    function activateWindowFor(launcherItem, launch) {
+    function activateWindowFor(launcherItem, launch, addToSwitcher) {
         if (Desktop.startupWizardRunning)
             return
 
@@ -77,7 +77,7 @@ SilicaFlickable {
         var item
         var index = windowIndexOf(launcherItem)
         var singleInstance = launcherItem.readValue("X-Nemo-Single-Instance")
-        if (index >= 0  && singleInstance !== "no") {
+        if (index >= 0 && singleInstance !== "no") {
             item = repeater.itemAt(index)
             item.minimized = false
 
@@ -99,7 +99,7 @@ SilicaFlickable {
                     launchingItem = item
 
                     ensureVisible(item)
-                } else {
+                } else if (addToSwitcher) {
                     switcherModel.append(launcherItem)
                 }
                 Lipstick.compositor.goToSwitcher(true)
@@ -133,11 +133,13 @@ SilicaFlickable {
         return false
     }
 
-    function closeCover(launcherItem) {
+    function closeCover(launcherItem, force) {
         var index = model.findCover(launcherItem)
         if (index >= 0 && index < repeater.count) {
             var item = repeater.itemAt(index)
-            item.close()
+            if (force || !item.running) {
+                item.close()
+            }
         }
     }
 
@@ -519,12 +521,15 @@ SilicaFlickable {
                             minimized = false
                             Lipstick.compositor.windowToFront(windowId)
                         } else if (launcherItem) {
+                            var wasLaunching = launching
                             switcherRoot.minimizeLaunchingWindows()
                             // App is not running. Launch it now.
                             launching = true
                             minimized = false
                             switcherRoot.launchingItem = switcherDelegate
-                            launcherItem.launchApplication()
+                            if (!wasLaunching) {
+                                launcherItem.launchApplication()
+                            }
                         }
                     }
 

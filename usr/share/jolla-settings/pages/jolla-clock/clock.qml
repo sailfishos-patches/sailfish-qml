@@ -2,10 +2,9 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.sailfishos.clock.settings 1.0
 import Nemo.Alarms 1.0
+import com.jolla.settings 1.0
 
-Page {
-    id: root
-
+ApplicationSettings {
     property var snoozeDurations: [5, 10, 15, 30]
     readonly property int snoozeMinutes: Math.round(settings.snooze/60.0)
 
@@ -25,38 +24,22 @@ Page {
         }
     }
 
-    SilicaFlickable {
-        anchors.fill: parent
-        contentHeight: content.height
+    ComboBox {
+        id: snoozeComboBox
 
-        Column {
-            id: content
-            width: parent.width
-            bottomPadding: Theme.paddingLarge
+        //% "Snooze duration"
+        label: qsTrId("clock_settings-la-snooze_duration")
+        value: currentItem ? currentItem.text
+                           : //% "%0 minute(s)"
+                             qsTrId("clock-la-minutes", snoozeMinutes).arg(snoozeMinutes)
 
-            PageHeader {
-                //% "Clock"
-                title:  qsTrId("clock_settings-he-clock")
-            }
-
-            ComboBox {
-                id: snoozeComboBox
-
-                //% "Snooze duration"
-                label: qsTrId("clock_settings-la-snooze_duration")
-                value: currentItem ? currentItem.text
-                                   : //% "%0 minute(s)"
-                                     qsTrId("clock-la-minutes", snoozeMinutes).arg(snoozeMinutes)
-
-                menu: ContextMenu {
-                    Repeater {
-                        model: snoozeDurations
-                        MenuItem {
-                            //% "%0 minute(s)"
-                            text: qsTrId("clock-la-minutes", modelData).arg(modelData)
-                            onClicked: settings.snooze = modelData * 60 // from minutes to seconds
-                        }
-                    }
+        menu: ContextMenu {
+            Repeater {
+                model: snoozeDurations
+                MenuItem {
+                    //% "%0 minute(s)"
+                    text: qsTrId("clock-la-minutes", modelData).arg(modelData)
+                    onClicked: settings.snooze = modelData * 60 // from minutes to seconds
                 }
             }
         }

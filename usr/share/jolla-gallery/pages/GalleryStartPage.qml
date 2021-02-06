@@ -25,14 +25,11 @@ Page {
                                transition !== undefined ? transition : PageStackAction.Animated)
     }
 
-    function showImage(urls) {
+    function showImage(urls, viewerAction) {
         // To avoid mixed content e.g. videos and photos in the same model, just
         // clear everything each time when function is called.
-        if (imageViewerPage && pageStack.currentPage === imageViewerPage) {
-            imageViewerPage = null
-            pageStack.pop(null, PageStackAction.Immediate)
-        }
-
+        pageStack.pop(startPage, PageStackAction.Immediate)
+        imageViewerPage = null
         viewerModel.clear()
 
         for (var i=0; i < urls.length; ++i) {
@@ -50,6 +47,13 @@ Page {
                     width: metadata.width,
                     height: metadata.height
                 }
+
+                if (fileInfo.source.toString().indexOf(StandardPaths.pictures + "/Screenshots/") >= 0) {
+                    showPage(screenshotsSource)
+                } else {
+                    showPage(photoSource)
+                }
+
             } else if (fileInfo.mimeFileType == "video") {
                 properties = {
                     url: file,
@@ -57,6 +61,8 @@ Page {
                     title: fileInfo.fileName,
                     orientation: 0
                 }
+
+                showPage(videoSource)
             }
 
             viewerModel.append(properties)
@@ -70,6 +76,9 @@ Page {
                           viewerOnlyMode: true
                         },
                         PageStackAction.Immediate)
+        if (viewerAction) {
+            imageViewerPage.triggerViewerAction(viewerAction, true)
+        }
         metadata.source = ""
         fileInfo.source = ""
     }
@@ -77,10 +86,8 @@ Page {
     function playVideoStream(url) {
         // To avoid mixed content e.g. videos and photos in the same model, just
         // clear everything each time when function is called.
-        if (imageViewerPage && pageStack.currentPage === imageViewerPage) {
-            imageViewerPage = null
-            pageStack.pop(null, PageStackAction.Immediate)
-        }
+        imageViewerPage = null
+        pageStack.pop(null, PageStackAction.Immediate)
 
         fileInfo.source = url
 
@@ -227,7 +234,7 @@ Page {
     GalleryService {
         onOpenImages:{
             if (urls.length > 0) {
-                showImage(urls)
+                showImage(urls, viewerAction)
             }
             activate()
         }

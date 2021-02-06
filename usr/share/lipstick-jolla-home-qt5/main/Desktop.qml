@@ -10,7 +10,7 @@
 pragma Singleton
 import QtQml 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0 as SilicaPrivate
+import Sailfish.Silica.Background 1.0
 import Sailfish.Telephony 1.0
 import Nemo.DBus 2.0
 import Nemo.FileManager 1.0
@@ -58,11 +58,11 @@ QtObject {
         property bool lock_screen_camera: true
         property int security_code_notification_id
         property int blur_iterations: 2
-        property int blur_kernel: SilicaPrivate.BlurEffect.Gaussian17
-        property int blur_levels: Theme.pixelRatio >= 1.5 ? 4 : 3
-        property int blur_iteration_behavior: SilicaPrivate.BlurEffect.IterateLastLayer
+        property int blur_kernel: Kernel.SampleSize17
         property real blur_deviation: 5
         property bool live_snapshots
+        property bool lock_screen_events: false
+        property bool lock_screen_events_allowed: true
     }
 
     property var startupWizardDoneWatcher: FileWatcher {

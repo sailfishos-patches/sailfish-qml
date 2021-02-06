@@ -111,7 +111,9 @@ Column {
             }
 
             onClicked: {
-                updateFromKnownContact(onlineSearchModel.getContact(index),
+                var contactData = onlineSearchModel.getContact(index)
+                contactData.accountId = onlineSearchModel.accountId
+                updateFromKnownContact(contactData,
                                        model.displayName, model.emailAddress)
                 onlineSearchModel.clear()
             }
@@ -219,7 +221,8 @@ Column {
 
         //: Displayed notification if online search fails
         //% "Failed to extend search to online address book"
-        previewSummary: qsTrId("components_contacts-la-failed_to_extend_search_to_online_address_book")
-        icon: "image://theme/icon-system-warning"
+        summary: qsTrId("components_contacts-la-failed_to_extend_search_to_online_address_book")
+        appIcon: "image://theme/icon-system-warning"
+        isTransient: true
     }
 }

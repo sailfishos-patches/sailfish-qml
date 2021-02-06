@@ -1,4 +1,11 @@
-import QtQuick 2.0
+/*
+ * Copyright (c) 2013 - 2019 Jolla Pty Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+*/
+
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 import org.nemomobile.contacts 1.0
@@ -13,7 +20,11 @@ PullDownMenu {
     readonly property bool _contactValid: !!contact && contact.id
     property var _peopleModel: peopleModel || ContactModelCache.unfilteredModel()
 
-    signal temporaryContactLinked(var detail)
+    signal unsavedContactLinkRequested()
+
+    function triggerLinkAction() {
+        linkMenuItem.clicked()
+    }
 
     function _vCardName(person) {
         // Return a name for this vcard that can be used as a filename
@@ -46,35 +57,32 @@ PullDownMenu {
                     //% "Deleted contact"
                     qsTrId("components_contacts-la-deleted_contact"),
                     function() {
-                        cache.unfilteredModel().removePerson(_contact)
+                        cache.deleteContact(_contact)
                         cache._deletingContactId = -1
                     })
         remorse.canceled.connect(function () { cache._deletingContactId = -1 })
     }
 
-    MenuItem {
-        //: Deletes contact
-        //% "Delete"
-        text: qsTrId("components_contacts-me-delete")
+    ContactDeleteMenuItem {
+        contact: root.contact
+        peopleModel: root._peopleModel
         visible: root._contactValid
 
         onClicked: root._deleteContact()
     }
 
     MenuItem {
+        id: linkMenuItem
+
         //: Manage links (associated contacts) for this contact
         //% "Link"
         text: qsTrId("components_contacts-me-link")
         onClicked: {
             if (root._contactValid) {
                 pageStack.animatorPush(Qt.resolvedUrl("ContactLinksPage.qml"),
-                                       { "person": root.contact } )
+                                       { "person": root.contact, "peopleModel": root._peopleModel } )
             } else {
-                var obj = pageStack.animatorPush(Qt.resolvedUrl("TemporaryContactLinkPage.qml"),
-                                                 { "temporaryContact": root.contact } )
-                obj.pageCompleted.connect(function(page) {
-                    page.detailAppended.connect(temporaryContactLinked)
-                })
+                root.unsavedContactLinkRequested()
             }
         }
     }
@@ -96,16 +104,14 @@ PullDownMenu {
         }
     }
 
-    MenuItem {
-        //: Edit contact
-        //% "Edit"
-        text: qsTrId("components_contacts-me-edit")
+    ContactEditMenuItem {
+        contact: root.contact
+        peopleModel: root._peopleModel
         visible: root._contactValid
 
         onClicked: {
-            // Ensure we're modifying the canonical instance of this contact
-            var c = root.contact.id !== 0 ? root._peopleModel.personById(root.contact.id) : root.contact
-            pageStack.animatorPush("ContactEditorDialog.qml", {"subject": c})
+            ContactsUtil.editContact(root.contact, root._peopleModel, pageStack)
         }
     }
+
 }

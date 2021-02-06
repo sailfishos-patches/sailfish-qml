@@ -17,7 +17,6 @@ CsdTestPage {
     function showPassOrFail() {
         if (page.result || timer.count == 25) {
             timer.running = false
-            compass.active = false
             setTestResult(page.result)
             testCompleted(false)
         }
@@ -28,14 +27,15 @@ CsdTestPage {
     Compass {
         id: compass
         dataRate: 100
-        active:true
+        active: page.status == PageStatus.Active
         property real level
+        property real azimuth
 
         onReadingChanged: {
             level = compass.reading.calibrationLevel
+            azimuth = compass.reading.azimuth
             if (compass.reading.calibrationLevel === 1) {
                 timer.stop()
-                compass.active = false
                 page.showPassOrFail()
             }
         }
@@ -87,7 +87,9 @@ CsdTestPage {
             text:  //% "Pass calibration level: %0"
                    qsTrId("csd-la-pass_calibration_level").arg(page.passingCalibrationLevel) +
                    //% "Current calibration level: %0"
-                   "\n\n" + qsTrId("csd-la-calibration_level").arg(compass.level)
+                   "\n\n" + qsTrId("csd-la-calibration_level").arg(compass.level) +
+                   //% "Current azimuth: %0"
+                   "\n\n" + qsTrId("csd-la-azimuth").arg(compass.azimuth)
         }
 
         Label {

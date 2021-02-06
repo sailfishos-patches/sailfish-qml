@@ -23,6 +23,7 @@ WebViewPage {
     // either undefined or function taking message id as parameter
     property var removeCallback
     property string pathToLoad
+    property string messageAction
     readonly property bool isLocalFile: pathToLoad !== ""
     readonly property string _mimeType: message.contentType == EmailMessage.HTML
             ? "text/html"
@@ -45,6 +46,7 @@ WebViewPage {
         if (status == PageStatus.Active) {
             if (!loaded) {
                 htmlLoader.load(message.htmlBody, _mimeType, message)
+                htmlLoader.markAsRead()
             }
             pageStack.pushAttached(messageInfoComponent, { message: message })
             app.coverMode = "mailViewer"
@@ -99,13 +101,6 @@ WebViewPage {
                 plainTextViewer.loadBody()
             }
         }
-
-        onInlinePartsDownloaded: {
-            // Some servers(e.g exchange), always update all message properties
-            // when some parts are retrived, the server as priority, so for the case of
-            // inline images the message read state can change back to unread
-            htmlLoader.markAsRead()
-        }
     }
 
     HtmlLoader {
@@ -116,6 +111,7 @@ WebViewPage {
         attachmentsModel: attachModel
         isOutgoing: messageViewPage.isOutgoing
         isLocalFile: messageViewPage.isLocalFile
+        initialAction: messageViewPage.messageAction
         onRemoveRequested: messageViewPage.doRemove()
         onNeedToSendReadReceipt: {
             _sendReadReceipt = true

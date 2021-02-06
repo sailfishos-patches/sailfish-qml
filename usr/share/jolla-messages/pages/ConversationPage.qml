@@ -79,6 +79,7 @@ Page {
         visible: active
         text: conversation.title
         showPhoneIcon: conversation.hasPhoneNumber
+        z: 1
     }
 
     MessagesView {
@@ -93,7 +94,7 @@ Page {
 
         anchors {
             fill: parent
-            topMargin: conversationHeader.active ? conversationHeader.height : 0
+            topMargin: conversationHeader.active ? conversationHeader.height - 2*Theme.paddingLarge : 0
         }
 
         model: CommConversationModel {

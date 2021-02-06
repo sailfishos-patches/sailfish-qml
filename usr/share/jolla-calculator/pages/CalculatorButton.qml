@@ -10,6 +10,7 @@ BackgroundItem {
 
     implicitWidth: squareWidth
 
+    _pressEffectDelay: false
     height: implicitWidth * (pageStack.currentPage.isLandscape ? 0.75 : 1.0)
     width: implicitWidth
 

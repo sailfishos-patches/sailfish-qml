@@ -561,6 +561,30 @@ PinchArea {
     }
 
     Item {
+        parent: _overlayPosition.exposure === Qt.AlignRight ? overlayAnchorBL : overlayAnchorBR
+        property int paddingVector: overlay.isPortrait
+                                    ? -2
+                                    : _overlayPosition.exposure === Qt.AlignRight ? 2 : -2
+        anchors {
+            centerIn: parent
+            verticalCenterOffset: overlay.isPortrait ? overlayAnchorBL.width*paddingVector : 0
+            horizontalCenterOffset: overlay.isPortrait ? 0 : overlayAnchorBL.height*paddingVector
+        }
+
+        opacity: qrFilter.result.length !== 0 ? 1.0 : 0.0
+        visible: opacity != 0.0
+        Behavior on opacity { FadeAnimation {} }
+
+        CameraButton {
+            icon.source: "image://theme/icon-camera-qr"
+            background.visible: false
+            onClicked: {
+                pageStack.push("QrPage.qml", { text: qrFilter.result })
+            }
+        }
+    }
+
+    Item {
         id: anchorContainer
 
         anchors.fill: parent

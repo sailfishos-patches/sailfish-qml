@@ -34,7 +34,7 @@ TabItem {
             //% "Pull down to save some alarms"
             text: qsTrId("clock-la-pull_down_to_save_alarms")
             enabled: alarmsModel.populated && alarms.count === 0
-            y: flickable.originY + topMargin + Math.max(mainPage.placeholderY, clock.height + dateContainer.height)
+            anchors.top: column.bottom
         }
 
         Column {
@@ -43,7 +43,7 @@ TabItem {
             x: Theme.horizontalPageMargin - Theme.paddingLarge
             width: parent.width - 2*x
 
-            Item { width: 1; height: topMargin - Theme.paddingLarge }
+            Item { width: 1; height: topMargin }
 
             Clock {
                 id: clock

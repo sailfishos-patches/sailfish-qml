@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2014 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
@@ -16,6 +23,7 @@ PixelAlignedItem {
     property alias transitionItem: peekArea.transitionItem
     property alias snapshotSource: peekArea.snapshotSource
     property alias underlayItem: peekArea.underlayItem
+    property alias foregroundItem: peekArea.foregroundItem
     property alias contentItem: peekArea.contentItem
     readonly property alias contentOpacity: peekArea.opacity
     property alias overlayItem: peekArea.overlayItem
@@ -46,10 +54,9 @@ PixelAlignedItem {
     property bool transitionIsPending
     property bool peekingAtHome
 
-    property Item background
     property bool renderBackground: window && window.renderBackground && window.mapped
-    property bool renderDialogBackground: window && window.renderDialogBackground && window.mapped
-    property bool mergeWindows: renderBackground || (window && window.hasChildWindows && window.mapped)
+    property bool renderDialogBackground: !!(window && window.renderDialogBackground && window.mapped)
+    property bool mergeWindows: renderBackground || !!(window && window.hasChildWindows && window.mapped)
     readonly property bool renderSnapshot: exposed && mergeWindows && (transitioning || peeking || peekingAtHome)
     readonly property rect backgroundRect: window && window.backgroundRect !== undefined ? window.backgroundRect : Qt.rect(0, 0, width, height)
     readonly property bool opaqueAndMapped: opaque && window && (window.mapped === undefined || window.mapped)

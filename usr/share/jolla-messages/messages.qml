@@ -149,26 +149,26 @@ ApplicationWindow {
 
         if (pageStack.depth > 1) {
             pageStack.animatorReplaceAbove(mainPage, Qt.resolvedUrl("pages/ConversationPage.qml"),
-                                           focus ? { "editorFocus": true } : {}, operationType)
+                                           { "editorFocus": focus }, operationType)
         } else {
             if (pageStack.depth == 0)
                 showMainPage(PageStackAction.Immediate)
 
             if (!!sync) {
                 pageStack.push(Qt.resolvedUrl("pages/ConversationPage.qml"),
-                               focus ? { "editorFocus": true } : {}, operationType)
+                               { "editorFocus": focus }, operationType)
             } else {
                 pageStack.animatorPush(Qt.resolvedUrl("pages/ConversationPage.qml"),
-                                       focus ? { "editorFocus": true } : {}, operationType)
+                                       { "editorFocus": focus }, operationType)
             }
         }
     }
 
     function loadAndShowSMSConversation(remoteUids, body) {
-        loadAndShowConversation(MessageUtils.telepathyAccounts.ringAccountPath, remoteUids, body)
+        loadAndShowConversation(MessageUtils.telepathyAccounts.ringAccountPath, remoteUids, body, true)
     }
 
-    function loadAndShowConversation(localUid, remoteUids, body) {
+    function loadAndShowConversation(localUid, remoteUids, body, focus) {
         // Exception handler to work around a Qt bug causing errors to not print when called from C++ code
         try {
             // If there is a draft in progress, save the state before changing conversation
@@ -184,7 +184,7 @@ ApplicationWindow {
             conversation.fromMessageChannel()
 
             showConversationPage(Qt.application.active ? PageStackAction.Animated : PageStackAction.Immediate,
-                                 true, true)
+                                 focus, true)
             if (body !== undefined && body.length > 0)
                 conversationPage.setText(body)
             activate()

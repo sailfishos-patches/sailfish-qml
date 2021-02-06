@@ -1,6 +1,14 @@
+/*
+ * Copyright (c) 2012 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.2
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
+import Sailfish.Silica.Background 1.0
 import "../pages/callhistory"
 import "../common/CallHistory.js" as CallHistory
 
@@ -87,107 +95,6 @@ Page {
 
     opacity: 0.0
     enabled: main.displayCallView
-
-    palette.colorScheme: avatarImage.status === Image.Ready ? Theme.LightOnDark : undefined
-
-    property url callerAvatar: {
-        if (callingState === "incoming") {
-            return telephony.incomingCallerDetails ? telephony.incomingCallerDetails.avatar : ""
-        } else if (callingState === "silenced") {
-            return telephony.silencedCallerDetails ? telephony.silencedCallerDetails.avatar : ""
-        } else {
-            return telephony.primaryCallerDetails ? telephony.primaryCallerDetails.avatar : ""
-        }
-    }
-    onCallerAvatarChanged: asyncAvatarCheck.restart()
-
-    Timer {
-        interval: 1
-        id: asyncAvatarCheck
-        onTriggered: {
-            if (!visible || (telephony.active && avatarImage.status !== Image.Ready)) {
-                glassAvatar.opacity = 0
-                avatarImage.source = callerAvatar
-            } else if (telephony.active
-                       && avatarImage.status === Image.Ready
-                       && avatarImage.source !== callerAvatar) {
-                avatarFadeInAnimation.stop()
-                avatarFadeOutAnimation.from = glassAvatar.opacity
-                avatarFadeOutAnimation.start()
-            }
-        }
-    }
-
-    GlassBackgroundBase {
-        id: glassAvatar
-
-        z: -1
-        opacity: 0.0
-        anchors.fill: parent
-        blending: true
-        parent: __silica_applicationwindow_instance._wallpaperItem
-        contentAngle: Math.floor(callingView.rotation / 90) * 90
-
-        color: Qt.rgba(0, 0, 0, 0.6)
-        patternItem: glassTextureImage
-        backgroundItem: avatarBlur
-
-        Image {
-            id: glassTextureImage
-            visible: false
-            source: "image://theme/graphic-shader-texture"
-        }
-
-        Image {
-            id: avatarImage
-            visible: false
-
-            sourceSize.width: Screen.width / (4 * Theme.pixelRatio)
-            onStatusChanged: {
-                if (status === Image.Ready) {
-                    if (callingView.visible) {
-                        avatarFadeInAnimation.start()
-                    } else {
-                        glassAvatar.opacity = 1
-                    }
-                }
-            }
-        }
-
-        BlurEffect {
-            id: avatarBlur
-            sourceItem: avatarImage
-            visible: false
-            blur: true
-
-            iterations: 2
-            kernel: BlurEffect.Gaussian9
-            levels: 1
-        }
-
-        FadeAnimator {
-            id: avatarFadeOutAnimation
-
-            target: glassAvatar
-
-            running: false
-            duration: 200
-            from: 1
-            to: 0
-
-            onStopped: avatarImage.source = telephony.active ? callingView.callerAvatar : ""
-        }
-
-        FadeAnimator {
-            id: avatarFadeInAnimation
-            target: glassAvatar
-
-            running: false
-            duration: 400
-            from: 0.0
-            to: 1.0
-        }
-    }
 
     CallHistoryItem {
         id: secondCallerItem

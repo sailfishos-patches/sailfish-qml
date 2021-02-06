@@ -85,6 +85,8 @@ MouseArea {
         color: Theme.highlightColor
         font.pixelSize: hugeFontMetrics.boundingRect(text).width > (width - textLeftMargin - textRightMargin) ? Theme.fontSizeExtraLarge
                                                                                                               : hugeFontMetrics.font.pixelSize
+
+        errorHighlight: false // avoid showing the default warning icon
         enableSoftwareInputPanel: false
         validator: RegExpValidator { regExp: /^[0-9\+\-\#\*\ ]{6,}$/ }
         labelVisible: false
@@ -215,15 +217,16 @@ MouseArea {
             height: clearLabel.height + 50*scaleRatio
             radius: 10*scaleRatio
             color: Theme.colorScheme === Theme.LightOnDark
-                   ? Qt.darker(Theme.highlightBackgroundColor, 1.2)
-                   : Qt.lighter(Theme.highlightBackgroundColor, 1.4)
+                   ? Qt.darker(Theme.highlightBackgroundColor, 1.45)
+                   : Qt.lighter(Theme.highlightBackgroundColor, 1.45)
 
             onVisibleChanged: containsMouse = false
 
             Label {
                 id: clearLabel
                 anchors.centerIn: parent
-                color: parent.containsMouse ? Theme.primaryColor : Theme.highlightColor
+                font.bold: parent.containsMouse
+                color: parent.containsMouse ? Theme.primaryColor : Theme.secondaryColor
                 //% "Clear clipboard"
                 text: qsTrId("number_input-la-clear_clipboard")
             }

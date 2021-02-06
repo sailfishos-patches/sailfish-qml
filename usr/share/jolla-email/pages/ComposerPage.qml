@@ -27,6 +27,8 @@ Page {
     property alias draft: composer.draft
     property var draftRemoveCallback
 
+    highContrast: true
+
     // Lazy load cover
     onStatusChanged: {
         if (status === PageStatus.Active) {

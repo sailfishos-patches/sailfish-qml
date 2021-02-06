@@ -4,8 +4,7 @@ import Sailfish.Settings.Networking.Vpn 1.0
 import Sailfish.Settings.Networking 1.0
 
 VpnTypeItem {
-    handleClick: false
-    vpnType: "openvpn"
+    canImport: true
     onClicked: {
         pageStack.animatorPush("OvpnFileSettingsDialog.qml", { mainPage: _mainPage })
     }

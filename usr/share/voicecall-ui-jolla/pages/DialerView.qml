@@ -8,7 +8,6 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
-import org.nemomobile.notifications 1.0
 import Nemo.Configuration 1.0
 import MeeGo.QOfono 0.2
 import org.nemomobile.dbus 2.0
@@ -106,8 +105,7 @@ Item {
             telephony.dial(voiceMail.mailboxNumber(), modemPath)
         } else {
             //% "No voicemail number is defined"
-            voiceMail.notification.previewBody = qsTrId("voicecall-la-no_voicemail_mailbox")
-            voiceMail.notification.publish()
+            Notices.show(qsTrId("voicecall-la-no_voicemail_mailbox"))
         }
         voiceMail.destroy()
     }
@@ -394,10 +392,7 @@ Item {
         id: messageWaiting
         Item {
             property alias modemPath: ofonoMessageWaiting.modemPath
-            property var notification: Notification {
-                urgency: Notification.Critical
-                isTransient: true
-            }
+
             function mailboxNumber() {
                 if (!simCodes.present(modemPath)) {
                     return ""

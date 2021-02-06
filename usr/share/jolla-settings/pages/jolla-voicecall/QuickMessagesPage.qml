@@ -78,7 +78,7 @@ Page {
             labelVisible: false
             text: model.display
             textTopMargin: Theme.paddingLarge
-            textRightMargin: Theme.horizontalPageMargin + deleteIcon.width + Theme.paddingMedium
+
             height: enableAppendAnimation ? 0 : implicitHeight
             opacity: enableAppendAnimation ? 0.0 : 1.0
 
@@ -99,15 +99,7 @@ Page {
                 }
             }
 
-            IconButton {
-                id: deleteIcon
-
-                parent: messageTextField
-                icon.source: messageTextField.text.length > 0
-                             ? "image://theme/icon-m-input-clear"
-                             : "image://theme/icon-m-input-remove"
-                anchors.right: parent.right
-                y: Theme.paddingSmall
+            rightItem: IconButton {
                 onClicked: {
                     if (messageTextField.text) {
                         messageTextField.text = ""
@@ -117,9 +109,14 @@ Page {
                     }
                 }
 
+                width: icon.width
+                height: icon.height
                 enabled: quickMessagesModel.count > 1
-                opacity: enabled ? 1.0 : 0.0
-                Behavior on opacity { FadeAnimator {} }
+                icon.source: messageTextField.text.length > 0
+                             ? "image://theme/icon-splus-clear"
+                             : "image://theme/icon-splus-remove"
+                opacity: clearableField.text.length > 0 ? 1.0 : 0.0
+                Behavior on opacity { FadeAnimation {} }
             }
 
             SequentialAnimation {

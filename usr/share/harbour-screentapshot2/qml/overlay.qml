@@ -1,6 +1,7 @@
 import QtQuick 2.1
 import Sailfish.Silica 1.0
 import QtSensors 5.0
+import QtGraphicalEffects 1.0
 import harbour.screentapshot2.screenshot 1.0
 
 Item {
@@ -103,8 +104,8 @@ Item {
         x: viewHelper.lastXPos
         y: viewHelper.lastYPos
 
-        width: 80
-        height: 80
+        width: Theme.itemSizeSmall
+        height: Theme.itemSizeSmall
 
         drag.target: touchArea
         drag.minimumX: 0
@@ -163,49 +164,16 @@ Item {
             Behavior on rotation {
                 SmoothedAnimation { duration: 500 }
             }
-            Image {
-                id: mainIcon
-                anchors.centerIn: parent
-                source: "../images/" + root.icon + "-blur.png"
-                property color color: Theme.rgba("black", Theme.highlightBackgroundOpacity)
-                layer.effect: ShaderEffect {
-                    property color color: mainIcon.color
-
-                    fragmentShader: "
-                        varying mediump vec2 qt_TexCoord0;
-                        uniform highp float qt_Opacity;
-                        uniform lowp sampler2D source;
-                        uniform highp vec4 color;
-                        void main() {
-                            highp vec4 pixelColor = texture2D(source, qt_TexCoord0);
-                            gl_FragColor = vec4(mix(pixelColor.rgb/max(pixelColor.a, 0.00390625), color.rgb/max(color.a, 0.00390625), color.a) * pixelColor.a, pixelColor.a) * qt_Opacity;
-                        }
-                    "
-                }
-                layer.enabled: true
-                layer.samplerName: "source"
+            Rectangle {
+                anchors.fill: parent
+                radius: Math.max(width, height) / 2
+                color: Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
             }
             Image {
                 id: highlightedIcon
                 anchors.centerIn: parent
-                source: "../images/" + root.icon + ".png"
-                property color color: Theme.highlightColor
-                layer.effect: ShaderEffect {
-                    property color color: highlightedIcon.color
-
-                    fragmentShader: "
-                        varying mediump vec2 qt_TexCoord0;
-                        uniform highp float qt_Opacity;
-                        uniform lowp sampler2D source;
-                        uniform highp vec4 color;
-                        void main() {
-                            highp vec4 pixelColor = texture2D(source, qt_TexCoord0);
-                            gl_FragColor = vec4(mix(pixelColor.rgb/max(pixelColor.a, 0.00390625), color.rgb/max(color.a, 0.00390625), color.a) * pixelColor.a, pixelColor.a) * qt_Opacity;
-                        }
-                    "
-                }
-                layer.enabled: true
-                layer.samplerName: "source"
+                smooth: true
+                source: "image://theme/icon-m-camera"
             }
         }
 
@@ -282,7 +250,8 @@ Item {
 
                 Label {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Application removal"
+                    //: Title of overlay visible while removing still launched application
+                    text: qsTr("Application removal")
                 }
 
                 Item {
@@ -294,7 +263,7 @@ Item {
                     Image {
                         id: appIcon
                         anchors.centerIn: parent
-                        source: "/usr/share/icons/hicolor/86x86/apps/harbour-screentapshot2.png"
+                        source: "image://theme//harbour-screentapshot2"
                     }
 
                     Label {
@@ -375,23 +344,26 @@ Item {
                 width: parent.width
                 wrapMode: Text.Wrap
                 horizontalAlignment: Text.AlignHCenter
-
-                text: "I'm sorry You unsatisfied with my application. Please tell me why, and I will try to do my best to improve it."
+                //: Removal overlay text
+                text: qsTr("I'm sorry You unsatisfied with my application. Please tell me why, and I will try to do my best to improve it.")
             }
 
             Button {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Leave comment in Jolla Store"
+                //: Removal overlay button to open openrepos in browser
+                text: qsTr("Leave comment in OpenRepos")
                 enabled: removalOverlay.enabled
                 onClicked: {
-                    viewHelper.openStore()
+//                    viewHelper.openStore()
+                    Qt.openUrlExternally("https://openrepos.net/content/coderus/screentapshot2")
                     Qt.quit()
                 }
             }
 
             Button {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "No, thanks"
+                //: Removal overlay button to close application
+                text: qsTr("No, thanks")
                 enabled: removalOverlay.enabled
                 onClicked: Qt.quit()
             }

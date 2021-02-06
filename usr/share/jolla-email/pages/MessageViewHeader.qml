@@ -49,74 +49,57 @@ Column {
                   qsTrId("jolla-email-la-no_recipient")
     }
 
-    BackgroundItem {
-        id: headerBackground
+    PageHeader {
+        id: header
 
-        width: root.width
-        height: header.height
+        width: parent.width
+        rightMargin: headerIcons.width > 0
+                     ? (headerIcons.width + Theme.paddingMedium + headerIcons.anchors.rightMargin)
+                     : Theme.horizontalPageMargin
+        descriptionRightMargin: Theme.horizontalPageMargin
+        interactive: true
 
-        onClicked: root.clicked()
+        title: email ? (isOutgoing ? _emailRecipients() : email.fromDisplayName) : ""
+        description: email ? email.subject : ""
 
-        SilicaControl {
-            width: headerBackground.width
-            height: header.height
+        Row {
+            id: headerIcons
 
-            highlighted: undefined
+            anchors {
+                right: parent.right
+                rightMargin: Theme.horizontalPageMargin + Theme.paddingSmall
+                verticalCenter: parent.verticalCenter
+                verticalCenterOffset: -Theme.paddingLarge / 3
+            }
+            spacing: Theme.paddingSmall
 
-            palette {
-                primaryColor: headerBackground.palette.highlightColor
-                secondaryColor: headerBackground.palette.secondaryHighlightColor
-                highlightColor: headerBackground.palette.primaryColor
-                secondaryHighlightColor: headerBackground.palette.secondaryColor
+            HighlightImage {
+                anchors.verticalCenter: parent.verticalCenter
+                source: inlineInvitation && event
+                        && (event.secrecy === CalendarEvent.SecrecyPrivate
+                            || event.secrecy === CalendarEvent.SecrecyConfidential)
+                        ? "image://theme/icon-s-secure"
+                        : ""
+                color: header.titleColor
             }
 
-            PageHeader {
-                id: header
+            HighlightImage {
+                anchors.verticalCenter: parent.verticalCenter
+                source: email ? Utils.priorityIcon(email.priority) : ""
+                color: header.titleColor
+            }
+        }
+    }
 
-                title: email ? (isOutgoing ? _emailRecipients() : email.fromDisplayName) : ""
-                description: email ? email.subject : ""
-                _titleItem.anchors.right: sensitivityImage.visible
-                                          ? sensitivityImage.left
-                                          : (priorityImage.visible ? priorityImage.left : header.right)
-                _titleItem.anchors.rightMargin: (priorityImage.visible || sensitivityImage.visible)
-                                                    ? Theme.paddingSmall : Theme.horizontalPageMargin
-                ImportModel {
-                    icsString: inlineInvitation ? email.calendarInvitationBody : ""
-                    onCountChanged: {
-                        if (count > 0) {
-                            root.event = getEvent(0)
-                            root.occurrence = root.event ? root.event.nextOccurrence() : null
-                        } else {
-                            root.event = null
-                            root.occurrence = null
-                        }
-                    }
-                }
-
-                Image {
-                    id: priorityImage
-                    visible: source != ""
-                    anchors {
-                        verticalCenter: header._titleItem.verticalCenter
-                        verticalCenterOffset: Theme.paddingSmall / 2
-                        right: parent.right
-                        rightMargin: Theme.horizontalPageMargin - Theme.paddingMedium
-                    }
-                    source: email ? Utils.priorityIcon(email.priority) : ""
-                }
-                Image {
-                    id: sensitivityImage
-                    visible: inlineInvitation && event &&
-                             (event.secrecy === CalendarEvent.SecrecyPrivate ||
-                              event.secrecy === CalendarEvent.SecrecyConfidential)
-                    anchors {
-                        verticalCenter: header._titleItem.verticalCenter
-                        verticalCenterOffset: Theme.paddingSmall / 2
-                        right: priorityImage.visible ? priorityImage.left : parent.right
-                        rightMargin: priorityImage.visible ? Theme.paddingSmall : Theme.horizontalPageMargin
-                    }
-                    source: visible ? "image://theme/icon-s-secure" : ""
-                }
+    ImportModel {
+        icsString: inlineInvitation ? email.calendarInvitationBody : ""
+        onCountChanged: {
+            if (count > 0) {
+                root.event = getEvent(0)
+                root.occurrence = root.event ? root.event.nextOccurrence() : null
+            } else {
+                root.event = null
+                root.occurrence = null
             }
         }
     }

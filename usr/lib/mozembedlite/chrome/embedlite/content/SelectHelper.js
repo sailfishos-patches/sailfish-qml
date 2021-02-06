@@ -231,7 +231,7 @@ SelectHelper.prototype = {
     var changed = false;
     if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
       aElement.selectedIndex = selected;
-    } else if (aElement instanceof Ci.nsIDOMHTMLSelectElement) {
+    } else if (aElement instanceof content.HTMLSelectElement) {
       if (!(selected instanceof Array)) {
         let temp = [];
         for (let i = 0; i < list.listitems.length; i++) {
@@ -252,7 +252,7 @@ SelectHelper.prototype = {
   },
 
   _isMenu: function(aElement) {
-    return (aElement instanceof Ci.nsIDOMHTMLSelectElement ||
+    return (aElement instanceof content.HTMLSelectElement ||
             aElement instanceof Ci.nsIDOMXULMenuListElement);
   },
 

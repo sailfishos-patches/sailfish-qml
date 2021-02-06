@@ -3,8 +3,9 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import com.jolla.keyboard 1.0
 
-Item {
+SilicaItem {
     id: popperCell
     width: geometry.accentPopperCellWidth
     height: geometry.popperHeight
@@ -13,7 +14,7 @@ Item {
     property alias character: textItem.text
     property alias textVisible: textItem.visible
 
-    Text {
+    Label {
         id: textItem
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -22,10 +23,12 @@ Item {
         width: geometry.popperWidth - Theme.paddingSmall
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        color: Theme.primaryColor
-        opacity: popperCell.active ? 1 : .35
+        color: popperCell.active ? popperCell.palette.primaryColor
+                                 : popperCell.palette.secondaryColor
         font.family: Theme.fontFamily
         font.pixelSize: geometry.popperFontSize
+        // emoji are already bold enough by such, and qtquick would break the rendering.
+        font.bold: popperCell.active && !KeyboardSupport.isEmoji(character)
         fontSizeMode: Text.Fit
     }
 }

@@ -48,7 +48,7 @@ TabItem {
             x: Theme.horizontalPageMargin - Theme.paddingLarge
             width: parent.width - 2*x
 
-            Item { width: 1; height: topMargin }
+            Item { width: 1; height: topMargin + Theme.paddingLarge }
             Grid {
                 id: timersView
 

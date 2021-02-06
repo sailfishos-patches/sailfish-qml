@@ -450,31 +450,14 @@ SilicaItem {
         radius: Theme.paddingLarge
     }
 
-    SilencedCallButtons {
+    Column {
         id: silencedOptions
 
-        onSendMessageClicked: {
-            //% "Select your message"
-            menuLoader.open(qsTrId("voicecall-he-select_your_message"), messageReplyMenuComponent)
-        }
-
-        onReminderClicked: {
-            //% "Remind me"
-            menuLoader.open(qsTrId("voicecall-he-remind_me"), reminderMenuComponent)
-        }
-
-        onEndCallClicked: {
-            if (!telephony.silencedCall) {
-                console.warn("Can't reject silenced call because there is no silenced call.")
-                return
-            }
-            if (main.state === "silenced") {
-                telephony.hangupCall(telephony.silencedCall)
-                main.hangupAnimation.complete()
-            }
-        }
-
         y: Screen.height
+        width: parent.width
+
+        spacing: Theme.paddingMedium
+
         enabled: !menuLoader.menuOpen && (telephony.messagingPermitted || telephony.callingPermitted)
         opacity: enabled ? (1.0 - (incomingCallControl.answering ? incomingCallGesture.progress : 0.0)) : 0.0
         anchors.bottomMargin: isPortrait ? (Theme.paddingLarge * 2) : 0
@@ -492,6 +475,48 @@ SilicaItem {
                 anchors.bottom: parent.bottom
             }
         }
+
+        Label {
+            leftPadding: Theme.horizontalPageMargin
+            rightPadding: Theme.horizontalPageMargin
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            color: palette.highlightColor
+            wrapMode: Text.Wrap
+
+            opacity: main.state === "silenced" ? 1 : 0
+
+            //% "Call silenced"
+            text: qsTrId("voicecall-la-call_silenced")
+
+            Behavior on opacity {
+                FadeAnimation { duration: 300 }
+            }
+        }
+
+        SilencedCallButtons {
+            onSendMessageClicked: {
+                //% "Select your message"
+                menuLoader.open(qsTrId("voicecall-he-select_your_message"), messageReplyMenuComponent)
+            }
+
+            onReminderClicked: {
+                //% "Remind me"
+                menuLoader.open(qsTrId("voicecall-he-remind_me"), reminderMenuComponent)
+            }
+
+            onEndCallClicked: {
+                if (!telephony.silencedCall) {
+                    console.warn("Can't reject silenced call because there is no silenced call.")
+                    return
+                }
+                if (main.state === "silenced") {
+                    telephony.hangupCall(telephony.silencedCall)
+                    main.hangupAnimation.complete()
+                }
+            }
+        }
+
     }
 
     ParallelAnimation {
@@ -741,7 +766,7 @@ SilicaItem {
         ParallelAnimation {
             FadeAnimation {
                 target: hangupIndicator
-                duration: hintAnimationDuration/3
+                duration: arrowAnimationDuration/3
                 to: 1.0
             }
             NumberAnimation {

@@ -1,9 +1,16 @@
+/****************************************************************************
+ **
+ ** Copyright (c) 2014 - 2019 Jolla Ltd.
+ ** Copyright (c) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import org.nemomobile.lipstick 0.1
 import "../windowwrappers"
-import "../compositor"
+import "../backgrounds"
 
 StackLayer {
     id: alarmLayer
@@ -36,15 +43,12 @@ StackLayer {
             opacity: Theme.opacityLow
         },
 
-        BlurredBackground {
+        AlarmBackground {
             visible: alarmLayer.renderDialogBackground
             x: alarmLayer.backgroundRect.x
             y: alarmLayer.backgroundRect.y
             width: alarmLayer.backgroundRect.width
             height: alarmLayer.backgroundRect.height
-            backgroundItem: Lipstick.compositor.dialogBlurSource
-            color: Theme.rgba(Theme.highlightBackgroundColor, Theme.opacityHigh)
-            radius: Theme.paddingLarge
         }
     ]
 }

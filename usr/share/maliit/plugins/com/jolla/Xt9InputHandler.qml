@@ -68,11 +68,11 @@ InputHandler {
         if (text === undefined) {
             return ""
         } else if (showApplicationSuggestions) {
-            return Theme.highlightText(text, combinedText, Theme.highlightColor)
+            return Theme.highlightText(text, combinedText, palette.highlightColor)
         } else {
             var preeditLength = xt9Handler.preedit.length
             if (text.substr(0, preeditLength) === xt9Handler.preedit) {
-                return "<font color=\"" + Theme.highlightColor + "\">" + xt9Handler.preedit + "</font>"
+                return "<font color=\"" + palette.highlightColor + "\">" + xt9Handler.preedit + "</font>"
                         + text.substr(preeditLength)
             } else {
                 return text

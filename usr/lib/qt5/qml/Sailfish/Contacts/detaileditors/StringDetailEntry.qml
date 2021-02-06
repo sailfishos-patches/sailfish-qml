@@ -11,7 +11,7 @@ import Sailfish.Silica.private 1.0 as Private
 import Sailfish.Contacts 1.0
 import org.nemomobile.contacts 1.0
 
-Item {
+FocusScope {
     id: root
 
     property alias icon: addFieldButton.icon
@@ -51,32 +51,21 @@ Item {
     signal detailSubTypeModified(int type, int subType)
     signal detailLabelModified(int label)
 
-    function forceActiveFocus(delayInterval) {
-        if (buttonMode) {
-            return false
-        }
-        if (!!delayInterval) {
-            focusTimer.interval = delayInterval
-            focusTimer.restart()
-        } else {
-            inputField.forceActiveFocus()
-        }
-        return true
+    function forceActiveFocus() {
+        inputField.forceActiveFocus()
+    }
+
+    function clearFocus() {
+        inputField.focus = false
     }
 
     width: parent.width
     height: inputField.height
 
-    Timer {
-        id: focusTimer
-        onTriggered: inputField.forceActiveFocus()
-    }
-
     TextField {
         id: inputField
 
         width: parent.width
-        textRightMargin: clearButton.width
         textLeftMargin: addFieldButton.offscreenPeekWidth
 
         readOnly: !root.enabled
@@ -86,6 +75,8 @@ Item {
 
         EnterKey.iconSource: root.keyboardEnterIcon
         EnterKey.onClicked: root.accepted()
+
+        focus: true
 
         onTextChanged: {
             if (activeFocus) {
@@ -154,28 +145,28 @@ Item {
                 }
             }
         }
-    }
 
-    IconButton {
-        id: clearButton
-
-        x: parent.width - width - Theme.paddingMedium
-        y: (inputField._editor.y + inputField._editor.height)/2 - height/2 + inputField.textTopMargin
-
-        icon.source: inputField.text.length > 0
-                     ? "image://theme/icon-m-input-clear"
-                     : (canRemove ? "image://theme/icon-m-input-remove" : "")
-        enabled: addFieldButton.offscreen && icon.status === Image.Ready
-        opacity: enabled ? addFieldButton.revealedContentOpacity : 0
-
-        onClicked: {
-            if (inputField.text.length > 0) {
-                inputField.text = ""
-                root.modified()
-                inputField.focus = true
-            } else {
-                root.removeClicked()
+        rightItem: IconButton {
+            onClicked: {
+                addFieldButton.animate = true
+                if (inputField.text.length > 0) {
+                    inputField.text = ""
+                    root.modified()
+                    inputField.forceActiveFocus()
+                } else {
+                    root.removeClicked()
+                }
             }
+
+            width: icon.width
+            height: icon.height
+            opacity: enabled ? addFieldButton.revealedContentOpacity : 0
+
+            enabled: addFieldButton.offscreen
+            icon.source: inputField.text.length > 0
+                         ? "image://theme/icon-splus-clear"
+                         : (canRemove ? "image://theme/icon-splus-remove" : "")
+            Behavior on opacity { FadeAnimation {} }
         }
     }
 
@@ -185,10 +176,10 @@ Item {
         x: parent.width - width - Theme.paddingMedium
 
         offscreen: !root.buttonMode
-        animate: root.animate
         highlighted: inputField.activeFocus || down
 
         onClicked: {
+            animate = true
             root._addButtonClicked = true
             if (root.buttonMode) {
                 root.clickedInButtonMode()
@@ -200,6 +191,9 @@ Item {
         onEnteredButtonMode: {
             root.enteredButtonMode()
         }
-    }
 
+        onExitedButtonMode: {
+            inputField.forceActiveFocus()
+        }
+    }
 }

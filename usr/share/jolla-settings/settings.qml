@@ -9,7 +9,7 @@ import "./pages"
 ApplicationWindow {
     id: window
 
-    property Page _frontPage
+    property Page _mainPage
 
     allowedOrientations: Screen.sizeCategory > Screen.Medium
                          ? defaultAllowedOrientations
@@ -17,20 +17,21 @@ ApplicationWindow {
     _defaultPageOrientations: Orientation.All
     _defaultLabelFormat: Text.PlainText
 
-    initialPage: Component { FrontPage { id: frontPage; Component.onCompleted: window._frontPage = frontPage} }
+    initialPage: Component { MainPage { id: mainPage; Component.onCompleted: window._mainPage = mainPage} }
 
     cover: Qt.resolvedUrl("pages/SettingsCover.qml")
 
     // Function to show a setting page specified by the url. This cleans the stack
     // to the first page before pushing the new pages on a stack. Otherwise the stack
     // might have the same page twice.
-    function showSettingsPage(url, properties) {
+    function showSettingsPage(section, url, properties) {
         if (!pageStack.currentPage.backNavigation) {
             showBusyWarning()
             return
         }
 
-        pageStack.pop(_frontPage, PageStackAction.Immediate)
+        pageStack.pop(_mainPage, PageStackAction.Immediate)
+        _mainPage.moveToSection(section)
         pageStack.push(url, properties || {}, PageStackAction.Immediate)
         window.activate()
     }
@@ -41,8 +42,8 @@ ApplicationWindow {
             return
         }
 
-        pageStack.pop(_frontPage, PageStackAction.Immediate)
-        _frontPage.moveToSection(section)
+        pageStack.pop(_mainPage, PageStackAction.Immediate)
+        _mainPage.moveToSection(section)
         window.activate()
     }
 
@@ -67,60 +68,53 @@ ApplicationWindow {
         iface: "com.jolla.settings.ui"
 
         function showSettings() {
-            // Jumps to initial page
-            if (!pageStack.currentPage.backNavigation) {
-                window.showBusyWarning()
-                return
-            }
-
-            pageStack.pop(_frontPage, PageStackAction.Immediate)
-            window.activate()
+            window.showSettingsSection("system_settings")
         }
 
         function showTransfers() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/transferui/mainpage.qml"))
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/transferui/mainpage.qml"))
         }
 
         function showAccounts() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/accounts/mainpage.qml"))
+            window.showSettingsSection("accounts")
         }
 
         function showSailfishOs() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/sailfishos/mainpage.qml"))
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/sailfishos/mainpage.qml"))
         }
 
         function showLocationSettings() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/gps_and_location/location.qml"))
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/gps_and_location/location.qml"))
         }
 
         function showEventsSettings() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/events/events.qml"))
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/events/events.qml"))
         }
 
         function showCallRecordings() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/jolla-voicecall/voicecall.qml"), { "showRecordingsImmediately": true })
+            window.showSettingsPage("applications", Qt.resolvedUrl("pages/jolla-voicecall/voicecall.qml"), { "showRecordingsImmediately": true })
         }
 
         function showAddNetworkDialog() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/wlan/mainpage.qml"), { "showAddNetworkDialog": true })
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/wlan/mainpage.qml"), { "showAddNetworkDialog": true })
         }
 
-        function importOvpn(path) {
-            window.showSettingsPage(Qt.resolvedUrl("pages/vpn/mainpage.qml"), { "importPath": path })
+        function importVpn(args) {
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/vpn/mainpage.qml"), { "importPath": args[1], "importMime": args[0] })
         }
 
         function findBluetoothDevices() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/bluetooth/bluetoothSettings.qml"))
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/bluetooth/bluetoothSettings.qml"))
             pageStack.currentPage.autoStartDiscovery()
         }
 
         function newVpnConnection() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/vpn/mainpage.qml"))
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/vpn/mainpage.qml"))
             pageStack.push(Qt.resolvedUrl("pages/vpn/NewConnectionDialog.qml"), {}, PageStackAction.Immediate)
         }
 
         function showAmbienceSettings(ambienceContentId) {
-            window.showSettingsPage(Qt.resolvedUrl("pages/jolla-gallery-ambience/ambience.qml"), {})
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/jolla-gallery-ambience/ambience.qml"), {})
             pageStack.push("com.jolla.gallery.ambience.AmbienceSettingsPage", { "contentId": ambienceContentId }, PageStackAction.Immediate)
         }
 
@@ -145,16 +139,26 @@ ApplicationWindow {
         }
 
         function addNewUser() {
-            window.showSettingsPage(Qt.resolvedUrl("pages/users/users.qml"), { "creatingUser": true })
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/users/users.qml"), { "creatingUser": true })
         }
 
-        function showPage(page) {
-            var obj = _frontPage.model.objectForPath(page)
-            if (obj && obj.type == "page") {
-                var params = obj.data()["params"]
-                if (params["source"]) {
-                    window.showSettingsPage(params["source"])
+        function showPage(path) {
+            path = path.toString()
+            var obj = _mainPage.objectForPath(path)
+            if (obj) {
+                if (obj.type === "page") {
+                    var params = obj.data()["params"]
+
+                    if (params["source"]) {
+                        window.showSettingsPage(path, params["source"])
+                    } else {
+                        console.warn("Settings app requested to show settings page, but no page source defined for the config '" + path + "'")
+                    }
+                } else {
+                    console.warn("Settings app requested to show a settings page, but the config '" + path + "' is of wrong type '" + obj.type + "'")
                 }
+            } else {
+                console.warn("Settings app requested to show settings page, but no config found for path", path)
             }
         }
 

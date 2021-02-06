@@ -87,11 +87,24 @@ Item {
             }
 
             BusyIndicator {
-                running: appData.state === ApplicationState.Installing
-                         || appData.state === ApplicationState.Updating
-                         || appData.state === ApplicationState.Uninstalling
+                id: busyIndicator
+                running: (appData.state === ApplicationState.Installing
+                       || appData.state === ApplicationState.Updating) && (app.progress === 0 || app.progress === 100)
+                       || appData.state === ApplicationState.Uninstalling
                 anchors.centerIn: statusIcon
                 size: BusyIndicatorSize.ExtraSmall
+            }
+
+            ProgressCircleBase {
+                anchors.centerIn: statusIcon
+                opacity: (app.progress > 0 && app.progress < 100) && appData.state !== ApplicationState.Uninstalling ? 1.0 : 0.0
+                Behavior on opacity { FadeAnimator {} }
+                value: (app.progress % 50) / 50.0
+                progressColor: palette.highlightColor
+                backgroundColor: palette.highlightDimmerColor
+                borderWidth: Theme.paddingSmall/2
+                width: busyIndicator.width
+                height: width
             }
 
             Label {
@@ -112,6 +125,22 @@ Item {
                         ? qsTrId("jolla-store-la-android_app")
                         //% "Sailfish application"
                         : qsTrId("jolla-store-la-sailfish_app")
+            }
+
+            Label {
+                anchors {
+                    baseline: statusLabel.baseline
+                    left: statusLabel.right
+                    leftMargin: Theme.paddingMedium
+                }
+                color: Theme.secondaryHighlightColor
+                font.pixelSize: Theme.fontSizeExtraSmall
+                //: Download progress fraction, e.g. 25.7MB / 44.3MB
+                //% "%1 / %2"
+                text: qsTrId("jolla-store-la-download_progress")
+                    .arg(Format.formatFileSize(app.progress / 50.0 * app.size))
+                    .arg(Format.formatFileSize(app.size))
+                visible: app.size > 0 && app.progress > 0 && app.progress < 50 && appData.state !== ApplicationState.Uninstalling
             }
         }
 

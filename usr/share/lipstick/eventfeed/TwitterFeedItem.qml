@@ -1,9 +1,10 @@
 /****************************************************************************
-**
-** Copyright (C) 2014 Jolla Ltd.
-** Contact: Antti Seppälä <antti.seppala@jollamobile.com>
-**
-****************************************************************************/
+ **
+ ** Copyright (C) 2014 - 2017 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.TextLinking 1.0
@@ -18,13 +19,13 @@ SocialMediaFeedItem {
     property int retweetCount
 
     property string _retweeter: model.retweeter
-    property real _rightContentMargin: Theme.horizontalPageMargin
 
     avatar.y: item._retweeter.length > 0
               ? topMargin + retweeterIcon.height + Theme.paddingSmall
               : topMargin
     contentHeight: Math.max(content.y + content.height, avatar.y + avatar.height) + bottomMargin
     topMargin: item._retweeter.length > 0 ? Theme.paddingMedium : Theme.paddingLarge
+    userRemovable: false
 
     Image {
         id: retweeterIcon
@@ -63,20 +64,19 @@ SocialMediaFeedItem {
             leftMargin: Theme.paddingMedium
             top: avatar.top
         }
-        width: item.contentWidth - x - item._rightContentMargin
+        width: parent.width - x
 
-        Text {
+        Label {
             width: parent.width
-            elide: Text.ElideRight
+            truncationMode: TruncationMode.Fade
             text: model.name
-            font.pixelSize: Theme.fontSizeMedium
             color: item.highlighted ? Theme.highlightColor : Theme.primaryColor
             textFormat: Text.PlainText
         }
 
-        Text {
+        Label {
             width: parent.width
-            elide: Text.ElideRight
+            truncationMode: TruncationMode.Fade
             text: "@" + model.screenName
             font.pixelSize: Theme.fontSizeSmall
             color: item.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
@@ -108,7 +108,7 @@ SocialMediaFeedItem {
 
         SocialMediaPreviewRow {
             id: previewRow
-            width: parent.width + item._rightContentMargin   // extend to right edge of notification area
+            width: parent.width + Theme.horizontalPageMargin   // extend to right edge of notification area
             imageList: item.imageList
             downloader: item.downloader
             accountId: item.accountId

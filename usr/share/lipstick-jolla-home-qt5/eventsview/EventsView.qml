@@ -14,31 +14,25 @@ EventsViewList {
     id: eventFeedWindow
     objectName: "EventsView_window"
 
-    signal shown(var immediateNotificationAnimation)
+    signal shown
     signal peeked
-    signal deactivated
     signal screenLocked
     signal screenBlanked
 
-    onShown: {
-        fadeInAnimation.restart()
-        if (immediateNotificationAnimation) {
-            expand(false)
-        }
-    }
+    onShown: fadeInAnimation.restart()
 
     onPeeked: {
         fadeInAnimation.stop()
         opacity = 1
-        expand(false)
     }
 
-    onDeactivated: contentY = originY
     onScreenLocked: fadeInAnimation.stop()
-    onScreenBlanked: collapse()
-    animationDuration: desktop.eventsViewActive ? 200 : 0
-    rightMargin: Theme.horizontalPageMargin
     statusBarHeight: Lipstick.compositor.homeLayer.statusBar.baseY + Lipstick.compositor.homeLayer.statusBar.height
+
+    Connections {
+        target: Lipstick.compositor.eventsLayer
+        onDeactivated: eventFeedWindow.contentY = eventFeedWindow.originY - eventFeedWindow.topMargin
+    }
 
     FadeAnimation {
         id: fadeInAnimation
@@ -47,6 +41,5 @@ EventsViewList {
         from: 0
         to: 1
         running: false
-        onRunningChanged: if (!running) { eventFeedWindow.expand(true) }
     }
 }

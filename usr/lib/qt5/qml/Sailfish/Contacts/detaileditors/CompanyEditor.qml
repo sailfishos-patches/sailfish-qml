@@ -27,7 +27,7 @@ BaseEditor {
         for (var i = 0; i < root._fields.length; i++) {
             var detail = root._fields[i]
             var value = contact[detail.propertyName]
-            if (!detail.persistent && value.length === 0) {
+            if (!detail.persistent && value.trim().length === 0) {
                 continue
             }
 
@@ -48,6 +48,7 @@ BaseEditor {
     fieldDelegate: EditorFieldDelegate {
         editor: root
         icon.source: "image://theme/icon-m-company"
+        focus: root.initialFocusIndex === model.index
 
         suggestionField: model.autoFillField
 

@@ -68,7 +68,6 @@ Column {
     GeneralEmailAddressField {
         id: emailaddress
         visible: !accountLimited
-        width: parent.width
         onTextChanged: {
             if (!incomingUsernameEdited && !editMode) {
                 incomingUsernameField.text = text
@@ -106,11 +105,7 @@ Column {
     TextField {
         id: incomingUsernameField
         visible: !hideIncoming && !accountLimited
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        //: Placeholder text for account incoming server username
-        //% "Enter username"
-        placeholderText: qsTrId("components_accounts-ph-genericemail_incoming_username")
         //: Incoming server username
         //% "Username"
         label: qsTrId("components_accounts-la-genericemail_incoming_username")
@@ -122,6 +117,9 @@ Column {
                 outgoingUsernameField.text = text
             }
         }
+        //% "Username is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-username_required") : ""
+
         errorHighlight: !text && checkMandatoryFields
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: incomingPasswordField.focus = true
@@ -130,12 +128,6 @@ Column {
     PasswordField {
         id: incomingPasswordField
         visible: !hideIncoming
-        //: Placeholder text for password of account login
-        //% "Enter password"
-        placeholderText: qsTrId("components_accounts-la-genericemail_incoming_password")
-        //: Password for account incoming server
-        //% "Enter password"
-        label: qsTrId("components_accounts-la-genericemail_incoming_password")
         onTextChanged: {
             if (focus && !incomingPasswordEdited) {
                 incomingPasswordEdited = true
@@ -144,6 +136,9 @@ Column {
                 outgoingPasswordField.text = text
             }
         }
+        //% "Password is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-password_required") : ""
+
         errorHighlight: !text && checkMandatoryFields
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: incomingServerField.focus = true
@@ -152,14 +147,14 @@ Column {
     TextField {
         id: incomingServerField
         visible: !hideIncoming && !accountLimited
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        //: Placeholder text for account incoming server address
-        //% "Enter server address"
-        placeholderText: qsTrId("components_accounts-ph-genericemail_incoming_server")
         //: Incoming server address
         //% "Server address"
         label: qsTrId("components_accounts-la-genericemail_incoming_server")
+
+        //% "Server address is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-server_address_required") : ""
+
         errorHighlight: !text && checkMandatoryFields
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: incomingPortField.focus = true
@@ -188,16 +183,16 @@ Column {
     TextField {
         id: incomingPortField
         visible: !hideIncoming && !accountLimited
-        width: parent.width
         inputMethodHints: Qt.ImhDigitsOnly
-        //: Placeholder text for account incoming server port
-        //% "Enter port"
-        placeholderText: qsTrId("components_accounts-ph-genericemail_incoming_port")
         //: Incoming server port
         //% "Port"
         label: qsTrId("components_accounts-la-genericemail_incoming_port")
         text: defaultIncomingPort()
         errorHighlight: !text && checkMandatoryFields
+
+        //% "Port is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-port_required") : ""
+
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: outgoingServerField.focus = true
     }
@@ -228,15 +223,15 @@ Column {
     TextField {
         id: outgoingServerField
         visible: !hideOutgoing && !accountLimited
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        //: Placeholder text for account outgoing server address
-        //% "Enter server address"
-        placeholderText: qsTrId("components_accounts-ph-genericemail_outgoing_server")
         //: Outgoing server address
         //% "Server address"
         label: qsTrId("components_accounts-la-genericemail_outgoing_server")
         errorHighlight: !text && checkMandatoryFields
+
+        //% "Server address is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-server_address_required") : ""
+
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: outgoingPortField.focus = true
     }
@@ -262,16 +257,16 @@ Column {
     TextField {
         id: outgoingPortField
         visible: !hideOutgoing && !accountLimited
-        width: parent.width
         inputMethodHints: Qt.ImhDigitsOnly
-        //: Placeholder text for account outgoing server port
-        //% "Enter port"
-        placeholderText: qsTrId("components_accounts-ph-genericemail_outgoing_port")
         //: Outgoing server port
         //% "Port"
         label: qsTrId("components_accounts-la-genericemail_outgoing_port")
         text: defaultOutgoingPort()
         errorHighlight: !text && checkMandatoryFields
+
+        //% "Port is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-port_required") : ""
+
         EnterKey.iconSource: "image://theme/icon-m-enter-close"
         EnterKey.onClicked: outgoingUsernameField.visible ? outgoingUsernameField.focus = true : focus = false
     }
@@ -287,16 +282,16 @@ Column {
     TextField {
         id: outgoingUsernameField
         visible: !hideOutgoing && outgoingRequiresAuthSwitch.checked && !accountLimited
-        width: parent.width
         inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        //: Placeholder text for server username
-        //% "Enter username"
-        placeholderText: qsTrId("components_accounts-ph-genericemail_outgoing_username")
         //% "Username"
         label: qsTrId("components_accounts-la-genericemail_outgoing_username")
         errorHighlight: !text && checkMandatoryFields
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: outgoingPasswordField.focus = true
+
+        //% "Username is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-username_required") : ""
+
         // solution for faster input, since most accounts have same credentials for
         // username and password
         // this can go away if we get a initial page for username/password, depends on design
@@ -309,17 +304,12 @@ Column {
     PasswordField {
         id: outgoingPasswordField
         visible: !hideOutgoing && outgoingRequiresAuthSwitch.checked
-        //: Placeholder text for outgoing server password
-        //% "Enter password"
-        placeholderText: qsTrId("components_accounts-la-genericemail_outgoing_password")
-        //: Password for account outgoing server
-        //% "Enter password"
-        label: qsTrId("components_accounts-la-genericemail_outgoing_password")
         errorHighlight: !text && checkMandatoryFields
-        onTextChanged: {
-            if (focus)
-               outgoingPasswordEdited = true
-        }
+        onTextChanged: if (focus) outgoingPasswordEdited = true
+
+        //% "Password is required"
+        description: errorHighlight ? qsTrId("components_accounts-la-password_required") : ""
+
         EnterKey.iconSource: "image://theme/icon-m-enter-accept"
         EnterKey.onClicked: root.focus = true
     }

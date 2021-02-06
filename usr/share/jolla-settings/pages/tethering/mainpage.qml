@@ -25,10 +25,10 @@ Page {
         }
 
         if (passwordInput.text.length < 8 || passwordInput.text.length > 63) {
-            passphraseErrorLabel.visible = true
+            passwordInput.errorHighlight = true
             ok = false
         } else {
-            passphraseErrorLabel.visible = false
+            passwordInput.errorHighlight = false
             if (wifiTethering.passphrase !== passwordInput.text)
                 wifiTethering.passphrase = passwordInput.text
         }
@@ -147,11 +147,7 @@ Page {
 
             TextField {
                 id: networkNameInput
-                width: parent.width
-                anchors {
-                    topMargin: Theme.paddingLarge
-                }
-                placeholderText: label
+
                 inputMethodHints: Qt.ImhNoAutoUppercase
                 readOnly: !content.enabled || wifiTethering.active || wlanSwitch.busy
                 opacity: content.enabled ? 1.0 : Theme.opacityLow
@@ -176,36 +172,17 @@ Page {
                 id: passwordInput
                 readOnly: !content.enabled || wifiTethering.active || wlanSwitch.busy
                 opacity: content.enabled ? 1.0 : Theme.opacityLow
-                showEchoModeToggle: true
                 maximumLength: 63
                 text: wifiTethering.passphrase.length == 0 ? wifiTethering.generatePassphrase() : wifiTethering.passphrase
-                placeholderText: label
                 //% "Password (WPA Pre-shared key)"
                 label: qsTrId("settings_network-la-hotspot_password")
                 EnterKey.iconSource: "image://theme/icon-m-enter-close"
-                EnterKey.onClicked: {
-                    parent.focus = true
-                }
-                onActiveFocusChanged: {
-                    if (!activeFocus) {
-                        page.checkIdPassphrase()
-                    }
-                }
-            }
-            Label {
-                id: passphraseErrorLabel
-                opacity: content.enabled ? 1.0 : Theme.opacityLow
-                wrapMode: Text.Wrap
-                anchors {
-                    left: parent.left; leftMargin: Theme.horizontalPageMargin
-                    right: parent.right; rightMargin: Theme.horizontalPageMargin
-                }
-                color: Theme.highlightColor
-                font.pixelSize: Theme.fontSizeExtraSmall
-                visible: false
+                EnterKey.onClicked: parent.focus = true
+
+                onActiveFocusChanged: if (!activeFocus) page.checkIdPassphrase()
                 //: Passphrase length requirement
                 //% "Minimum length for passphrase is 8 characters"
-                text: qsTrId("settings-la-passphrase-length")
+                description: errorHighlight ? qsTrId("settings-la-passphrase-length") : ""
             }
         }
     }

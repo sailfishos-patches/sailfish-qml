@@ -32,7 +32,7 @@ PasswordInputDialog {
 
     onPasswordChanged: agent.assessNewPassword(password)
     onConfirmed: agent.submitPassword(password)
-    onCanceled: agent.cancel();
+    onCanceled: agent.cancel()
 
     Connections {
         target: window.agent

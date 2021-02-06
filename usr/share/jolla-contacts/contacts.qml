@@ -56,8 +56,7 @@ ApplicationWindow {
 
         onEditContact: {
             returnToList()
-            contactList.openContactEditor(contactList.allContactsModel.personById(contactId),
-                                          PageStackAction.Immediate)
+            contactList.openContactEditor(contactList.allContactsModel.personById(contactId))
             activate()
         }
 

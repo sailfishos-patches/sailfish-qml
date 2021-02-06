@@ -22,9 +22,7 @@ CompressibleItem {
 
     TextField {
         id: textField
-        width: parent.width
         visible: !root.compressed
-        label: placeholderText
         anchors.bottom: parent.bottom
         horizontalAlignment: Text.AlignLeft
 

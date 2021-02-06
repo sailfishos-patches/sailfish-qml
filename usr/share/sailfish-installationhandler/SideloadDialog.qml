@@ -1,4 +1,9 @@
-import QtQuick 2.0
+/* Copyright (c) 2018 - 2020 Jolla Ltd.
+ * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ * License: Proprietary
+ */
+ 
+ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 

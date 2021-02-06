@@ -49,13 +49,13 @@ Page {
 
         onLockError: {
             //% "Memory card locking failed"
-            storageErrorNotification.previewBody = qsTrId("settings_storage-la-memory_card_locking_failed")
+            storageErrorNotification.body = qsTrId("settings_storage-la-memory_card_locking_failed")
             storageErrorNotification.notify()
         }
 
         onMountError: {
             //% "Memory card mounting failed"
-            storageErrorNotification.previewBody = qsTrId("settings_storage-la-memory_card_mounting_failed")
+            storageErrorNotification.body = qsTrId("settings_storage-la-memory_card_mounting_failed")
             storageErrorNotification.notify()
         }
 
@@ -65,19 +65,17 @@ Page {
                        error == PartitionModel.ErrorNotAuthorized) {
                 //: Displayed when user did not authorize memory card format operation.
                 //% "Memory card formatting not authorized"
-                storageErrorNotification.previewBody = qsTrId("settings_storage-la-memory_card_format_not_authorized")
+                storageErrorNotification.body = qsTrId("settings_storage-la-memory_card_format_not_authorized")
             } else {
                 storageErrorNotification.isTransient = false
 
                 //: Summary text of memory card formatting failed
                 //% "Memory card formatting failed"
                 storageErrorNotification.summary = qsTrId("settings_storage-la-memory_card_format_failed_summary")
-                storageErrorNotification.previewSummary = storageErrorNotification.summary
 
                 //: Body text of memory card formatting failed
                 //% "The memory card might be in unstable state."
                 storageErrorNotification.body = qsTrId("settings_storage-la-memory_card_format_failed_body")
-                storageErrorNotification.previewBody = storageErrorNotification.body
             }
             storageErrorNotification.notify()
         }
@@ -86,16 +84,16 @@ Page {
             if (error == PartitionModel.ErrorDeviceBusy) {
                 //: Displayed when unmounting an external storage (sd card, USB otg mass storage, etc) that is busy
                 //% "External storage busy, cannot unmount"
-                storageErrorNotification.previewBody = qsTrId("settings_storage-la-memory_card_busy")
+                storageErrorNotification.body = qsTrId("settings_storage-la-memory_card_busy")
             } else if (error == PartitionModel.ErrorNotMounted) {
                 // This should be a bit theoretical error as unmounting should not be possible from the ui
                 // if the device is nout mounted but let's keep it here regardless.
                 //: Displayed when trying to unmount a device that is not mounted
                 //% "Device already unmounted"
-                storageErrorNotification.previewBody = qsTrId("settings_storage-la-memory_card_already_unmounted")
+                storageErrorNotification.body = qsTrId("settings_storage-la-memory_card_already_unmounted")
             } else {
                 //% "Memory card unmount failed"
-                storageErrorNotification.previewBody = qsTrId("settings_storage-la-memory_card_unmount_failed")
+                storageErrorNotification.body = qsTrId("settings_storage-la-memory_card_unmount_failed")
             }
             storageErrorNotification.notify()
         }

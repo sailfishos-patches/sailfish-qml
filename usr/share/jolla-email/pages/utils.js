@@ -89,7 +89,7 @@ function isLocalFolder(folderId) {
 function syncErrorText(syncError) {
     if (syncError === Email.EmailAgent.SyncFailed) {
         //: Synchronization failed error (Shown in app cover, small space)
-        //% "Synchronization failed"
+        //% "Sync error"
         return qsTrId("jolla-email-la-sync_failed")
     } else if (syncError === Email.EmailAgent.LoginFailed) {
         //: Login failed error (Shown in app cover, small space)
@@ -101,7 +101,7 @@ function syncErrorText(syncError) {
         return qsTrId("jolla-email-la-disk_full")
     } else if (syncError === Email.EmailAgent.InvalidConfiguration) {
         //: Invalid configuration (Shown in app cover, small space)
-        //% "Invalid configuration"
+        //% "Configuration error"
         return qsTrId("jolla-email-la-invalid_configuration")
     } else if (syncError === Email.EmailAgent.UntrustedCertificates) {
         //: Invalid certificate (Shown in app cover, small space)

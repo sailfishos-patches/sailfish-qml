@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import org.nemomobile.notifications 1.0
 import org.nemomobile.dbus 2.0
@@ -30,10 +37,10 @@ Notification {
             if (multipleAvailableSims) {
                 //: Contains SIM name, e.g. "SIM1 | Operator name" or user defined string
                 //% "Access point settings saved for %0"
-                otaNotification.previewBody = qsTrId("voicecall-la-apn_serviceprovider_settings_saved").arg(serviceProviderName(path))
+                otaNotification.body = qsTrId("voicecall-la-apn_serviceprovider_settings_saved").arg(serviceProviderName(path))
             } else {
                 //% "Access point settings saved"
-                otaNotification.previewBody = qsTrId("voicecall-la-apn_settings_saved")
+                otaNotification.body = qsTrId("voicecall-la-apn_settings_saved")
             }
             otaNotification.publish()
         }
@@ -41,10 +48,10 @@ Notification {
             if (multipleAvailableSims) {
                 //: Contains SIM name, e.g. "SIM1 | Operator name" or user defined string
                 //% "Access point settings partially saved for %0"
-                otaNotification.previewBody = qsTrId("voicecall-la-apn_serviceprovider_settings_partially_saved").arg(serviceProviderName(path))
+                otaNotification.body = qsTrId("voicecall-la-apn_serviceprovider_settings_partially_saved").arg(serviceProviderName(path))
             } else {
                 //% "Access point settings partially saved"
-                otaNotification.previewBody = qsTrId("voicecall-la-apn_settings_partially_saved")
+                otaNotification.body = qsTrId("voicecall-la-apn_settings_partially_saved")
             }
             otaNotification.publish()
         }
@@ -52,10 +59,10 @@ Notification {
             if (multipleAvailableSims) {
                 //: Contains SIM name, e.g. "SIM1 | Operator name" or user defined string
                 //% "Failed to save received access point settings for %0"
-                otaNotification.previewBody = qsTrId("voicecall-la-apn_serviceprovider_failed_to_save_apn_settings").arg(serviceProviderName(path))
+                otaNotification.body = qsTrId("voicecall-la-apn_serviceprovider_failed_to_save_apn_settings").arg(serviceProviderName(path))
             } else {
                 //% "Failed to save received access point settings"
-                otaNotification.previewBody = qsTrId("voicecall-la-apn_failed_to_save_apn_settings")
+                otaNotification.body = qsTrId("voicecall-la-apn_failed_to_save_apn_settings")
             }
             otaNotification.publish()
         }

@@ -25,7 +25,6 @@ Column {
 
             width: root.width
             contentHeight: Theme.itemSizeExtraLarge
-
             menu: Component {
                 ContextMenu {
                     id: contextMenu
@@ -85,32 +84,57 @@ Column {
 
                 Label {
                     width: parent.width
-                    text: displayName != "" ? displayName : emailAddress
-                    font.pixelSize: Theme.fontSizeLarge
-                    color: unreadCountLabel.text != "" ? (highlighted ? Theme.highlightColor : Theme.primaryColor)
-                                                       : (highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor)
+                    text: displayName !== "" ? displayName : emailAddress
+                    font.pixelSize: accountItem.errorOccurred ? Theme.fontSizeMedium : Theme.fontSizeLarge
+                    color: unreadCountLabel.text !== "" ? (highlighted ? Theme.highlightColor : Theme.primaryColor)
+                                                        : (highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor)
                     truncationMode: TruncationMode.Fade
                 }
 
-                Label {
+                Item {
                     width: parent.width
-                    font.pixelSize: Theme.fontSizeExtraSmall
-                    color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
-                    truncationMode: TruncationMode.Fade
-                    text: {
-                        // Cheating a bit as needsUpdate is always true but property changes are
-                        // of our interest here.
-                        var needsUpdate = Qt.application.active || accountItem.visible || app.refreshSyncTime || true
-                        if (accountItem.updating) {
-                            //: Updating account label
-                            //% "Updating account..."
-                            return qsTrId("jolla-email-la-updating_account")
-                        } else if (accountItem.errorOccurred) {
-                            return lastErrorText
-                        } else if (needsUpdate) {
-                            return hasPersistentConnection ? qsTrId("email-la_up_to_date") : Utils.lastSyncTime(lastSynchronized)
+                    height: statusLabel.height
+
+                    Icon {
+                        id: errorIcon
+
+                        y: (statusLabel.firstLineHeight - height) / 2
+
+                        visible: accountItem.errorOccurred
+                        source: "image://theme/icon-s-warning"
+                    }
+
+                    Label {
+                        id: statusLabel
+
+                        property real firstLineHeight
+
+                        x: accountItem.errorOccurred ? errorIcon.width + Theme.paddingSmall : 0
+                        width: parent.width - x
+                        font.pixelSize: Theme.fontSizeExtraSmall
+                        color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
+                        wrapMode: Text.Wrap
+                        text: {
+                            // Cheating a bit as needsUpdate is always true but property changes are
+                            // of our interest here.
+                            var needsUpdate = Qt.application.active || accountItem.visible || app.refreshSyncTime || true
+                            if (accountItem.updating) {
+                                //: Updating account label
+                                //% "Updating account..."
+                                return qsTrId("jolla-email-la-updating_account")
+                            } else if (accountItem.errorOccurred) {
+                                return lastErrorText
+                            } else if (needsUpdate) {
+                                return hasPersistentConnection ? qsTrId("email-la_up_to_date") : Utils.lastSyncTime(lastSynchronized)
+                            }
+                            return ""
                         }
-                        return ""
+
+                        onLineLaidOut: {
+                            if (line.number === 0) {
+                                firstLineHeight = line.height
+                            }
+                        }
                     }
                 }
             }
@@ -131,7 +155,7 @@ Column {
                 }
 
                 onError: {
-                    if (accountId === mailAccountId) {
+                    if (accountId === 0 || accountId === mailAccountId) {
                         accountItem.errorOccurred = true
                         accountItem.lastErrorText = Utils.syncErrorText(syncError)
                     }

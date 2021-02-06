@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2015 - 2020 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
 
 import QtQuick 2.0
 import org.nemomobile.lipstick 0.1
@@ -5,7 +11,7 @@ import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import com.jolla.lipstick 0.1
 import "../main"
-import "../compositor"
+import "../backgrounds"
 
 ApplicationWindow {
     id: launcherWindow
@@ -16,7 +22,7 @@ ApplicationWindow {
 
     allowedOrientations: Lipstick.compositor.topmostWindowOrientation
 
-    children: BlurredBackground {
+    children: MenuBackground {
         z: -1
 
         anchors.fill: parent

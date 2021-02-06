@@ -164,14 +164,6 @@ IconGridViewBase {
             interval: 200
         }
 
-        Timer {
-            interval: 0
-            running: object && !!object.isLaunching && !object.isUpdating
-            onTriggered: {
-                Desktop.instance.switcher.activateWindowFor(object, false)
-            }
-        }
-
         Connections {
             target: model.object
             ignoreUnknownSignals: true
@@ -218,7 +210,9 @@ IconGridViewBase {
                     // for interested parties (non-store client) to pick it up
                     object.launchApplication()
                 } else {
-                    Desktop.instance.switcher.activateWindowFor(object, !object.isLaunching)
+                    // Don't display covers for sandboxed apps when launching them,
+                    // sailjail-homescreen will take care of that
+                    Desktop.instance.switcher.activateWindowFor(object, !object.isLaunching, !object.isSandboxed)
                 }
                 gridview.itemLaunched()
             }

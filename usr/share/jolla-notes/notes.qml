@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 import "pages"
 
 ApplicationWindow
@@ -73,6 +73,12 @@ ApplicationWindow
             if (filePath && (String(filePath) != '')) {
                 console.log('jolla-notes: Importing note file:', filePath)
                 var plaintextNotes = vnoteConverter.importFromFile(filePath)
+                if (plaintextNotes.length === 0) {
+                    var filename = filePath.substring(filePath.lastIndexOf("/") + 1)
+                    //% "Unable to import: %1"
+                    Notices.show(qsTrId("notes-la-unable_to_open").arg(filename))
+                }
+
                 for (var index = 0; index < plaintextNotes.length; ++index) {
                     // insert the note into the database
                     notesModel.newNote(index + 1, plaintextNotes[index], notesModel.nextColor())

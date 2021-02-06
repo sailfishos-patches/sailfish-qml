@@ -56,16 +56,15 @@ KeyBase {
     keyText: attributes.inSymView && symView.length > 0 ? (attributes.inSymView2 ? symView2 : symView)
                                                         : (attributes.isShifted ? captionShifted : caption)
 
-    Text {
+    Label {
         id: textItem
         anchors.fill: parent
-        anchors.leftMargin: leftPadding
-        anchors.rightMargin: rightPadding
+        anchors.leftMargin: aCharKey.leftPadding
+        anchors.rightMargin: aCharKey.rightPadding
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeLarge
-        color: pressed ? Theme.highlightColor : Theme.primaryColor
         text: aCharKey.keyText
     }
 
@@ -77,7 +76,7 @@ KeyBase {
     Rectangle {
         anchors.fill: parent
         z: -1
-        color: Theme.highlightBackgroundColor
+        color: aCharKey.palette.highlightBackgroundColor
         opacity: 0.5
         visible: pressed && showHighlight
     }

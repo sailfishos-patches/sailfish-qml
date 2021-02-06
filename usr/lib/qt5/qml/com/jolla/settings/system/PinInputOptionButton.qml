@@ -16,17 +16,13 @@ BackgroundItem {
 
     highlightedColor: {
         if (emergency) {
-            return "white"
+            if (root.showWhiteBackgroundByDefault && !down) {
+                return "white"
+            }
+
+            return emergencyTextColor
         }
         return Theme.rgba(Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: 2
-        color: "#4c0000"
-        radius: 4
-        visible: root.showWhiteBackgroundByDefault && root.down
     }
 
     Icon {
@@ -54,7 +50,7 @@ BackgroundItem {
         color: {
             if (root.emergency) {
                 if (showWhiteBackgroundByDefault) {
-                    return root.down ? "white" : "black"
+                    return "black"
                 }
                 return root.highlighted ? "black" : "white"
             }

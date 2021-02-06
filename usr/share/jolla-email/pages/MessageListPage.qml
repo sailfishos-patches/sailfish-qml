@@ -22,7 +22,9 @@ Page {
     onStatusChanged: {
         if (status === PageStatus.Active) {
             app.coverMode = "mainView"
-            if (!app.syncInProgress && messageListView.folderType !== EmailFolder.InvalidFolder) {
+            if (!app.syncInProgress
+                    && Qt.application.state === Qt.ApplicationActive
+                    && messageListView.folderType !== EmailFolder.InvalidFolder) {
                 messageListView.synchronize(false)
             }
 

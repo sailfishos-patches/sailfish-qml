@@ -178,13 +178,13 @@ Layer {
             NumberAnimation {
                 target: edgeLayer
                 property: "x"
-                duration: 300
+                duration: 250
                 easing.type: Easing.OutQuad
             }
             NumberAnimation {
                 target: edgeLayer
                 property: "y"
-                duration: 300
+                duration: 250
                 easing.type: Easing.OutQuad
             }
             PropertyAction {
@@ -199,13 +199,13 @@ Layer {
             NumberAnimation {
                 target: edgeLayer
                 property: "x"
-                duration: 400
+                duration: 300
                 easing.type: Easing.InOutQuad
             }
             NumberAnimation {
                 target: edgeLayer
                 property: "y"
-                duration: 400
+                duration: 300
                 easing.type: Easing.InOutQuad
             }
             PropertyAction {

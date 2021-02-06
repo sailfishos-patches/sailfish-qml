@@ -1,9 +1,9 @@
 /****************************************************************************
-**
-** Copyright (C) 2015 Jolla Ltd.
-** Contact: Bea Lam <bea.lam@jolla.com>
-**
-****************************************************************************/
+ **
+ ** Copyright (C) 2015-2019 Jolla Ltd.
+ ** Copyright (C) 2020 Open Mobile Platform LLC.
+ **
+ ****************************************************************************/
 
 import QtQuick 2.2
 import Sailfish.Silica 1.0
@@ -15,12 +15,9 @@ Layer {
     id: root
 
     property bool hasNotifications: notifications.hasNotifications
-    property bool animating: positionAnimation.running && state == "animate_to_eventsview"
-    readonly property bool revealingEventsView: Lipstick.compositor.lockScreenLayer.notificationAnimation === "animated" ||
-                                                Lipstick.compositor.lockScreenLayer.notificationAnimation === "immediate"
-    property alias notificationColumn: notifications
     // Lockscreen notifications when normal blanking policy and when notifications are not needed
-    readonly property bool lockScreenAnimated: lipstickSettings.blankingPolicy == "default" || !Lipstick.compositor.lockScreenLayer.showNotifications
+    readonly property bool lockScreenAnimated: lipstickSettings.blankingPolicy === "default" || !Lipstick.compositor.lockScreenLayer.showNotifications
+    property bool previewExpanded
 
     property bool lockScreenLocked
 
@@ -42,30 +39,18 @@ Layer {
         FadeAnimation {
             // Use shorter fade duration when flicking from switcher
             // to events.
-            duration:  state == "eventsview" ? 100 : 200
+            duration: 200
         }
     }
 
     // Behaviors must be enabled or disabled before dependent values are modified
-    property bool _positionBehaviorEnabled: {
-        if (state == "peeking_through_launcher" ||
-            state == "switcher-menu" ||
-            state == "peeking_at_switcher" ||
-            state == "lockscreen_animated" ||
-            state == "lockscreen_unanimated" ||
-            state == "peeking_at_eventsview") {
-            return false
-        }
-        return true
-    }
 
     property bool _opacityBehaviorEnabled: {
         if (state == "peeking_through_launcher" ||
             state == "switcher-menu" ||
             state == "peeking_at_switcher" ||
             state == "lockscreen_unanimated" ||
-            state == "animate_to_eventsview" ||
-            state == "peeking_at_eventsview") {
+            state == "eventsview") {
             return false
         }
         return true
@@ -89,29 +74,27 @@ Layer {
         }
         if (_state == "peeking_through_launcher" ||
             _state == "switcher-menu" ||
-            _state == "peeking_at_switcher" ||
-            _state == "animate_to_eventsview") {
+            _state == "peeking_at_switcher") {
             return 1
         }
         return 0
     }
 
     property real _x: {
+        // Reveal indicator width + padding.
+        var margin = Theme.paddingMedium + notifications.width
+
         if (_state == "switcher-menu") {
-            return notifications.visiblePosition - ((1 - root._launcherPosition) * notifications.margin)
+            return -((1 - root._launcherPosition) * margin)
         }
         if (_state == "peeking_through_launcher" ||
             _state == "peeking_at_switcher" ||
             _state == "lockscreen_animated" ||
             _state == "lockscreen_unanimated") {
-            return notifications.visiblePosition
+            return 0
         }
-        if (_state == "animate_to_eventsview" ||
-            _state == "eventsview" ||
-            _state == "peeking_at_eventsview") {
-            return notifications.targetPosition
-        }
-        return notifications.visiblePosition - notifications.margin
+
+        return -margin
     }
 
     states: [
@@ -138,24 +121,15 @@ Layer {
             // LockScreenLayer can be locked below the running application. Notification opacity and position
             // can be controlled by LockScreen.
             name: "lockscreen_animated"
-            when: !revealingEventsView && lockScreenLocked && lockScreenAnimated
+            when: lockScreenLocked && lockScreenAnimated
         },
         State {
             name: "lockscreen_unanimated"
-            when: !revealingEventsView && lockScreenLocked && !lockScreenAnimated
-        },
-        State {
-            name: "animate_to_eventsview"
-            when: Lipstick.compositor.lockScreenLayer.notificationAnimation === "animated"
-        },
-        State {
-            name: "peeking_at_eventsview"
-            when: Lipstick.compositor.homeLayer.currentItem == Lipstick.compositor.eventsLayer
-                        && Lipstick.compositor.peekingAtHome
+            when: lockScreenLocked && !lockScreenAnimated
         },
         State {
             name: "eventsview"
-            when: Lipstick.compositor.homeLayer.currentItem == Lipstick.compositor.eventsLayer
+            when: Lipstick.compositor.homeLayer.currentItem === Lipstick.compositor.eventsLayer
         }
     ]
 
@@ -199,26 +173,9 @@ Layer {
             id: notifications
 
             x: root._x
-            Behavior on x {
-                enabled: root._positionBehaviorEnabled
-
-                SmoothedAnimation {
-                    id: positionAnimation
-
-                    duration: 400
-                    velocity: 1000 / duration
-                    onRunningChanged: {
-                        if (!running && root.state == "animate_to_eventsview") {
-                            Lipstick.compositor.goToEvents()
-                        }
-                    }
-                }
-            }
 
             anchors.verticalCenter: parent.verticalCenter
-            showApplicationName: root.state == "animate_to_eventsview" || root.state == "eventsview"
             showCount: Screen.sizeCategory >= Screen.Large || lockScreenLocked
-            textColor: Lipstick.compositor.lockScreenLayer.textColor
 
             layer.enabled: lipstickSettings.lowPowerMode
             layer.effect: ShaderEffect {

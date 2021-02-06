@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.contacts 1.0
@@ -39,8 +46,6 @@ AttachmentDelegate {
         id: saveNotification
         //% "Saved photo"
         body: qsTrId("messages-la-saved_photo")
-        previewBody: body
-        previewSummary: summary
         appIcon: "icon-launcher-messaging"
     }
 
@@ -62,8 +67,8 @@ AttachmentDelegate {
                         saveNotification.remoteActions = [ {
                                                               "name": "default",
                                                               //: Display text for notification action
-                                                              //% "Open file"
-                                                              "displayName": qsTrId("jolla-messages-open_file"),
+                                                              //% "Open"
+                                                              "displayName": qsTrId("jolla-messages-open_mms_file"),
                                                               "service": "com.jolla.gallery",
                                                               "path": "/com/jolla/gallery/ui",
                                                               "iface": "com.jolla.gallery.ui",
@@ -73,8 +78,8 @@ AttachmentDelegate {
                         saveNotification.publish()
                     } else {
                         //% "Error saving photo"
-                        var previewBody = qsTrId("messages-la-error_saving_photo")
-                        mainPage.publishNotification(previewBody)
+                        var body = qsTrId("messages-la-error_saving_photo")
+                        mainPage.publishNotification(body)
                     }
                 })
             } else if (vcardModel.count > 1) {

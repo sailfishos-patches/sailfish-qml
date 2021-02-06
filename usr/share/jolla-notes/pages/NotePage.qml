@@ -17,6 +17,8 @@ Page {
 
     property bool __jollanotes_notepage
 
+    highContrast: true
+
     // TODO: should some kind of IndexConnection go into the silica components?
     Connections {
         target: notesModel
@@ -301,7 +303,8 @@ Page {
                 //: nothing else on the screen.
                 //% "Write a note..."
                 placeholderText: qsTrId("notes-ph-empty-note")
-                background: null // full-screen text fields don't need bottom border background
+                color: Theme.primaryColor
+                backgroundStyle: TextEditor.NoBackground
 
                 onTextChanged: saveTimer.restart()
                 Timer {

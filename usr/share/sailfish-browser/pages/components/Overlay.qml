@@ -14,10 +14,12 @@ import Sailfish.Silica.private 1.0 as Private
 import Sailfish.Browser 1.0
 import Sailfish.Policy 1.0
 import Sailfish.WebView.Controls 1.0
+import Sailfish.WebEngine 1.0
 import com.jolla.settings.system 1.0
 import "." as Browser
+import "../../shared" as Shared
 
-Background {
+Shared.Background {
     id: overlay
 
     property bool active
@@ -33,15 +35,16 @@ Background {
 
     property string enteredUrl
 
-    property real _overlayHeight: browserPage.isPortrait ? toolBar.toolsHeight : 0
+    property real _overlayHeight: browserPage.isPortrait ? toolBar.rowHeight : 0
     property bool _showFindInPage
     property bool _showUrlEntry
-    property bool _showInfoOverlay
     readonly property bool _topGap: _showUrlEntry || _showFindInPage
 
     function loadPage(url)  {
         if (url == "about:config") {
             pageStack.animatorPush(Qt.resolvedUrl("ConfigWarning.qml"), {"browserPage": browserPage})
+        } else if (url == "about:settings") {
+            pageStack.animatorPush(Qt.resolvedUrl("../SettingsPage.qml"))
         } else {
             if (webView && webView.tabModel.count === 0) {
                 webView.clearSurface();
@@ -53,6 +56,7 @@ Background {
             }
 
             if (!searchField.enteringNewTabUrl) {
+                webView.releaseActiveTabOwnership()
                 webView.load(pageUrl)
             } else {
                 // Loading will start once overlay animator has animated chrome visible.
@@ -85,7 +89,7 @@ Background {
         searchField.enteringNewTabUrl = false
     }
 
-    y: webView.fullscreenHeight - toolBar.toolsHeight
+    y: webView.fullscreenHeight - toolBar.rowHeight
 
     Private.VirtualKeyboardObserver {
         id: virtualKeyboardObserver
@@ -99,15 +103,15 @@ Background {
     enabled: visible
 
     // This is an invisible object responsible to hide/show Overlay in an animated way
-    Browser.OverlayAnimator {
+    Shared.OverlayAnimator {
         id: overlayAnimator
 
         overlay: overlay
         portrait: browserPage.isPortrait
         webView: overlay.webView
 
-        readonly property real _fullHeight: isPortrait ? overlay.toolBar.toolsHeight : 0
-        readonly property real _infoHeight: Math.max(webView.fullscreenHeight - overlay.toolBar.certOverlayPreferedHeight - overlay.toolBar.toolsHeight, 0)
+        readonly property real _fullHeight: isPortrait ? overlay.toolBar.rowHeight : 0
+        readonly property real _infoHeight: Math.max(webView.fullscreenHeight - overlay.toolBar.certOverlayPreferedHeight - overlay.toolBar.rowHeight, 0)
 
         onAtBottomChanged: {
             if (atBottom) {
@@ -129,7 +133,7 @@ Background {
 
                 _showFindInPage = false
                 _showUrlEntry = false
-                _showInfoOverlay = false
+                toolBar.certOverlayActive = false
             }
             dragArea.moved = false
         }
@@ -137,10 +141,10 @@ Background {
         onAtTopChanged: {
             if (atTop) {
                 if (_showFindInPage || _showUrlEntry) {
-                    _showInfoOverlay = false
+                    toolBar.certOverlayActive = false
                 }
             } else {
-                if (!_showInfoOverlay) {
+                if (!toolBar.certOverlayActive) {
                     dragArea.moved = true
                 }
             }
@@ -167,10 +171,10 @@ Background {
         id: dragArea
 
         property bool moved
-        property int dragThreshold: state === "fullscreenOverlay" ? toolBar.toolsHeight * 1.5
+        property int dragThreshold: state === "fullscreenOverlay" ? toolBar.rowHeight * 1.5
                                                                   : state === "certOverlay"
-                                                                    ? (overlayAnimator._infoHeight + toolBar.toolsHeight * 0.5)
-                                                                    : (webView.fullscreenHeight - toolBar.toolsHeight * 2)
+                                                                    ? (overlayAnimator._infoHeight + toolBar.rowHeight * 0.5)
+                                                                    : (webView.fullscreenHeight - toolBar.rowHeight * 2)
 
         width: parent.width
         height: historyContainer.height
@@ -181,7 +185,7 @@ Background {
         drag.axis: Drag.YAxis
         // Favorite grid first row offset is negative. So, increase minumumY drag by that.
         drag.minimumY: _overlayHeight
-        drag.maximumY: webView.fullscreenHeight - toolBar.toolsHeight
+        drag.maximumY: webView.fullscreenHeight - toolBar.rowHeight
 
         drag.onActiveChanged: {
             if (!drag.active) {
@@ -204,10 +208,10 @@ Background {
             }
         }
 
-        Browser.ProgressBar {
+        Shared.ProgressBar {
             id: progressBar
             width: parent.width
-            height: toolBar.toolsHeight
+            height: toolBar.rowHeight
             visible: !searchField.enteringNewTabUrl
             opacity: webView.loading ? 1.0 : 0.0
             progress: webView.loadProgress / 100.0
@@ -219,7 +223,7 @@ Background {
             readonly property bool showFavorites: !overlayAnimator.atBottom && (!searchField.edited && searchField.text === webView.url || !searchField.text) && !toolBar.findInPageActive && _showUrlEntry
 
             width: parent.width
-            height: toolBar.toolsHeight + historyList.height
+            height: toolBar.rowHeight + historyList.height
             // Clip only when content has been moved and we're at top or animating downwards.
             clip: (overlayAnimator.atTop ||
                    overlayAnimator.direction === "downwards" ||
@@ -305,7 +309,6 @@ Background {
                 y: -((historyContainer.showFavorites ? favoriteGrid.contentY : historyList.contentY) + height)
                 // On top of HistoryList and FavoriteGrid
                 z: 1
-                width: parent.width
                 height: Theme.itemSizeMedium
                 textLeftMargin: Theme.paddingLarge
                 textRightMargin: Theme.paddingLarge
@@ -427,15 +430,14 @@ Background {
 
                 visible: opacity > 0.0
                 secondaryToolsActive: overlayAnimator.secondaryTools
-                certOverlayActive: _showInfoOverlay
-                certOverlayHeight: !_showInfoOverlay
+                certOverlayHeight: !toolBar.certOverlayActive
                                    ? 0
-                                   : Math.max((webView.fullscreenHeight - overlay.y - overlay.toolBar.toolsHeight)
+                                   : Math.max((webView.fullscreenHeight - overlay.y - overlay.toolBar.rowHeight)
                                               - overlay.toolBar.secondaryToolsHeight, 0)
 
-                certOverlayAnimPos: Math.min(Math.max((webView.fullscreenHeight - overlay.y - overlay.toolBar.toolsHeight)
+                certOverlayAnimPos: Math.min(Math.max((webView.fullscreenHeight - overlay.y - overlay.toolBar.rowHeight)
                                                       / (webView.fullscreenHeight - overlayAnimator._infoHeight
-                                                         - overlay.toolBar.toolsHeight), 0.0), 1.0)
+                                                         - overlay.toolBar.rowHeight), 0.0), 1.0)
 
                 onShowOverlay: {
                     _showUrlEntry = true
@@ -451,7 +453,7 @@ Background {
                 }
                 onShowSecondaryTools: overlayAnimator.showSecondaryTools()
                 onShowInfoOverlay: {
-                    _showInfoOverlay = true
+                    toolBar.certOverlayActive = true
                     _overlayHeight = Qt.binding(function() { return overlayAnimator._infoHeight })
                     overlayAnimator.showInfoOverlay(false)
                 }
@@ -465,6 +467,7 @@ Background {
                     }
                 }
 
+                onLoadPage: overlay.loadPage(url)
                 onEnterNewTabUrl: overlay.enterNewTabUrl()
                 onFindInPage: {
                     _showFindInPage = true
@@ -485,6 +488,15 @@ Background {
                     if (webView.security && !webView.security.certIsNull) {
                         pageStack.animatorPush("com.jolla.settings.system.CertificateDetailsPage", {"website": webView.security.subjectDisplayName, "details": webView.security.serverCertDetails})
                     }
+                }
+                onSavePageAsPDF: {
+                    var filename = ((webView.title && webView.title.length !== 0) ? webView.title : (WebUtils.pageName(webView.url) || "unnamed_file")) + ".pdf"
+                    var targetUrl = DownloadHelper.createUniqueFileUrl(filename, StandardPaths.download)
+                    WebEngine.notifyObservers("embedui:download",
+                                              {
+                                                  "msg": "saveAsPdf",
+                                                  "to": targetUrl
+                                              })
                 }
             }
 
@@ -508,8 +520,10 @@ Background {
 
                 onMovingChanged: if (moving) historyList.focus = true
                 onSearchChanged: if (search !== webView.url) historyModel.search(search)
-                onLoad: overlay.loadPage(url)
-
+                onLoad: {
+                    historyList.focus = true
+                    overlay.loadPage(url)
+                }
                 Behavior on opacity { FadeAnimator {} }
             }
 

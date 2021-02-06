@@ -39,15 +39,10 @@ Item {
     property bool complete
 
     signal removeRequested
+    signal composerRequested(string action)
 
     Component.onCompleted: {
         complete = true
-    }
-
-    function _openComposer(action) {
-        pageStack.animatorPush(
-                    Qt.resolvedUrl("ComposerPage.qml"),
-                    { popDestination: previousPage, action: action, originalMessageId: email.messageId })
     }
 
     onEmailChanged: showImagesButton = false
@@ -108,7 +103,8 @@ Item {
 
             onViewInitialized: {
                 webView.loadFrameScript(Qt.resolvedUrl("webviewframescript.js"));
-                webView.addMessageListeners([ "JollaEmail:DocumentHasImages", "JollaEmail:OpenLink" ])
+                webView.addMessageListener("JollaEmail:DocumentHasImages")
+                webView.addMessageListener("embed:OpenLink")
             }
 
             onChromeChanged: {
@@ -136,8 +132,7 @@ Item {
                         view.showImagesButton = !view.showImages
                     }
                     break
-                case "JollaEmail:OpenLink":
-                    console.log("open link", data.uri)
+                case "embed:OpenLink":
                     linkHandler.handleLink(data.uri)
                     break
                 default:
@@ -263,9 +258,9 @@ Item {
                 }
             }
 
-            onForward: view._openComposer('forward')
-            onReplyAll: view._openComposer('replyAll')
-            onReply: view._openComposer('reply')
+            onForward: view.composerRequested('forward')
+            onReplyAll: view.composerRequested('replyAll')
+            onReply: view.composerRequested('reply')
             onDeleteEmail: {
                 pageStack.pop()
                 view.removeRequested()

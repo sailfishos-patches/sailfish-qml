@@ -45,8 +45,19 @@ DBusAdaptor {
     function importFile(fileName) {
         if (pageStack.currentPage.objectName === "ImportPage") {
             pageStack.currentPage.fileName = fileName
+            pageStack.currentPage.icsString = ""
         } else {
             pageStack.push("pages/ImportPage.qml", { "fileName": fileName }, PageStackAction.Immediate)
+        }
+        requestActive.start()
+    }
+
+    function importIcsData(icsString) {
+        if (pageStack.currentPage.objectName === "ImportPage") {
+            pageStack.currentPage.icsString = icsString
+            pageStack.currentPage.fileName = ""
+        } else {
+            pageStack.push("pages/ImportPage.qml", { "icsString": icsString }, PageStackAction.Immediate)
         }
         requestActive.start()
     }

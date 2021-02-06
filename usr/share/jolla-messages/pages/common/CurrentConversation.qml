@@ -370,7 +370,7 @@ Item {
 
         for (var i = 0; i < peopleList.length; i++) {
             var person = peopleList[i]
-            var shortName = person.firstName || person.lastName || person.displayLabel
+            var shortName = person.displayLabel
 
             if (shortName) {
                 conversationTitle += shortName

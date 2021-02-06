@@ -10,6 +10,7 @@ import Nemo.Email 0.1
 
 RemorsePopup {
     property EmailMessageListModel selectionModel
+    property DeletionDelegateModel deletionModel
 
     function startDeleteSelectedMessages() {
         //: Remorse popup for multiple emails deletion
@@ -20,5 +21,6 @@ RemorsePopup {
 
     onCanceled: {
         selectionModel.deselectAllMessages()
+        deletionModel.clearHidden()
     }
 }

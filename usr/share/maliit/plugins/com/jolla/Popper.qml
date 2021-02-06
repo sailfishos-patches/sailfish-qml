@@ -185,6 +185,10 @@ Rectangle {
         }
     ]
 
+    function isCombiningChar(c) {
+        return (c >= '\u0300' && c < '\u0370')
+    }
+
     function release() {
         if (activeCell < 0) {
             return
@@ -217,13 +221,32 @@ Rectangle {
         var accentString = (keyboard.inSymView || keyboard.inSymView2)
                            ? "" : keyboard.isShifted ? target.accentsShifted
                                                      : target.accents
+        var accentArray = new Array
+        var currentChar = ""
+        var combiningChar = ""
+        var i
+
+        // split accents into array, one element per combined UTF character
+        for (i = accentString.length - 1; i >= 0; --i) {
+            currentChar = accentString.charAt(i)
+            combiningChar = currentChar + combiningChar
+            if (!isCombiningChar(currentChar)) {
+                accentArray.unshift(combiningChar)
+                combiningChar = ""
+            }
+        }
 
         // calculate expanded position and make sure we stay inside the vkb area
-        var baseIndex = accentString.indexOf(target.text)
-        var itemCount = baseIndex >= 0 ? accentString.length : (accentString.length + 1)
-        var middleCell = baseIndex >= 0 ? baseIndex : Math.floor(itemCount / 2)
-
-        accentString = accentString.replace(target.text, "") // added back later
+        var baseIndex = accentArray.indexOf(target.text)
+        var itemCount, middleCell
+        if (baseIndex >= 0) {
+            itemCount = accentArray.length
+            middleCell = baseIndex
+            accentArray.splice(baseIndex, 1) // added back later
+        } else {
+            itemCount = accentArray.length + 1
+            middleCell = Math.floor(itemCount / 2)
+        }
 
         popper.expandedWidth = itemCount * geometry.accentPopperCellWidth +
                                2 * geometry.accentPopperMargin
@@ -248,8 +271,8 @@ Rectangle {
 
         // TODO: support separate visual and input text on accents
         accents.clear()
-        for (var i = 0; i < accentString.length; ++i) {
-            accents.append({ "labelText": accentString.charAt(i), "inputText": accentString.charAt(i) })
+        for (i = 0; i < accentArray.length; ++i) {
+            accents.append({ "labelText": accentArray[i], "inputText": accentArray[i] })
         }
         accents.insert(activeCell, { "labelText": target.keyText, "inputText": target.text } )
 

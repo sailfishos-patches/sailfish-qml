@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2020 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Messages 1.0
@@ -11,8 +18,8 @@ Page {
 
     property bool showAccountsPlaceholder: !MessageUtils.hasModemOrIMaccounts
 
-    function publishNotification(previewBody) {
-        notification.previewBody = previewBody
+    function publishNotification(body) {
+        notification.body = body
         notification.publish()
     }
 

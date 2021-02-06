@@ -12,14 +12,18 @@ import MeeGo.Connman 0.2
 import com.jolla.settings.system 1.0
 import Sailfish.Settings.Networking.Vpn 1.0
 import org.nemomobile.systemsettings 1.0
+import Qt.labs.folderlistmodel 2.1
 
 Page {
     id: root
 
     property string importPath
+    property string importMime
     readonly property bool connectionAccess: AccessPolicy.vpnConnectionSettingsEnabled
     readonly property bool configurationAccess: AccessPolicy.vpnConfigurationSettingsEnabled
     property bool showConnection: !connectionAccess
+    property var mimeHandlers
+    property bool pendingMime
 
     onStatusChanged: {
         if (status === PageStatus.Active) {
@@ -28,8 +32,40 @@ Page {
                     importPath = importPath.substr(7)
                 }
 
-                VpnTypes.importOvpnFile(pageStack, root, importPath)
-                importPath = ''
+                if (mimeHandlers && mimeHandlers[importMime]) {
+                    VpnTypes.importFile(pageStack, root, importPath, mimeHandlers[importMime].vpnType, mimeHandlers[importMime].parser)
+                    importPath = ''
+                    importPath = ''
+                    pendingMime = false
+                } else {
+                    pendingMime = true
+                }
+            }
+        }
+    }
+
+    FolderListModel {
+        id: vpnTypes
+        folder: VpnTypes.settingsPath
+        showFiles: false
+    }
+
+    Repeater {
+        model: vpnTypes
+        delegate: Loader {
+            source: filePath + '/' + "import.qml"
+            onStatusChanged: {
+                if (status === Loader.Ready) {
+                    if (mimeHandlers === undefined) {
+                        mimeHandlers = {}
+                    }
+                    mimeHandlers[item.mimeType] = { vpnType: fileName, parser: item.parseFile }
+                    if (pendingMime && importPath && importMime === item.mimeType) {
+                        VpnTypes.importFile(pageStack, root, importPath, fileName, item.parseFile)
+                        importPath = ''
+                        pendingMime = false
+                    }
+                }
             }
         }
     }

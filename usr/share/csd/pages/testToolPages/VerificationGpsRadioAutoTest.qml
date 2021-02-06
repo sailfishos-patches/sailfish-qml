@@ -18,25 +18,13 @@ AutoTest {
 
     property PositionSource positionSource
 
-    property bool originalLocationEnabled
-    property bool originalGpsEnabled
-    property bool originalGpsFlightMode
-    property bool originalMlsEnabled
-    property int originalMlsOnlineState
-    property int originalHereState
-
     function run() {
         gpsTechModel.initTestCase()
         initialiseTimer.start()
     }
 
     function storeStateAndStart() {
-        originalLocationEnabled = locationSettings.locationEnabled
-        originalGpsEnabled = locationSettings.gpsEnabled
-        originalGpsFlightMode = locationSettings.gpsFlightMode
-        originalMlsEnabled = locationSettings.mlsEnabled
-        originalMlsOnlineState = locationSettings.mlsOnlineState
-        originalHereState = locationSettings.hereState
+        GpsStateRestorer.increaseConsumer()
 
         if (policy.value) {
             locationSettings.locationEnabled = true
@@ -105,7 +93,9 @@ AutoTest {
                 stop()
 
                 if (gps.satellitesInView === 0) {
-                    gpsTechModel.done(false)
+                    if (!gpsTechModel.testFinished) {
+                        gpsTechModel.done(false)
+                    }
                 }
             }
         }
@@ -116,13 +106,17 @@ AutoTest {
 
         onStatusChanged: {
             if (status === Gps.StatusError || status === Gps.StatusUnavailable) {
-                gpsTechModel.done(false)
+                if (!gpsTechModel.testFinished) {
+                    gpsTechModel.done(false)
+                }
             }
         }
 
         onSatellitesInViewChanged: {
             if (satellitesInView > 0) {
-                gpsTechModel.done(true)
+                if (!gpsTechModel.testFinished) {
+                    gpsTechModel.done(true)
+                }
             }
         }
     }
@@ -135,12 +129,7 @@ AutoTest {
             test.setTestResult(success)
 
             if (policy.value) {
-                locationSettings.hereState = originalHereState
-                locationSettings.mlsOnlineState = originalMlsOnlineState
-                locationSettings.mlsEnabled = originalMlsEnabled
-                locationSettings.gpsFlightMode = originalGpsFlightMode
-                locationSettings.gpsEnabled = originalGpsEnabled
-                locationSettings.locationEnabled = originalLocationEnabled
+                GpsStateRestorer.decreaseConsumer()
             }
 
             if (!!positionSource) {

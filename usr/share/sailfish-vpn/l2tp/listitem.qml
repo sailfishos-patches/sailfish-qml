@@ -4,8 +4,6 @@ import Sailfish.Settings.Networking.Vpn 1.0
 import Sailfish.Settings.Networking 1.0
 
 VpnTypeItem {
-    vpnType: "l2tp"
-
     //% "L2TP"
     name: qsTrId("settings_network-me-vpn_type_l2tp")
  

@@ -165,6 +165,7 @@ Page {
             width: flick.width
 
             PageHeader {
+                //: Header text
                 title: qsTr("About")
             }
 
@@ -177,7 +178,8 @@ Page {
                 spacing: Theme.paddingLarge
 
                 Label {
-                    text: "ScreenTapShot"
+                    //: Application name, affect icon text in the app grid
+                    text: qsTranslate("", "ScreenTapShot")
                     font.pixelSize: Theme.fontSizeMedium
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter
@@ -185,7 +187,7 @@ Page {
                 }
 
                 Label {
-                    text: "v" + Qt.application.version
+                    text: "v%1".arg(Qt.application.version)
                     font.pixelSize: Theme.fontSizeMedium
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter
@@ -201,7 +203,8 @@ Page {
                 }
 
                 Label {
-                    text: "Simple screenshot application with overlay button"
+                    //: About text
+                    text: qsTr("Simple screenshot application with overlay button")
                     font.pixelSize: Theme.fontSizeMedium
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter
@@ -209,32 +212,8 @@ Page {
                 }
 
                 Label {
-                    text: "We accept donations via"
-                    font.pixelSize: Theme.fontSizeMedium
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                }
-
-                Button {
-                    text: "PayPal"
-                    width: 300
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    onClicked: {
-                        Qt.openUrlExternally("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ovi.coderus%40gmail%2ecom&lg=en&lc=US&item_name=Donation%20for%20coderus%20battery-overlay%20EUR&no_note=0&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHostedGuest")
-                    }
-                }
-
-                Label {
-                    text: "Me and my beloved would be grateful for every cent.\nYour donations makes application better and i can spend more time for development."
-                    font.pixelSize: Theme.fontSizeMedium
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                }
-
-                Label {
-                    text: "Thanks to tortoisedoc for MOUSE_REGION trick."
+                    //: About thanks
+                    text: qsTr("Thanks to tortoisedoc for MOUSE_REGION trick.")
                     font.pixelSize: Theme.fontSizeMedium
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter

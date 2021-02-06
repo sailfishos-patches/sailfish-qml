@@ -9,7 +9,6 @@ import Sailfish.Silica 1.0
 import Sailfish.AccessControl 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.devicelock 1.0
-import org.nemomobile.notifications 1.0
 import org.nemomobile.systemsettings 1.0
 
 Page {
@@ -43,63 +42,58 @@ Page {
             switch (error) {
                 case UserModel.HomeCreateFailed:
                     //% "Home directory already in use, please try another name"
-                    notification.previewBody = qsTrId("settings_users-la-adding_user_failed_home_create_failed")
+                    Notices.show(qsTrId("settings_users-la-adding_user_failed_home_create_failed"))
                     break
                 case UserModel.GroupCreateFailed:
                     //% "User group already in use, please try another name"
-                    notification.previewBody = qsTrId("settings_users-la-adding_user_failed_group_create_failed")
+                    Notices.show(qsTrId("settings_users-la-adding_user_failed_group_create_failed"))
                     break
                 case UserModel.UserAddFailed:
                     //% "Could not add user, please try another name"
-                    notification.previewBody = qsTrId("settings_users-la-adding_user_failed_user_add_failed")
+                    Notices.show(qsTrId("settings_users-la-adding_user_failed_user_add_failed"))
                     break
                 case UserModel.MaximumNumberOfUsersReached:
                     //% "Could not add user, maximum number of users reached already"
-                    notification.previewBody = qsTrId("settings_users-la-maximum_number_of_users_reached")
+                    Notices.show(qsTrId("settings_users-la-maximum_number_of_users_reached"))
                     break
                 case UserModel.UserModifyFailed:
                 case UserModel.Failure:
                 default:
                     //% "Could not add user"
-                    notification.previewBody = qsTrId("settings_users-la-adding_user_failed")
+                    Notices.show(qsTrId("settings_users-la-adding_user_failed"))
                     break
             }
             root.creatingUser = false
-            notification.publish()
         }
 
         onUserModifyFailed: {
             //% "Could not rename user"
-            notification.previewBody = qsTrId("settings_users-la-renaming_user_failed")
-            notification.publish()
+            Notices.show(qsTrId("settings_users-la-renaming_user_failed"))
         }
 
         onUserRemoveFailed: {
             switch (error) {
                 case UserModel.HomeRemoveFailed:
                     //% "Could not remove user, home directory could not be removed"
-                    notification.previewBody = qsTrId("settings_users-la-home_remove_failed")
+                    Notices.show(qsTrId("settings_users-la-home_remove_failed"))
                     break
                 case UserModel.UserRemoveFailed:
                 case UserModel.Failure:
                 default:
                     //% "Could not remove user"
-                    notification.previewBody = qsTrId("settings_users-la-removing_user_failed")
+                    Notices.show(qsTrId("settings_users-la-removing_user_failed"))
                     break
             }
-            notification.publish()
         }
 
         onAddGroupsFailed: {
             //% "Could not add permissions"
-            notification.previewBody = qsTrId("settings_users-la-add_permissions_failed")
-            notification.publish()
+            Notices.show(qsTrId("settings_users-la-add_permissions_failed"))
         }
 
         onRemoveGroupsFailed: {
             //% "Could not remove permissions"
-            notification.previewBody = qsTrId("settings_users-la-remove_permissions_failed")
-            notification.publish()
+            Notices.show(qsTrId("settings_users-la-remove_permissions_failed"))
         }
 
         onUserGroupsChanged: userList._groupUpdateCounter++
@@ -138,14 +132,6 @@ Page {
                 deviceLockSettings.authorization.requestChallenge()
             }
         }
-    }
-
-    Notification {
-        id: notification
-
-        isTransient: true
-        icon: "icon-s-filled-warning"
-        urgency: Notification.Critical
     }
 
     SilicaListView {

@@ -11,6 +11,7 @@ AccountCreationAgent {
     initialPage: Dialog {
         canAccept: settings.acceptableInput
         acceptDestination: busyComponent
+        onAcceptBlocked: settings.acceptBlocked()
 
         SilicaFlickable {
             anchors.fill: parent

@@ -60,11 +60,11 @@ MultiTypeFieldEditor {
         property int addressLabel: model.label
         property bool aboutToDelete
 
-        function forceActiveFocus(delayInterval) {
-            if (addressFieldsRepeater.count > 0) {
-                return addressFieldsRepeater.itemAt(0).forceActiveFocus(delayInterval)
+        function forceActiveFocus() {
+            var firstEditorField = addressFieldsRepeater.itemAt(0)
+            if (firstEditorField) {
+                firstEditorField.forceActiveFocus()
             }
-            return false
         }
 
         width: parent.width
@@ -237,6 +237,8 @@ MultiTypeFieldEditor {
                     leftMargin: addressHeaderLabel.x
                     buttonMode: false
                     editor: root
+                    focus: root.initialFocusIndex === addressDelegate.addressIndex
+                           && model.index === 0 // always focus the first address field
 
                     onModified: {
                         if (addressDelegate.aboutToDelete) {
@@ -244,14 +246,15 @@ MultiTypeFieldEditor {
                         }
 
                         var wasEmpty = (model.value.length === 0 && addressFields.allFieldsEmpty())
-                        addressFields.setProperty(index, "value", root.detailModel.rightTrim(value))
+                        var trimmedValue = value.trim()
+                        addressFields.setProperty(index, "value", trimmedValue)
 
                         // Add an empty field to act as the next 'Add address' button.
-                        if (wasEmpty && value.length > 0 && addressDelegate.addressIndex === root.detailModel.count - 1) {
+                        if (wasEmpty && trimmedValue.length > 0 && addressDelegate.addressIndex === root.detailModel.count - 1) {
                             root.addEmptyField()
                         }
 
-                        root.hasContent = value.length > 0 || root._testHasAddressContent()
+                        root.hasContent = trimmedValue.length > 0 || root._testHasAddressContent()
                     }
                 }
             }

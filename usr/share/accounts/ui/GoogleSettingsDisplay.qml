@@ -288,11 +288,8 @@ StandardAccountSettingsDisplay {
 
         TextField {
             id: yourNameField
-            width: parent.width
             inputMethodHints: Qt.ImhNoPredictiveText
-            //: Placeholder text for your name
-            //% "Your name"
-            placeholderText: qsTrId("components_accounts-ph-genericemail_your_name")
+
             //: Your name
             //% "Your name"
             label: qsTrId("components_accounts-la-genericemail_your_name")

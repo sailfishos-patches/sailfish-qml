@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2013 – 2019 Jolla Ltd.
+ * Copyright (c) 2019 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.1
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0 as Private
@@ -221,7 +228,7 @@ Page {
                     // However, when formatting an encrypted device unmounting doesn't work. Hence, this notification.
                     // This notification can be removed if/when unmounting before encrypting starts working.
                     if (encryptSwitch.checked && partition.status === PartitionModel.Mounted) {
-                        storageErrorNotification.previewBody = partition.drive.connectionBus === PartitionModel.USB
+                        storageErrorNotification.body = partition.drive.connectionBus === PartitionModel.USB
                                   //: Displayed when formatting encrypted device but device is already mounted.
                                   //% "Unmount USB storage before formatting an encrypted device."
                                 ? qsTrId("settings_storage-la-usb_storage_formatting_encrypted_already_mounted")

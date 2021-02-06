@@ -62,7 +62,9 @@ BackgroundItem {
         Label {
             id: clearLabel
             anchors.centerIn: parent
-            color: parent.containsMouse ? Theme.primaryColor : Theme.highlightColor
+            font.bold: popup.containsMouse
+            color: popup.containsMouse ? pasteContainer.palette.primaryColor
+                                       : pasteContainer.palette.secondaryColor
             //% "Clear clipboard"
             text: qsTrId("text_input-la-clear_clipboard")
         }

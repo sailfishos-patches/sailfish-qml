@@ -41,7 +41,6 @@ FunctionKey {
     icon.source: attributes.inSymView ? ""
                                       : (attributes.isShifted && !attributes.isShiftLocked ? "image://theme/icon-m-autocaps"
                                                                                            : "image://theme/icon-m-capslock")
-                                      + (pressed ? ("?" + Theme.highlightColor) : "")
 
     // dim normal shift mode
     icon.opacity: (!attributes.inSymView && !attributes.isShiftLocked && !attributes.isShifted) ? 0.2 : 1.0

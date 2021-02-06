@@ -50,29 +50,28 @@ KeyBase {
 
     Rectangle {
         id: backgroundItem
-        color: parent.pressed ? Theme.highlightBackgroundColor : Theme.primaryColor
+        color: parent.pressed ? aFunctKey.palette.highlightBackgroundColor : aFunctKey.palette.primaryColor
         opacity: parent.pressed ? 0.6 : 0.17
         radius: geometry.keyRadius
         anchors { fill: parent; margins: Theme.paddingMedium }
     }
 
-    Image {
+    Icon {
         id: image
         anchors.centerIn: parent
-        anchors.horizontalCenterOffset: (leftPadding - rightPadding) / 2
+        anchors.horizontalCenterOffset: (aFunctKey.leftPadding - aFunctKey.rightPadding) / 2
     }
 
-    Text {
+    Label {
         id: textItem
         anchors.centerIn: parent
-        anchors.horizontalCenterOffset: Math.round((leftPadding - rightPadding) / 2)
-        width: parent.width - leftPadding - rightPadding - 4
+        anchors.horizontalCenterOffset: Math.round((aFunctKey.leftPadding - aFunctKey.rightPadding) / 2)
+        width: parent.width - aFunctKey.leftPadding - aFunctKey.rightPadding - 4
         fontSizeMode: Text.HorizontalFit
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: Theme.fontSizeMedium
         font.family: Theme.fontFamily
-        color: parent.pressed ? Theme.highlightColor : Theme.primaryColor
         text: parent.caption
     }
 

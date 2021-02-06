@@ -61,9 +61,9 @@ ListModel {
             path: StandardPaths.documents,
             storageType: 'user',
             position: 0,
-            dBusService: "org.sailfish.office",
-            dBusPath: "/org/sailfish/office/ui",
-            dBusInterface: "org.sailfish.office.ui",
+            dBusService: "org.sailfishos.Office",
+            dBusPath: "/org/sailfishos/office/ui",
+            dBusInterface: "org.sailfishos.Office.ui",
             dBusMethod: "activateWindow",
             pathAllowed: true
         },

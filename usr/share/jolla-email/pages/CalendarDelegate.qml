@@ -9,6 +9,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Nemo.Email 0.1
 import org.nemomobile.calendar 1.0
+import Nemo.DBus 2.0
 
 BackgroundItem {
     id: root
@@ -20,6 +21,13 @@ BackgroundItem {
 
     contentHeight: Theme.itemSizeExtraSmall
     height: contentItem.height
+
+    DBusInterface {
+        id: calendarDBusInterface
+        service: "com.jolla.calendar.ui"
+        path: "/com/jolla/calendar/ui"
+        iface: "com.jolla.calendar.ui"
+    }
 
     InvitationQuery {
         id: invitationQuery
@@ -40,7 +48,7 @@ BackgroundItem {
                                            startTime: invitationQuery.startTime
                                        })
             } else {
-                Qt.openUrlExternally(email.calendarInvitationUrl)
+                calendarDBusInterface.call("importIcsData", [email.calendarInvitationBody])
             }
         }
     }

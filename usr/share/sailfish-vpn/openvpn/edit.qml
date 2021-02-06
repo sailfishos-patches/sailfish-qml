@@ -7,8 +7,6 @@ import Sailfish.Settings.Networking.Vpn 1.0
 VpnPlatformEditDialog {
     id: root
 
-    property string importPath
-
     title: {
         if (newConnection) {
             if (importPath) {
@@ -24,7 +22,7 @@ VpnPlatformEditDialog {
     }
 
     Binding {
-        when: root.newConnection && VpnTypes.ovpnImportPath
+        when: root.newConnection && root.importPath
         target: root
         property: 'subtitle'
 
@@ -134,8 +132,7 @@ VpnPlatformEditDialog {
         opacity: openVpnAuthProvision.currentIndex == 2 ? 1 : 0
         Behavior on opacity { FadeAnimation { duration: 200 } }
 
-        height: visible ? implicitHeight : 0
-        Behavior on height { NumberAnimation { duration: 200 } }
+        height: opacity * implicitHeight
 
         //% "OpenVPN password file"
         label: qsTrId("settings_network-la-vpn_openvpn_authuserpass")

@@ -4,11 +4,15 @@ import Sailfish.Telephony 1.0
 import MeeGo.QOfono 0.2
 import com.jolla.messages.settings.translations 1.0
 import org.nemomobile.ofono 1.0
+import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 
-Page {
-    id: mainPage
-    property bool pageReady: sailfishSimManager.ready || mainPage.status == PageStatus.Active
+ApplicationSettings {
+    id: page
+
+    // These rely on the detail that ApplicationSettings is still a page
+    property bool pageReady: sailfishSimManager.ready || page.status == PageStatus.Active
+
     onPageReadyChanged: if (pageReady) pageReady = true // remove binding
 
     onStatusChanged: {
@@ -25,9 +29,12 @@ Page {
         id: sailfishSimManager
     }
 
-    SilicaFlickable {
-        anchors.fill: parent
-        contentHeight: content.height
+    OfonoModemManager {
+        id: modemManager
+    }
+
+    Column {
+        width: parent.width
         enabled: pageReady
         Behavior on opacity { FadeAnimator {} }
         opacity: enabled ? 1.0 : 0.0
@@ -41,57 +48,42 @@ Page {
             simActivationPullDownMenu: pullDownMenu
         }
 
-        OfonoModemManager {
-            id: modemManager
-        }
-
-        Column {
-            id: content
-            width: parent.width
+        ExpandingSectionGroup {
             enabled: !mainPlaceholder.enabled
             opacity: 1 - mainPlaceholder.opacity
+            width: parent.width
+            animateToExpandedSection: false
+            currentIndex: sailfishSimManager.activeSim >= 0 ? sailfishSimManager.activeSim : 0
 
-            PageHeader {
-                //: Messages settings page header
-                //% "Messages"
-                title: qsTrId("settings_messages-he-messages")
-            }
-
-            ExpandingSectionGroup {
+            Repeater {
+                id: simCardSettingsRepeater
                 width: parent.width
-                animateToExpandedSection: false
-                currentIndex: sailfishSimManager.activeSim >= 0 ? sailfishSimManager.activeSim : 0
+                model: modemManager.availableModems
 
-                Repeater {
-                    id: simCardSettingsRepeater
-                    width: parent.width
-                    model: modemManager.availableModems
+                delegate: ExpandingSection {
+                    buttonHeight: (title.length && modemManager.availableModems.length > 1) ? Theme.itemSizeMedium : 0 // hide section header if only one modem
+                    title: sailfishSimManager.simNames[sailfishSimManager.indexOfModem(modelData)]
+                    content.sourceComponent: Column {
+                        width: parent.width
 
-                    delegate: ExpandingSection {
-                        buttonHeight: (title.length && modemManager.availableModems.length > 1) ? Theme.itemSizeMedium : 0 // hide section header if only one modem
-                        title: sailfishSimManager.simNames[sailfishSimManager.indexOfModem(modelData)]
-                        content.sourceComponent: Column {
-                            width: parent.width
+                        SimSectionPlaceholder {
+                            id: simPlaceholder
+                            modemPath: modelData
+                            simManager: ofonoSimManager
+                            multiSimManager: sailfishSimManager
+                        }
 
-                            SimSectionPlaceholder {
-                                id: simPlaceholder
-                                modemPath: modelData
-                                simManager: ofonoSimManager
-                                multiSimManager: sailfishSimManager
-                            }
+                        SimCardMessagingSettings {
+                            enabled: !simPlaceholder.enabled
+                            opacity: 1 - simPlaceholder.opacity
+                            height: enabled ? implicitHeight + Theme.paddingLarge : 0
+                            modemPath: modelData
+                            imsi: ofonoSimManager.subscriberIdentity
+                        }
 
-                            SimCardMessagingSettings {
-                                enabled: !simPlaceholder.enabled
-                                opacity: 1 - simPlaceholder.opacity
-                                height: enabled ? implicitHeight + Theme.paddingLarge : 0
-                                modemPath: modelData
-                                imsi: ofonoSimManager.subscriberIdentity
-                            }
-
-                            OfonoSimManager {
-                                id: ofonoSimManager
-                                modemPath: modelData
-                            }
+                        OfonoSimManager {
+                            id: ofonoSimManager
+                            modemPath: modelData
                         }
                     }
                 }

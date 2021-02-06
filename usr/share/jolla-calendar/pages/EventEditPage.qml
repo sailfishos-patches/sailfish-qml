@@ -1,10 +1,19 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 - 2019 Jolla Ltd.
+** Copyright (C) 2020 Open Mobile Platform LLC.
+**
+****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.calendar 1.0
 import Sailfish.Calendar 1.0
+import Sailfish.Timezone 1.0
 import Calendar.syncHelper 1.0
 import org.nemomobile.notifications 1.0 as SystemNotifications
 import org.nemomobile.configuration 1.0
+import org.nemomobile.systemsettings 1.0
 import Sailfish.Silica.private 1.0 as Private
 
 Dialog {
@@ -24,7 +33,7 @@ Dialog {
     onAcceptBlocked: {
         if (!dateSelector.valid) {
             //% "Event start time needs to be before end time"
-            systemNotification.previewBody = qsTrId("jolla-calendar-event_time_problem_notification")
+            systemNotification.body = qsTrId("jolla-calendar-event_time_problem_notification")
             systemNotification.publish()
         }
     }
@@ -68,7 +77,7 @@ Dialog {
     SystemNotifications.Notification {
         id: systemNotification
 
-        icon: "icon-lock-calendar"
+        appIcon: "icon-lock-calendar"
         isTransient: true
     }
 
@@ -257,6 +266,68 @@ Dialog {
                             recurEnd.recurEndDate = new Date(NaN) // just clear it, not visible
                         }
                     }
+                }
+            }
+
+            ValueButton {
+                id: timezone
+                property int timespec: CalendarEvent.SpecTimeZone
+                property string name: timeSettings.timezone
+                function set(spec, zone) {
+                    if (spec == CalendarEvent.SpecTimeZone && zone !== undefined) {
+                        name = zone
+                    } else {
+                        name = Qt.binding(function() {return timeSettings.timezone})
+                    }
+                    if (spec == CalendarEvent.SpecLocalZone) {
+                        // This is a hack, because KDateTime for local zone
+                        // spec is not reacting to tz change. So save as
+                        // time zone spec with the right name. To be removed
+                        // when kcalcore/ktimezones can react to tz changes,
+                        // or kcalcore is upgrade to upstream.
+                        timespec == CalendarEvent.SpecTimeZone
+                    } else {
+                        timespec = spec
+                    }
+                }
+                visible: opacity > 0.
+                opacity: allDay.checked ? 0. : 1.
+                Behavior on opacity { FadeAnimation {} }
+                //% "Time zone"
+                label: qsTrId("calendar-choose-timespec")
+                value: {
+                    switch (timespec) {
+                    //% "None"
+                    case CalendarEvent.SpecClockTime: return qsTrId("calendar-me-clock_time")
+                    //% "Coordinated universal time"
+                    case CalendarEvent.SpecUtc: return qsTrId("calendar-me-utc")
+                    //: %1 will be replaced by localized country and %2 with localized city
+                    //% "%1, %2"
+                    case CalendarEvent.SpecTimeZone: return qsTrId("calendar-me-localized-timezone").arg(localizer.country).arg(localizer.city)
+                    }
+                }
+                onClicked: {
+                    var obj = pageStack.animatorPush("Sailfish.Timezone.TimezonePicker",
+                        {showNoTimezoneOption: true, showUniversalTimeOption: true})
+                    obj.pageCompleted.connect(function(page) {
+                        page.timezoneClicked.connect(function(zone) {
+                            if (zone == "") {
+                                timezone.set(CalendarEvent.SpecClockTime)
+                            } else if (zone == "UTC") {
+                                timezone.set(CalendarEvent.SpecUtc)
+                            } else {
+                                timezone.set(CalendarEvent.SpecTimeZone, zone)
+                            }
+                            pageStack.pop()
+                        })
+                    })
+                }
+                TimezoneLocalizer {
+                    id: localizer
+                    timezone: timezone.name
+                }
+                DateTimeSettings {
+                    id: timeSettings
                 }
             }
 
@@ -518,9 +589,15 @@ Dialog {
                     } else if (seconds === 0) {
                         currentIndex = 1 // ReminderTime
                     } else {
-                        for (var i = menu.children.length - 1; i >= 2; --i) {
-                            if (seconds >= menu.children[i].seconds) {
+                        for (var i = reminderValues.model.length - 1; i >= 2; --i) {
+                            if (seconds == reminderValues.model[i]) {
                                 currentIndex = i
+                                return
+                            } else if (seconds > reminderValues.model[i]) {
+                                var tmp = reminderValues.model
+                                tmp.splice(i + 1, 0, seconds)
+                                reminderValues.model = tmp
+                                currentIndex = i + 1
                                 return
                             }
                         }
@@ -539,38 +616,21 @@ Dialog {
                 //% "Remind me"
                 label: qsTrId("calendar-add-remind_me")
                 menu: ContextMenu {
-                    ReminderMenuItem {
-                        seconds: -1 // ReminderNone
-                    }
-                    ReminderMenuItem {
-                        seconds: 0 // ReminderTime
-                    }
-                    ReminderMenuItem {
-                        seconds: 5 * 60 // Reminder5Min
-                    }
-                    ReminderMenuItem {
-                        seconds: 15 * 60 // Reminder15Min
-                    }
-                    ReminderMenuItem {
-                        seconds: 30 * 60 // Reminder30Min
-                    }
-                    ReminderMenuItem {
-                        seconds: 60 * 60 // Reminder1Hour
-                    }
-                    ReminderMenuItem {
-                        seconds: 2 * 60 * 60 // Reminder2Hour
-                    }
-                    ReminderMenuItem {
-                        seconds: 6 * 60 * 60 // Reminder6Hour
-                    }
-                    ReminderMenuItem {
-                        seconds: 12 * 60 * 60 // Reminder12Hour
-                    }
-                    ReminderMenuItem {
-                        seconds: 24 * 60 * 60 // Reminder1Day
-                    }
-                    ReminderMenuItem {
-                        seconds: 2 * 24 * 60 * 60 // Reminder2Day
+                    Repeater {
+                        id: reminderValues
+                        model: [-1 // ReminderNone
+                               , 0 // ReminderTime
+                               , 5 * 60 // Reminder5Min
+                               , 15 * 60 // Reminder15Min
+                               , 30 * 60 // Reminder30Min
+                               , 60 * 60 // Reminder1Hour
+                               , 2 * 60 * 60 // Reminder2Hour
+                               , 6 * 60 * 60 // Reminder6Hour
+                               , 12 * 60 * 60 // Reminder12Hour
+                               , 24 * 60 * 60 // Reminder1Day
+                               , 2 * 24 * 60 * 60 // Reminder2Day
+                               ]
+                        delegate: ReminderMenuItem { seconds: modelData }
                     }
                 }
             }
@@ -602,15 +662,15 @@ Dialog {
             recurEnd.recurEndDate = event.recurEndDate
 
             if (dialog._replaceOccurrence) {
-                dateSelector.setStartDate(dialog.occurrence.startTime)
-                dateSelector.setEndDate(dialog.occurrence.endTime)
+                dateSelector.setStartDate(dialog.occurrence.startTimeInTz)
+                dateSelector.setEndDate(dialog.occurrence.endTimeInTz)
             } else  {
                 dateSelector.setStartDate(event.startTime)
                 dateSelector.setEndDate(event.endTime)
             }
+            timezone.set(event.startTimeSpec, event.startTimeZone)
 
             allDay.checked = event.allDay
-
         } else {
             eventName.focus = true
 
@@ -644,8 +704,8 @@ Dialog {
             modification.setEndTime(stripTime(dateSelector.endDate), CalendarEvent.SpecClockTime)
             modification.allDay = true
         } else {
-            modification.setStartTime(dateSelector.startDate, CalendarEvent.SpecLocalZone)
-            modification.setEndTime(dateSelector.endDate, CalendarEvent.SpecLocalZone)
+            modification.setStartTime(dateSelector.startDate, timezone.timespec, timezone.name)
+            modification.setEndTime(dateSelector.endDate, timezone.timespec, timezone.name)
             modification.allDay = false
         }
 

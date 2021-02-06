@@ -46,7 +46,17 @@ Page {
                 onEditContact: {
                     ContactsUtil.editContact(person, root.allContactsModel, pageStack)
                 }
+
+                onChangeFavoriteStatus: {
+                    favoriteModifier.setFavoriteStatus(person, favorite)
+                }
             }
+        }
+
+        ContactFavoriteModifier {
+            id: favoriteModifier
+
+            peopleModel: root.allContactsModel
         }
 
         PullDownMenu {
@@ -92,14 +102,13 @@ Page {
                                operationType)
     }
 
-    function openContactEditor(contact, operationType) {
+    function openContactEditor(contact) {
         if (contact == null || contact == undefined) {
             return null
         }
         ContactsUtil.editContact(contact,
                                  root.allContactsModel,
-                                 pageStack,
-                                 operationType)
+                                 pageStack)
     }
 
 
@@ -111,16 +120,8 @@ Page {
         })
     }
 
-
-    function multiSelectDeleteClicked(contactsToDelete) {
-        // pop the multiSelect page
-        pageStack.pop(root)
-        // cache contacts in this function to avoid context destruction issues
-        var contactModel = root.allContactsModel
-        //% "Deleting %n contacts"
-        Remorse.popupAction(root, qsTrId("components_contacts-la-removing_multiple_contacts", contactsToDelete.length), function() {
-            contactModel.removePeople(contactsToDelete)
-        })
+    function multiSelectDeleteClicked(contactIds) {
+        pageStack.animatorReplace("RemoveContactsPage.qml", { "contactsToRemove": contactIds })
     }
 
     function multiSelectShareClicked(content) {
@@ -129,10 +130,9 @@ Page {
     }
 
     function openNewContactEditor(attributes, operationType) {
-        ContactsUtil.editContact(ContactCreator.createContact(attributes),
-                                 root.allContactsModel,
-                                 pageStack,
-                                 operationType)
+        ContactsUtil.editNewContact(ContactCreator.createContact(attributes),
+                                    root.allContactsModel,
+                                    pageStack)
     }
 
     function openImportWizard(properties) {
@@ -154,7 +154,7 @@ Page {
     }
 
     function openRemoveAllPage() {
-        pageStack.animatorPush("RemoveAllPage.qml")
+        pageStack.animatorPush("RemoveContactsPage.qml", { "removeAllContacts": true })
     }
 
     function openSearch() {

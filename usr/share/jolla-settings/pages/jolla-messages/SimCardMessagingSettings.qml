@@ -271,7 +271,7 @@ Column {
             onSetServiceCenterAddressComplete: {
                 if (!success) {
                     //% "Changing the SMS Center address failed"
-                    notification.previewBody = qsTrId("settings_messages-la-change_smsc_failed")
+                    notification.body = qsTrId("settings_messages-la-change_smsc_failed")
                     notification.publish()
                 }
                 destroy()
