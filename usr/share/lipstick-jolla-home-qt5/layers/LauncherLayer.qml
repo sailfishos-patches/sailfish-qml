@@ -10,6 +10,8 @@ EdgeLayer {
     property bool allowed
     property bool closedFromBottom
 
+    opaque: false
+
     peekFilter {
         enabled: Lipstick.compositor.systemInitComplete
         onGestureTriggered: closedFromBottom = peekFilter.bottomActive
