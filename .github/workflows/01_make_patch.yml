@@ -11,6 +11,7 @@ jobs:
 
       - name: Create diff
         run: |
+          mkdir -p .github/patch_data
           git fetch origin
           git diff origin/${{ github.base_ref }}  -- . ':!.github' > .github/patch_data/unified_diff.patch
         
