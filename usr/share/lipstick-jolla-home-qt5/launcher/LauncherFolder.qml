@@ -12,38 +12,20 @@ import Sailfish.Silica.private 1.0
 import Sailfish.Lipstick 1.0
 import com.jolla.lipstick 0.1
 
-Rectangle {
+Dialog {
     id: launcherFolder
+    _clickablePageIndicators: false
+    allowedOrientations: Lipstick.compositor.topmostWindowOrientation
+    property var launcherPager
     property alias model: launcherGrid.model
     property bool selectIcon
     property Item iconSelector
     property int visibleRowCount: launcherGrid.rows-2
 
-    Connections {
-        target: Desktop.instance.switcher
-        onAppShowInProgressChanged: if (Desktop.instance.switcher.appShowInProgress) close()
-    }
-
-    function close() {
+    function close(animate) {
         launcherGrid.setEditMode(false)
-        opacity = 0.0
-        enabled = false
-        destroy(450)
+        reject()
     }
-
-    z: 10
-    opacity: 0.0
-    Behavior on opacity { SmoothedAnimation { duration: 400; velocity: 1000 / duration } }
-
-    gradient: Gradient {
-        GradientStop { position: 0.0; color: Theme.rgba(Theme.overlayBackgroundColor, 1.0) }
-        GradientStop { position: 1.0; color: Theme.rgba(Theme.overlayBackgroundColor, Theme.opacityOverlay) }
-    }
-
-    width: launcherPager.width
-    height: launcherPager.height
-
-    Component.onCompleted: opacity = 1.0
 
     Connections {
         target: Lipstick.compositor
@@ -91,7 +73,7 @@ Rectangle {
                 } else if (selectIcon) {
                     selectIcon = false
                 } else if (!launcherGrid.launcherEditMode) {
-                    launcherFolder.close()
+                    launcherFolder.close(true)
                 }
                 launcherGrid.setEditMode(false)
             }
@@ -100,11 +82,12 @@ Rectangle {
         Rectangle {
             id: header
             width: parent.width
-            height: launcherGrid.cellHeight - Theme.fontSizeExtraSmall/2
+            height: launcherIcon.height + Theme.paddingLarge
             gradient: Gradient {
                 GradientStop { position: 0.0; color: Theme.rgba(Theme.primaryColor, 0.0) }
                 GradientStop { position: 1.0; color: Theme.rgba(Theme.primaryColor, 0.15) }
             }
+            opacity: 1 - footer.opacity
 
             Image {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -112,22 +95,23 @@ Rectangle {
             }
 
             MouseArea {
-                id: icon
+                id: iconHeader
                 objectName: "LauncherFolder_icon"
-                width: launcherGrid.cellWidth
+                width: height
                 height: parent.height
-                x: launcherGrid.x // launcherGrid is centered in it's parent
-                LauncherIcon {
-                    y: (launcherGrid.cellHeight - height - Theme.fontSizeExtraSmall)/2
-                    icon: model.iconId
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    pressed: icon.pressed && icon.containsMouse
+                x: Theme.paddingMedium
+                FolderIconLoader {
+                    id: launcherIcon
+                    folder: model
+                    anchors.centerIn: parent
+                    pressed: iconHeader.pressed && iconHeader.containsMouse
                     Text {
                         font.pixelSize: Theme.fontSizeExtraLarge
                         font.family: Theme.fontFamilyHeading
                         color: Theme.lightPrimaryColor
                         text: model.itemCount
                         anchors.centerIn: parent
+                        visible: launcherIcon.index < 16
                     }
                 }
                 onClicked: {
@@ -145,7 +129,7 @@ Rectangle {
             TextField {
                 id: titleEditor
                 anchors {
-                    left: icon.right
+                    left: iconHeader.right
                     leftMargin: -Theme.paddingLarge
                     right: parent.right
                     verticalCenter: parent.verticalCenter
@@ -179,8 +163,8 @@ Rectangle {
                 anchors {
                     right: titleEditor.right
                     rightMargin: Theme.horizontalPageMargin
-                    top: titleEditor.bottom
-                    topMargin: -Theme.paddingMedium
+                    bottom: parent.bottom
+                    bottomMargin: Theme.paddingMedium
                 }
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.highlightColor
@@ -197,8 +181,8 @@ Rectangle {
             // Use a clipper item to clip slightly outside the GridView area
             anchors.top: header.bottom
             width: parent.width
-            height: launcherGrid.height + Theme.fontSizeExtraSmall
-            clip: true
+            height: launcherGrid.height
+            clip: launcherGrid.reorderItem ? false : true
 
             LauncherGrid {
                 id: launcherGrid
@@ -213,7 +197,6 @@ Rectangle {
                 }
 
                 gridManager.dragContainer: launcherFolder
-                onItemLaunched: launcherFolder.close()
 
                 NumberAnimation {
                     id: contentYAnimation
@@ -236,23 +219,24 @@ Rectangle {
                             } else if (selectIcon) {
                                 selectIcon = false
                             } else if (!launcherGrid.launcherEditMode) {
-                                launcherFolder.close()
+                                launcherFolder.close(true)
                             }
                             launcherGrid.setEditMode(false)
                         }
                     }
                 }
 
-                VerticalScrollDecorator {}
+                VerticalScrollDecorator { anchors.rightMargin: -launcherGrid.x }
 
                 y: Theme.fontSizeExtraSmall/2
-                height: cellHeight * visibleRowCount
+                height: launcherFolder.height - header.height
                 cacheBuffer: height
                 displayMarginBeginning: Theme.fontSizeExtraSmall/2
                 displayMarginEnd: Theme.fontSizeExtraSmall/2
                 enabled: !titleEditor.activeFocus && !selectIcon
                 Behavior on opacity { FadeAnimation { duration: 300 } }
                 opacity: enabled ? 1.0 : (selectIcon ? 0.0 : Theme.opacityLow)
+                footer: Item { width: 1; height: Theme.paddingSmall}
             }
         }
 
@@ -263,21 +247,19 @@ Rectangle {
                 if (item) {
                     // The odd launcherGrid.reorderItem.y line below is to force revaluation of this binding
                     launcherGrid.reorderItem.y
-                    var itemY = launcherGrid.mapFromItem(item, 0, 0).y
-                    if (itemY + item.height/2 > launcherGrid.height)
+                    var itemY = header.mapFromItem(item, 0, 0).y
+                    if (itemY < header.height / 2)
                         return true
                 }
                 return false
             }
             property bool shown: (launcherGrid.launcherEditMode && launcherGrid.reorderItem ||
                                   model.itemCount > launcherGrid.columns * visibleRowCount) && !selectIcon
-            height: launcherGrid.cellHeight - Theme.fontSizeExtraSmall/2
+            height: header.height
             width: parent.width
-            y: parent.height - (shown ? height : 0)
-            Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
+            y: 0
             opacity: launcherGrid.launcherEditMode && launcherGrid.reorderItem ?
-                         (draggedIntoFooter ? 1.0 : Theme.opacityHigh) :
-                         (model.itemCount > launcherGrid.columns * visibleRowCount && shown ? Theme.opacityHigh : 0.0)
+                         (draggedIntoFooter ? 1.0 : 0.8) : 0.0
             Behavior on opacity { FadeAnimation {} }
             color: Theme.highlightDimmerColor
             gradient: Gradient {
@@ -328,18 +310,19 @@ Rectangle {
                     id: folderIconGrid
                     columns: Math.floor(launcherGrid.width/launcherGrid.cellWidth)
                     Repeater {
-                        model: 16
+                        model: 20
                         delegate: MouseArea {
                             id: folderIcon
-                            objectName: "LauncherFolder_folderIcon"
                             width: launcherGrid.cellWidth
                             height: launcherGrid.cellHeight
-                            LauncherIcon {
+                            FolderIconLoader {
                                 id: folderLauncherIcon
                                 anchors {
                                     centerIn: parent
                                     verticalCenterOffset: Math.round(-Theme.fontSizeExtraSmall/2)
                                 }
+                                folder: launcherFolder.model
+                                index: model.index
                                 icon: "image://theme/icon-launcher-folder-" + (index >= 9 ? (index+1) : "0" + (index+1))
                                 pressed: folderIcon.pressed && folderIcon.containsMouse
                                 opacity: icon.indexOf(launcherFolder.model.iconId) !== -1 ? Theme.opacityFaint : 1.0
