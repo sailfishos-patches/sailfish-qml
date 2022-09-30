@@ -92,6 +92,19 @@ SystemDialogWindow {
         Component {
             id: wallpaperComponent
 
+            Image {
+                id: avatarImage
+                parent: __silica_applicationwindow_instance
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectCrop
+                z: -1
+                property alias imageUrl: avatarImage.source
+            }
+        }
+
+        Component {
+            id: wallpaperComponent0
+
             ThemeImageWallpaper {
                 id: avatarImage
 
