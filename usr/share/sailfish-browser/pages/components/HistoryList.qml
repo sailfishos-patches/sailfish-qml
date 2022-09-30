@@ -1,6 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Jolla Ltd.
+** Copyright (c) 2014 Jolla Ltd.
+** Copyright (c) 2021 Open Mobile Platform LLC.
 ** Contact: Vesa-Matti Hartikainen <vesa-matti.hartikainen@jolla.com>
 **
 ****************************************************************************/
@@ -11,48 +12,41 @@
 
 import QtQuick 2.1
 import Sailfish.Silica 1.0
+import Sailfish.WebView.Popups 1.0
 
 SilicaListView {
     id: view
+
+    property alias viewPlaceholder: viewPlaceholder
     property string search
     property bool showDeleteButton
+    property bool menuClosed
 
-    signal load(string url, string title)
+    signal load(string url, string title, bool newTab)
+    signal saveBookmark(string url, string title, string favicon)
+
+    onLoad: if (newTab) webView.privateMode = !webView.privateMode
 
     // To prevent model to steal focus
     currentIndex: -1
 
     delegate: HistoryItem {
         id: historyDelegate
-        menu: contextMenuComponent
+
         search: view.search
         showDeleteButton: view.showDeleteButton
+        onMenuOpenChanged: view.menuClosed = !menuOpen
+    }
 
-        Component {
-            id: contextMenuComponent
+    WebShareAction {
+        id: webShareAction
+    }
 
-            ContextMenu {
-                MenuItem {
-                    //: Share link from browser history pulley menu
-                    //% "Share"
-                    text: qsTrId("sailfish_browser-me-share-link")
-                    onClicked: pageStack.animatorPush("Sailfish.WebView.Popups.ShareLinkPage",
-                                                      {"link" : model.url, "linkTitle": model.title})
-                }
-                MenuItem {
-                    //% "Copy to clipboard"
-                    text: qsTrId("sailfish_browser-me-copy-to-clipboard")
-                    onClicked: Clipboard.text = model.url
-                }
+    ViewPlaceholder {
+        id: viewPlaceholder
 
-                MenuItem {
-                    //: Delete history entry
-                    //% "Delete"
-                    text: qsTrId("sailfish_browser-me-delete")
-                    onClicked: historyDelegate.remove(model.url)
-                }
-            }
-        }
+        //% "Websites you visit show up here"
+        text: qsTrId("sailfish_browser-la-websites-show-up-here")
     }
 
     VerticalScrollDecorator {}

@@ -33,6 +33,7 @@ ApplicationWindow {
         property string lastCreatedNumber
         property int lastShownContact
 
+        signal openUrl(variant urls)
         signal createContact(variant attributes)
         signal showContact(int contactId)
         signal editContact(int contactId)
@@ -40,6 +41,14 @@ ApplicationWindow {
         signal importContactFile(variant pathList)
         signal importContactsFromSim(string simModemPath)
         signal removeAllDeviceContacts()
+
+        onOpenUrl: {
+            if (urls.length === 0) {
+                activate()
+            } else {
+                importContactFile(urls)
+            }
+        }
 
         onCreateContact: {
             returnToList()

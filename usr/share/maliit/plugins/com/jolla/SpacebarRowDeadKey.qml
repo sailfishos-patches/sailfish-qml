@@ -10,6 +10,7 @@ KeyboardRow {
 
     property alias deadKeyCaption: deadKey.caption
     property alias deadKeyCaptionShifted: deadKey.captionShifted
+    property alias periodAccents: periodKey.accents
 
     splitIndex: 4
 
@@ -30,12 +31,10 @@ KeyboardRow {
         active: splitActive
         languageLabel: ""
     }
-    CharacterKey {
-        caption: "."
-        captionShifted: "."
+    PeriodKey {
+        id: periodKey
+        accentsShifted: accents
         implicitWidth: punctuationKeyWidthNarrow
-        fixedWidth: !splitActive
-        separator: SeparatorState.HiddenSeparator
     }
     EnterKey {}
 }

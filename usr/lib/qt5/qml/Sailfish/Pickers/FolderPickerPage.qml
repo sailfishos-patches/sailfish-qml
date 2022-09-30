@@ -11,7 +11,7 @@ import Nemo.FileManager 1.0
 import "private"
 
 Page {
-    id: folderPicker
+    id: page
 
     // "Select location"
     // String defined in FilePickerPage.qml
@@ -29,12 +29,12 @@ Page {
 
     orientationTransitions: Private.PageOrientationTransition {
         fadeTarget: __silica_applicationwindow_instance.contentItem
-        targetPage: folderPicker
+        targetPage: page
     }
 
     onStatusChanged: {
         if (page.status === PageStatus.Active) {
-            acceptDestination = pageStack.previousPage(folderPicker)
+            acceptDestination = pageStack.previousPage(page)
         }
     }
 
@@ -42,14 +42,14 @@ Page {
         id: partitionList
 
         header: PageHeader {
-            title: folderPicker.title
+            title: page.title
         }
 
         onSelected: {
             var obj = pageStack.animatorPush(folderPickerDialog, {
-                                                 title: folderPicker.dialogTitle,
+                                                 title: page.dialogTitle,
                                                  path: info.path,
-                                                 acceptDestination: folderPicker.acceptDestination
+                                                 acceptDestination: page.acceptDestination
                                              })
         }
     }
@@ -57,12 +57,12 @@ Page {
     Component {
         id: folderPickerDialog
         FolderPickerDialog {
-            allowedOrientations: folderPicker.allowedOrientations
-            sortBy: folderPicker.sortBy
-            sortOrder: folderPicker.sortOrder
-            directorySort: folderPicker.directorySort
-            caseSensitivity: folderPicker.caseSensitivity
-            onAccepted: folderPicker.selectedPath = selectedPath
+            allowedOrientations: page.allowedOrientations
+            sortBy: page.sortBy
+            sortOrder: page.sortOrder
+            directorySort: page.directorySort
+            caseSensitivity: page.caseSensitivity
+            onAccepted: page.selectedPath = selectedPath
         }
     }
 }

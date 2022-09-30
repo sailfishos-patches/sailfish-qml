@@ -42,7 +42,6 @@ Page {
         height: root.height
 
         PullDownMenu {
-            visible: Ambience.source != ambience.url
 
             palette {
                 colorScheme: ambience.colorScheme
@@ -50,6 +49,8 @@ Page {
             }
 
             MenuItem {
+                enabled: Ambience.source != ambience.url
+
                 //: Remove ambience from the ambience list
                 //% "Remove ambience"
                 text: qsTrId("jolla-gallery-ambience-me-remove_ambience")
@@ -65,6 +66,16 @@ Page {
                 }
             }
             MenuItem {
+                //: Restores an ambience's original settings
+                //% "Reset to defaults"
+                text: qsTrId("jolla-gallery-ambience-me-reset_to_defaults")
+                onClicked: {
+                    ambience.reset()
+                }
+            }
+            MenuItem {
+                enabled: Ambience.source != ambience.url
+
                 //: Active the ambience
                 //% "Set Ambience"
                 text: qsTrId("jolla-gallery-ambience-me-set_ambience")

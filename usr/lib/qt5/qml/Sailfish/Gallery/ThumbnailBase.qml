@@ -1,33 +1,23 @@
 import QtQuick 2.0
-import org.nemomobile.thumbnailer 1.0
+import Sailfish.Silica 1.0
+import Sailfish.Gallery 1.0
 
-// Base item for thumbnails in a Grid to get default behavior for free.
-// Make sure that this is a top level delegate item for a grid or
-// some functionality (opacity, ...) will be lost
-MouseArea {
+GridItem {
     id: thumbnail
 
     property url source
-    property bool down: pressed && containsMouse
     property string mimeType: model && model.mimeType ? model.mimeType : ""
-    property bool pressedAndHolded
     property int size: GridView.view.cellSize
-    property real contentYOffset
-    property real contentXOffset
-    property GridView grid: GridView.view
+    property bool selected
 
     width: size
-    height: size
-    opacity: grid
-             ? (grid.currentIndex === index && grid.unfocusHighlightEnabled
-                ? 1.0
-                : grid._unfocusedOpacity)
-             : 1.0
+    contentHeight: size
+    opacity: down && selected && !menuOpen ? 0.8 : 1.0
+    highlighted: down || menuOpen || selected
 
-    // Default behavior for each thumbnail
-    onPressed: if (grid) grid.currentIndex = index
-    onPressAndHold: pressedAndHolded = true
-    onReleased: pressedAndHolded = false
-    onCanceled: pressedAndHolded = false
-
+    HighlightItem {
+        z: 1
+        active: thumbnail.highlighted && !thumbnail.menuOpen
+        anchors.fill: parent
+    }
 }

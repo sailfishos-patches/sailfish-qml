@@ -16,6 +16,7 @@ Page {
 
     readonly property bool admin: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")
     property bool creatingUser
+    property bool enableUserCreationOnceComplete
     property UserModel userModel: userModel
 
     function remove(index, name) {
@@ -32,6 +33,29 @@ Page {
                 }
             })
         })
+    }
+
+    function enableUserCreation() {
+        if (!deviceLockQuery._availableMethods) {
+            var obj = pageStack.animatorPush(enableCodeConfirmation)
+            obj.pageCompleted.connect(function(dialog) {
+                dialog.accepted.connect(function() {
+                    dialog.acceptDestinationInstance.authenticate()
+                    dialog.acceptDestinationInstance.canceled.connect(function() {
+                        pageStack.pop(root)
+                    })
+                    dialog.acceptDestinationInstance.authenticated.connect(function() {
+                        deviceLockQuery.cachedAuth = true
+                        root.creatingUser = true
+                        pageStack.pop(root)
+                    })
+                })
+            })
+        } else {
+            deviceLockQuery.askCode(function() {
+                root.creatingUser = true
+            })
+        }
     }
 
     UserModel {
@@ -209,28 +233,7 @@ Page {
                     ListItem {
                         contentHeight: parent ? parent.height : 0
 
-                        onClicked: {
-                            if (!deviceLockQuery._availableMethods) {
-                                var obj = pageStack.animatorPush(enableCodeConfirmation)
-                                obj.pageCompleted.connect(function(dialog) {
-                                    dialog.accepted.connect(function() {
-                                        dialog.acceptDestinationInstance.authenticate()
-                                        dialog.acceptDestinationInstance.canceled.connect(function() {
-                                            pageStack.pop(root)
-                                        })
-                                        dialog.acceptDestinationInstance.authenticated.connect(function() {
-                                            deviceLockQuery.cachedAuth = true
-                                            root.creatingUser = true
-                                            pageStack.pop(root)
-                                        })
-                                    })
-                                })
-                            } else {
-                                deviceLockQuery.askCode(function() {
-                                    root.creatingUser = true
-                                })
-                            }
-                        }
+                        onClicked: root.enableUserCreation()
 
                         Icon {
                             id: addIcon
@@ -426,4 +429,6 @@ Page {
             }
         }
     }
+
+    Component.onCompleted: if (enableUserCreationOnceComplete) enableUserCreation()
 }

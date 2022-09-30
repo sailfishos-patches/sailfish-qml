@@ -1,4 +1,11 @@
-import QtQuick 2.0
+/*
+ * Copyright (c) 2013 - 2021 Jolla Pty Ltd.
+ * Copyright (c) 2021 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+*/
+
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 import org.nemomobile.contacts 1.0
@@ -86,6 +93,10 @@ Page {
         }
     }
 
+    ContactShareAction {
+        id: shareAction
+    }
+
     /* for the active cover, cache the models in the page cache */
     Component.onCompleted: {
         ContactsUtil.init()
@@ -125,8 +136,8 @@ Page {
     }
 
     function multiSelectShareClicked(content) {
-        pageStack.animatorReplaceAbove(root, "Sailfish.Contacts.ContactSharePage",
-                       { "content": content, "shareEndDestination": root })
+        shareAction.resources = [content]
+        shareAction.trigger()
     }
 
     function openNewContactEditor(attributes, operationType) {

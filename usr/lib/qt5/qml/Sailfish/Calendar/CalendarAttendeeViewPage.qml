@@ -25,10 +25,8 @@ Page {
         }
 
         delegate: CalendarAttendeeDelegate {
-            x: Theme.horizontalPageMargin
-            width: parent.width - 2*x
             name: model.name
-            secondaryText: model.email
+            email: model.email
             participationStatus: model.participationStatus
         }
 

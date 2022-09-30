@@ -1,4 +1,13 @@
-import QtQuick 2.0
+/****************************************************************************************
+**
+** Copyright (c) 2013 - 2021 Jolla Ltd.
+** Copyright (c) 2021 Open Mobile Platform LLC.
+** All rights reserved.
+**
+** License: Proprietary.
+**
+****************************************************************************************/
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
 import MeeGo.Connman 0.2
@@ -14,13 +23,14 @@ Column {
     readonly property bool discovering: adapter && adapter.discovering
     property bool highlightSelectedDevice
     property bool requirePairing
+    property bool openMenuOnPressAndHold: true
 
     property bool showPairedDevicesHeader
     property bool showPairedDevices: true
     property var excludedDevices: []    // addresses expected to be in upper case
     property int preferredProfileHint: -1  // darken devices that don't match this filter
 
-    property QtObject adapter: _bluetoothManager.usableAdapter
+    property QtObject adapter: _bluetoothManager ? _bluetoothManager.usableAdapter : null
     property bool autoStartDiscovery    // automatically start discovery when powered
 
     property QtObject _bluetoothManager : BluezQt.Manager
@@ -141,6 +151,8 @@ Column {
         excludedDevices: root.excludedDevices
         visible: root.showPairedDevices ? 1.0 : 0
         highlightSelectedDevice: root.highlightSelectedDevice
+        openMenuOnPressAndHold: root.openMenuOnPressAndHold
+
         onDeviceItemClicked: root._deviceClicked(address, paired)
         onDeviceSettingsClicked: root._deviceSettings(address)
         onRemoveDeviceClicked: root.removeDevice(address)
@@ -170,6 +182,8 @@ Column {
         filters: BluezQt.DevicesModelPrivate.UnpairedDevices
         excludedDevices: root.excludedDevices
         highlightSelectedDevice: root.highlightSelectedDevice
+        openMenuOnPressAndHold: root.openMenuOnPressAndHold
+
         onDeviceItemClicked: root._deviceClicked(address, paired)
         onDeviceSettingsClicked: root._deviceSettings(address)
         onRemoveDeviceClicked: root.removeDevice(address)

@@ -17,8 +17,8 @@ SilicaItem {
         width: parent.width - Theme.horizontalPageMargin*2
         height: implicitHeight + Theme.paddingLarge*2
         wrapMode: Text.Wrap
-        //% "Please uninstall following before proceeding with the Sailfish OS update"
-        text: qsTrId("settings_sailfishos-la-recommend_uninstall_packages")
+        //% "Please remove or revert the following package(s), as it(they) may cause problems during upgrade"
+        text: qsTrId("settings_sailfishos-la-remove_problem_packages", storeIf.offendingPackagesList.length)
         color: Theme.highlightColor
         font.pixelSize: Theme.fontSizeLarge
         horizontalAlignment: Text.AlignHCenter

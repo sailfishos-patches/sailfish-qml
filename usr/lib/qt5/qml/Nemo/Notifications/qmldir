@@ -1,0 +1,3 @@
+module Nemo.Notifications
+plugin nemonotifications
+typeinfo plugins.qmltypes

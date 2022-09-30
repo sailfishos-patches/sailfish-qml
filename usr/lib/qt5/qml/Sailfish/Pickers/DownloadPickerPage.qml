@@ -17,6 +17,8 @@ DocumentPickerPage {
         property: "filePath"
         value: StandardPaths.download
     }
+    _contentModel.contentType: ContentType.File
+    _contentModel.rootType: DocumentGallery.File
 
     //: Placeholder text of downloads search field in content picker
     //% "Search downloads"

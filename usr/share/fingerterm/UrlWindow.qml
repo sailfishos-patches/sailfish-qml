@@ -26,63 +26,59 @@ PopupWindow {
 
     Component {
         id: listDelegate
-        Rectangle {
-            color: "#909090"
-            width: parent.width
-            height: openButton.height+(4*window.pixelRatio)
-            border.width: 1
-            border.color: "#ffffff"
-            radius: window.radiusSmall
-            clip: true
+        Item {
+            x: window.paddingSmall
+            width: parent.width - 2*window.paddingSmall
+            height: Math.max(openButton.height, copyButton.height)
 
-            Text {
-                text: modelData
-                color: "#ffffff"
-                anchors.verticalCenter: parent.verticalCenter
-                x: 8*window.pixelRatio
-                width: openButton.x - x
-                font.pointSize: window.uiFontSize
-                elide: Text.ElideRight
-            }
             Button {
                 id: openButton
-                text: "Open"
-                anchors.right: copyButton.left
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.rightMargin: window.paddingSmall
-                width: 70*window.pixelRatio
-                onClicked: {
-                    Qt.openUrlExternally(modelData);
-                }
+                text: modelData
+                width: parent.width - copyButton.width - window.paddingSmall
+                font.pointSize: window.uiFontSize
+                onClicked: Qt.openUrlExternally(modelData)
+                horizontalAlignment: Text.AlignLeft
             }
+
             Button {
                 id: copyButton
                 anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Copy"
-                width: 70*window.pixelRatio
-                anchors.rightMargin: window.paddingSmall
-                onClicked: {
-                    util.copyTextToClipboard(modelData);
-                }
+                //: Button for copying a URL
+                //% "Copy"
+                text: qsTrId("fingerterm-url-window_bt_copy")
+                width: window.buttonWidthHalf
+                onClicked: util.copyTextToClipboard(modelData)
+                minHeight: openButton.height
             }
         }
+    }
+
+    SectionHeader {
+        id: titleText
+        width: parent.width
+        //% "URL grabber"
+        text: qsTrId("fingerterm-keyboard-layout_sh_urk-grabber")
+        font.pointSize: window.uiFontSize + 4*window.pixelRatio
     }
 
     Text {
         visible: urlWindow.urls.length == 0
         anchors.centerIn: parent
         color: "#ffffff"
-        text: "No URLs"
+        //: Shown when no URLs are available
+        //% "No URLs"
+        text: qsTrId("fingerterm-url-window_la_no-urls")
         font.pointSize: window.uiFontSize + 4*window.pixelRatio
     }
 
     ListView {
         anchors.fill: parent
+        anchors.topMargin: titleText.height + window.paddingSmall
         delegate: listDelegate
         model: urlWindow.urls
         spacing: window.paddingSmall
         anchors.margins: window.paddingSmall
+        boundsBehavior: Flickable.StopAtBounds
         clip: true
     }
 
@@ -90,7 +86,9 @@ PopupWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: window.paddingMedium
-        text: "Back"
+        //: Button for closing the URL window
+        //% "Back"
+        text: qsTrId("fingerterm-url-window_bt_back")
         onClicked: urlWindow.show = false
     }
 }

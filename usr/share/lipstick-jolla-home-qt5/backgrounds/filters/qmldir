@@ -1,0 +1,2 @@
+singleton BlurFilter 1.0 BlurFilter.qml
+singleton ContrastFilter 1.0 ContrastFilter.qml

@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2016 – 2019 Jolla Ltd.
- * Copyright (c) 2019 Open Mobile Platform LLC.
+ * Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Share 1.0
 import Nemo.FileManager 1.0
 import Sailfish.FileManager 1.0
 
@@ -30,6 +31,7 @@ Page {
     property alias sortOrder: fileModel.sortOrder
     property alias caseSensitivity: fileModel.caseSensitivity
     property alias directorySort: fileModel.directorySort
+    property alias errorType: fileModel.errorType
 
     property int __directory_page
     property string _deletingPath
@@ -75,13 +77,6 @@ Page {
 
         path: initialPath
         active: page.status === PageStatus.Active
-        onError: {
-            if (error == FileModel.ErrorReadNoPermissions) {
-                //% "No permissions to access %1"
-                errorNotification.show(qsTrId("filemanager-la-folder_no_permission_to_access").arg(fileName))
-
-            }
-        }
     }
     SilicaListView {
         id: listView
@@ -271,11 +266,12 @@ Page {
                         //% "Share"
                         text: qsTrId("filemanager-me-share")
                         onClicked: {
-                            pageStack.animatorPush("Sailfish.TransferEngine.SharePage", {
-                                               source: FileManager.pathToUrl(model.absolutePath),
-                                               mimeType: model.mimeType,
-                                               serviceFilter: ["sharing", "e-mail"]
-                                           })
+                            shareAction.resources = [FileManager.pathToUrl(model.absolutePath)]
+                            shareAction.trigger()
+                        }
+
+                        ShareAction {
+                            id: shareAction
                         }
                     }
 
@@ -288,9 +284,14 @@ Page {
             }
         }
         ViewPlaceholder {
-            enabled: fileModel.count === 0 && fileModel.populated
-            //% "No files"
-            text: qsTrId("filemanager-la-no_files")
+            id: viewPlaceholder
+            enabled: (fileModel.count === 0 && fileModel.populated) || errorType !== FileModel.NoError
+            visible: enabled
+            text: errorType === FileModel.NoError ?
+                  //% "No files"
+                  qsTrId("filemanager-la-no_files") :
+                  //% "No permissions to access %1"
+                  qsTrId("filemanager-la-folder_no_permission_to_access").arg(fileModel.path)
         }
         VerticalScrollDecorator {}
     }

@@ -1,6 +1,6 @@
 import QtQuick 2.1
 import QtQuick.Window 2.1
-import Sailfish.QrFilter 1.0
+import Amber.QrFilter 1.0
 import Sailfish.Silica 1.0
 import com.jolla.camera 1.0
 import QtMultimedia 5.0

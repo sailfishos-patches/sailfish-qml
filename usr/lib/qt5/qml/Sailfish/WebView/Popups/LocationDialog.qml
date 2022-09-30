@@ -1,8 +1,7 @@
 /****************************************************************************
 **
-** Copyright (c) 2013 - 2016 Jolla Ltd.
-** Copyright (c) 2020 Open Mobile Platform LLC.
-** Contact: Vesa-Matti Hartikainen <vesa-matti.hartikainen@jolla.com>
+** Copyright (c) 2013 - 2020 Jolla Ltd.
+** Copyright (c) 2020 - 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -13,44 +12,77 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-UserPrompt {
+Dialog {
     id: dialog
 
-    property string host
+    property alias privateBrowsing: location.privateBrowsing
+    property alias host: location.host
+    property alias rememberValue: location.rememberValue
 
-    property alias rememberValue: remember.checked
+    property alias acceptText: location.acceptText
+    property alias cancelText: location.cancelText
+    property alias title: location.title
+    property alias preventDialogsVisible: location.preventDialogsVisible
+    property alias preventDialogsPrefillValue: location.preventDialogsPrefillValue
+    property alias preventDialogsValue: location.preventDialogsValue
 
-    //: Allow the server to use location
-    //% "Allow"
-    acceptText: qsTrId("sailfish_components_webview_popups-he-accept_location")
+    LocationPopupInterface {
+        id: location
 
-    //: Deny the server to use location
-    //% "Deny"
-    cancelText: qsTrId("sailfish_components_webview_popups-he-deny_location")
+        anchors.fill: parent
+        rememberValue: remember.checked
 
-    Column {
-        width: parent.width
-        spacing: Theme.paddingMedium
+        //: Allow the server to use location
+        //% "Allow"
+        acceptText: qsTrId("sailfish_components_webview_popups-he-accept_location")
 
-        Label {
-            x: Theme.horizontalPageMargin
-            width: parent.width - x * 2
+        //: Deny the server to use location
+        //% "Deny"
+        cancelText: qsTrId("sailfish_components_webview_popups-he-deny_location")
 
-            //: %1 is the site that wants know user location
-            //% "Allow %1 to use your location?"
-            text: qsTrId("sailfish_components_webview_popups-la-location_request")
-                        .arg(host)
+        UserPromptUi {
+            anchors.fill: parent
+            dialog: dialog
+            popupInterface: location
 
-            wrapMode: Text.WordWrap
-            color: Theme.highlightColor
-        }
+            Column {
+                width: parent.width
+                spacing: Theme.paddingMedium
 
-        TextSwitch {
-            id: remember
+                Label {
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - x * 2
 
-            //: Remember decision for this site for later use
-            //% "Remember for this site"
-            text: qsTrId("sailfish_components_webview_popups-remember_for_site")
+                    //: %1 is the site that wants know user location
+                    //% "Allow %1 to use your location?"
+                    text: qsTrId("sailfish_components_webview_popups-la-location_request")
+                                .arg(location.host)
+
+                    wrapMode: Text.WordWrap
+                    color: Theme.highlightColor
+                }
+
+                TextSwitch {
+                    id: remember
+
+                    visible: !location.privateBrowsing
+                    //: Remember decision for this site for later use
+                    //% "Remember for this site"
+                    text: qsTrId("sailfish_components_webview_popups-remember_for_site")
+                }
+
+                Label {
+                    x: Theme.horizontalPageMargin
+                    width: parent.width - Theme.horizontalPageMargin * 2
+                    visible: location.privateBrowsing
+                    wrapMode: Text.Wrap
+                    color: Theme.highlightColor
+
+                    //: Description label for user when private mode active (entered permissions are not saved)
+                    //% "When in private browsing mode permissions choices are not stored"
+                    text: qsTrId("sailfish_components_webview_popups-la-private_browsing_premission_description")
+                }
+            }
         }
     }
 }

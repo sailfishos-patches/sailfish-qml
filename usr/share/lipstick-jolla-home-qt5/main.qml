@@ -105,7 +105,7 @@ ApplicationWindow {
         Timer {
             id: hintTimer
             interval: 1000
-            onTriggered: if (!Lipstick.compositor.topMenuHinting) Lipstick.compositor.launcherHinting = true
+            onTriggered: if (!Lipstick.compositor.topMenuHinting) Lipstick.compositor.launcherLayer.showHint()
         }
 
         Switcher {

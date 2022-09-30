@@ -132,7 +132,7 @@ Column {
     TextSwitch {
         id: openConnectDisableIPv6
 
-        //% "Do not ask for IPv6 connectivity"
+        //% "Do not ask for IPv6 connectivity (enables IPv6 data leak protection)"
         text: qsTrId("settings_network-la-vpn_openconnect_disable_IPv6")
     }
 

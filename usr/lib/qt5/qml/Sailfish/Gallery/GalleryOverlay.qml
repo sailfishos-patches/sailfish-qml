@@ -2,7 +2,10 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import Sailfish.Gallery 1.0
+import Sailfish.Gallery.private 1.0
 import Sailfish.Ambience 1.0
+import Sailfish.Share 1.0
+import Nemo.FileManager 1.0
 
 Item {
     id: overlay
@@ -14,7 +17,8 @@ Item {
     property alias toolbar: toolbar
     property alias additionalActions: additionalActionsLoader.sourceComponent
     property alias detailsButton: detailsButton
-    property alias localFile: fileInfo.localFile
+    // local == allow file operations and info
+    property bool localFile: fileInfo.localFile
     property alias editingAllowed: editButton.visible
     property alias deletingAllowed: deleteButton.visible
     property alias sharingAllowed: shareButton.visible
@@ -37,7 +41,6 @@ Item {
         }
     }
     property Item _remorsePopup
-    property Component additionalShareComponent
 
     function remorseAction(text, action) {
         if (!_remorsePopup) {
@@ -68,19 +71,19 @@ Item {
             if (player && player.playing) {
                 player.pause()
             }
-
-            pageStack.animatorPush("Sailfish.TransferEngine.SharePage",
-                                   {
-                                       "source": overlay.source,
-                                       "mimeType": localFile ? fileInfo.mimeType
-                                                             : "text/x-url",
-                                                               "content": localFile ? undefined
-                                                                                    : { "type": "text/x-url", "status": overlay.source },
-                                       "serviceFilter": ["sharing", "e-mail"],
-                                       "additionalShareComponent": additionalShareComponent
-                                   },
-                                   immediately ? PageStackAction.Immediate : PageStackAction.Animated)
+            if (fileInfo.localFile) {
+                shareAction.resources = [overlay.source.toString()]
+            } else {
+                shareAction.resources = [{ "type": "text/x-url", "status": overlay.source.toString() }]
+            }
+            shareAction.trigger()
         }
+    }
+
+    ShareAction {
+        id: shareAction
+
+        mimeType: fileInfo.localFile ? fileInfo.mimeType : "text/x-url"
     }
 
     Connections {
@@ -125,11 +128,18 @@ Item {
         seekTimer.restart()
     }
 
+
     Timer {
         id: seekTimer
         interval: 16
         property int position
-        onTriggered: player.seek(position)
+        onTriggered: {
+            if (player.loaded) {
+                player.seek(position)
+            } else {
+                restart()
+            }
+        }
     }
 
     signal createPlayer
@@ -164,8 +174,8 @@ Item {
         x: Theme.horizontalPageMargin
         y: Theme.paddingLarge
         icon.source: "image://theme/icon-m-about"
-        visible: localFile && !viewerOnlyMode && itemId.length > 0
-        onClicked: if (itemId.length > 0) pageStack.animatorPush("DetailsPage.qml", { modelItem: overlay.itemId } )
+        visible: overlay.localFile
+        onClicked: pageStack.animatorPush("DetailsPage.qml", { 'source': overlay.source, 'isImage': overlay.isImage } )
     }
 
     Timer {
@@ -205,19 +215,36 @@ Item {
 
                 handleVisible: false
                 minimumValue: 0
-                maximumValue: overlay._duration > 0 ? overlay._duration : 1
+                maximumValue: 1
 
-                valueText: Format.formatDuration(value, value >= 3600
+                valueText: {
+                    var position = overlay._duration * value
+                    return Format.formatDuration(position, position >= 3600
                                                  ? Format.DurationLong
                                                  : Format.DurationShort)
+                }
 
-                onReleased: seek(value * 1000)
+                onPressed: {
+                    if (!overlay.player) {
+                        overlay.createPlayer()
+                    }
+
+                    if (!overlay.player.loaded) {
+                        overlay.player.pause()
+                    }
+                }
+
+                // An absolute value will be assigned to an object property and the actual seek delayed.
+                onReleased: {
+                    var relativePosition = value
+                    seek(Qt.binding(function() { return relativePosition * Math.max(0, overlay.player.duration) }))
+                }
 
                 Connections {
                     target: player
                     onPositionChanged: {
-                        if (!positionSlider.pressed) {
-                            positionSlider.value = player.position / 1000
+                        if (!positionSlider.pressed && player.duration > 0 && !seekTimer.running) {
+                            positionSlider.value = player.position / player.duration
                         }
                     }
                     onSourceChanged: positionSlider.value = 0
@@ -247,7 +274,7 @@ Item {
             IconButton {
                 id: downIcon
 
-                visible: !overlay.error || (localFile && fileInfo.exists)
+                visible: !overlay.error || (fileInfo.localFile && fileInfo.exists)
                 onClicked: toolbar.expanded = !toolbar.expanded
                 icon.source: "image://theme/icon-m-change-type"
                 icon.rotation: toolbar.expanded ? 0 : 180
@@ -294,7 +321,7 @@ Item {
             IconButton {
                 id: deleteButton
                 icon.source: "image://theme/icon-m-delete"
-                visible: localFile && fileInfo.exists
+                visible: overlay.localFile && fileInfo.exists
                 anchors.verticalCenter: parent.verticalCenter
                 onClicked: overlay.remove()
             }
@@ -302,7 +329,7 @@ Item {
             IconButton {
                 id: editButton
                 icon.source: "image://theme/icon-m-edit"
-                visible: !overlay.error && fileInfo.editableImage && isImage && !viewerOnlyMode
+                visible: !overlay.error && isImage && !viewerOnlyMode && ImageWriter.isMimeTypeSupported(fileInfo.mimeType)
                 anchors.verticalCenter: parent.verticalCenter
                 onClicked: {
                     overlay.triggerAction("edit")
@@ -368,7 +395,7 @@ Item {
 
     FileInfo {
         id: fileInfo
-        source: overlay.source
+        url: overlay.source
     }
 
     Component {

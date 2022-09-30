@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (c) 2016 - 2020 Jolla Ltd.
-** Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+** Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -20,14 +20,23 @@ import Sailfish.WebView.Pickers 1.0
 RawWebView {
     id: webview
 
-    property WebViewPage webViewPage: _findParentWithProperty(webview, '__sailfish_webviewpage')
+    property alias downloadsEnabled: popupOpener.downloadsEnabled
+    property Page webViewPage: {
+        var containerPage = _findParentWithProperty(webview, '__sailfish_webviewpage')
+        if (!containerPage) containerPage = _findParentWithProperty(webview, '__silica_page')
+        return containerPage
+    }
     property bool canShowSelectionMarkers: true
     property real _indicatorVerticalOffset
 
     readonly property bool textSelectionActive: textSelectionController && textSelectionController.active
     property Item textSelectionController: null
     readonly property int _pageOrientation: webViewPage ? webViewPage.orientation : Orientation.None
+    readonly property bool _appActive: Qt.application.state === Qt.ApplicationActive
 
+    property alias popupProvider: popupOpener.popupProvider
+
+    signal aboutToOpenPopup(var topic, var data)
     signal linkClicked(string url)
 
     function _findParentWithProperty(item, propertyName) {
@@ -52,12 +61,12 @@ RawWebView {
     }
 
     active: !webViewPage
-            || webViewPage.status === PageStatus.Active
-            || webViewPage.status === PageStatus.Deactivating
+            || _appActive && (webViewPage.status === PageStatus.Active)
+            || _appActive && (webViewPage.status === PageStatus.Deactivating)
     _acceptTouchEvents: !textSelectionActive
 
     viewportHeight: webViewPage
-            ? ((webViewPage.orientation & Orientation.PortraitMask) ? Screen.height : Screen.width)
+            ? ((webViewPage.orientation & Orientation.PortraitMask) ? height : width)
             : undefined
 
     orientation: {
@@ -160,6 +169,7 @@ RawWebView {
         contentItem: webview
         downloadsEnabled: false
 
+        onAboutToOpenPopup: webview.aboutToOpenPopup(topic, data)
         onAboutToOpenContextMenu: {
             if (Qt.inputMethod.visible) {
                 webview.parent.focus = true
@@ -179,7 +189,7 @@ RawWebView {
         height: webview.height
 
         opacity: 0
-        color: webview.bgcolor
+        color: webview.backgroundColor
 
         NumberAnimation on opacity {
             id: orientationFadeOut
@@ -220,7 +230,7 @@ RawWebView {
         transpose: appWindow ? appWindow._transpose : false
         onImSizeChanged: {
             if (imSize > 0 && opened) {
-                webview.virtualKeyboardMargin = virtualKeyboardObserver.imSize
+                webview.virtualKeyboardMargin = marginRequired(virtualKeyboardObserver.imSize)
             }
         }
 
@@ -228,7 +238,7 @@ RawWebView {
 
         onOpenedChanged: {
             if (opened) {
-                webview.virtualKeyboardMargin = virtualKeyboardObserver.panelSize
+                webview.virtualKeyboardMargin = marginRequired(virtualKeyboardObserver.panelSize)
             }
         }
         onClosedChanged: {
@@ -236,10 +246,14 @@ RawWebView {
                 webview.virtualKeyboardMargin = 0
             }
         }
+
+        function marginRequired(panelSize) {
+            var ypos = appWindow ? appWindow.mapFromItem(null, 0, webview.y).y : 0
+            return panelSize + ypos + webview.height - Screen.height
+        }
     }
 
     Component.onCompleted: {
-        webview.loadFrameScript("chrome://embedlite/content/embedhelper.js")
         webview.addMessageListener("embed:linkclicked")
         webview.addMessageListener("Content:ContextMenu")
         webview.addMessageListener("Content:SelectionRange")

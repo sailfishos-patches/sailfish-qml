@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -126,6 +126,8 @@ SystemDialog {
 
     IconButton {
         id: closeButton
+
+        objectName: "closeButton"
         anchors {
             top: parent.top
             topMargin: Theme.paddingMedium
@@ -139,6 +141,7 @@ SystemDialog {
     Label {
         id: callerNameLabel
 
+        objectName: "callerNameLabel"
         anchors {
             left: parent.left
             leftMargin: Theme.horizontalPageMargin
@@ -178,6 +181,7 @@ SystemDialog {
             CallEndedDialogButton {
                 id: sendMsgButton
 
+                objectName: "sendMsgButton"
                 width: root._buttonWidth
                 height: parent.height
                 //% "Send message"
@@ -201,6 +205,7 @@ SystemDialog {
             CallEndedDialogButton {
                 id: removeReminderButton
 
+                objectName: "removeReminderButton"
                 width: root._buttonWidth
                 height: parent.height
 
@@ -227,6 +232,7 @@ SystemDialog {
             CallEndedDialogButton {
                 id: callButton
 
+                objectName: "callButton"
                 width: root._buttonWidth
                 height: parent.height
                 //% "Call again"

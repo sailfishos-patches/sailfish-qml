@@ -78,16 +78,25 @@ Item {
 
             property int paddingSmall: 5*pixelRatio
             property int paddingMedium: 10*pixelRatio
+            property int paddingLarge: 20*pixelRatio
 
             property int fontSizeSmall: 14*pixelRatio
             property int fontSizeLarge: 24*pixelRatio
 
-            property int uiFontSize: util.uiFontSize * pixelRatio
+            property int uiFontSize: util.uiFontSize*pixelRatio
 
-            property int scrollBarWidth: 6*window.pixelRatio
+            property int scrollBarWidth: 6*pixelRatio
 
             anchors.fill: parent
             color: bgcolor
+
+            Connections {
+                target: util
+                onKeyboardModeChanged: {
+                    window.setTextRenderAttributes();
+                    window.updateVKB();
+                }
+            }
 
             Rectangle {
                 id: bellTimerRect
@@ -126,14 +135,16 @@ Item {
 
                 onPressed: {
                     touchPoints.forEach(function (touchPoint) {
-                        if (multiTouchArea.firstTouchId == -1) {
-                            multiTouchArea.firstTouchId = touchPoint.pointId;
+                        var key = vkb.keyAt(touchPoint.x, touchPoint.y);
+                        if ((key == null) || (!vkb.active)) {
+                            if (multiTouchArea.firstTouchId == -1) {
+                                multiTouchArea.firstTouchId = touchPoint.pointId;
 
-                            //gestures c++ handler
-                            textrender.mousePress(touchPoint.x, touchPoint.y);
+                                //gestures c++ handler
+                                textrender.mousePress(touchPoint.x, touchPoint.y - textrender.y);
+                            }
                         }
 
-                        var key = vkb.keyAt(touchPoint.x, touchPoint.y);
                         if (key != null) {
                             key.handlePress(multiTouchArea, touchPoint.x, touchPoint.y);
                         }
@@ -144,7 +155,7 @@ Item {
                     touchPoints.forEach(function (touchPoint) {
                         if (multiTouchArea.firstTouchId == touchPoint.pointId) {
                             //gestures c++ handler
-                            textrender.mouseMove(touchPoint.x, touchPoint.y);
+                            textrender.mouseMove(touchPoint.x, touchPoint.y - textrender.y);
                         }
 
                         var key = multiTouchArea.pressedKeys[touchPoint.pointId];
@@ -163,7 +174,8 @@ Item {
                             //   - not in select mode, as it would be hard to select text
                             if (touchPoint.y < vkb.y && touchPoint.startY < vkb.y &&
                                     Math.abs(touchPoint.y - touchPoint.startY) < 20 &&
-                                    util.dragMode !== Util.DragSelect) {
+                                    util.dragMode !== Util.DragSelect &&
+                                    util.keyboardMode != Util.KeyboardFixed) {
                                 if (vkb.active) {
                                     window.sleepVKB();
                                 } else {
@@ -172,7 +184,7 @@ Item {
                             }
 
                             //gestures c++ handler
-                            textrender.mouseRelease(touchPoint.x, touchPoint.y);
+                            textrender.mouseRelease(touchPoint.x, touchPoint.y - textrender.y);
                             multiTouchArea.firstTouchId = -1;
                         }
 
@@ -202,13 +214,23 @@ Item {
                 }
             }
 
-            Image {
-                // terminal buffer scroll indicator
-                source: "icons/scroll-indicator.png"
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
+
+            MouseArea {
+                // terminal buffer scroll button
+                x: window.width - width
+                width: scrollImg.width + 60*window.pixelRatio
+                height: scrollImg.height + 30*window.pixelRatio
+                anchors.bottom: textrender.bottom
                 visible: textrender.showBufferScrollIndicator
-                scale: window.pixelRatio
+                onClicked: textrender.scrollToEnd()
+
+                Image {
+                    id: scrollImg
+
+                    anchors.centerIn: parent
+                    source: "icons/scroll-indicator.png"
+                    scale: window.pixelRatio
+                }
             }
 
             TextRender {
@@ -222,7 +244,9 @@ Item {
                 fontPointSize: util.fontSize
                 opacity: (util.keyboardMode == Util.KeyboardFade && vkb.active) ? 0.3
                                                                                 : 1.0
-                allowGestures: !vkb.active && !menu.showing && !urlWindow.show && !aboutDialog.show && !layoutWindow.show
+                allowGestures: (!vkb.active || util.keyboardMode !== Util.KeyboardFade)
+                               && !menu.showing && !urlWindow.show
+                               && !aboutDialog.show && !layoutWindow.show
 
                 Behavior on opacity {
                     NumberAnimation { duration: textrender.duration; easing.type: Easing.InOutQuad }
@@ -232,7 +256,7 @@ Item {
                 }
 
                 onCutAfterChanged: {
-                    // this property is used in the paint function, so make sure that the element gets
+                    // this property is used in the paint function, to make sure that the element gets
                     // painted with the updated value (might not otherwise happen because of caching)
                     textrender.redraw();
                 }
@@ -243,7 +267,9 @@ Item {
 
                 interval: util.keyboardFadeOutDelay
                 onTriggered: {
-                    window.sleepVKB();
+                    if (util.keyboardMode != Util.KeyboardFixed) {
+                        window.sleepVKB();
+                    }
                 }
             }
 
@@ -273,10 +299,14 @@ Item {
                 // shows large text notification in the middle of the screen (for gestures)
                 id: textNotify
 
-                anchors.centerIn: parent
+                anchors.fill: parent
+                anchors.margins: window.paddingSmall
                 color: "#ffffff"
                 opacity: 0
                 font.pointSize: 40*window.pixelRatio
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.Wrap
 
                 Behavior on opacity {
                     id: textNotifyAnim
@@ -284,27 +314,8 @@ Item {
                 }
             }
 
-            NotifyWin {
+            AboutWindow {
                 id: aboutDialog
-
-                text: {
-                    var str = "<font size=\"+3\">FingerTerm " + util.versionString() + "</font><br>\n" +
-                            "<font size=\"+1\">" +
-                            "by Heikki Holstila &lt;<a href=\"mailto:heikki.holstila@gmail.com?subject=FingerTerm\">heikki.holstila@gmail.com</a>&gt;<br><br>\n\n" +
-                            "Config files for adjusting settings are at:<br>\n" +
-                            util.configPath() + "/<br><br>\n" +
-                            "Source code:<br>\n<a href=\"https://git.merproject.org/mer-core/fingerterm/\">https://git.merproject.org/mer-core/fingerterm/</a>"
-                    if (term.rows != 0 && term.columns != 0) {
-                        str += "<br><br>Current window title: <font color=\"gray\">" + util.windowTitle.substring(0,40) + "</font>"; //cut long window title
-                        if(util.windowTitle.length>40)
-                            str += "...";
-                        str += "<br>Current terminal size: <font color=\"gray\">" + term.columns + "×" + term.rows + "</font>";
-                        str += "<br>Charset: <font color=\"gray\">" + util.charset + "</font>";
-                    }
-                    str += "</font>";
-                    return str;
-                }
-                onDismissed: util.showWelcomeScreen = false
             }
 
             NotifyWin {
@@ -338,6 +349,9 @@ Item {
                 fadeTimer.restart();
                 vkb.active = true;
                 setTextRenderAttributes();
+                // FIXME: This "duration = 0" hack prevents the animations running at
+                // other times (e.g. on screen rotation). It should be using States.
+                textrender.duration = 0;
             }
 
             function sleepVKB()
@@ -345,39 +359,55 @@ Item {
                 textrender.duration = window.fadeInTime;
                 vkb.active = false;
                 setTextRenderAttributes();
+                // FIXME: This "duration = 0" hack prevents the animations running at
+                // other times (e.g. on screen rotation). It should be using States.
+                textrender.duration = 0;
+            }
+
+            function updateVKB()
+            {
+                if(!vkb.visibleSetting)
+                    return;
+
+                textrender.duration = 0;
+                fadeTimer.restart();
+                setTextRenderAttributes();
+            }
+
+            function _applyKeyboardOffset()
+            {
+                if(vkb.active) {
+                    var move = textrender.cursorPixelPos().y + textrender.fontHeight/2
+                            + textrender.fontHeight*util.extraLinesFromCursor
+                    if (move < vkb.y) {
+                        textrender.y = 0;
+                        textrender.cutAfter = vkb.y;
+                    } else {
+                        textrender.y = 0 - move + vkb.y
+                        textrender.cutAfter = move;
+                    }
+                } else {
+                    textrender.y = 0;
+                    textrender.cutAfter = textrender.height;
+                }
             }
 
             function setTextRenderAttributes()
             {
-                if (util.keyboardMode == Util.KeyboardMove)
+                var solidKeyboard = (util.keyboardMode === Util.KeyboardMove)
+                        || (util.keyboardMode === Util.KeyboardFixed)
+
+                if (solidKeyboard)
                 {
+                    vkb.active |= (util.keyboardMode === Util.KeyboardFixed);
                     vkb.visibleSetting = true;
-                    if(vkb.active) {
-                        var move = textrender.cursorPixelPos().y + textrender.fontHeight/2
-                                + textrender.fontHeight*util.extraLinesFromCursor
-                        if(move < vkb.y) {
-                            textrender.y = 0;
-                            textrender.cutAfter = vkb.y;
-                        } else {
-                            textrender.y = 0 - move + vkb.y
-                            textrender.cutAfter = move;
-                        }
-                    } else {
-                        textrender.cutAfter = textrender.height;
-                        textrender.y = 0;
-                    }
+                    _applyKeyboardOffset()
                 }
-                else if (util.keyboardMode == Util.KeyboardFade)
+                else
                 {
-                    vkb.visibleSetting = true;
-                    textrender.cutAfter = textrender.height;
+                    vkb.visibleSetting = (util.keyboardMode === Util.KeyboardFade);
                     textrender.y = 0;
-                }
-                else // "off" (vkb disabled)
-                {
-                    vkb.visibleSetting = false;
                     textrender.cutAfter = textrender.height;
-                    textrender.y = 0;
                 }
             }
 

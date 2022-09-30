@@ -10,9 +10,6 @@ import org.nemomobile.thumbnailer 1.0
 
 ApplicationWindow {
     cover: null  // don't create a cover - the switcher will try to show it
-    Camera {
-        cameraState: Camera.UnloadedState
-    }
     VideoOutput { }
 
     BackgroundItem { }
@@ -30,6 +27,7 @@ ApplicationWindow {
         // If instantiation won't result in further caching then place those
         // components here.
         Item {
+            Camera {}
             ImageViewer {}
             Thumbnail {}
             DocumentGalleryModel {}

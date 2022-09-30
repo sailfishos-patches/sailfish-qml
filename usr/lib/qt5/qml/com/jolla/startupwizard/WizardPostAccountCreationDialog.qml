@@ -62,7 +62,7 @@ Dialog {
 
     StartupApplicationModel {
         id: sailfishAppsModel
-        category: "jolla"
+        category: "essentials"
 
         onPopulatedChanged: {
             if (_sailfishAppInstallationAllowed && populated && count > 0) {

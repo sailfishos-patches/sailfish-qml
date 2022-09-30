@@ -1,0 +1,2 @@
+module Sailfish.TransferEngine.Plugins
+plugin transferengine-plugins-declarative

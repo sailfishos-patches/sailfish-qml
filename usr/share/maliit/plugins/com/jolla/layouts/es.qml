@@ -133,5 +133,6 @@ KeyboardLayout {
     SpacebarRowDeadKey {
         deadKeyCaption: "´"
         deadKeyCaptionShifted: "´"
+        periodAccents: "¡¿!.?"
     }
 }

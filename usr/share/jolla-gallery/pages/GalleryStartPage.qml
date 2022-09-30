@@ -5,6 +5,7 @@ import Sailfish.Gallery 1.0
 import Sailfish.Gallery.private 1.0
 import com.jolla.gallery 1.0
 import QtDocGallery 5.0
+import Nemo.FileManager 1.0
 
 Page {
     id: startPage
@@ -35,9 +36,9 @@ Page {
         for (var i=0; i < urls.length; ++i) {
             var properties = {}
             var file = urls[i]
-            fileInfo.source = file
+            fileInfo.url = file
 
-            if (fileInfo.mimeFileType == "image") {
+            if (fileInfo.mimeType.indexOf("image/") === 0) {
                 metadata.source = file
                 properties = {
                     url: file,
@@ -48,13 +49,13 @@ Page {
                     height: metadata.height
                 }
 
-                if (fileInfo.source.toString().indexOf(StandardPaths.pictures + "/Screenshots/") >= 0) {
+                if (fileInfo.url.toString().indexOf(StandardPaths.pictures + "/Screenshots/") >= 0) {
                     showPage(screenshotsSource)
                 } else {
                     showPage(photoSource)
                 }
 
-            } else if (fileInfo.mimeFileType == "video") {
+            } else if (fileInfo.mimeType.indexOf("video") === 0) {
                 properties = {
                     url: file,
                     mimeType: fileInfo.mimeType,
@@ -70,8 +71,7 @@ Page {
 
         imageViewerPage = pageStack.push(
                         Qt.resolvedUrl("GalleryFullscreenPage.qml"),
-                        { title: "",
-                          model: viewerModel,
+                        { model: viewerModel,
                           currentIndex: viewerModel.count - urls.length,
                           viewerOnlyMode: true
                         },
@@ -80,7 +80,7 @@ Page {
             imageViewerPage.triggerViewerAction(viewerAction, true)
         }
         metadata.source = ""
-        fileInfo.source = ""
+        fileInfo.url = ""
     }
 
     function playVideoStream(url) {
@@ -89,7 +89,7 @@ Page {
         imageViewerPage = null
         pageStack.pop(null, PageStackAction.Immediate)
 
-        fileInfo.source = url
+        fileInfo.url = url
 
         viewerModel.clear()
         viewerModel.set(0, {
@@ -101,7 +101,6 @@ Page {
 
         imageViewerPage = pageStack.push(Qt.resolvedUrl("GalleryFullscreenPage.qml"),
                                                 {
-                                                    title: "",
                                                     model: viewerModel,
                                                     currentIndex: 0,
                                                     viewerOnlyMode: true,
@@ -109,7 +108,7 @@ Page {
                                                 }, PageStackAction.Immediate)
         activate()
         metadata.source = ""
-        fileInfo.source = ""
+        fileInfo.url = ""
     }
 
     Component.onCompleted: window.startPage = startPage
@@ -142,7 +141,7 @@ Page {
                     verticalCenter: parent.verticalCenter
                 }
                 opacity: Theme.opacityLow
-                text: count.toLocaleString()
+                text: media.busy && count == 0 ? "" : count.toLocaleString()
                 color: delegateItem.down ? Theme.highlightColor : Theme.primaryColor
                 font.pixelSize: Theme.fontSizeLarge
                 horizontalAlignment: Text.AlignRight
@@ -162,6 +161,11 @@ Page {
                         item.model = media.model
                     }
                 }
+            }
+
+            BusyIndicator {
+                anchors.centerIn: thumbnail
+                running: media.busy
             }
 
             Label {
@@ -199,6 +203,7 @@ Page {
                 page: "GalleryGridPage.qml"
                 model: photosModel
                 ready: true
+                busy: model.status == DocumentGalleryModel.Active
                 count: model ? model.count : 0
                 type: MediaSource.Photos
             }
@@ -211,6 +216,7 @@ Page {
                 page: "GalleryGridPage.qml"
                 model: videosModel
                 ready: true
+                busy: model.status == DocumentGalleryModel.Active
                 count: model ? model.count : 0
                 type: MediaSource.Videos
             }
@@ -223,8 +229,21 @@ Page {
                 page: "ScreenshotsPage.qml"
                 model: screenshotsModel
                 ready: true
+                busy: model.status == DocumentGalleryModel.Active
                 count: model ? model.count : 0
                 type: MediaSource.Screenshots
+            }
+
+            MediaSource {
+                //% "Android™ storage"
+                title: qsTrId("gallery-bt-android_storage")
+                icon: "PhotoIcon.qml"
+                page: "GalleryGridPage.qml"
+                model: androidStorage
+                ready: FileEngine.exists(androidStorage.path)
+                busy: model.status == DocumentGalleryModel.Active
+                count: model ? model.count : 0
+                type: MediaSource.Photos
             }
         }
 
@@ -232,11 +251,13 @@ Page {
     }
 
     GalleryService {
+        onActivate: window.activate()
+
         onOpenImages:{
             if (urls.length > 0) {
                 showImage(urls, viewerAction)
             }
-            activate()
+            window.activate()
         }
 
         onPlayStream: startPage.playVideoStream(url)

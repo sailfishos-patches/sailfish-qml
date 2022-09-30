@@ -1,5 +1,6 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
+import com.jolla.clock.private 1.0
 import "../../common"
 
 AlarmItemBase {
@@ -11,6 +12,10 @@ AlarmItemBase {
     contentHeight: column.height + 2*Theme.paddingMedium
 
     onClicked: {
+        if (alarm.enabled) {
+            Clock.cancelNotifications(alarm.id)
+        }
+
         alarm.enabled = !alarm.enabled
         alarm.save()
 

@@ -9,6 +9,7 @@ ColumnView {
     property var filters
     property var excludedDevices: []
     property bool highlightSelectedDevice
+    property bool openMenuOnPressAndHold
 
     signal deviceItemClicked(string address, bool paired)
     signal deviceSettingsClicked(string address)
@@ -67,6 +68,8 @@ ColumnView {
 
         property bool matchesProfileHint: columnView._matchesProfileHint(model.Uuids, model.Class)
         property bool useHighlight: highlighted || (highlightSelectedDevice && model.Address === columnView._selectedDevice)
+
+        openMenuOnPressAndHold: columnView.openMenuOnPressAndHold
 
         onIsConnectingChanged: {
             if (isConnecting) {

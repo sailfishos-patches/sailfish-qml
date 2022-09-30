@@ -1,6 +1,6 @@
 import QtQuick 2.1
 import QtMultimedia 5.0
-import Sailfish.QrFilter 1.0
+import Amber.QrFilter 1.0
 import Sailfish.Silica 1.0
 import com.jolla.camera 1.0
 import "pages"
@@ -53,7 +53,7 @@ ApplicationWindow {
         id: qrFilter
         active: Settings.global.qrFilterEnabled
                 && Settings.global.captureMode === "image"
-                && Settings.cameraDevice === "primary"
+                && Settings.global.position === Camera.BackFace
 
         onActiveChanged: qrFilter.clearResult()
     }

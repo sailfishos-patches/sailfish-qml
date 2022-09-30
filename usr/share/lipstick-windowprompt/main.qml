@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 - 2020 Jolla Ltd.
+ * Copyright (c) 2017 - 2021 Jolla Ltd.
  * Copyright (c) 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
@@ -14,10 +14,24 @@ ApplicationWindow {
     id: root
 
     property var _promptWindow
+    property var _showTimer
     property string _componentName
-    property var _promptConfigQueue: []
+
+    function singleShot(timeout, callback) {
+        var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root, "singleShot")
+        timer.interval = timeout
+        timer.repeat = false
+        timer.triggered.connect(callback)
+        timer.start()
+        return timer
+    }
 
     function _showPrompt(promptConfig) {
+        var delay = false
+        if (_promptWindow) {
+            _promptWindow.lower()
+            delay = true
+        }
         if (!_promptWindow || _componentName != promptConfig.componentName) {
             _componentName = promptConfig.componentName
             var comp = Qt.createComponent(Qt.resolvedUrl(_componentName))
@@ -28,22 +42,25 @@ ApplicationWindow {
             _promptWindow = comp.createObject(root)
             _promptWindow.done.connect(_promptDone)
         }
-        _promptWindow.init(promptConfig)
+        if (delay) {
+            var config = promptConfig
+            _showTimer = singleShot(400, function() {
+                _promptWindow.init(config)
+                _showTimer = undefined
+            })
+        } else {
+            _promptWindow.init(promptConfig)
+        }
     }
 
     function _promptDone(window, unregister) {
         if (unregister)
             manager.unregisterTerms(window.promptConfig)
         window.lower()
-        delayedQuit.restart()
-    }
-
-    function _queueOrShowPrompt(promptConfig) {
-        if (_promptWindow && _promptWindow.windowVisible) {
-            _promptConfigQueue.push(promptConfig)
-        } else {
-            _showPrompt(promptConfig)
-        }
+        var config = window.promptConfig
+        singleShot(400, function() {
+            manager.finish(config)
+        })
     }
 
     allowedOrientations: defaultAllowedOrientations
@@ -54,7 +71,7 @@ ApplicationWindow {
     WindowPromptManager {
         id: manager
 
-        onShowTermsPromptUi: {
+        onCreateTermsPrompt: {
             // Register the terms/agreement so that lipstick knows to re-display the dialog on
             // startup hasn't yet been accepted (e.g. if rebooted without accepting it).
 
@@ -63,49 +80,48 @@ ApplicationWindow {
             }
 
             if (manager.registerTerms(promptConfig)) {
-                _queueOrShowPrompt(promptConfig)
+                manager.queue(id, promptConfig)
             } else {
                 console.log("showTermsPrompt() failed, cannot register config", termsId(promptConfig))
-                if (!_promptWindow || !_promptWindow.windowVisible) {
-                    Qt.quit()
-                }
+                manager.discard(id)
             }
         }
 
-        onStorageDeviceUi: {
+        onCreateStorageDevicePrompt: {
             if (!promptConfig.componentName) {
                 promptConfig.componentName = "StorageDeviceSystemDialog.qml"
             }
 
-            _queueOrShowPrompt(promptConfig)
+            manager.queue(id, promptConfig)
         }
 
-        onShowInfoWindowUi: {
+        onCreateInfoWindow: {
             if (!promptConfig.componentName) {
                 promptConfig.componentName = "InfoWindow.qml"
             }
 
-            _queueOrShowPrompt(promptConfig)
+            manager.queue(id, promptConfig)
         }
 
-        onShowPermissionPromptUi: {
+        onCreatePermissionPrompt: {
             if (!promptConfig.componentName) {
                 promptConfig.componentName = "PermissionPrompt.qml"
             }
 
-            _queueOrShowPrompt(promptConfig)
+            manager.queue(id, promptConfig)
         }
-    }
 
-    Timer {
-        id: delayedQuit
-        interval: 400   // wait for window fade outs etc.
-        onTriggered: {
-            if (_promptConfigQueue.length > 0) {
-                _showPrompt(_promptConfigQueue.pop())
-            } else {
-                console.log("lipstick-windowprompt: exiting...")
-                Qt.quit()
+        onShowPromptUi: {
+            _showPrompt(promptConfig)
+        }
+
+        onHidePromptUi: {
+            if (_showTimer) {
+                _showTimer.stop()
+                _showTimer = undefined
+            }
+            if (_promptWindow) {
+                _promptWindow.lower()
             }
         }
     }

@@ -473,7 +473,7 @@ ApplicationWindow {
                         lockScreen.pinQueryPannable.deviceWasLocked = false
                     }
 
-                    if ((lockContainer.x > 0 || overshoot > 0) && !Lipstick.compositor.lockScreenLayer.lockScreenEvents
+                    if ((lockContainer.x > 0 || absoluteProgress > 0) && !Lipstick.compositor.lockScreenLayer.lockScreenEventsEnabled
                             && (Lipstick.compositor.notificationOverviewLayer.hasNotifications || Desktop.settings.left_peek_to_events)
                             && Lipstick.compositor.systemInitComplete) {
                         lockItem.reset()
@@ -505,7 +505,7 @@ ApplicationWindow {
                     }
 
                     if (pannable) {
-                        lockScreen.setCurrentItem(pannable, animate, direction)
+                        lockScreen.setCurrentItem(pannable, animate, direction !== undefined ? direction : "left")
                     }
                     return !!pannable
                 }

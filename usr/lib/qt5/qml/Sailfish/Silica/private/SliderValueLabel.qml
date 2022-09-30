@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2013 Jolla Ltd.
-** Contact: Vesa-Matti Hartikainen <vesa-matti.hartikainen@jollamobile.com>
 ** All rights reserved.
 ** 
 ** This file is part of Sailfish Silica UI component package.

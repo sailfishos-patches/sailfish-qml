@@ -35,7 +35,6 @@ Loader {
 
     signal finished
 
-    anchors.fill: parent
     active: enabled && firstTimeUseCounter.active
     onActiveChanged: if (!active && firstTimeUseCounter.value === firstTimeUseCounter.limit) hint.finished()
     sourceComponent: Component {
@@ -74,8 +73,8 @@ Loader {
                 id: closeInteractionHint
 
                 direction: TouchInteraction.Down
-                startY: keyboard.layout.height / 10
-                distance: keyboard.layout.height / 3
+                startY: keyboard.currentLayoutHeight / 10
+                distance: keyboard.currentLayoutHeight / 3
                 anchors.horizontalCenter: parent.horizontalCenter
             }
         }

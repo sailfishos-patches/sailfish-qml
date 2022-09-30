@@ -8,7 +8,6 @@ Page {
     property string deviceType
 
     property var importFromFile
-    property var bluetoothPairing
     property var createAccount
     property var abandonImport
 
@@ -26,13 +25,7 @@ Page {
 
             PageHeader {
                 title: {
-                    if (deviceType == 'wp75') {
-                        //% "Lumia (WP 7.5)"
-                        return qsTrId('contacts-he-header_import_from_wp75')
-                    } else if (deviceType == 'wp8') {
-                        //% "Lumia (WP 8)"
-                        return qsTrId('contacts-he-header_import_from_wp8')
-                    } else if (deviceType == 'android') {
+                    if (deviceType == 'android') {
                         //% "Android"
                         return qsTrId('contacts-he-header_import_from_android')
                     } else if (deviceType == 'iphone') {
@@ -51,20 +44,7 @@ Page {
                 font { pixelSize: Theme.fontSizeMedium }
 
                 text: {
-                    // TODO: remove mentions of Bluetooth - JB#38055
-                    if (deviceType == 'wp75') {
-                        //% "Install Contacts share application from Nokia marketplace to Lumia.<br>"
-                        //% "<br>"
-                        //% "Pair both devices using Bluetooth.<br>"
-                        //% "<br>"
-                        //% "Transfer contacts to your device using Contacts share."
-                        return qsTrId('contacts-la-prompt_import_from_wp75')
-                    } else if (deviceType == 'wp8') {
-                        //% "We recommend that you use accounts to transfer contacts.<br>"
-                        //% "<br>"
-                        //% "If that is not possible, pair both devices using Bluetooth sync and share contacts from the Lumia People app to your device one by one."
-                        return qsTrId('contacts-la-prompt_import_from_wp8')
-                    } else if (deviceType == 'android') {
+                    if (deviceType == 'android') {
                         //% "Your contacts are probably automatically synchronized to your Google account. You can check this easily on your Android phone by going to 'Settings / Accounts / Google'.<br>"
                         //% "<br>"
                         //% "If the 'Sync contacts' option is selected, your contacts are available from your Google account and you can add this account to your device in 'Settings / Accounts' to sync your contacts.<br>"
@@ -117,12 +97,7 @@ Page {
                 rightMargin: Theme.horizontalPageMargin
 
                 link: {
-                    if (deviceType == 'wp75' || deviceType == 'wp8') {
-                        // Note: not currently specific to WP7.5:
-                        return helpArticles.import_lumia_link
-                               ? helpArticles.import_lumia_link
-                               : 'https://jolla.zendesk.com/hc/en-us/articles/201440837'
-                    } else if (deviceType == 'android') {
+                    if (deviceType == 'android') {
                         return helpArticles.import_android_link
                                ? helpArticles.import_android_link
                                : 'https://jolla.zendesk.com/hc/en-us/articles/201440847'
@@ -170,17 +145,6 @@ Page {
             Button {
                 ButtonLayout.newLine: true
 
-                //: Bluetooth pairing
-                //% "Bluetooth"
-                text: qsTrId("contacts-bt-bluetooth_pairing")
-
-                onClicked: bluetoothPairing(root)
-
-                visible: deviceType == 'wp75' || deviceType == 'wp8'
-            }
-            Button {
-                ButtonLayout.newLine: true
-
                 //: Cancel import procedure
                 //% "Skip importing"
                 text: qsTrId("contacts-bt-skip_importing")
@@ -199,7 +163,6 @@ Page {
 
         property string import_android_link
         property string import_iphone_link
-        property string import_lumia_link
         property string setup_google_account_link
     }
 }

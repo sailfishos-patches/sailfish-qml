@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013 - 2018 Jolla Ltd.
- * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -47,7 +47,7 @@ SilicaListView {
     highlightMoveDuration: 300
     pressDelay: 0
     quickScroll: false
-    interactive: !launcher.openedChildFolder && launcherActive
+    interactive: !launcher.openedChildFolder && launcherActive && !Lipstick.compositor.launcherLayer.pinned
 
     function resetPosition(delay) {
         resetPositionTimer.interval = delay === undefined ? 1 : delay
@@ -117,11 +117,12 @@ SilicaListView {
         }
     }
 
-    Image {
+    Icon {
         parent: launcherPager.contentItem
         y: launcherPager.originY
         anchors.horizontalCenter: parent.horizontalCenter
         source: "image://theme/graphic-edge-swipe-handle-bottom"
+        highlighted: Lipstick.compositor.launcherLayer.pinned
     }
 
     MouseArea {
@@ -146,7 +147,10 @@ SilicaListView {
                 findClosestDelegate(mouse.x, mouse.y).animateScaleUp()
             }
         }
-        onClicked: if (launcher.launcherEditMode) launcher.setEditMode(false)
+        onClicked: {
+            if (launcher.launcherEditMode) launcher.setEditMode(false)
+            Lipstick.compositor.launcherLayer.pinned = false
+        }
 
         LauncherGrid {
             id: launcher
@@ -160,7 +164,10 @@ SilicaListView {
 
             model: LauncherFolderModel {
                 property bool completed
-                Component.onCompleted: completed = true
+                Component.onCompleted: {
+                    Lipstick.compositor.launcherModel = allItems
+                    completed = true
+                }
 
                 iconDirectories: Theme.launcherIconDirectories
                 blacklistedApplications: {
@@ -209,7 +216,7 @@ SilicaListView {
                 onNotifyLaunching: {
                     item.isLaunching = true // TODO: Some leftover?
                     if (!item.isUpdating) {
-                        Desktop.instance.switcher.activateWindowFor(item, false, true)
+                        Desktop.instance.switcher.activateWindowFor(item)
                     }
                 }
 
@@ -272,6 +279,12 @@ SilicaListView {
                 id: developerModeEnabled
                 defaultValue: false
                 key: "/sailfish/developermode/enabled"
+            }
+
+            Binding {
+                target: Lipstick.compositor.launcherLayer
+                property: "cellHeight"
+                value: launcher.cellHeight
             }
 
             Component {

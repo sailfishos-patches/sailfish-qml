@@ -9,8 +9,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                   '@mozilla.org/process/environment;1',
@@ -21,40 +21,20 @@ Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
 // Common helper service
 
 function SPConsoleListener() {
-  this._cacheLogs = true;
-
   Logger.debug("JSComp: EmbedLiteConsoleListener.js loaded");
 }
 
 SPConsoleListener.prototype = {
-  _cacheLogs: true,
-  _startupCachedLogs: [],
   observe: function(msg) {
     if (Logger.enabled) {
       Logger.debug("CONSOLE message:");
       Logger.debug(msg);
     } else {
-      if (this._cacheLogs) {
-        this._startupCachedLogs.push(msg);
-      } else {
-        Services.obs.notifyObservers(null, "embed:logger", JSON.stringify({ multiple: false, log: msg }));
-      }
-    }
-  },
-  clearCache: function() {
-      this._cacheLogs = false;
-      this._startupCachedLogs = null;
-  },
-
-  flushCache: function() {
-    if (this._cacheLogs) {
-      this._cacheLogs = false;
-      Services.obs.notifyObservers(null, "embed:logger", JSON.stringify({ multiple: true, log: this._startupCachedLogs }));
-      this._startupCachedLogs = null;
+      Services.obs.notifyObservers(null, "embed:logger", JSON.stringify({ multiple: false, log: msg }));
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener])
 };
 
 // Captures the data received on a channel for debug output
@@ -68,7 +48,7 @@ function DocumentContentListener(aHttpChannel) {
 }
 
 DocumentContentListener.prototype = {
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function(request, inputStream, offset, count) {
     var binaryInputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci["nsIBinaryInputStream"]);
     var storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci["nsIStorageStream"]);
     var binaryOutputStream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(Ci["nsIBinaryOutputStream"]);
@@ -83,7 +63,7 @@ DocumentContentListener.prototype = {
 
     binaryOutputStream.writeBytes(data, count);
 
-    this.originalListener.onDataAvailable(request, context, storageStream.newInputStream(0), offset, count);
+    this.originalListener.onDataAvailable(request, storageStream.newInputStream(0), offset, count);
   },
 
   onStartRequest: function(request, context) {
@@ -158,11 +138,13 @@ function LogChannelInfo(aSubject) {
   }
 }
 
-function EmbedLiteConsoleListener()
+// Prefix the component name with $ to ensure it is initalised
+// before all other components in the start-up sequence.
+function $EmbedLiteConsoleListener()
 {
 }
 
-EmbedLiteConsoleListener.prototype = {
+$EmbedLiteConsoleListener.prototype = {
   classID: Components.ID("{6b21b5a8-9816-11e2-86f8-fb54170a814d}"),
   _listener: null,
 
@@ -184,8 +166,8 @@ EmbedLiteConsoleListener.prototype = {
         if (Logger.enabled) {
           this._listener = new SPConsoleListener();
           Services.console.registerListener(this._listener);
-          Services.obs.addObserver(this, "embedui:logger", true);
         }
+        Services.obs.addObserver(this, "embedui:logger", true);
 
         if (Logger.devModeNetworkEnabled) {
           Services.obs.addObserver(this, 'http-on-examine-response', false);
@@ -200,38 +182,70 @@ EmbedLiteConsoleListener.prototype = {
       case "embedui:logger": {
         var data = JSON.parse(aData);
         if (data.enabled) {
-          if (Logger.enabled) {
-            this._listener.flushCache();
-          } else {
-            Services.console.registerListener(this._listener);
-          }
-        } else if (!data.enabled && Logger.enabled) {
+          Services.console.registerListener(this._listener);
+        } else {
           Services.console.unregisterListener(this._listener);
-          this._listener.clearCache();
         }
         break;
       }
       case "console-api-log-event": {
-        let message = aSubject.wrappedJSObject;
-        let args = message.arguments;
-        let stackTrace = '';
-
-        if (message.stacktrace &&
-            (message.level == 'assert' || message.level == 'error' || message.level == 'trace')) {
-          stackTrace = Array.map(message.stacktrace, this.formatStackFrame).join('\n');
-        } else {
-          stackTrace = this.formatStackFrame(message);
-        }
-
-        args.push('\n' + stackTrace);
-
-        Logger.debug("Content JS:", message.filename, "function:", message.functionName, "message:", args.join(" "));
+        this._handleConsoleMessage(aSubject);
         break;
       }
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
+  _handleConsoleMessage(aMessage) {
+    // This code has been adapted from
+    // gecko-dev/mobile/android/modules/geckoview/GeckoViewConsole.jsm
+    // https://github.com/sailfishos-mirror/gecko-dev/blob/2834d64c4b16c7b93857fd58ca55dc76d8176bfd/mobile/android/modules/geckoview/GeckoViewConsole.jsm#L55
+    aMessage = aMessage.wrappedJSObject;
+
+    const mappedArguments = Array.from(aMessage.arguments, this.formatResult, this);
+    const joinedArguments = mappedArguments.join(" ");
+    const functionName = aMessage.functionName || "anonymous";
+
+    if (aMessage.level == "error" || aMessage.level == "warn") {
+      const flag = aMessage.level == "error" ? Ci.nsIScriptError.errorFlag
+                                             : Ci.nsIScriptError.warningFlag;
+      const consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
+        Ci.nsIScriptError
+      );
+      consoleMsg.init(joinedArguments, null, null, 0, 0, flag, "content javascript");
+
+      Logger.debug("Content JS: " + aMessage.filename + ", function: " + functionName + ", message: " + consoleMsg);
+    } else if (aMessage.level == "trace") {
+      const filename = this._abbreviateSourceURL(aMessage.filename);
+      const lineNumber = aMessage.lineNumber;
+
+      Logger.debug("Content JS: " + filename + ", function: " + functionName + ", line: " + lineNumber + ", message: " + joinedArguments);
+    } else {
+      Logger.debug("Content JS: " + aMessage.filename + ", function: " + functionName + ", message: " + joinedArguments);
+    }
+  },
+
+  _abbreviateSourceURL(aSourceURL) {
+    // Remove any query parameters.
+    const hookIndex = aSourceURL.indexOf("?");
+    if (hookIndex > -1) {
+      aSourceURL = aSourceURL.substring(0, hookIndex);
+    }
+
+    // Remove a trailing "/".
+    if (aSourceURL[aSourceURL.length - 1] == "/") {
+      aSourceURL = aSourceURL.substring(0, aSourceURL.length - 1);
+    }
+
+    // Remove all but the last path component.
+    const slashIndex = aSourceURL.lastIndexOf("/");
+    if (slashIndex > -1) {
+      aSourceURL = aSourceURL.substring(slashIndex + 1);
+    }
+
+    return aSourceURL;
+  },
+
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([EmbedLiteConsoleListener]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([$EmbedLiteConsoleListener]);

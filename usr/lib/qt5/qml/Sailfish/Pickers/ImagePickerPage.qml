@@ -30,6 +30,7 @@ PickerPage {
         property bool searchActive
 
         anchors.fill: parent
+        dateProperty: "lastModified"
         header: SearchPageHeader {
             id: searchHeader
             title: imagePicker.title

@@ -9,48 +9,35 @@ import com.jolla.settings.system 1.0
 import Sailfish.Policy 1.0
 
 ApplicationSettings {
-    ConfigurationGroup {
-        id: globalSettings
-
-        path: "/apps/jolla-camera"
-
-        ConfigurationGroup {
-            id: primaryImageSettings
-
-            path: "primary/image"
-
-            property string imageResolution
-            property string viewfinderResolution
-            property string imageResolution_16_9
-            property string viewfinderResolution_16_9
-            property string imageResolution_4_3
-            property string viewfinderResolution_4_3
+    function aspectRatioName(aspectRatio) {
+        if (aspectRatio === CameraConfigs.AspectRatio_16_9) {
+            //: Aspect ratio 16:9
+            //% "16:9"
+            return qsTrId("camera_settings-me-aspect_ratio_16_9")
+        } else if (aspectRatio === CameraConfigs.AspectRatio_4_3) {
+            //: Aspect ratio 4:3
+            //% "4:3"
+            return qsTrId("camera_settings-me-aspect_ratio_4_3")
+        } else {
+            console.warn("Camera Settings: Unsupported aspect ratio")
         }
+    }
 
-        ConfigurationGroup {
-            id: secondaryImageSettings
+    ConfigurationValue {
+        id: backCameraAspectRatio
 
-            path: "secondary/image"
+        key: "/apps/jolla-camera/back/image/aspectRatio"
+        defaultValue: CameraConfigs.AspectRatio_4_3
+    }
 
-            property string imageResolution
-            property string viewfinderResolution
-            property string imageResolution_16_9
-            property string viewfinderResolution_16_9
-            property string imageResolution_4_3
-            property string viewfinderResolution_4_3
-        }
+    ConfigurationValue {
+        id: frontCameraAspectRatio
+
+        key: "/apps/jolla-camera/front/image/aspectRatio"
+        defaultValue: CameraConfigs.AspectRatio_4_3
     }
 
     LocationSettings { id: locationSettings }
-
-    function resolutionText(ratioHorizontal, ratioVertical, resolution) {
-        var dimensions = resolution.split("x")
-        var megaPixels = dimensions.length == 2 ? (Math.round((dimensions[0] * dimensions[1]) / 1000000))
-                                                : "?"
-        //: template for resolution text, %1 and %2 are aspect ratio, %3 is megapixel value. e.g. 16:9 (2Mpix)"
-        //% "%1:%2 (%3Mpix)"
-        return qsTrId("camera_settings-me-resolution_template").arg(ratioHorizontal).arg(ratioVertical).arg(megaPixels)
-    }
 
     DisabledByMdmBanner {
         active: !AccessPolicy.cameraEnabled
@@ -172,48 +159,43 @@ ApplicationSettings {
         opacity: AccessPolicy.cameraEnabled ? 1.0 : Theme.opacityLow
     }
 
-    ResolutionComboBox {
-        settings: primaryImageSettings
-
-        //% "Photo resolution"
-        label: qsTrId("camera_settings-cb-photo-resolution")
+    ComboBox {
+        //% "Aspect ratio"
+        label: qsTrId("camera_settings-la-aspect_ratio")
         enabled: AccessPolicy.cameraEnabled
-        menu: ContextMenu {
-            ResolutionComboItem {
-                text: resolutionText(16, 9, imageResolution)
-                imageResolution: primaryImageSettings.imageResolution_16_9
-                viewfinderResolution: primaryImageSettings.viewfinderResolution_16_9
+        currentIndex: backCameraAspectRatio.value
 
+        menu: ContextMenu {
+            MenuItem {
+                text: aspectRatioName(CameraConfigs.AspectRatio_4_3)
+                onClicked: backCameraAspectRatio.value = CameraConfigs.AspectRatio_4_3
             }
-            ResolutionComboItem {
-                text: resolutionText(4, 3, imageResolution)
-                imageResolution: primaryImageSettings.imageResolution_4_3
-                viewfinderResolution: primaryImageSettings.viewfinderResolution_4_3
+            MenuItem {
+                text: aspectRatioName(CameraConfigs.AspectRatio_16_9)
+                onClicked: backCameraAspectRatio.value = CameraConfigs.AspectRatio_16_9
             }
         }
     }
 
     SectionHeader {
         //% "Front camera"
-        text: qsTrId("camera-ph-front-camera")
+        text: qsTrId("camera-he-front-camera")
         opacity: AccessPolicy.cameraEnabled ? 1.0 : Theme.opacityLow
     }
 
-    ResolutionComboBox {
-        settings: secondaryImageSettings
-
-        label: qsTrId("camera_settings-cb-photo-resolution")
+    ComboBox {
+        //% "Aspect ratio"
+        label: qsTrId("camera_settings-la-aspect_ratio")
         enabled: AccessPolicy.cameraEnabled
+        currentIndex: frontCameraAspectRatio.value
         menu: ContextMenu {
-            ResolutionComboItem {
-                text: resolutionText(16, 9, imageResolution)
-                imageResolution: secondaryImageSettings.imageResolution_16_9
-                viewfinderResolution: secondaryImageSettings.viewfinderResolution_16_9
+            MenuItem {
+                text: aspectRatioName(CameraConfigs.AspectRatio_4_3)
+                onClicked: frontCameraAspectRatio.value = CameraConfigs.AspectRatio_4_3
             }
-            ResolutionComboItem {
-                text: resolutionText(4, 3, imageResolution)
-                imageResolution: secondaryImageSettings.imageResolution_4_3
-                viewfinderResolution: secondaryImageSettings.viewfinderResolution_4_3
+            MenuItem {
+                text: aspectRatioName(CameraConfigs.AspectRatio_16_9)
+                onClicked: frontCameraAspectRatio.value = CameraConfigs.AspectRatio_16_9
             }
         }
     }

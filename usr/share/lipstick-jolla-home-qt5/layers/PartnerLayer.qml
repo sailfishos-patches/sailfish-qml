@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015 - 2020 Jolla Ltd.
- * Copyright (c) 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2020 - 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -49,7 +49,7 @@ PannableLayer {
         if (launcherItem && !launcherItem.isLaunching) {
             if (launcherActive) {
                 launching = true
-                launcherItem.launchApplication()
+                Lipstick.compositor.launch(launcherItem)
                 _waitingForLauncher = false
             } else {
                 _waitingForLauncher = true

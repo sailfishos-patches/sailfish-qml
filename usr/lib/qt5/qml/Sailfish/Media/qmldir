@@ -1,0 +1,6 @@
+module Sailfish.Media
+plugin sailfishmediaplugin
+MediaListItem 1.0 MediaListItem.qml
+MediaPlayerControlsPanel 1.0 MediaPlayerControlsPanel.qml
+MprisPlayerControls 1.0 MprisPlayerControls.qml
+MediaPlayerPanelBackground 1.0 MediaPlayerPanelBackground.qml

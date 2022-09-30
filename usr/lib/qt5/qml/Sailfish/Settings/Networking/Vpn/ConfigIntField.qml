@@ -8,6 +8,6 @@ ConfigTextField {
 
     inputMethodHints: Qt.ImhDigitsOnly
 
-    errorHighlight: !acceptableInput
+    errorHighlight: text !== '' && !acceptableInput
     validator: IntValidator { bottom: intLowerLimit; top: intUpperLimit }
 }

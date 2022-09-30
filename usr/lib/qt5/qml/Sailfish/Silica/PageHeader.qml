@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2013 Jolla Ltd.
-** Contact: Joona Petrell <joona.petrell@jollamobile.com>
 ** All rights reserved.
 ** 
 ** This file is part of Sailfish Silica UI component package.
@@ -91,7 +90,9 @@ SilicaControl {
 
     width: parent ? parent.width : Screen.width
     // set height that keeps the first line of text aligned with the page indicator
-    height: Math.max(_preferredHeight, headerText.y + headerText.height + ((_descriptionLabel && description.length > 0) ? _descriptionLabel.height : 0) + Theme.paddingMedium)
+    height: Math.max(_preferredHeight,
+                     headerText.y + headerText.height + ((_descriptionLabel && description.length > 0)
+                                                         ? _descriptionLabel.height : 0) + Theme.paddingMedium)
 
     highlighted: defaultHighlighted
 

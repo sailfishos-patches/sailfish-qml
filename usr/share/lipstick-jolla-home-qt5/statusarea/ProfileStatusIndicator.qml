@@ -20,6 +20,6 @@ Icon {
     ProfileControl {
         id: profileControl
 
-        property bool isSilent: profile == "silent" || profile.ringerVolume == 0
+        property bool isSilent: profile == "silent" || ringerVolume == 0
     }
 }

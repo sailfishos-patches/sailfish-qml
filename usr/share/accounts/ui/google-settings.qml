@@ -31,8 +31,6 @@ AccountSettingsAgent {
 
             StandardAccountSettingsPullDownMenu {
                 visible: settingsDisplay.accountValid
-                allowCredentialsUpdate: root.accountNotSignedIn
-
                 onCredentialsUpdateRequested: credentialsUpdater.replaceWithCredentialsUpdatePage(root.accountId)
                 onAccountDeletionRequested: {
                     root.accountDeletionRequested()

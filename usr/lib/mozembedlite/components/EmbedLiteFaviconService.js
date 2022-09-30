@@ -5,10 +5,9 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
-const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
@@ -49,20 +48,24 @@ var gProgressListener = {
       return;
     }
     let iconPath = domDoc.documentURIObject.prePath + "/favicon.ico";
-    let winId = Services.embedlite.getIDByWindow(aWebProgress.DOMWindow);
-    NetUtil.asyncFetch(iconPath, function(aInputStream, aStatusCode, aRequest) {
-      if (!Components.isSuccessCode(aStatusCode) || aRequest.contentType == "text/html") {
-        return;
-      }
-      Services.embedlite.sendAsyncMessage(winId, "embed:faviconURL", JSON.stringify({url: resolveGeckoURI(iconPath)}));
-    });
+    try {
+      let winId = Services.embedlite.getIDByWindow(aWebProgress.DOMWindow);
+      NetUtil.asyncFetch(iconPath, function(aInputStream, aStatusCode, aRequest) {
+        if (!Components.isSuccessCode(aStatusCode) || aRequest.contentType == "text/html") {
+          return;
+        }
+        Services.embedlite.sendAsyncMessage(winId, "embed:faviconURL", JSON.stringify({url: resolveGeckoURI(iconPath)}));
+      });
+    } catch (e) {
+      Logger.warn("EmbedLiteFaviconService: sending async message failed", e)
+    }
   },
   onSecurityChange: function() { },
   onProgressChange: function() { },
   onStatusChange: function() { },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                          Ci.nsISupportsWeakReference]),
 }
 
 function EventLinkListener(aWindow)
@@ -100,12 +103,16 @@ EventLinkListener.prototype = {
         if (list.indexOf("[icon]") == -1)
           return;
 
-        Services.embedlite.sendAsyncMessage(this._winId, "embed:faviconURL", JSON.stringify({url: resolveGeckoURI(target.href)}));
+        try {
+          Services.embedlite.sendAsyncMessage(this._winId, "embed:faviconURL", JSON.stringify({url: resolveGeckoURI(target.href)}));
+        } catch (e) {
+          Logger.warn("EmbedLiteFaviconService: sending async message failed", e)
+        }
         break;
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMEventListener])
 };
 
 EmbedLiteFaviconService.prototype = {
@@ -152,9 +159,7 @@ EmbedLiteFaviconService.prototype = {
   },
   
   _getProgress: function(aWindow) {
-    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsIDocShell)
+    return aWindow.docShell
                   .QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIWebProgress);
   },
@@ -173,7 +178,7 @@ EmbedLiteFaviconService.prototype = {
     this._getProgress(aWindow).removeProgressListener(gProgressListener, Ci.nsIWebProgress.NOTIFY_LOCATION);
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([EmbedLiteFaviconService]);

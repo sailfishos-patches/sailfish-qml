@@ -65,6 +65,7 @@ AccountCreationAgent {
             "imagesPath": authDialog.imagesPath,
             "backupsPath": authDialog.backupsPath,
             "ignoreSslErrors": authDialog.ignoreSslErrors,
+            "skipAuthentication": authDialog.skipAuthentication,
             "servicesEnabledConfig": authDialog.servicesEnabledConfig
         }
         _accountCreator = accountCreatorComponent.createObject(root, props)

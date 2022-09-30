@@ -113,7 +113,6 @@ KeyboardLayout {
             visible: !keyboard.inSymView
 
             onArcStarted: {
-                keyboard.cancelGesture()
                 fadeTimer.stop()
                 if (fadeAnimation.running) {
                     fadeAnimation.stop()

@@ -38,9 +38,8 @@ StackLayer {
         Rectangle {
             width: alarmLayer.width
             height: alarmLayer.height
-            color: Theme.highlightDimmerColor
+            color: Theme.rgba("black", Theme.opacityLow)
             visible: alarmLayer.renderDialogBackground
-            opacity: Theme.opacityLow
         },
 
         AlarmBackground {

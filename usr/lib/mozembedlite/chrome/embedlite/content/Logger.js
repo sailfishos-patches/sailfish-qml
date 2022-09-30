@@ -7,6 +7,8 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+var EXPORTED_SYMBOLS = [ "Logger" ];
+
 let Logger = {
   _enabled: false,
   _consoleEnv: null,

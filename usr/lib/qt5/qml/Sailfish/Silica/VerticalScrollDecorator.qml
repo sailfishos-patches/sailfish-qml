@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2013 Jolla Ltd.
-** Contact: Martin Jones <martin.jones@jollamobile.com>
 ** All rights reserved.
 **
 ** This file is part of Sailfish Silica UI component package.
@@ -34,70 +33,16 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0 as Private
-import "private/Util.js" as Util
 import "private"
 
-Private.SilicaRectangle {
-    id: verticalScrollDecorator
-
-    property Flickable flickable
-    property Item page
-
-    property real _headerSpacing
-    property real _topMenuSpacing: flickable.pullDownMenu ? flickable.pullDownMenu.spacing : 0
-    property real _bottomMenuSpacing: flickable.pushUpMenu ? flickable.pushUpMenu.spacing : 0
-    property bool _inBounds: (!flickable.pullDownMenu || !flickable.pullDownMenu.active) && (!flickable.pushUpMenu || !flickable.pushUpMenu.active)
-    property real _sizeRatio: (flickable.height - _headerSpacing) / (flickable.contentHeight + _topMenuSpacing + _bottomMenuSpacing)
-    property Item _forcedParent
-
-    function showDecorator() {
-        timer.showDecorator = true
-    }
-
-    // If we were declared in a Flickable then our parent is contentItem rather than the Flickable itself
-    onFlickableChanged: parent = _forcedParent ? _forcedParent : flickable
+VerticalScrollBase {
+    property alias color: rectangle.color
 
     width: Math.round(Theme.paddingSmall/2)
     height: _sizeRatio * (parent ? parent.height : 0)
-    anchors.right: parent ? parent.right : undefined
-    color: palette.primaryColor
-    opacity: (timer.moving && _inBounds) || timer.running ? 1.0 : 0.0
-    visible: flickable.contentHeight > flickable.height
-    Behavior on opacity { FadeAnimation { duration: 400 } }
-    y: Math.max(0, Math.min(
-                (parent.height / flickable.height) * (_headerSpacing + (flickable.contentY - flickable.originY + _topMenuSpacing) * _sizeRatio),
-                (parent.height - height)))
-
-    Component.onCompleted: {
-        if (!flickable) {
-            flickable = Util.findFlickable(verticalScrollDecorator)
-        }
-        if (!page) {
-            page = Util.findPage(verticalScrollDecorator)
-        }
-        if (page && page["_dialogHeader"] !== undefined) {
-            if (Util.findFlickable(page._dialogHeader) === flickable) {
-                // The DialogHeader is a child of the flickable
-                _headerSpacing = Qt.binding(function() { return page._dialogHeader._overlayHeight })
-            }
-        }
-    }
-
-    Timer {
-        id: timer
-
-        property bool moving: flickable.movingVertically
-        property bool showDecorator
-
-        onMovingChanged: {
-            if (!moving && _inBounds) {
-                showDecorator = false
-                restart()
-            }
-        }
-        onShowDecoratorChanged: if (showDecorator) restart()
-        interval: showDecorator ? 800 : 300
-        onTriggered: showDecorator = false
+    Rectangle {
+        id: rectangle
+        color: palette.primaryColor
+        anchors.fill: parent
     }
 }

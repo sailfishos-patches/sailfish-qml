@@ -48,15 +48,16 @@ Page {
         z: -1
 
         Rectangle {
-            x: galleryItem.x - switcherView.contentX
-            y: galleryItem.y - switcherView.contentY
+            x: galleryItem.x
+            y: galleryItem.y
             width: galleryItem.width
             height: galleryItem.height
             color: "black"
+            visible: galleryItem.PagedView.exposed
         }
     }
 
-    ListView {
+    PagedView {
         id: switcherView
 
         readonly property bool transitioning: moving || returnToCaptureModeTimeout.running
@@ -69,32 +70,23 @@ Page {
                 }
             } else {
                 pageStack.pop(page, PageStackAction.Immediate)
-                positionViewAtEnd()
+                moveTo(1, PagedView.Immediate)
             }
         }
 
         Timer {
             id: returnToCaptureModeTimeout
-            interval: switcherView.highlightMoveDuration
+            interval: 300 //switcherView.highlightMoveDuration
         }
 
         width: page.width
         height: page.height
-        orientation: ListView.Horizontal
-        snapMode: ListView.SnapOneItem
-        boundsBehavior: Flickable.StopAtBounds
-        highlightRangeMode: ListView.StrictlyEnforceRange
+        wrapMode: PagedView.NoWrap
+
         interactive: (!galleryLoader.item || !galleryLoader.item.positionLocked)
                      && !captureView.recording
         currentIndex: 1
         focus: true
-
-        flickDeceleration: Theme.flickDeceleration
-        maximumFlickVelocity: Theme.maximumFlickVelocity
-
-        // Normally transition is handled through a different path when flicking,
-        // avoid slow transition if triggered by ListView for some reason
-        highlightMoveDuration: 300
 
         Keys.onPressed: {
             if (!event.isAutoRepeat && event.key == Qt.Key_Camera) {
@@ -139,6 +131,7 @@ Page {
                 orientation: page.orientation
                 pageRotation: page.rotation
                 captureModel: page.captureModel
+                orientationTransitionRunning: page.orientationTransitionRunning
 
                 visible: switcherView.moving || captureView.active
 
@@ -173,15 +166,15 @@ Page {
 
         onCurrentItemChanged: {
             if (!transitioning) {
-                page.galleryActive = galleryItem.ListView.isCurrentItem
-                captureView.active = captureView.ListView.isCurrentItem
+                page.galleryActive = galleryItem.PagedView.isCurrentItem
+                captureView.active = captureView.PagedView.isCurrentItem
             }
         }
 
         onTransitioningChanged: {
             if (!transitioning) {
-                page.galleryActive = galleryItem.ListView.isCurrentItem
-                captureView.active = captureView.ListView.isCurrentItem
+                page.galleryActive = galleryItem.PagedView.isCurrentItem
+                captureView.active = captureView.PagedView.isCurrentItem
             } else if (captureView.active) {
                 if (galleryLoader.source == "") {
                     galleryLoader.setSource("gallery/GalleryView.qml", { page: page })

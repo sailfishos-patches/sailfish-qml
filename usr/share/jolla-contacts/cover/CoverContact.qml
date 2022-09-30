@@ -38,6 +38,7 @@ Thumbnail {
     onEnableAvatarChanged: displayData()
     onContactChanged: displayData()
 
+    clip: true
     sourceSize {
         width: AvatarSize.thumbnailSize
         height: AvatarSize.thumbnailSize

@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Gallery 1.0
+import Nemo.FileManager 1.0
 import com.jolla.gallery 1.0
 
 FullscreenContentPage {
@@ -25,11 +26,11 @@ FullscreenContentPage {
         target: window
         property: "activeObject"
         property bool active: root.status === PageStatus.Active
-        value: { "url": active ? fileInfo.source : "", "mimeType": active ? fileInfo.mimeType : "" }
+        value: { "url": active ? fileInfo.url : "", "mimeType": active ? fileInfo.mimeType : "" }
     }
     FileInfo {
         id: fileInfo
-        source: {
+        url: {
             if (model && model.count >= imageView.currentIndex - 1) {
                 var data = model.get(imageView.currentIndex)
                 return data ? data.url : ""

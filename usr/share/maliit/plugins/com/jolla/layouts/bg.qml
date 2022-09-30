@@ -100,12 +100,8 @@ KeyboardLayout {
             languageLabel: ""
             active: splitActive
         }
-        CharacterKey {
-            caption: "."
-            captionShifted: "."
+        PeriodKey {
             implicitWidth: punctuationKeyWidthNarrow
-            fixedWidth: !splitActive
-            separator: SeparatorState.HiddenSeparator
         }
         EnterKey {}
     }

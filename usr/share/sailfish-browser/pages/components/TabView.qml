@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (c) 2014 - 2019 Jolla Ltd.
-** Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+** Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -11,17 +11,18 @@
 
 import QtQuick 2.1
 import Sailfish.Silica 1.0
+import Sailfish.Silica.private 1.0 as Private
+import Sailfish.Browser 1.0
 import org.nemomobile.configuration 1.0
-import "." as Browser
 
-SilicaListView {
+SilicaControl {
     id: tabView
 
     property bool portrait
     property bool privateMode
-    property bool closingAllTabs
-
-    property var remorsePopup
+    property var tabModel
+    property alias scaledPortraitHeight: tabsToolBar.scaledPortraitHeight
+    property alias scaledLandscapeHeight: tabsToolBar.scaledLandscapeHeight
 
     signal hide
     signal enterNewTabUrl
@@ -31,131 +32,229 @@ SilicaListView {
     signal closeAllCanceled
     signal closeAllPending
 
-    onCountChanged: if (count > 0) closingAllTabs = false
-    onClosingAllTabsChanged: if (closingAllTabs) closeAllPending()
+    property var _remorsePopup
+    property bool _closingAllTabs
 
-    width: parent.width
-    height: parent.height
-    currentIndex: -1
-    header: PageHeader {
-        //: Tabs
-        //% "Tabs"
-        title: qsTrId("sailfish_browser-he-tabs")
+    property bool _emptyPrivateIcon: (privateMode && _closingAllTabs) || webView.privateTabModel.count === 0
+
+    anchors.fill: parent
+
+    Private.TabView {
+        id: tabs
+
+        anchors {
+            fill: parent
+            bottomMargin: tabsToolBar.height
+        }
+
+        header: Private.TabBar {
+            id: headerTabs
+            model: modeModel
+            delegate: Private.TabButton {
+                id: tabButton
+
+                icon.source: {
+                    if (!model.privateMode) {
+                        return "image://theme/icon-m-tabs"
+                    } else if (tabView._emptyPrivateIcon) {
+                        return "image://theme/icon-m-incognito"
+                    } else {
+                        "image://theme/icon-m-incognito-selected"
+                    }
+                }
+                icon.color: palette.primaryColor
+
+                icon.children: Label {
+                    anchors.centerIn: tabButton.icon
+
+                    font.pixelSize: Theme.fontSizeExtraSmall
+                    font.bold: true
+                    color: {
+                        if (model.privateMode) {
+                            return tabView.palette.colorScheme === Theme.LightOnDark
+                                    ? Theme.darkPrimaryColor
+                                    : Theme.lightPrimaryColor
+                        } else if (highlighted || tabButton.isCurrentTab) {
+                            return palette.highlightColor
+                        } else {
+                            return tabView.palette.colorScheme === Theme.LightOnDark
+                                    ? Theme.lightPrimaryColor
+                                    : Theme.darkPrimaryColor
+                        }
+                    }
+
+                    text: model.privateMode
+                            ? (!tabView._emptyPrivateIcon ? webView.privateTabModel.count : "")
+                            : (!tabView.privateMode && tabView._closingAllTabs ? 0 : webView.persistentTabModel.count)
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+
+                z: -100
+                color: tabView.palette.colorScheme === Theme.LightOnDark
+                        ? Theme.darkPrimaryColor
+                        : Theme.lightPrimaryColor
+            }
+        }
+        _headerBackgroundVisible: false
+        model: modeModel
+        interactive: false
+        currentIndex: privateMode ? 1 : 0
+        delegate: Private.TabItem {
+            id: tabItem
+            property bool privateMode: model.privateMode
+            allowDeletion: false
+            flickable: _tabView
+
+            TabGridView {
+                id: _tabView
+
+                portrait: tabView.portrait
+                model: tabItem.privateMode ? webView.privateTabModel : webView.persistentTabModel
+                header: Item {
+                    width: 1
+                    height: Theme.paddingLarge
+                }
+
+                onHide: tabView.hide()
+                onEnterNewTabUrl: tabView.enterNewTabUrl()
+                onActivateTab: tabView.activateTab(index)
+                onCloseTab: tabView.closeTab(index)
+                onCloseAll: tabView.closeAll()
+                onCloseAllCanceled: tabView.closeAllCanceled()
+                onCloseAllPending: tabView.closeAllPending()
+            }
+
+            onIsCurrentItemChanged: {
+                if (isCurrentItem) {
+                    _remorsePopup = Qt.binding(function() { return _tabView.remorsePopup })
+                    _closingAllTabs = Qt.binding(function() { return _tabView.closingAllTabs })
+                }
+            }
+
+            Connections {
+                target: popupMenu
+                onCloseAllTabs: {
+                    if (isCurrentItem)
+                        _tabView.closeAllTabs()
+                }
+            }
+
+            PrivateModeTexture {
+                visible: privateMode
+                z: -1
+            }
+        }
+
+        onCurrentIndexChanged: {
+            if (_remorsePopup) {
+                _remorsePopup.trigger()
+            }
+            privateMode = currentIndex !== 0
+        }
+
+        ListModel {
+            id: modeModel
+
+            ListElement {
+                privateMode: false
+            }
+            ListElement {
+                privateMode: true
+            }
+        }
     }
-    footer: spacer
 
-    spacing: Theme.paddingMedium
-
-    delegate: TabItem {
-        id: tabItem
-
-        enabled: !closingAllTabs
-        opacity: enabled ? 1.0 : 0.0
-        Behavior on opacity { FadeAnimator {}}
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: browserPage.thumbnailSize.width
-        height: browserPage.thumbnailSize.height
-
-        ListView.onAdd: AddAnimation {
-            target: tabItem
-        }
-        ListView.onRemove: RemoveAnimation {
-            target: tabItem
-        }
+    TabsToolBar {
+        id: tabsToolBar
+        anchors.bottom: parent.bottom
+        onBack: pageStack.pop()
+        onEnterNewTabUrl: tabView.enterNewTabUrl()
+        onOpenMenu: popupMenu.active = true
     }
 
-    // Behind tab delegates
-    children: [
-        PrivateModeTexture {
-            z: -1
-            visible: opacity > 0.0
-            opacity: privateMode ? 1.0 : 0.0
+    PopUpMenu {
+        id: popupMenu
 
-            Behavior on opacity { FadeAnimation {} }
-        },
+        signal closeAllTabs
 
-        MouseArea {
-            z: -1
-            width: tabView.width
-            height: tabView.height
-            onClicked: hide()
+        anchors.fill: parent
+        active: false
+
+        menuItem: Component {
+            Item {
+                id: menuItem_
+                readonly property int iconWidth: Theme.iconSizeMedium + Theme.paddingLarge
+                readonly property int verticalPadding: 3 * Theme.paddingSmall
+
+                height: content.height + verticalPadding * 2
+
+                Column {
+                    id: content
+
+                    y: verticalPadding
+                    width: parent.width
+                    spacing: Theme.paddingLarge
+
+                    Column {
+                        width: parent.width
+
+                        OverlayListItem {
+                            height: Theme.itemSizeSmall
+                            iconWidth: menuItem_.iconWidth
+                            iconSource: "image://theme/icon-m-tab-new"
+                            enabled: !_closingAllTabs
+                            //% "New tab"
+                            text: qsTrId("sailfish_browser-la-new_tab")
+                            onClicked: {
+                                popupMenu.visible = false
+                                // override to block animation
+                                tabs.currentIndex = privateMode ? 1 : 0
+                                tabView.privateMode = false
+                                tabView.enterNewTabUrl()
+                            }
+                        }
+
+                        OverlayListItem {
+                            height: Theme.itemSizeSmall
+                            iconWidth: menuItem_.iconWidth
+                            iconSource: "image://theme/icon-m-incognito-new"
+                            enabled: !_closingAllTabs
+                            //% "New private tab"
+                            text: qsTrId("sailfish_browser-la-new_private_tab")
+                            onClicked: {
+                                popupMenu.visible = false
+                                // override to block animation
+                                tabs.currentIndex = privateMode ? 1 : 0
+                                tabView.privateMode = true
+                                tabView.enterNewTabUrl()
+                            }
+                        }
+
+                        OverlayListItem {
+                            height: Theme.itemSizeSmall
+                            iconWidth: menuItem_.iconWidth
+                            iconSource: "image://theme/icon-m-tab-close"
+                            enabled: showCloseAllAction.value && webView.tabModel.count && !_closingAllTabs
+                            //% "Close all tabs"
+                            text: qsTrId("sailfish_browser-me-close_all")
+                            onClicked: {
+                                popupMenu.active = false
+                                popupMenu.closeAllTabs()
+                            }
+                        }
+                    }
+                }
+            }
         }
-    ]
+        onClosed: active = false
+    }
 
     ConfigurationValue {
         id: showCloseAllAction
         key: "/apps/sailfish-browser/settings/show_close_all"
         defaultValue: true
-    }
-
-    PullDownMenu {
-        id: pullDownMenu
-
-        flickable: tabView
-
-        MenuItem {
-            text: tabView.privateMode ?
-                    //: Menu item switching back to normal browser
-                    //% "Normal browsing"
-                    qsTrId("sailfish_browser-me-normal_browsing") :
-                    //: Menu item switching to private browser
-                    //% "Private browsing"
-                    qsTrId("sailfish_browser-me-private_browsing")
-            onDelayedClick: {
-                if (remorsePopup) {
-                    remorsePopup.trigger()
-                }
-
-                tabView.privateMode = !tabView.privateMode
-
-            }
-        }
-        MenuItem {
-            visible: showCloseAllAction.value && webView.tabModel.count
-            //% "Close all tabs"
-            text: qsTrId("sailfish_browser-me-close_all")
-            onClicked: {
-                remorsePopup = Remorse.popupAction(
-                            tabView,
-                            //% "Closed all tabs"
-                            qsTrId("sailfish_browser-closed-all-tabs"),
-                            function() {
-                                tabView.closeAll()
-                                remorsePopup = null
-                            })
-                closingAllTabs = true
-                remorsePopup.canceled.connect(
-                            function() {
-                                closingAllTabs = false
-                                tabView.closeAllCanceled()
-                                remorsePopup = null
-                            })
-            }
-        }
-        MenuItem {
-            //% "New tab"
-            text: qsTrId("sailfish_browser-me-new_tab")
-            onClicked: tabView.enterNewTabUrl()
-        }
-    }
-
-    VerticalScrollDecorator {
-        flickable: tabView
-    }
-
-    ViewPlaceholder {
-        enabled: !webView.tabModel.count || closingAllTabs
-        //: Hint to create a new tab from pull down menu.
-        //% "Pull down to create a new tab"
-        text: qsTrId("sailfish_browser-la-pull_down_to_create_tab_hint")
-    }
-
-    Component {
-        id: spacer
-        Item {
-            width: tabView.width
-            height: Theme.paddingMedium
-        }
     }
 }

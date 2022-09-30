@@ -105,9 +105,8 @@ Page {
         }
         Component {
             id: stopwatchView
-            TabItem {
+            StopwatchView {
                 allowDeletion: false
-                StopwatchView {}
             }
         }
     }

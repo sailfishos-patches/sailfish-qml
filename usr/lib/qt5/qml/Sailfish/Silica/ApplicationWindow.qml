@@ -35,12 +35,12 @@
 import QtQuick 2.1
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0
-import Sailfish.Silica.private 1.0
-import Sailfish.Silica.Background 1.0
+import Sailfish.Silica.private 1.0 as Private
+import Sailfish.Silica.Background 1.0 as Background
 import "CoverLoader.js" as CoverLoader
-import "private"
+import "private" as PrivatePath
 
-Window {
+Private.Window {
     id: window
 
     // Provides a globally available identifier for use by components.
@@ -82,7 +82,7 @@ Window {
     readonly property bool _dimmingActive: _dimScreen || dimAnimation.running
 
     property color _pageColor: {
-        if (Config.desktop) {
+        if (Private.Config.desktop) {
             // Use black background when running Silica on desktop without ambiences
             return palette.colorScheme === Theme.LightOnDark ? "black" : "white"
         } else if (stack.currentPage
@@ -102,7 +102,7 @@ Window {
 
     Behavior on _pageDimmerColor { enabled: window.visible; ColorAnimation { duration: stack._transitionDuration } }
 
-    property bool _autoGcWhenInactive: Config.wayland
+    property bool _autoGcWhenInactive: Private.Config.wayland
     property int allowedOrientations: Orientation.All
     property int _defaultPageOrientations: Orientation.Portrait
     property int _defaultLabelFormat: Text.AutoText
@@ -130,7 +130,7 @@ Window {
             if (_incubatingCoverWindow) {
                 return
             }
-            if (!Config.desktop) {
+            if (!Private.Config.desktop) {
                 var component = Qt.createComponent("private/CoverWindow.qml")
                 if (component.status === Component.Ready) {
                     _coverIncubator = component.incubateObject(window)
@@ -167,7 +167,7 @@ Window {
                         console.log("Warning: recommended to use Cover or CoverBackground component based cover")
                     }
                     _coverObject.visible = true
-                    if (!Config.wayland) _coverObject.rotation = 0 - window.screenRotation
+                    if (!Private.Config.wayland) _coverObject.rotation = 0 - window.screenRotation
                     _updateCoverVisibility()
                 } else if (_coverWindow) {
                     _coverWindow.destroy()
@@ -222,12 +222,12 @@ Window {
         height: Screen.height
         anchors.centerIn: parent
 
-        rotation: Config.desktop ? 0 : window.QtQuick.Screen.angleBetween(Qt.PortraitOrientation, window.QtQuick.Screen.primaryOrientation)
+        rotation: Private.Config.desktop ? 0 : window.QtQuick.Screen.angleBetween(Qt.PortraitOrientation, window.QtQuick.Screen.primaryOrientation)
 
-        ThemeTransaction {
+        Private.ThemeTransaction {
             deferAmbience: ambienceChangeTimer.running
             onAmbienceAboutToChange: {
-                if (Config.wayland && window.__quickWindow.visible) { // Don't do this inside of the compositor.
+                if (Private.Config.wayland && window.__quickWindow.visible) { // Don't do this inside of the compositor.
                     ambienceChangeTimer.restart()
                 }
             }
@@ -347,7 +347,7 @@ Window {
                     anchors.fill: parent
                     focus: true
 
-                    VirtualKeyboardObserver {
+                    Private.VirtualKeyboardObserver {
                         id: virtualKeyboardObserver
                         transpose: window._transpose
                         active: window.activeFocus && window._resizeContent
@@ -456,7 +456,7 @@ Window {
 
             anchors.centerIn: parent
 
-            AnimatedLoader {
+            Private.AnimatedLoader {
                 id: noticeLoader
 
                 property var notice: Notices._currentNotice
@@ -508,12 +508,12 @@ Window {
         }
     }
 
-    ReturnToHomeHintCounter {}
+    PrivatePath.ReturnToHomeHintCounter {}
 
     Component {
         id: wallpaperWindowComponent
 
-        WallpaperWindow {
+        Private.WallpaperWindow {
             id: wallpaperWindow
 
             windowWidth: wallpaperLoader.width
@@ -521,7 +521,7 @@ Window {
 
             windowVisible: (wallpaperLoader.item || wallpaperLoader.replacedItem)
 
-            WallpaperLoader {
+            Background.WallpaperLoader {
                 id: wallpaperLoader
 
                 properties: ({
@@ -562,14 +562,14 @@ Window {
     Component {
         id: imageWallpaper
 
-        ImageWallpaper {
+        Background.ImageWallpaper {
         }
     }
 
     Component {
         id: themeWallpaper
 
-        ThemeImageWallpaper {
+        Background.ThemeImageWallpaper {
         }
     }
 
@@ -586,7 +586,7 @@ Window {
         if (cover) {
             _loadCover()
         }
-        if (Config.layoutGrid) {
+        if (Private.Config.layoutGrid) {
             var component = Qt.createComponent(Qt.resolvedUrl("private/LayoutGrid.qml"))
             if (component.status == Component.Ready) {
                 component.createObject(window)

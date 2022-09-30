@@ -33,6 +33,7 @@ SystemDialog {
     }
 
     function init(promptConfig) {
+        encryptedInterface.reset()
         root.promptConfig = promptConfig
 
         var title
@@ -59,6 +60,7 @@ SystemDialog {
             show()
         } else {
             notification.publish()
+            closeDialog(root)
         }
     }
 
@@ -202,6 +204,12 @@ SystemDialog {
 
         service: "org.freedesktop.UDisks2"
         iface: "org.freedesktop.UDisks2.Encrypted"
+
+        function reset() {
+            service = "org.freedesktop.UDisks2"
+            iface = "org.freedesktop.UDisks2.Encrypted"
+            passwordInput.text = ""
+        }
 
         function unlock(password) {
             // Lower the window and wait for callback.

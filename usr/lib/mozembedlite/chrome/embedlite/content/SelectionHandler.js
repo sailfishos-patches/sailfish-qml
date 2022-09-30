@@ -60,6 +60,19 @@ function SelectionHandler() {
   }
 
   this.sendAsync = function sendAsync(aMsg, aJson) {
+    // Update visualViewport.offsetLeft and visualViewport.offsetTop for every
+    // send selection message.
+    if (this._contentWindow) {
+      if (!aJson.visualViewport) {
+        aJson["visualViewport"] = {offsetLeft: 0, offsetTop: 0}
+      }
+
+      aJson.visualViewport.offsetLeft = this._contentWindow.visualViewport.offsetLeft;
+      aJson.visualViewport.offsetTop = this._contentWindow.visualViewport.offsetTop;
+    } else {
+      Logger.warn("No content window, cannot send visual viewport offset.")
+    }
+
     sendAsyncMessage(aMsg, aJson);
   }
 
@@ -198,7 +211,7 @@ function SelectionHandler() {
       return;
     }
 
-    if (this._targetElement instanceof Ci.nsIDOMNSEditableElement) {
+    if (this._targetIsEditable) {
       this._targetElement.select()
     } else if (this._contentWindow) {
       this._contentWindow.getSelection().selectAllChildren(this._contentWindow.document.body);
@@ -609,14 +622,6 @@ function SelectionHandler() {
    * Utilities
    */
 
-  this._getDocShell = function _getDocShell(aWindow) {
-    if (aWindow == null)
-      return null;
-    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsIDocShell);
-  }
-
   this._getSelectedText = function _getSelectedText() {
     let selection = this._getSelection();
     if (selection)
@@ -625,23 +630,34 @@ function SelectionHandler() {
   }
 
   this._getSelection = function _getSelection() {
-    if (this._targetElement instanceof Ci.nsIDOMNSEditableElement) {
-      return this._targetElement
-                 .QueryInterface(Ci.nsIDOMNSEditableElement)
-                 .editor.selection;
+    // Don't get the selection for password fields. See bug 565717.
+    if (this._targetElement && (ChromeUtils.getClassName(this._targetElement) === "HTMLTextAreaElement" ||
+                                (ChromeUtils.getClassName(this._targetElement) === "HTMLInputElement" &&
+                                 this._targetElement.mozIsTextField(true)))) {
+      let selection = focusedElement.editor.selection;
+      return selection.toString();
     } else if (this._contentWindow)
       return this._contentWindow.getSelection();
     return null;
   }
 
   this._getSelectController = function _getSelectController() {
-    if (this._targetElement instanceof Ci.nsIDOMNSEditableElement) {
-      return this._targetElement
-                 .QueryInterface(Ci.nsIDOMNSEditableElement)
-                 .editor.selectionController;
+    // display: none iframes don't have a selection controller, see bug 493658
+    try {
+      if (!this._contentWindow.innerWidth || !this._contentWindow.innerHeight) {
+        return null;
+      }
+    } catch (e) {
+      // If getting innerWidth or innerHeight throws, we can't get a selection
+      // controller.
+      return null;
+    }
+
+    if (this._targetElement && this._targetElement.editor) {
+      return this._targetElement.editor.selectionController;
     } else {
-      let docShell = this._getDocShell(this._contentWindow);
-      if (docShell == null)
+      let docShell = this._contentWindow ? this._contentWindow.docShell : null;
+      if (!docShell)
         return null;
       return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsISelectionDisplay)

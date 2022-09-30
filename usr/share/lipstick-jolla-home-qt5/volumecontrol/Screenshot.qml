@@ -14,6 +14,7 @@ import org.nemomobile.lipstick 0.1
 import org.nemomobile.notifications 1.0
 import org.nemomobile.systemsettings 1.0
 import Sailfish.Silica 1.0
+import Sailfish.Share 1.0
 import QtFeedback 5.0
 import Sailfish.Policy 1.0
 
@@ -40,11 +41,24 @@ Item {
         //: Filename of a captured screenshot, e.g. "Screenshot_1"
         //% "Screenshot_%1"
         var filename = fileUtils.uniqueFileName(folderPath, qsTrId("lipstick-jolla-home-la-screenshot") + ".png")
+        var filePath = folderPath + filename
 
-        notification.body = filename
-        notification.screenshotFilePath = folderPath + filename
-        Lipstick.takeScreenshot(notification.screenshotFilePath)
-        notification.publish()
+        shareAction.resources = [ filePath ]
+
+        var result = Lipstick.takeScreenshot(filePath)
+        immediateNotification.replacesId = 0
+        immediateNotification.body = filename
+        immediateNotification.publish()
+
+        var replacesId = immediateNotification.replacesId
+        if (result) {
+            result.finished.connect(function()  {
+                completeNotification.replacesId = replacesId
+                completeNotification.body = filename
+                completeNotification.icon = filePath
+                completeNotification.publish()
+            })
+        }
     }
 
     PolicyValue {
@@ -53,15 +67,22 @@ Item {
     }
 
     Notification {
-        id: notification
-
-        property string screenshotFilePath
+        id: immediateNotification
 
         appName: Lipstick.notificationSystemApplicationName
         //% "Screenshot captured"
         summary: qsTrId("lipstick-jolla-home-la-screenshot_captured")
         urgency: Notification.Critical
         appIcon: "icon-lock-information"
+    }
+
+    Notification {
+        id: completeNotification
+
+        appName: immediateNotification.appName
+        summary: immediateNotification.summary
+        appIcon: immediateNotification.appIcon
+
         remoteActions: [
             remoteAction(
                 "default",
@@ -70,18 +91,18 @@ Item {
                 "/com/jolla/gallery/ui",
                 "com.jolla.gallery.ui",
                 "openFile",
-                [ notification.screenshotFilePath ]
+                [ completeNotification.icon ]
             ),
             remoteAction(
                 "",
                 //: Share screenshot image
                 //% "Share"
                 qsTrId("lipstick-jolla-home-la-share_screenshot"),
-                "com.jolla.gallery",
-                "/com/jolla/gallery/ui",
-                "com.jolla.gallery.ui",
-                "shareFile",
-                [ notification.screenshotFilePath ]
+                "org.sailfishos.share",
+                "/",
+                "org.sailfishos.share",
+                "share",
+                [ shareAction.toConfiguration() ]
             ),
             remoteAction(
                 "",
@@ -92,9 +113,13 @@ Item {
                 "/com/jolla/gallery/ui",
                 "com.jolla.gallery.ui",
                 "editFile",
-                [ notification.screenshotFilePath ]
+                [ completeNotification.icon ]
             ),
         ]
+    }
+
+    ShareAction {
+        id: shareAction
     }
 
     Notification {

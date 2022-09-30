@@ -15,19 +15,18 @@ Page {
     property string totalSize
     
 
-    property bool autoStartReady: true
+    property bool autoStartReady
     property bool appSizeReady
     property bool error
-    property bool autoStartAllowed: true
-    property Item remorse
+    property bool autoStartAllowed
 
     DBusInterface {
         id: apkConfiguration
 
         bus: DBus.SystemBus
-        service: "com.jolla.apkd"
-        path: "/com/jolla/apkd"
-        iface: "com.jolla.apkd"
+        service: "com.myriadgroup.alien.settings"
+        path: "/com/myriadgroup/alien/settings"
+        iface: "com.myriadgroup.alien.settings"
         signalsEnabled: true
 
         function appStartOnBootupChanged(packageName, allowed) {
@@ -37,8 +36,10 @@ Page {
         }
     }
 
-    BusyLabel {
+    BusyIndicator {
+        anchors.centerIn: parent
         running: !(root.appSizeReady && root.autoStartReady) && !root.error
+        size: BusyIndicatorSize.Large
     }
 
     Label {
@@ -83,8 +84,7 @@ Page {
 
     SilicaFlickable {
         anchors.fill: parent
-        contentHeight: header.height + (content.enabled ? (content.height + Theme.paddingLarge)
-                                                        : 0)
+        contentHeight: header.height + content.height + Theme.paddingLarge
         width: parent.width
 
         PageHeader {
@@ -99,9 +99,7 @@ Page {
             id: content
 
             anchors.top: header.bottom
-            enabled: root.appSizeReady && root.autoStartReady
-            opacity: enabled ? 1.0 : 0.0
-            Behavior on opacity { FadeAnimator {} }
+            visible: root.appSizeReady && root.autoStartReady
             width: parent.width
 
             TextSwitch {
@@ -131,49 +129,14 @@ Page {
             DetailItem { label: qsTrId("apkd_settings-la-appsize_total"); value: totalSize }
             //% "App:"
             DetailItem { label: qsTrId("apkd_settings-la-appsize_app"); value: appSize }
-            DetailItem {
-                //% "Data:"
-                label: qsTrId("apkd_settings-la-appsize_data")
-                value: root.remorse && root.remorse.active ? Format.formatFileSize(0)
-                                                           : dataSize
-            }
+            //% "Data:"
+            DetailItem { label: qsTrId("apkd_settings-la-appsize_data"); value: dataSize }
             //% "Cache:"
             DetailItem { label: qsTrId("apkd_settings-la-appsize_cache"); value: cacheSize }
 
             SectionHeader {
                 //% "Actions"
                 text: qsTrId("apkd_settings-la-package_actions")
-            }
-
-            Label {
-                x: Theme.horizontalPageMargin
-                width: parent.width - 2*x
-                height: implicitHeight + Theme.paddingMedium
-                wrapMode: Text.Wrap
-                font.pixelSize: Theme.fontSizeExtraSmall
-                color: Theme.secondaryHighlightColor
-                //% "Open the Android™ Settings page for this app. "
-                //% "Adjust permissions, notification settings from within Android™."
-                text: qsTrId("apkd_settings-la-open-alien-settings-description")
-            }
-            Item {
-                width: 1
-                height: Theme.paddingMedium
-            }
-            Button {
-                preferredWidth: Theme.buttonWidthMedium
-                anchors.horizontalCenter: parent.horizontalCenter
-                //% "Open Android™ Settings"
-                text: qsTrId("apkd_settings-open-alien-settings")
-                onClicked: {
-                    apkConfiguration.call("openAppSettings", [root.packageName])
-                    
-                }
-            }
-
-            Item {
-                width: 1
-                height: Theme.paddingLarge
             }
 
             Label {
@@ -233,12 +196,14 @@ Page {
                 //% "Clear data"
                 text: qsTrId("apkd_settings-la-package_clear_data")
                 onClicked: { 
-                    //% "Cleared app data"
-                    root.remorse = Remorse.popupAction(root, qsTrId("apkd_settings-la-package_cleared_data"), function() {
+                	//% "Clearing app data"
+                    dataRemorse.execute(qsTrId("apkd_settings-la-package_clearing_data"), function() {
                         root.appSizeReady = false
                         apkConfiguration.call("clearAppUserData", [root.packageName], function() { refreshSizes() })
-                    })
+                    })  
                 }
+
+                RemorsePopup { id: dataRemorse }
             }
 
 

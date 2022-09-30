@@ -1,11 +1,18 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import org.nemomobile.thumbnailer 1.0
+import Nemo.Thumbnailer 1.0
 
 ThumbnailBase {
     id: thumbnailBase
 
     readonly property alias status: thumbnail.status
+    property alias _thumbnail: thumbnail
+
+    Image {
+        anchors.fill: parent
+        source: thumbnail.status === Thumbnail.Ready ? ""
+                                                     : "image://theme/graphic-avatar-text-back"
+    }
 
     Thumbnail {
         id: thumbnail
@@ -13,17 +20,15 @@ ThumbnailBase {
 
         source: thumbnailBase.source
         mimeType: thumbnailBase.mimeType
-        width:  size
-        height: size
+        width: thumbnailBase.width
+        height: thumbnailBase.contentHeight
         sourceSize.width: width
         sourceSize.height: height
-        y: contentYOffset
-        x: contentXOffset
         priority: Thumbnail.NormalPriority
 
         onGridMovingChanged: {
             if (!gridMoving) {
-                var visibleIndex = Math.floor(thumbnailBase.grid.contentY / size) * thumbnailBase.grid.columnCount
+                var visibleIndex = Math.floor(thumbnailBase.grid.contentY / thumbnailBase.contentHeight) * thumbnailBase.grid.columnCount
 
                 if (visibleIndex <= index && index <= visibleIndex + 18) {
                     priority = Thumbnail.HighPriority

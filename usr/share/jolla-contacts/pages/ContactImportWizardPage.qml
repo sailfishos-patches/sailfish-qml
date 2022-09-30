@@ -1,7 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
-import Sailfish.Bluetooth 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.contacts 1.0
 import com.jolla.settings.accounts 1.0
@@ -20,19 +19,6 @@ Dialog {
                 openImportPage({ "importSourceUrl": fileUrl }, true)
             })
         })
-    }
-
-    function bluetoothPairing(returnPage) {
-        pageStack.animatorPush(bluetoothPairingDialogComponent,
-                               { 'acceptDestination': returnPage, 'acceptDestinationAction': PageStackAction.Pop })
-    }
-
-    Component {
-        id: bluetoothPairingDialogComponent
-
-        BluetoothDevicePickerDialog {
-            requirePairing: true
-        }
     }
 
     function createAccount(providerName) {
@@ -122,10 +108,9 @@ Dialog {
                 color: Theme.highlightColor
                 font { pixelSize: Theme.fontSizeMedium }
 
-                // TODO: remove mention of Bluetooth - JB#38055
                 //: Prompt the user to choose an import option (text should match accept text label)
-                //% "Choose 'Import' if you would like to import contacts using Accounts, from Bluetooth or other sources."
-                text: qsTrId("contacts-la-import_prompt")
+                //% "Choose 'Import' if you would like to import contacts using Accounts or other sources."
+                text: qsTrId("contacts-la-import_prompt_account_or_other_sources")
             }
             Label {
                 x: Theme.horizontalPageMargin
@@ -269,7 +254,6 @@ Dialog {
                                     } else {
                                         pageStack.animatorPush('wizard/ImportFromDevice.qml', {
                                             'importFromFile': importFromFile,
-                                            'bluetoothPairing': bluetoothPairing,
                                             'createAccount': createAccount,
                                             'abandonImport': abandonImport
                                         })

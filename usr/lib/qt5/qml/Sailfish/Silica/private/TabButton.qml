@@ -36,94 +36,58 @@ import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import "Util.js" as Util
 
-MouseArea {
+SilicaMouseArea {
     id: root
 
-    property int tabIndex: -1
+    property int tabIndex: (model && model.index !== undefined) ? model.index : -1
+    property int tabCount: parent && parent.tabCount || 0
     property bool isCurrentTab: _tabView && _tabView.currentIndex >= 0 && _tabView.currentIndex === tabIndex
 
-    property string title
+    property alias title: titleLabel.text
     property alias icon: highlightImage
+
+    property int titleFontSize: parent && parent.buttonFontSize || Theme.fontSizeLarge
     property int count
 
-    property Item _page
+    property Item _tabView: parent && parent.tabView || null
+
+    readonly property Item _page: _tabView ? _tabView._page : null
     readonly property bool _portrait: _page && _page.isPortrait
-    readonly property Item _tabView: Util.findParentWithProperty(root, '__silica_tab_view')
-    readonly property bool _becomingCurrentTab: _tabView && _tabView._nextIndex === tabIndex
-    property bool _activatingByClick
+
+    readonly property Item _tabItem: _tabView ? (_tabView.exposedItems, _tabView.itemAt(tabIndex)) : null
     property alias contentItem: contentColumn
-    property alias contentState: contentColumn.state
-    property real extraMargin
+    property real _extraMargin: parent && parent.extraMargin || 0
     // contentWidth is used to calculate TabButtonRow width except of extraMargin
     property real contentWidth: 2 * Theme.paddingLarge + contentColumn.implicitWidth
                                 + (bubble.active && highlightImage.width === 0 ? bubble.width : 0)
-    implicitWidth: contentWidth + extraMargin
+    implicitWidth: contentWidth
+                + (root.tabIndex == 0 ? _extraMargin : 0)
+                + (root.tabIndex == root.tabCount - 1 ? _extraMargin : 0)
 
     implicitHeight: Math.max(_portrait ? Theme.itemSizeLarge : Theme.itemSizeSmall,
                              contentColumn.implicitHeight + 2 * (_portrait ? Theme.paddingLarge : Theme.paddingMedium))
 
-    Component.onCompleted: {
-        if (!parent.hasOwnProperty("__silica_tab_button_row")) {
-            console.warn("TabButton should be always created within TabButtonRow")
-        }
-        _page = Util.findPage(root)
-        parent._registerButton(root)
-    }
-
-    Component.onDestruction: parent._deregisterButton(root)
+    highlighted: pressed && containsMouse
 
     onClicked: {
-        _activatingByClick = true
-    }
-
-    Connections {
-        target: _tabView
-        onMovingChanged: {
-            if (!_tabView.moving) {
-                _activatingByClick = false
-            }
+        if (_tabView && tabIndex >= 0) {
+            _tabView.moveTo(tabIndex)
         }
     }
 
     VariantInterpolator {
         id: colorInterpolator
 
-        from: {
-            if (_becomingCurrentTab) {
-                return palette.primaryColor
-            } else if (isCurrentTab) {
-                return palette.highlightColor
-            }
-            return palette.primaryColor
-        }
-
-        to: {
-            if (_becomingCurrentTab) {
-                return palette.highlightColor
-            } else if (isCurrentTab) {
-                return palette.primaryColor
-            }
-            return palette.primaryColor
-        }
+        from: root.palette.primaryColor
+        to: root.palette.highlightColor
 
         progress: {
-            if (!_tabView || _activatingByClick) {
+            if (!root._tabView || !root._tabItem) {
                 return 0
-            }
-            // Gradually adjust the button text color when the current tab changes.
-            // The progress goes from 0->1 when the slideable is panned, then 1->0 when the
-            // slideable is released and animates automatically towards the new index, so to
-            // use the progress value for interpolation it must be inversed when the
-            // alternate item becomes the current item.
-            var exitingCurrentTab = (isCurrentTab && _tabView._nextIndex >= 0 && _tabView._nextIndex !== tabIndex)
-            if (tabIndex === _tabView._previousIndex || exitingCurrentTab) {
-                return _tabView.slideProgress
-            } else if (_becomingCurrentTab) {
-                return isCurrentTab ? 1 - _tabView.slideProgress : _tabView.slideProgress
-            } else if (isCurrentTab) {
-                return _tabView.slideProgress
+            } else if (isCurrentTab && !root._tabView.dragging) {
+                return 1
             } else {
-                return 0
+                return 1 - Math.abs(root._tabItem.x / (root._tabView.width + root._tabView.horizontalSpacing))
             }
         }
     }
@@ -131,99 +95,49 @@ MouseArea {
     Column {
         id: contentColumn
 
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.horizontalCenterOffset: bubble.active && highlightImage.width === 0 ? -bubble.width*0.5 : 0
+        x: {
+            if (root.tabCount > 1 && root.tabIndex == 0) {
+                return root.width - width - Theme.paddingMedium
+            } else if (root.tabCount > 1 && root.tabIndex == root.tabCount - 1) {
+                return Theme.paddingMedium
+            } else {
+                return ((root.width - width) / 2)
+                            - (highlightImage.status === Image.Ready ? bubble.width * 0.5 : 0)
+            }
+        }
+
+        y: (root.height - height) / 2
 
         HighlightImage {
             id: highlightImage
 
             anchors.horizontalCenter: parent.horizontalCenter
-            highlighted: (pressed && containsMouse)
-                         || _activatingByClick || root.isCurrentTab
+            highlighted: root.highlighted || root.isCurrentTab
         }
 
-        Loader {
-            active: root.title
-            visible: active
-            anchors.horizontalCenter: parent.horizontalCenter
-            sourceComponent: Component {
-                Label {
-                    text: root.title
-                    color: (pressed && containsMouse)
-                           || _activatingByClick ? Theme.highlightColor : colorInterpolator.value
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: {
-                        if (highlightImage.height > 0) {
-                            return Theme.fontSizeTiny
-                        } else if (root.parent && root.parent._buttonFontSize) {
-                            return root.parent._buttonFontSize
-                        } else {
-                            return Theme.fontSizeLarge
-                        }
-                    }
-                }
-            }
+        Label {
+            id: titleLabel
+
+            x: (contentColumn.width - width) / 2
+            color: highlighted ? palette.highlightColor : colorInterpolator.value
+            font.pixelSize: highlightImage.status === Image.Ready ? Theme.fontSizeTiny : root.titleFontSize
         }
-
-        state: "between"
-
-        states: [
-            State {
-                name: "first"
-                AnchorChanges {
-                    target: contentColumn
-                    anchors {
-                        horizontalCenter: undefined
-                        left: undefined
-                        right: parent.right
-                    }
-                }
-                PropertyChanges {
-                    target: contentColumn
-                    anchors.rightMargin: Theme.paddingMedium
-                }
-            },
-            State {
-                name: "between"
-                AnchorChanges {
-                    target: contentColumn
-                    anchors {
-                        horizontalCenter: parent.horizontalCenter
-                    }
-                }
-            },
-            State {
-                name: "last"
-                AnchorChanges {
-                    target: contentColumn
-                    anchors {
-                        horizontalCenter: undefined
-                        right: undefined
-                        left: parent.left
-                    }
-                }
-                PropertyChanges {
-                    target: contentColumn
-                    anchors.leftMargin: Theme.paddingMedium
-                }
-            }
-        ]
     }
 
     Loader {
         id: bubble
 
+        x: highlightImage.status === Image.Ready
+                ? (contentColumn.width - width + highlightImage.width) / 2
+                : contentColumn.x + contentColumn.width + Theme.dp(4)
         y: Theme.paddingLarge
-        active: root.count
+        active: root.count > 0
         asynchronous: true
-        opacity: (pressed && containsMouse) || _activatingByClick ? 0.8 : 1.0
-        anchors {
-            left: contentColumn.right
-            leftMargin: Theme.dp(4)
-        }
+        opacity: root.highlighted ? 0.8 : 1.0
+
         sourceComponent: Component {
             Rectangle {
-                color: Theme.highlightBackgroundColor
+                color: root.palette.highlightBackgroundColor
                 width: bubbleLabel.text ? Math.max(bubbleLabel.implicitWidth + Theme.paddingSmall*2, height) : Theme.paddingMedium + Theme.paddingSmall
                 height: bubbleLabel.text ? bubbleLabel.implicitHeight : Theme.paddingMedium + Theme.paddingSmall
                 radius: Theme.dp(2)
@@ -244,25 +158,6 @@ MouseArea {
                     anchors.centerIn: parent
                     font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
-                }
-            }
-        }
-        states: State {
-            when: highlightImage.width > 0
-            name: "withicon"
-            AnchorChanges {
-                target: bubble
-                anchors {
-                    horizontalCenter: contentColumn.horizontalCenter
-                    verticalCenter: undefined
-                    left: undefined
-                }
-            }
-            PropertyChanges {
-                target: bubble
-                anchors {
-                    horizontalCenterOffset: highlightImage.width * 0.5
-                    leftMargin: 0
                 }
             }
         }

@@ -1,8 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2015-2016 Jolla Ltd.
-** Contact: Martin Jones <martin.jones@jolla.com>
-** Contact: Raine Makelainen <raine.makelainen@jolla.com>
 ** All rights reserved.
 **
 ** This file is part of Sailfish Silica UI component package.

@@ -19,13 +19,16 @@ Item {
         QT_TRID_NOOP("jolla-store-la-category_jolla")
 
         //: A top level category
+        //% "Essentials"
+        QT_TRID_NOOP("jolla-store-la-category_essentials")
+
+        //: A top level category
         //% "Marketplaces"
         QT_TRID_NOOP("jolla-store-la-category_marketplaces")
 
         //: A top level category
         //% "Ambiances"
         QT_TRID_NOOP("jolla-store-la-category_ambiances")
-
 
         //: A sub-category under Apps
         //% "Accessibility"

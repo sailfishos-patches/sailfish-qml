@@ -15,6 +15,7 @@ Column {
     property Item header
 
     property bool pressed: pressedItem && pressedItem.pressed
+    property bool active: model.length > 0
 
     onPressedChanged: {
         if (pressed && header) {
@@ -23,6 +24,7 @@ Column {
     }
 
     width: Screen.width / 4
+    visible: active
 
     Repeater {
         id: repeater

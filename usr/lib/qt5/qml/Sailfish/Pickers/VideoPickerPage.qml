@@ -36,6 +36,7 @@ PickerPage {
         anchors.fill: parent
         // reference column width: 960 / 4
         columnCount: Math.floor(width / (Theme.pixelRatio * 240))
+        dateProperty: "lastModified"
 
         header: SearchPageHeader {
             id: searchHeader

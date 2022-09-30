@@ -5,30 +5,29 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
-const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
 
 function EmbedLiteSyncServiceImpotUtils()
 {
-    Cu.import("resource://services-common/log4moz.js");
-    Cu.import("resource://services-sync/main.js");
-    Cu.import("resource://services-sync/constants.js");
-    Cu.import("resource://services-sync/service.js");
-    Cu.import("resource://services-sync/policies.js");
-    Cu.import("resource://services-sync/util.js");
-    Cu.import("resource://services-sync/engines.js");
-    Cu.import("resource://services-sync/record.js");
-    Cu.import("resource://services-sync/engines/history.js");
-    Cu.import("resource://services-sync/engines/apps.js");
-    Cu.import("resource://services-sync/engines/forms.js");
-    Cu.import("resource://services-sync/engines/passwords.js");
-    Cu.import("resource://services-sync/engines/prefs.js");
-    Cu.import("resource://services-sync/engines/tabs.js");
-    Cu.import("chrome://embedlite/content/sync/bookmarks.js");
+    ChromeUtils.import("resource://services-common/log4moz.js");
+    ChromeUtils.import("resource://services-sync/main.js");
+    ChromeUtils.import("resource://services-sync/constants.js");
+    ChromeUtils.import("resource://services-sync/service.js");
+    ChromeUtils.import("resource://services-sync/policies.js");
+    ChromeUtils.import("resource://services-sync/util.js");
+    ChromeUtils.import("resource://services-sync/engines.js");
+    ChromeUtils.import("resource://services-sync/record.js");
+    ChromeUtils.import("resource://services-sync/engines/history.js");
+    ChromeUtils.import("resource://services-sync/engines/apps.js");
+    ChromeUtils.import("resource://services-sync/engines/forms.js");
+    ChromeUtils.import("resource://services-sync/engines/passwords.js");
+    ChromeUtils.import("resource://services-sync/engines/prefs.js");
+    ChromeUtils.import("resource://services-sync/engines/tabs.js");
+    ChromeUtils.import("chrome://embedlite/content/sync/bookmarks.js");
 }
 
 // Common helper service
@@ -114,7 +113,7 @@ EmbedLiteSyncService.prototype = {
     });
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([EmbedLiteSyncService]);

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2012 - 2020 Jolla Ltd.
- * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -101,13 +101,20 @@ Item {
 
     function dialVoiceMail(modemPath) {
         var voiceMail = messageWaiting.createObject(null, { 'modemPath': modemPath ? modemPath : telephony.modemPath })
-        if (voiceMail.mailboxNumber().length > 0) {
-            telephony.dial(voiceMail.mailboxNumber(), modemPath)
-        } else {
-            //% "No voicemail number is defined"
-            Notices.show(qsTrId("voicecall-la-no_voicemail_mailbox"))
+        var dialFn = function() {
+            if (voiceMail.mailboxNumber().length > 0) {
+                telephony.dial(voiceMail.mailboxNumber(), modemPath)
+            } else {
+                //% "No voicemail number is defined"
+                Notices.show(qsTrId("voicecall-la-no_voicemail_mailbox"))
+            }
+            voiceMail.destroy()
         }
-        voiceMail.destroy()
+        if (voiceMail.valid) {
+            dialFn()
+        } else {
+            voiceMail.validChanged.connect(dialFn)
+        }
     }
 
     objectName: "softwareInputPanel"
@@ -391,6 +398,8 @@ Item {
     Component {
         id: messageWaiting
         Item {
+            id: voiceMail
+            property bool valid
             property alias modemPath: ofonoMessageWaiting.modemPath
 
             function mailboxNumber() {
@@ -407,6 +416,10 @@ Item {
                 id: ofonoMessageWaiting
                 property bool error
                 onGetPropertiesFailed: error = true
+                onValidChanged: {
+                    timeout.stop()
+                    voiceMail.valid = true
+                }
             }
 
             ConfigurationValue {
@@ -415,6 +428,17 @@ Item {
                 property string card: simId != "" ? simId : "default"
                 key: "/sailfish/voicecall/voice_mailbox/" + card
                 defaultValue: ""
+            }
+
+            Timer {
+                id: timeout
+                // Timeout for oFono response
+                interval: 5000
+                running: true
+                // Something very bad has happened and OfonoMessageWaiting timed out,
+                // so set valid to true to make an attempt to read a number from dconf
+                // and then be guaranteed to destroy the object.
+                onTriggered: voiceMail.valid = true
             }
         }
     }

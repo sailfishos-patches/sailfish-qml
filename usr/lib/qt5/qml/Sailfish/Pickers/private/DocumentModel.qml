@@ -13,8 +13,8 @@ import Sailfish.Pickers 1.0
 ContentModel {
     contentType: ContentType.Document
     rootType: DocumentGallery.Document
-    sortProperties: ["-lastAccessed"]
-    properties: [ 'url', 'title', 'lastAccessed', 'filePath', 'fileName', 'fileSize',
+    sortProperties: ["-lastModified"]
+    properties: [ 'url', 'title', 'lastModified', 'filePath', 'fileName', 'fileSize',
         'mimeType', 'selected', 'contentType' ]
 
     function extension(fileName) {

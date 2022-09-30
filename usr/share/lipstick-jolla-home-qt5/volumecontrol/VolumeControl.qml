@@ -13,7 +13,6 @@ import org.nemomobile.configuration 1.0
 import com.jolla.lipstick 0.1
 import QtFeedback 5.0
 import "../systemwindow"
-import "../compositor"
 
 SystemWindow {
     id: volumeBar

@@ -67,7 +67,7 @@ Page {
                                 //: Uninstall label for remorse item
                                 //% "Uninstalling %1"
                                 qsTrId("jolla-store-la-remorse_uninstalling_app").arg(appData.title), function() {
-                                    handler.uninstall(packageName, false)
+                                    handler.uninstall(packageName)
                                 } )
                 }
             }
@@ -139,8 +139,8 @@ Page {
             }
 
             AppScreenshots {
-                visible: appData.inStore && urls.length > 0
                 urls: appData.screenshots
+                visible: appData.inStore && urls.length > 0
             }
 
             AppPageReviews {

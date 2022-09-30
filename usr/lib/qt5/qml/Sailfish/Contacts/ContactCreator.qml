@@ -21,6 +21,25 @@ QtObject {
             var list
             var i
 
+            if (attributes.hasOwnProperty('name')) {
+                var nameParts = lastCreatedContact.decomposeName(attributes['name'])
+                if (nameParts.firstName) {
+                    lastCreatedContact.firstName = nameParts.firstName
+                }
+                if (nameParts.middleName) {
+                    lastCreatedContact.middleName = nameParts.middleName
+                }
+                if (nameParts.lastName) {
+                    lastCreatedContact.lastName = nameParts.lastName
+                }
+                if (nameParts.namePrefix) {
+                    lastCreatedContact.namePrefix = nameParts.namePrefix
+                }
+                if (nameParts.nameSuffix) {
+                    lastCreatedContact.nameSuffix = nameParts.nameSuffix
+                }
+            }
+
             if (attributes.hasOwnProperty('note')) {
                 details.push({
                     'type': Person.NoteType,

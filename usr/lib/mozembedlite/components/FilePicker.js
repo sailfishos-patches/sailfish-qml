@@ -4,9 +4,9 @@
 
 // Ported from Android FF esr60 sha1 c714053d73ac408ab402bb4d7e906e718f4ecb7e
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 Cu.importGlobalProperties(['File']);
 
@@ -177,7 +177,7 @@ FilePicker.prototype = {
   show: function() {
     if (this._domWin) {
       this.fireDialogEvent(this._domWin, "DOMWillOpenModalDialog");
-      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this._domWin.windowUtils;
       winUtils.enterModalState();
     }
 
@@ -190,7 +190,7 @@ FilePicker.prototype = {
     Services.embedlite.removeMessageListener("filepickerresponse", this);
 
     if (this._domWin) {
-      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = this._domWin.windowUtils;
       winUtils.leaveModalState();
       this.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
     }
@@ -227,7 +227,11 @@ FilePicker.prototype = {
   },
 
   sendMessageToEmbed: function(aMsg) {
-    Services.embedlite.sendAsyncMessage(aMsg.winId, aMsg.type, JSON.stringify(aMsg));
+    try {
+      Services.embedlite.sendAsyncMessage(aMsg.winId, aMsg.type, JSON.stringify(aMsg));
+    } catch (e) {
+      Logger.warn("FilePicker: sending async message failed", e)
+    }
     Services.embedlite.addMessageListener("filepickerresponse", this);
   },
 
@@ -244,7 +248,14 @@ FilePicker.prototype = {
 
     this._promptActive = false;
 
-    if (!this._filePath) {
+    if (!this._filePath || !accepted) {
+      try {
+        this._callback.done(Ci.nsIFilePicker.returnCancel);
+        Services.embedlite.removeMessageListener("filepickerresponse", this);
+        delete this._callback;
+      } catch (e) {
+          Logger.warn("FilePicker: cancelling filepicker failed", e)
+      }
       return;
     }
 
@@ -261,8 +272,7 @@ FilePicker.prototype = {
       promise.then(domFile => {
                      this._domFiles.push(domFile);
                      if (this._callback && (this._domFiles.length === this._filePath.length)) {
-                       this._callback.done(this._filePath && accepted ?
-                                             Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
+                       this._callback.done(Ci.nsIFilePicker.returnOK);
                        Services.embedlite.removeMessageListener("filepickerresponse", this);
                        delete this._callback;
                      }
@@ -272,7 +282,7 @@ FilePicker.prototype = {
 
   getEnumerator: function(files) {
     return {
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISimpleEnumerator]),
       mFiles: files,
       mIndex: 0,
       hasMoreElements: function() {
@@ -294,15 +304,14 @@ FilePicker.prototype = {
         return;
       let event = aDomWin.document.createEvent("Events");
       event.initEvent(aEventName, true, true);
-      let winUtils = aDomWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+      let winUtils = aDomWin.windowUtils;
       winUtils.dispatchEventToChromeOnly(aDomWin, event);
     } catch(ex) {
     }
   },
 
   classID: Components.ID("{18a4e042-7c7c-424b-a583-354e68553a7f}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker, Ci.nsIEmbedMessageListener])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFilePicker, Ci.nsIEmbedMessageListener])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([FilePicker]);

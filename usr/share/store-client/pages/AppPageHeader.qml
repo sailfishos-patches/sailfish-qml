@@ -26,9 +26,6 @@ Item {
                                                                             : 0.0
         image: app.cover
 
-        // TODO: Remove this workaround!
-        _scaleDownWorkaround: true
-
         Behavior on opacity { FadeAnimation {} }
     }
 

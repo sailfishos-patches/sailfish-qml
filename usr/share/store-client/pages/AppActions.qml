@@ -13,6 +13,6 @@ QtObject {
 
     // Uninstalls given application.
     function uninstall(uuid, packageName) {
-        packageHandler.uninstall(packageName, false)
+        packageHandler.uninstall(packageName)
     }
 }

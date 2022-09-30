@@ -1,81 +1,65 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-Item {
-    id: self
+Row {
+    id: root
 
-    property var urls: []
+    property alias urls: repeater.model
 
-    width: parent.width
-    height: childrenRect.height
+    width: Math.min(parent.width, urls.length * parent.width/3)
+    anchors.horizontalCenter: parent.horizontalCenter
+    spacing: Math.round(Theme.pixelRatio)
 
-    Row {
-       id: row
+    Repeater {
+        id: repeater
 
-       width: parent.width
+        // keep track of the images that have finished loading, as the UI
+        // design proposes loading sequentially from left to right, showing
+        // a spinner on the image that is currently loading
+        property int loadingOffset
 
-       Repeater {
-           id: repeater
+        delegate: StoreImage {
+            id: img
 
-           // keep track of the images that have finished loading, as the UI
-           // design proposes loading sequentially from left to right, showing
-           // a spinner on the image that is currently loading
-           property int loadingOffset
+            fillMode: Image.PreserveAspectFit
+            image: (index > repeater.loadingOffset) ? "" : modelData
+            width: (root.parent.width - 2*root.spacing)/3
+            sourceSize.width: width
 
-           model: self.urls
+            onImageStatusChanged: {
+                if (image && imageStatus !== Image.Loading) {
+                    // advance to the next image, if the image stopped
+                    // loading (has loaded or failed)
+                    repeater.loadingOffset = Math.max(repeater.loadingOffset, index + 1)
+                }
+            }
 
-           delegate: Item {
-               width: row.width / 3
-               height: row.width / 3
+            BusyIndicator {
+                y: parent.width/2 - height/2
+                anchors.horizontalCenter: parent.horizontalCenter
+                running: img.imageStatus === Image.Loading
+            }
 
-               StoreImage {
-                   id: img
-                   image: (index > repeater.loadingOffset) ? "" : modelData
-                   visible: false
+            Rectangle {
+                anchors.fill: parent
+                visible: mouse.pressed && mouse.containsMouse
+                color: Theme.highlightBackgroundColor
+                opacity: Theme.highlightBackgroundOpacity
+            }
 
-                   onImageStatusChanged: {
-                       if (image && imageStatus !== Image.Loading) {
-                           // advance to the next image, if the image stopped
-                           // loading (has loaded or failed)
-                           repeater.loadingOffset = Math.max(repeater.loadingOffset, index + 1)
-                       }
-                   }
-               }
+            MouseArea {
+                id: mouse
+                anchors.fill: parent
 
-               ShaderEffectSource {
-                   // Notice that this is consuming quite a bit of memory.
-                   // The optimal solution would be to use QImage.scaled()
-                   // when we have the disk caching available.
-                   property int size: Math.min(img.width, img.height)
-                   property real hsize: size / 2.0
-
-                   anchors.fill: parent
-                   smooth: true
-                   mipmap: true
-                   sourceItem: img
-                   textureSize { width: size; height: size }
-                   sourceRect: Qt.rect(img.width / 2.0 - hsize, img.height / 2.0 - hsize, size, size)
-               }
-
-               BusyIndicator {
-                   anchors.centerIn: parent
-                   running: img.imageStatus === Image.Loading
-               }
-
-               MouseArea {
-                   anchors.fill: parent
-
-                   onClicked: {
-                       if (!jollaStore.isOnline) {
-                           jollaStore.tryGoOnline()
-                       } else {
-                           var props = { "model": self.urls,
-                                         "currentIndex": model.index }
-                           pageStack.push(Qt.resolvedUrl("ScreenshotPage.qml"), props)
-                       }
-                   }
-               }
-           }
-       }
+                onClicked: {
+                    if (!jollaStore.isOnline) {
+                        jollaStore.tryGoOnline()
+                    } else {
+                        var props = { "model": root.urls, "currentIndex": model.index }
+                        pageStack.push(Qt.resolvedUrl("ScreenshotPage.qml"), props)
+                    }
+                }
+            }
+        }
     }
 }

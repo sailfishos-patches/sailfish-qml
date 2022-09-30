@@ -1,0 +1,2 @@
+singleton ListModelRefCounter ListModelRefCounter.qml
+singleton GpsStateRestorer GpsStateRestorer.qml

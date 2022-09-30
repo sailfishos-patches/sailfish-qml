@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2013-2016 Jolla Ltd.
-** Contact: Sami Kananoja <sami.kananoja@jollamobile.com>,
 **          Joona Petrell <joona.petrell@jollamobile.com>
 ** All rights reserved.
 **

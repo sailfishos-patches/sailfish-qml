@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (c) 2013 - 2019 Jolla Ltd.
-** Copyright (c) 2019 Open Mobile Platform LLC.
+** Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
 ** Contact: Dmitry Rozhkov <dmitry.rozhkov@jolla.com>
 ** Contact: Raine Makelainen <raine.makelainen@jollamobile.com>
 **
@@ -17,6 +17,7 @@ import Sailfish.WebEngine 1.0
 import Nemo.DBus 2.0
 import MeeGo.Connman 0.2
 import org.nemomobile.policy 1.0
+import Nemo.Connectivity 1.0
 
 // QtObject cannot have children
 Item {
@@ -31,10 +32,12 @@ Item {
     property string _lastMetaOwner
     property bool _isAudioStream
     property bool _isVideoStream
+    property bool _webrtcAudioActive
+    property bool _webrtcVideoActive
 
     function calculateStatus() {
-        var video = false
-        var audio = false
+        var video = _webrtcVideoActive
+        var audio = _webrtcAudioActive
 
         if (_mediaState === "play" && _lastStateOwner === _lastMetaOwner) {
             if (_isVideoStream) {
@@ -83,7 +86,11 @@ Item {
     Connections {
         target: WebEngine
 
-        onInitialized: networkManager.notifyOfflineStatus()
+        onInitialized: {
+          WebEngine.addObserver("network-enable")
+          WebEngine.addObserver("webrtc-media-info")
+          connectionHelper.notifyOfflineStatus()
+        }
         onRecvObserve: {
             if (message === "media-decoder-info") {
                 if (data.state === "meta") {
@@ -95,24 +102,30 @@ Item {
                     _lastStateOwner = data.owner
                 }
                 calculateStatus()
+            } else if (message === "webrtc-media-info") {
+                _webrtcAudioActive = data.audio
+                _webrtcVideoActive = data.video
+                calculateStatus()
+            } else if (message === "network-enable") {
+                connectionHelper.attemptToConnectNetwork()
             }
         }
     }
 
-    NetworkManager {
-        id: networkManager
-        readonly property bool online: state == "online" || state == "ready"
+    ConnectionHelper {
+        id: connectionHelper
+        readonly property bool connected: status >= ConnectionHelper.Connected
 
         function notifyOfflineStatus() {
-            if (WebEngine.isInitialized) {
+            if (WebEngine.initialized) {
                 WebEngine.notifyObservers("embed-network-link-status",
                                           {
-                                              "offline": !networkManager.online
+                                              "offline": !connectionHelper.connected
                                           })
             }
         }
 
-        onOnlineChanged: notifyOfflineStatus()
+        onConnectedChanged: notifyOfflineStatus()
     }
 
     DBusInterface {

@@ -28,6 +28,7 @@ Dialog {
     property alias backupsPath: advancedSettings.backupsPath
     property bool showAdvancedSettings
     property alias ignoreSslErrors: ignoreSslErrorsSwitch.checked
+    property alias skipAuthentication: authenticationSwitch.skipAuthentication
 
     property var servicesEnabledConfig: ({})
 
@@ -146,6 +147,15 @@ Dialog {
                 //: Switch to ignore SSL security errors
                 //% "Ignore SSL Errors"
                 text: qsTrId("components_accounts-la-jabber_ignore_ssl_errors")
+            }
+
+            TextSwitch {
+                id: authenticationSwitch
+                //: Switch to force or skip authentication during account creation
+                //% "Authenticate during account creation"
+                text: qsTrId("components_accounts-la-online_sync_authentication")
+                checked: true
+                readonly property bool skipAuthentication: !checked
             }
 
             SectionHeader {

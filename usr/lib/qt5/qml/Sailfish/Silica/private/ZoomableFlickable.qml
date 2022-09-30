@@ -23,6 +23,9 @@ SilicaFlickable {
     property bool transpose: (contentRotation % 180) != 0
     property int fit: width < height ? Qt.Horizontal : Qt.Vertical
 
+    property int minimumContentWidth: width
+    property int minimumContentHeight: height
+
     property Item _dragDetector: dragDetector
     property alias contentRotation: rotatingItem.rotation
     default property alias rotatingItem: rotatingItem.data
@@ -67,7 +70,7 @@ SilicaFlickable {
                 zoom = minimumZoom
                 return
             } else {
-                newHeight = Math.min(newHeight, _implicitContentWidth * maximumZoom)
+                newHeight = Math.min(newHeight, _implicitContentHeight * maximumZoom)
                 zoom = newHeight / _implicitContentHeight
                 newWidth = _implicitContentWidth * zoom
             }
@@ -90,8 +93,8 @@ SilicaFlickable {
     // block touch events going to PinchArea in certain cases.
     pressDelay: 0
 
-    contentWidth: Math.max(width, transpose ? rotatingItem.height : rotatingItem.width)
-    contentHeight: Math.max(height, transpose ? rotatingItem.width : rotatingItem.height)
+    contentWidth: Math.max(minimumContentWidth, transpose ? rotatingItem.height : rotatingItem.width)
+    contentHeight: Math.max(minimumContentHeight, transpose ? rotatingItem.width : rotatingItem.height)
 
     property alias implicitContentWidth: rotatingItem.implicitWidth
     property alias implicitContentHeight: rotatingItem.implicitHeight

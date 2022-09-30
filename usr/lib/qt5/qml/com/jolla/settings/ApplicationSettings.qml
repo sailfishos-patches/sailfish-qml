@@ -6,11 +6,13 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Lipstick 1.0
 
 Page {
     id: page
 
     property alias applicationName: header.title
+    property alias applicationIcon: appIcon.icon
     property string _desktopFile
     default property alias settings: column.data
 
@@ -39,6 +41,20 @@ Page {
 
             PageHeader {
                 id: header
+
+                rightMargin: appIcon.width + Theme.horizontalPageMargin + Theme.paddingLarge
+                height: Math.max(implicitHeight, appIcon.height + 2 * Theme.paddingLarge)
+                _titleItem.y: height/2 - _titleItem.height/2
+
+                LauncherIcon {
+                    id: appIcon
+
+                    anchors {
+                        right: parent.right
+                        rightMargin: Theme.horizontalPageMargin
+                        verticalCenter: parent.verticalCenter
+                    }
+                }
             }
         }
 

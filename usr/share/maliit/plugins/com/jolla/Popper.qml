@@ -47,10 +47,12 @@ Rectangle {
     property bool expanded
     property real activeX
     property bool hasAccents
+    property bool popupAlways
 
     onTargetChanged: {
         expanded = false
         hasAccents = target && (typeof target.accents == "string") && target.accents.length > 0
+        popupAlways = target && (typeof target.popupAlways == "boolean") && target.popupAlways
 
         if (hasAccents || (target && target.showPopper)) {
             popperExpandTimer.restart()
@@ -218,7 +220,7 @@ Rectangle {
         var margin = geometry.popperMargin
         activeX = Math.max(Math.min(pos, parent.width - popper.width - margin), margin)
 
-        var accentString = (keyboard.inSymView || keyboard.inSymView2)
+        var accentString = ((keyboard.inSymView || keyboard.inSymView2) && !popupAlways)
                            ? "" : keyboard.isShifted ? target.accentsShifted
                                                      : target.accents
         var accentArray = new Array

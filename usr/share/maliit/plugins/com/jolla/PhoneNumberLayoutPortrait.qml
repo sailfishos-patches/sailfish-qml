@@ -11,6 +11,11 @@ KeyboardLayout {
     portraitMode: true
     height: 4 * geometry.keyHeightPortrait
 
+    layoutIndex: -1
+    type: ""
+    handler: null
+    languageCode: ""
+
     Row {
         PhoneKey {
             caption: "1"

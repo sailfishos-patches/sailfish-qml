@@ -4,8 +4,6 @@
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
-let Node = Ci.nsIDOMNode;
-
 Logger.debug("JSScript: ContextMenuHandler.js loaded");
 
 var ContextMenuHandler = {
@@ -16,11 +14,6 @@ var ContextMenuHandler = {
     // Events we catch from content during the bubbling phase
     addEventListener("contextmenu", this, false);
     addEventListener("pagehide", this, false);
-
-    // Messages we receive from browser
-    // Command sent over from browser that only we can handle.
-    addMessageListener("Browser:ContextCommand", this, false);
-
     this.popupNode = null;
   },
 
@@ -31,45 +24,6 @@ var ContextMenuHandler = {
         break;
       case "pagehide":
         this.reset();
-        break;
-    }
-  },
-
-  receiveMessage: function ch_receiveMessage(aMessage) {
-    switch (aMessage.name) {
-      case "Browser:ContextCommand":
-        this._onContextCommand(aMessage);
-      break;
-    }
-  },
-
-  /*
-   * Handler for commands send over from browser's ContextCommands.js
-   * in response to certain context menu actions only we can handle.
-   */
-  _onContextCommand: function _onContextCommand(aMessage) {
-    let node = this.popupNode;
-    let command = aMessage.json.command;
-
-    switch (command) {
-      case "cut":
-        this._onCut();
-        break;
-
-      case "copy":
-        this._onCopy();
-        break;
-
-      case "paste":
-        this._onPaste();
-        break;
-
-      case "select-all":
-        this._onSelectAll();
-        break;
-
-      case "copy-image-contents":
-        this._onCopyImage();
         break;
     }
   },
@@ -94,67 +48,6 @@ var ContextMenuHandler = {
 
     this._processPopupNode(aEvent.originalTarget, aEvent.clientX,
                            aEvent.clientY, aEvent.mozInputSource);
-  },
-
-  /******************************************************
-   * ContextCommand handlers
-   */
-
-  _onSelectAll: function _onSelectAll() {
-    if (Util.isTextInput(this._target)) {
-      // select all text in the input control
-      this._target.select();
-    } else {
-      // select the entire document
-      content.getSelection().selectAllChildren(content.document);
-    }
-    this.reset();
-  },
-
-  _onPaste: function _onPaste() {
-    // paste text if this is an input control
-    if (Util.isTextInput(this._target)) {
-      let edit = this._target.QueryInterface(Ci.nsIDOMNSEditableElement);
-      if (edit) {
-        edit.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
-      } else {
-        Logger.warn("error: target element does not support nsIDOMNSEditableElement");
-      }
-    }
-    this.reset();
-  },
-
-  _onCopyImage: function _onCopyImage() {
-    Util.copyImageToClipboard(this._target);
-  },
-
-  _onCut: function _onCut() {
-    if (Util.isTextInput(this._target)) {
-      let edit = this._target.QueryInterface(Ci.nsIDOMNSEditableElement);
-      if (edit) {
-        edit.editor.cut();
-      } else {
-        Logger.warn("error: target element does not support nsIDOMNSEditableElement");
-      }
-    }
-    this.reset();
-  },
-
-  _onCopy: function _onCopy() {
-    if (Util.isTextInput(this._target)) {
-      let edit = this._target.QueryInterface(Ci.nsIDOMNSEditableElement);
-      if (edit) {
-        edit.editor.copy();
-      } else {
-        Logger.warn("error: target element does not support nsIDOMNSEditableElement");
-      }
-    } else {
-      let selectionText = this._previousState.string;
-
-      Cc["@mozilla.org/widget/clipboardhelper;1"]
-        .getService(Ci.nsIClipboardHelper).copyString(selectionText);
-    }
-    this.reset();
   },
 
   /******************************************************
@@ -189,10 +82,14 @@ var ContextMenuHandler = {
       contentType: "",
       contentDisposition: "",
       string: "",
+      visualViewport: {
+          offsetLeft: 0,
+          offsetTop: 0
+      }
     };
 
     // Do checks for nodes that never have children.
-    if (popupNode.nodeType == Node.ELEMENT_NODE) {
+    if (popupNode.nodeType == content.Node.ELEMENT_NODE) {
       // See if the user clicked on an image.
       if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
         state.types.push("image");
@@ -227,7 +124,7 @@ var ContextMenuHandler = {
 
 
     while (elem) {
-      if (elem.nodeType == Node.ELEMENT_NODE) {
+      if (elem.nodeType == content.Node.ELEMENT_NODE) {
         // is the target a link or a descendant of a link?
         if (Util.isLink(elem)) {
           // If this is an image that links to itself, don't include both link and
@@ -320,6 +217,11 @@ var ContextMenuHandler = {
     state.xPos = offsetX + aX;
     state.yPos = offsetY + aY;
     state.source = aInputSrc;
+
+    let currentWindow = popupNode.ownerDocument.defaultView;
+    let visualViewport = currentWindow.visualViewport;
+    state.visualViewport.offsetLeft = visualViewport.offsetLeft;
+    state.visualViewport.offsetTop = visualViewport.offsetTop;
 
     for (let i = 0; i < this._types.length; i++)
       if (this._types[i].handler(state, popupNode))

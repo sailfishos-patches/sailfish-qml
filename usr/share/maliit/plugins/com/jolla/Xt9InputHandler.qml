@@ -47,7 +47,7 @@ InputHandler {
     Xt9EngineThread {
         id: thread
         // note: also china language codes being set with this, assume xt9 model just ignores such
-        language: layoutRow.layout ? layoutRow.layout.languageCode : ""
+        language: keyboard.language
 
         property int shiftState: keyboard.isShifted ? (keyboard.isShiftLocked ? Xt9Model.ShiftLocked
                                                                               : Xt9Model.ShiftLatched)

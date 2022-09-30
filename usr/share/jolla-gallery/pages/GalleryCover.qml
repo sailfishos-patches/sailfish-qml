@@ -186,15 +186,11 @@ CoverBackground {
         }
     }
 
-    Image {
-        source: "image://theme/icon-launcher-gallery"
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            bottom: takePhotosLabel.top
-            bottomMargin: Theme.paddingLarge
-        }
-        opacity: Theme.opacityFaint
+    CoverPlaceholder {
         visible: !contentAvailable
+        icon.source: "image://theme/icon-launcher-gallery"
+        //% "Take some photos"
+        text: qsTrId("gallery-la-take_some_photos")
     }
 
     // Show the "Active object" e.g. fullscreen image or video
@@ -231,31 +227,4 @@ CoverBackground {
         opacity: fullscreen ? 1 : 0
         Behavior on opacity { FadeAnimation {}}
     }
-
-    // We don't have a design for empty content so let's
-    // just define a placeholder for it.
-    // TODO: Remove this when the design exists.
-    Label {
-        id: takePhotosLabel
-        //% "Take some photos"
-        text: qsTrId("gallery-la-take_some_photos")
-        anchors {
-            centerIn: parent
-        }
-        width: parent.width - Theme.paddingLarge
-        visible: !contentAvailable
-        color: Theme.secondaryColor
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.Wrap
-    }
-
-    CoverActionList {
-       enabled: !contentAvailable
-       CoverAction {
-           iconSource: "image://theme/icon-cover-camera"
-           onTriggered: {
-               CameraLauncher.exec()
-           }
-       }
-   }
 }

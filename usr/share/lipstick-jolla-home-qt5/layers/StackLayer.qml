@@ -369,14 +369,14 @@ Layer {
         PauseAnimation { id: delayAnimation; duration: 150 }
         ScriptAction {
             script: {
-                if (active) {
-                    if (layer.window.mapped || ++showAnimation.retries >= 4) {
+                if (layer.active) {
+                    if (layer.window.mapped || ++showAnimation.retries >= 20) {
                         showAnimation.retries = 0
                         if (layer.mergeWindows) {
                             layer.cacheWindow(layer.window)
                         }
                     } else {
-                        // If the window has not yet been redrawn wait for up to a second for
+                        // If the window has not yet been redrawn wait for up to 3 seconds for
                         // the window to be mapped.  If it's still not mapped by that time just
                         // fade in anyway, a not responding dialog will probably follow soon after
                         // to explain the black window.

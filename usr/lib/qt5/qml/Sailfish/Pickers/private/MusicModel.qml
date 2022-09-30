@@ -19,7 +19,7 @@ ContentModel {
     rootType: DocumentGallery.Audio
 
     sortProperties: ["+title"]
-    properties: [ 'url', 'title', 'lastAccessed', 'filePath', 'fileName', 'fileSize',
+    properties: [ 'url', 'title', 'lastModified', 'filePath', 'fileName', 'fileSize',
         'mimeType', 'duration', 'artist', 'albumTitle', 'genre', 'selected', 'contentType' ]
 
     function _filter(contentItem) {

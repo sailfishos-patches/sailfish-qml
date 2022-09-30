@@ -11,9 +11,11 @@ import QtQml 2.2
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
+import Sailfish.Media 1.0
 import MeeGo.QOfono 0.2
 import Nemo.DBus 2.0
 import org.nemomobile.lipstick 0.1
+import org.nemomobile.policy 1.0
 import com.jolla.lipstick 0.1
 
 BackgroundItem
@@ -121,6 +123,29 @@ BackgroundItem
         service: "com.jolla.voicecall.ui"
         path: "/"
         iface: "org.freedesktop.DBus.Peer"
+    }
+
+    Permissions {
+        id: permissions
+        enabled: root.ongoingCall
+        applicationClass: "call"
+
+        Resource {
+            required: true
+            type: Resource.HeadsetButtons
+        }
+    }
+
+    MediaKey {
+        enabled: permissions.acquired
+        key: Qt.Key_ToggleCallHangup
+        onPressed: voicecallIf.call("toggleCall", undefined)
+    }
+
+    MediaKey {
+        enabled: permissions.acquired
+        key: Qt.Key_MediaTogglePlayPause
+        onPressed: voicecallIf.call("toggleCall", undefined)
     }
 }
 

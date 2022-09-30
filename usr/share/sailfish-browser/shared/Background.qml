@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 Jolla Ltd.
+** Copyright (c) 2015 Jolla Ltd.
 ** Contact: Raine Makelainen <raine.makelainen@jolla.com>
 **
 ****************************************************************************/
@@ -16,25 +16,11 @@ import "." as Browser
 Item {
     id: wallpaper
 
-    readonly property alias baseColor: base.color
-    readonly property alias baseOpacity: base.opacity
-
     Item {
         id: glassTextureItem
         visible: false
         width: glassTextureImage.width
         height: glassTextureImage.height
-
-        Rectangle {
-            id: base
-            anchors.fill: parent
-            color: Theme.lightPrimaryColor
-            opacity: window.opaqueBackground ? 1 : 0
-            Behavior on opacity {
-                enabled: window.rootPage.active
-                FadeAnimation { }
-            }
-        }
 
         Rectangle {
             color: Theme.overlayBackgroundColor ? Theme.overlayBackgroundColor : "black"

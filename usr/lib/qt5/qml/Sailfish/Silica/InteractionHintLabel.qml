@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2014 Jolla Ltd.
-** Contact: Joona Petrell <joona.petrell@jollamobile.com>
 ** All rights reserved.
 **
 ** This file is part of Sailfish Silica UI component package.
@@ -36,13 +35,18 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 Rectangle {
+    id: root
+
     property bool invert
     property alias text: label.text
     property alias textColor: label.color
     property color backgroundColor: Theme.rgba(palette.highlightDimmerColor, 0.9)
     property alias palette: label.palette
+    property int bottomMargin: invert ? width/3 : Theme.paddingLarge*2
+    property int topMargin: invert ? Theme.paddingLarge*2 : width/3
 
-    height: parent.height / 2
+    height: implicitHeight
+    implicitHeight: label.height + topMargin + bottomMargin
     width: parent.width
     gradient: Gradient {
         GradientStop { position: invert ? 1.0 : 0.0; color: "transparent" }
@@ -55,8 +59,8 @@ Rectangle {
         anchors {
             top: invert ? parent.top : undefined
             bottom: invert ? undefined : parent.bottom
-            bottomMargin: Theme.paddingLarge*2
-            topMargin: Theme.paddingLarge*2
+            bottomMargin: root.bottomMargin
+            topMargin: root.topMargin
         }
     }
 }

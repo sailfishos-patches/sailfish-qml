@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Jolla Ltd.
-** Contact: Raine Makelainen <raine.makelainen@jolla.com>
+** Copyright (c) 2014 - 2021 Jolla Ltd.
+** Copyright (c) 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -24,7 +24,6 @@ import "." as Browser
 WebContainer {
     id: webView
 
-    property color _decoratorColor: Theme.highlightDimmerColor
     readonly property bool moving: contentItem ? contentItem.moving : false
     property bool findInPageHasResult
     property bool canShowSelectionMarkers: true
@@ -40,8 +39,7 @@ WebContainer {
 
     property var _webPageCreator: WebPageCreator {
         activeWebPage: contentItem
-        // onNewWindowRequested is always handled as synchronous operation (not through newTab).
-        onNewWindowRequested: tabModel.newTab("", parentId)
+        model: tabModel
     }
 
     property Component textSelectionControllerComponent: Component {
@@ -57,6 +55,9 @@ WebContainer {
             }
 
             Behavior on opacity { FadeAnimator {} }
+
+            onStartHandleMaskChanged: browserPage.inputRegion.selectionStartHandleMask = startHandleMask
+            onEndHandleMaskChanged: browserPage.inputRegion.selectionEndHandleMask = endHandleMask
         }
     }
 
@@ -83,10 +84,13 @@ WebContainer {
     }
 
     function thumbnailCaptureSize() {
-        var ratio = Screen.width / browserPage.thumbnailSize.width
+        var ratio = Math.min(
+                    browserPage.width / browserPage.thumbnailSize.width,
+                    browserPage.height / browserPage.thumbnailSize.height)
+        var width = browserPage.thumbnailSize.width * ratio
         var height = browserPage.thumbnailSize.height * ratio
 
-        return Qt.size(Screen.width, height)
+        return Qt.size(width, height)
     }
 
     function grabActivePage() {
@@ -100,14 +104,23 @@ WebContainer {
     }
 
     foreground: visibility >= QuickWindow.Window.Maximized && Qt.application.state === Qt.ApplicationActive
-    readyToPaint: resourceController.videoActive ? webView.visible && !resourceController.displayOff : webView.visible && webView.contentItem && webView.contentItem.domContentLoaded
+    readyToPaint: resourceController.videoActive ? webView.visible && !resourceController.displayOff : webView.visible && webView.contentItem && (webView.contentItem.domContentLoaded || webView.contentItem.painted)
     allowHiding: !resourceController.videoActive && !resourceController.audioActive
     fullscreenMode: (contentItem && !contentItem.chrome) ||
                     (contentItem && contentItem.fullscreen)
 
+    selectionActive: webView.contentItem && webView.contentItem.textSelectionActive
     touchBlocked: contentItem && contentItem.popupOpener && contentItem.popupOpener.active ||
-                  webView.contentItem && webView.contentItem.textSelectionActive || !AccessPolicy.browserEnabled || false
+                   !AccessPolicy.browserEnabled || false
     favicon: contentItem ? contentItem.favicon : ""
+
+    onSelectionActiveChanged: {
+        if (!selectionActive && webView.contentItem && webView.contentItem.textSelectionController) {
+            webView.contentItem.textSelectionController.clearSelection()
+            browserPage.inputRegion.selectionStartHandleMask = Qt.rect(0, 0, 0, 0)
+            browserPage.inputRegion.selectionEndHandleMask = Qt.rect(0, 0, 0, 0)
+        }
+    }
 
     webPageComponent: Component {
         WebPage {
@@ -145,6 +158,12 @@ WebContainer {
                     webView.grabActivePage()
                     contextMenuRequested(data)
                 }
+
+                onLoginSaved: {
+                    FaviconManager.grabIcon("logins", webPage,
+                                            Qt.size(Theme.iconSizeMedium,
+                                                    Theme.iconSizeMedium));
+                }
             }
 
             signal selectionCopied(var data)
@@ -161,8 +180,10 @@ WebContainer {
             }
 
             function clearSelection() {
-                if (textSelectionActive) {
+                if (textSelectionController) {
                     textSelectionController.clearSelection()
+                    browserPage.inputRegion.selectionStartHandleMask = Qt.rect(0, 0, 0, 0)
+                    browserPage.inputRegion.selectionEndHandleMask = Qt.rect(0, 0, 0, 0)
                 }
             }
 
@@ -170,7 +191,7 @@ WebContainer {
             toolbarHeight: container.toolbarHeight
             throttlePainting: !foreground && !resourceController.videoActive && webView.visible || !webView.visible
             enabled: webView.enabled
-            chromeGestureThreshold: toolbarHeight / 2
+            chromeGestureThreshold: toolbarHeight / 3
             chromeGestureEnabled: !forcedChrome && enabled && !webView.imOpened
 
             onGrabResult: tabModel.updateThumbnailPath(tabId, fileName)
@@ -208,19 +229,9 @@ WebContainer {
                 }
             }
 
-            onBgcolorChanged: {
+            onBackgroundColorChanged: {
                 // Update only webPage
                 if (container.contentItem === webPage) {
-                    var bgLightness = WebUtils.getLightness(bgcolor)
-                    var dimmerLightness = WebUtils.getLightness(Theme.highlightDimmerColor)
-                    var highBgLightness = WebUtils.getLightness(Theme.highlightBackgroundColor)
-
-                    if (Math.abs(bgLightness - dimmerLightness) > Math.abs(bgLightness - highBgLightness)) {
-                        container._decoratorColor = Theme.highlightDimmerColor
-                    } else {
-                        container._decoratorColor =  Theme.highlightBackgroundColor
-                    }
-
                     sendAsyncMessage("Browser:SelectionColorUpdate",
                                      {
                                          "color": Theme.secondaryHighlightColor
@@ -245,6 +256,13 @@ WebContainer {
                         resurrectedContentRect = null
                     }
                     grabItem()
+
+                    if (!webView.privateMode) {
+                        // Update the favicon for history items.
+                        FaviconManager.grabIcon("history", webPage,
+                                                Qt.size(Theme.iconSizeMedium,
+                                                        Theme.iconSizeMedium))
+                    }
                 }
 
                 // Refresh timers (if any) keep working even for suspended views. Hence
@@ -317,6 +335,13 @@ WebContainer {
                     linkHandler.handleLink(data.uri)
                     break
                 }
+                case "Link:AddSearch": {
+                    if (!webView.privateMode) {
+                        // This adds this search as available if not already there
+                        SearchEngineModel.add(data.engine.title, data.engine.href)
+                    }
+                    break
+                }
                 }
             }
             onRecvSyncMessage: {
@@ -348,36 +373,4 @@ WebContainer {
             }
         }
     }
-//    Rectangle {
-//        id: verticalScrollDecorator
-
-//        width: 5
-//        height: contentItem ? contentItem.verticalScrollDecorator.size : 0
-//        y: contentItem ? contentItem.verticalScrollDecorator.position : 0
-//        z: 1
-//        anchors.right: contentItem ? contentItem.right: undefined
-//        color: _decoratorColor
-//        smooth: true
-//        radius: 2.5
-//        visible: contentItem && contentItem.contentHeight > contentItem.height && !contentItem.pinching && !popupActive
-//        opacity: contentItem && contentItem.verticalScrollDecorator.moving ? 1.0 : 0.0
-//        Behavior on opacity { NumberAnimation { properties: "opacity"; duration: 400 } }
-//    }
-
-//    Rectangle {
-//        id: horizontalScrollDecorator
-
-//        width: contentItem ? contentItem.horizontalScrollDecorator.size : 0
-//        height: 5
-//        x: contentItem ? contentItem.horizontalScrollDecorator.position : 0
-//        y: webView.height - height
-//        z: 1
-//        color: _decoratorColor
-//        smooth: true
-//        radius: 2.5
-//        visible: contentItem && contentItem.contentWidth > contentItem.width && !contentItem.pinching && !popupActive
-//        opacity: contentItem && contentItem.horizontalScrollDecorator.moving ? 1.0 : 0.0
-//        Behavior on opacity { NumberAnimation { properties: "opacity"; duration: 400 } }
-//    }
-
 }

@@ -4,18 +4,26 @@ import Sailfish.Silica 1.0
 SettingsMenuItemBase {
     id: menuItem
 
-    property url icon
+    property string icon
     property alias iconVisible: image.visible
+
+    visible: icon.length > 0
 
     Image {
         id: image
 
         anchors.centerIn: parent
-        source: menuItem.pressed
-                ? menuItem.icon + "?" + (Theme.colorScheme == Theme.LightOnDark
-                                         ? Theme.highlightColor
-                                         : Theme.highlightFromColor(Theme.highlightColor, Theme.LightOnDark))
-                : menuItem.icon + "?" + Theme.lightPrimaryColor
-        smooth: true
+        source: {
+            if (menuItem.icon.length > 0) {
+                if (menuItem.pressed) {
+                  return menuItem.icon + "?" + (Theme.colorScheme == Theme.LightOnDark
+                                                ? Theme.highlightColor
+                                                : Theme.highlightFromColor(Theme.highlightColor, Theme.LightOnDark))
+                } else {
+                    return menuItem.icon + "?" + Theme.lightPrimaryColor
+                }
+            }
+            return ""
+        }
     }
 }

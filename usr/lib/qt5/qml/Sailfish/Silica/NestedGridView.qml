@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2014 Jolla Ltd.
-** Contact: Aaron McCarthy <aaron.mccarthy@jolla.com>
 ** All rights reserved.
 **
 ** This file is part of Sailfish Silica UI component package.

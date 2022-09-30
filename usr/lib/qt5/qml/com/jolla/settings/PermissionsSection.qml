@@ -44,7 +44,7 @@ Column {
             property bool expanded
 
             // Skip Privileged permission
-            visible: model.name !== "Privileged"
+            visible: model.name !== "Privileged" && model.name !== "Compatibility"
             contentItem.clip: expanded
             contentHeight: description.implicitHeight + 2*description.y
             width: section.width

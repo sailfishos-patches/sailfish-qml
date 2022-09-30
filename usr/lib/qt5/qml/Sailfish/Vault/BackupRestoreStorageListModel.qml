@@ -196,7 +196,9 @@ ListModel {
         }
         for (var i = 0; i < _externalPartitions.count; ++i) {
             var storageData = _externalPartitions.objectAt(i)
-            append(storageData)
+            if (storageData) {
+                append(storageData)
+            }
         }
     }
 
@@ -212,20 +214,22 @@ ListModel {
     function _refreshCloudBackup(index) {
         var data = get(index)
         if (data && data.accountId > 0) {
-            var latestBackupInfo
-            if (_networkManagerFactory.instance.state === "online") {
-                latestBackupInfo = {
-                    "ready": false
-                }
-                _sailfishBackup.call("listCloudBackups", [data.accountId, true])
+            var latestBackupInfo = {
+                "fileName": "",
+                "fileDir": "",
+                "created": undefined,
+                "error": "",
+                "ready": true
+            }
+            if (_accountManager.credentialsNeedUpdate(data.accountId)) {
+                //: Error shown when an account is not available because user has not signed in
+                //% "Account not signed in"
+                latestBackupInfo.error = qsTrId("vault-la-account_not_signed_in")
+            } else if (_networkManagerFactory.instance.state === "online") {
+                latestBackupInfo.ready = false
+                _sailfishBackup.listCloudBackups(data.accountId)
             } else {
-                latestBackupInfo = {
-                    "fileName": "",
-                    "fileDir": "",
-                    "created": undefined,
-                    "error": BackupUtils.cloudConnectErrorText,
-                    "ready": true
-                }
+                latestBackupInfo.error = BackupUtils.cloudConnectErrorText
             }
             setProperty(index, "latestBackupInfo", latestBackupInfo)
         }
@@ -235,8 +239,19 @@ ListModel {
         property string status
         property var localBackupUnits: []
         property var cloudBackupUnits: []
+        property var _pendingListCalls: ({})
+
+        function listCloudBackups(accountId) {
+            _pendingListCalls[accountId] = true
+            call("listCloudBackups", [accountId, true])
+        }
 
         function listCloudBackupsFinished(accountId, fileNames, success) {
+            if (!_pendingListCalls[accountId]) {
+                return
+            }
+            delete _pendingListCalls[accountId]
+
             var rowIndex = root._findAccount(accountId)
             if (rowIndex < 0) {
                 return

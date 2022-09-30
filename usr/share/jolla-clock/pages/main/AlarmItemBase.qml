@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import com.jolla.clock.private 1.0
 
 GridItem {
     id: alarmItemBase
@@ -11,6 +12,10 @@ GridItem {
     highlighted: alarm.enabled || down || menuOpen
 
     function remove() {
+        if (alarm.enabled) {
+            Clock.cancelNotifications(alarm.id)
+        }
+
         showContents = false
         alarm.deleteAlarm()
     }

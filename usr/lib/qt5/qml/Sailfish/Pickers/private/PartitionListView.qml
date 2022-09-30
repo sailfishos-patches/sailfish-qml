@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (c) 2021 Open Mobile Platform LLC.
 ** Copyright (C) 2017 Jolla Ltd.
 ** Contact: Raine Mäkeläinen <raine.makelainen@jollamobile.com>
 **
@@ -46,7 +47,7 @@ SilicaListView {
             insert(0, {
                        //% "Home folder"
                        name: qsTrId("components_pickers-la-home_folder"),
-                       iconSource: 'image://theme/icon-m-file-folder',
+                       iconSource: 'image://theme/icon-m-device',
                        path: StandardPaths.home
                    })
         }
@@ -61,9 +62,8 @@ SilicaListView {
             Component.onCompleted: {
                 if (model.status == PartitionModel.Mounted) {
                     sourceModel.append({
-                        //% "Memory card"
-                        name: qsTrId("components_pickers-la-memory_card"),
-                        iconSource: 'image://theme/icon-m-file-folder',
+                        name: model.deviceLabel,
+                        iconSource: 'image://theme/icon-m-sd-card',
                         path: model.mountPath
                     })
                 }

@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
-** Copyright (C) 2013 Jolla Ltd.
-** Contact: Martin Jones <martin.jones@jollamobile.com>
+** Copyright (C) 2013-2021 Jolla Ltd.
 ** All rights reserved.
 ** 
 ** This file is part of Sailfish Silica UI component package.
@@ -212,7 +211,7 @@ SilicaMouseArea {
         // The _contentHeight (and the animated _displayHeight following it) may be reduced to 0 if
         // active is false or all of the items in the menu are hidden which can happen as a
         // side effect of the menu or its window being hidden.
-        if (_contentHeight <= 0) {
+        if (_displayHeight <= 0 && _contentHeight <= 0) {
             close() // If the menu was effectively closed as a result of being hidden, explicitly close it now.
             parent = null
             _page = null
@@ -441,10 +440,16 @@ SilicaMouseArea {
 
             onRunningChanged: {
                 if (!running) {
-                    contextMenu._reset()
+                    delayedReset.restart()
                 }
             }
         }
+    }
+
+    Timer {
+        id: delayedReset
+        interval: 10
+        onTriggered: contextMenu._reset()
     }
 
     Component.onDestruction: {

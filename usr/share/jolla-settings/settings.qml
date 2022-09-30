@@ -139,7 +139,7 @@ ApplicationWindow {
         }
 
         function addNewUser() {
-            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/users/users.qml"), { "creatingUser": true })
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/users/users.qml"), { "enableUserCreationOnceComplete": true })
         }
 
         function showPage(path) {
@@ -164,6 +164,16 @@ ApplicationWindow {
 
         function activateWindow(arg) {
             window.activate()
+        }
+    }
+
+    DBusAdaptor {
+        path: "/share_signing_keys"
+        iface: "org.sailfishos.share"
+
+        function share(shareActionConfiguration) {
+            window.showSettingsPage("system_settings", Qt.resolvedUrl("pages/keys/SigningSharePage.qml"),
+                                    { "shareActionConfiguration": shareActionConfiguration })
         }
     }
 }

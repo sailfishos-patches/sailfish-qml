@@ -11,8 +11,8 @@ Page {
         id: fileModel
         properties: ["url", "fileName"]
         sortProperties: ["+fileName"]
-        rootType: DocumentGallery.Text
-        filter: GalleryEqualsFilter { property: "mimeType"; value: "text/vcard" }
+        rootType: DocumentGallery.File
+        filter: GalleryEqualsFilter { property: "fileExtension"; value: "vcf" }
     }
 
     SilicaFlickable {

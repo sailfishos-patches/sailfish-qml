@@ -2,18 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const APP_STARTUP         = "app-startup"
-const VIEW_CREATED        = "embedliteviewcreated";
-const XPCOM_SHUTDOWN      = "xpcom-shutdown";
-const PREF_OVERRIDE       = "general.useragent.override";
+const APP_STARTUP               = "app-startup"
+const VIEW_CREATED              = "embedliteviewcreated";
+const VIEW_DESTROYED            = "embedliteviewdestroyed";
+const VIEW_DESKTOP_MODE_CHANGED = "embedliteviewdesktopmodechanged";
+const VIEW_UA_CHANGED           = "embedliteviewhttpuseragentchanged";
+const XPCOM_SHUTDOWN            = "xpcom-shutdown";
+const PREF_OVERRIDE             = "general.useragent.override";
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { UserAgentOverrides } = ChromeUtils.import("chrome://embedlite/content/UserAgentOverrides.jsm");
 
 Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
 
@@ -31,17 +34,31 @@ UserAgentOverrideHelper.prototype = {
       // Engine DownloadManager notifications
       case APP_STARTUP: {
         Logger.debug("UserAgentOverrideHelper app-startup");
+        Services.obs.addObserver(this, VIEW_CREATED, true);
+        Services.obs.addObserver(this, VIEW_DESKTOP_MODE_CHANGED, true);
+        Services.obs.addObserver(this, VIEW_DESTROYED, true);
+        Services.obs.addObserver(this, VIEW_UA_CHANGED, true);
         Services.obs.addObserver(this, XPCOM_SHUTDOWN, false);
-        Services.prefs.addObserver(PREF_OVERRIDE, this, false);
         UserAgent.init();
         break;
       }
-      case "nsPref:changed": {
-        // Trigger by Preferences::InitializeUserPrefs after user prefs has been read.
-        if (aData === PREF_OVERRIDE) {
-            // Drop general.useragent.override from the in-memory prefs.
-            Services.prefs.clearUserPref(PREF_OVERRIDE);
+      case VIEW_CREATED: {
+        UserAgent.addTabForWindow(aSubject)
+        break;
+      }
+      case VIEW_DESTROYED: {
+        UserAgent.removeTabForWindow(aSubject)
+        break;
+      }
+      case VIEW_DESKTOP_MODE_CHANGED: {
+        let tab = UserAgent.getTabForWindow(aSubject);
+        if (tab) {
+          tab.desktopMode = (aData === "true");
         }
+        break;
+      }
+      case VIEW_UA_CHANGED: {
+        UserAgent.setUserAgentOverride(aSubject, aData);
         break;
       }
       case XPCOM_SHUTDOWN: {
@@ -55,16 +72,17 @@ UserAgentOverrideHelper.prototype = {
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISiteSpecificUserAgent, Ci.nsIObserver,
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISiteSpecificUserAgent, Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference, Ci.nsIFormSubmitObserver])
 };
 
 var UserAgent = {
-  _desktopMode: false,
   _debug: false,
   _customUA: null,
+  _tabs: [],
   overrideMap: new Map,
   initilized: false,
+  userAgent: "",
   DESKTOP_UA: null,
   GOOGLE_DOMAIN: /(^|\.)google\.com$/,
   GOOGLE_MAPS_DOMAIN: /(^|\.)maps\.google\.com$/,
@@ -76,30 +94,54 @@ var UserAgent = {
       return
     }
 
-    Services.obs.addObserver(this, "DesktopMode:Change", false);
     Services.obs.addObserver(this.onModifyRequest.bind(this),
                              "http-on-modify-request");
     Services.prefs.addObserver(PREF_OVERRIDE, this, false);
+
+    this.userAgent = Cc["@mozilla.org/network/protocol;1?name=http"]
+                       .getService(Ci.nsIHttpProtocolHandler).userAgent
+
     this._customUA = this.getCustomUserAgent();
-    Cu.import("resource://gre/modules/UserAgentOverrides.jsm");
     UserAgentOverrides.init();
     UserAgentOverrides.addComplexOverride(this.onRequest.bind(this));
-    // See https://developer.mozilla.org/en/Gecko_user_agent_string_reference
-    this.DESKTOP_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
-                        .getService(Ci.nsIHttpProtocolHandler).userAgent;
-
+    // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent/Firefox
+    // Same as in moz.configure/init.configure to split the MOZILLA_UAVERSION
+    let version = Services.appinfo.version.split(".")[0] + ".0";
+    this.DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64; rv:" + version + ") Gecko/20100101 Firefox/" + version;
     this.initilized = true;
   },
 
   onModifyRequest(aSubject, aTopic, aData) {
     if (aTopic === "http-on-modify-request") {
       let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+
+      let loadInfo = channel.loadInfo;
+      if (loadInfo.securityMode === loadInfo.SEC_REQUIRE_CORS_DATA_INHERITS) {
+        // User-agent is not safelisted CORS request header so don't add it when in CORS mode. We may need to change this
+        // later to use nsILoadInfo securityFlags: https://bugzilla.mozilla.org/show_bug.cgi?id=1189945 (see also
+        // dom/fetch/InternalRequest::MapChannelToRequestMode).
+        //
+        // This approach works for now. Safelisted CORS request headers can be found here
+        // https://github.com/sailfishos-mirror/gecko-dev/blob/esr78/dom/fetch/InternalHeaders.cpp#L314.
+        // Fetch spec: https://fetch.spec.whatwg.org/#cors-safelisted-request-header
+        return;
+      }
+
       // Cover all google domains
       if (!channel.URI.schemeIs("https") && channel.URI.asciiHost.indexOf(".google.") !== -1) {
         channel.upgradeToSecure();
       }
       let ua = this.onRequest(channel, this.getDefaultUserAgent());
-      channel.setRequestHeader("User-Agent", ua, false);
+      if (ua) {
+        channel.setRequestHeader("User-Agent", ua, false);
+      }
+    }
+  },
+
+  setUserAgentOverride: function(aWindow, httpUserAgent) {
+    let tab = this.getTabForWindow(aWindow);
+    if (tab) {
+      tab.httpuseragentstring = httpUserAgent
     }
   },
 
@@ -113,15 +155,15 @@ var UserAgent = {
   },
 
   getDefaultUserAgent : function ua_getDefaultUserAgent() {
-    // Send desktop UA if "Request Desktop Site" is enabled.
-    if (this._desktopMode)
-      return this.DESKTOP_UA;
-
-    return this._customUA ? this._customUA : this.DESKTOP_UA;
+    if (this._customUA) {
+      return this._customUA;
+    } else if (this.userAgent) {
+      return this.userAgent;
+    }
+    return this.DESKTOP_UA;
   },
 
   uninit: function ua_uninit() {
-    Services.obs.removeObserver(this, "DesktopMode:Change");
     Services.prefs.removeObserver(PREF_OVERRIDE, this);
     UserAgentOverrides.uninit();
   },
@@ -131,6 +173,19 @@ var UserAgent = {
     let ua = "";
     let uri = channel.URI;
     let loadingPrincipalURI = null;
+    let channelWindow = this._getWindowForRequest(channel);
+
+    let tab = this.getTabForWindow(channelWindow);
+    if (tab) {
+      // Send assigned UA if it has been overridden
+      if (tab.httpuseragentstring.length) {
+        return tab.httpuseragentstring;
+      }
+      // Send desktop UA if "Request Desktop Site" is enabled.
+      if (tab.desktopMode) {
+        return this.DESKTOP_UA;
+      }
+    }
 
     // Prefer current uri over the loading principal's uri in case both have overrides.
     ua = uri && UserAgentOverrides.getOverrideForURI(uri)
@@ -152,16 +207,73 @@ var UserAgent = {
       if (this._debug) {
         Logger.debug("Loading principal uri:", loadingPrincipalURI.asciiHost, "Uri:", uri.asciiHost, "UA:", ua);
       }
-      return ua;
+      // Fall through to default user-agent if there is no override for the loadingPrincipalURI.
+      if (ua) {
+        return ua;
+      }
     }
-    return this.getDefaultUserAgent();
+    return defaultUA;
+  },
+
+  getTabForWindow: function getTabForWindow(aWindow) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].contentWindow == aWindow) {
+        return tabs[i];
+      }
+    }
+    return null;
+  },
+
+  addTabForWindow: function addTabForWindow(aWindow) {
+    this._tabs.push({
+      "contentWindow" : aWindow,
+      "desktopMode" : false,
+      "httpuseragentstring" : ""
+    });
+  },
+
+  removeTabForWindow: function removeTabForWindow(aWindow) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].contentWindow == aWindow) {
+        tabs.splice(i, 1);
+        return;
+      }
+    }
+  },
+
+  _getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
+    if (aRequest && aRequest.notificationCallbacks) {
+      try {
+        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
+      try {
+        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    return null;
+  },
+
+  _getWindowForRequest: function ua_getWindowForRequest(aRequest) {
+    let loadContext = this._getRequestLoadContext(aRequest);
+    if (loadContext) {
+      try {
+        return loadContext.associatedWindow;
+      } catch (e) {
+        // loadContext.associatedWindow can throw when there's no window
+      }
+    }
+
+    return null;
   },
 
   observe: function ua_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "DesktopMode:Change": {
-        break;
-      }
       case "nsPref:changed": {
         if (aData == PREF_OVERRIDE) {
           this._customUA = this.getCustomUserAgent();

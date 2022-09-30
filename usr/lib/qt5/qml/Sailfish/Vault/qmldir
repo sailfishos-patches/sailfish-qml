@@ -1,0 +1,11 @@
+module Sailfish.Vault
+plugin sailfishvaultplugin
+singleton BackupUtils 1.0 BackupUtils.qml
+BackupRestoreStoragePicker 1.0 BackupRestoreStoragePicker.qml
+BackupRestoreProgressItem 1.0 BackupRestoreProgressItem.qml
+BackupRestoreStorageListModel 1.0 BackupRestoreStorageListModel.qml
+RecentBackupsView 1.0 RecentBackupsView.qml
+BackupView 1.0 BackupView.qml
+BackupPlaceholder 1.0 BackupPlaceholder.qml
+RestorePage 1.0 RestorePage.qml
+BackupPage 1.0 BackupPage.qml

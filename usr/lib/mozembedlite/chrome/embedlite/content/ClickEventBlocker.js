@@ -12,11 +12,13 @@ let makeURI = Components.utils.import("resource://gre/modules/BrowserUtils.jsm",
 var ClickEventBlocker = {
   _context: null,
   _allowNavigationInSameOrigin: false,
+  _rootOrigin: null,
 
   init: function init(context, params) {
     this._context = context;
     this._allowNavigationInSameOrigin = params && params.allowNavigationInSameOrigin;
     Services.els.addSystemEventListener(context, "click", this, true);
+    this._rootOrigin = null;
   },
 
   handleEvent(event) {
@@ -28,14 +30,21 @@ var ClickEventBlocker = {
         return;
       }
 
-      let [href, isSameOrigin] = this._hrefForClickEvent(event);
+      let [referrerURI, href, isForm] = this._hrefForClickEvent(event);
+      if (!this._rootOrigin) {
+        // Keep track of the original origin to compare future clicks against
+        this._rootOrigin = referrerURI;
+      }
+      let isSameOrigin = this._isSameOriginHref(this._rootOrigin, href);
 
-      if (this._allowNavigationInSameOrigin && isSameOrigin) {
-        // Do not block clicks to the same origin links
+      // If it's a click in the same origin, or a form, handle it inside
+      // the captive portal
+      if (this._allowNavigationInSameOrigin && (isSameOrigin || isForm)) {
+        // Do not block clicks to the same origin links or form actions
         return;
       }
-      event.preventDefault();
       if (href) {
+        event.preventDefault();
         sendAsyncMessage("embed:OpenLink", {
                           "uri":  href
                         })
@@ -44,12 +53,35 @@ var ClickEventBlocker = {
   },
 
   /**
-   * Extracts href for the current click target and checks if it has same
-   * origin as current page.
+   * Checks of two URLs (usually a referer and a link href)
+   * have the same origin.
+   *
+   * @param referrerURI
+   *        The referrer URI.
+   * @param href
+   *        The href URI to compare with the referrer URI.
+   * @return isSameOrigin
+   */
+  _isSameOriginHref(referrerURI, href) {
+    if (!this._allowNavigationInSameOrigin)
+      return null;
+    const securityManager = Services.scriptSecurityManager;
+    try {
+      var targetURI = makeURI(href);
+      securityManager.checkSameOriginURI(referrerURI, targetURI, false);
+      return true;
+    } catch (e) { }
+    return false;
+  },
+
+  /**
+   * Extracts referrer URI and href for the current click target.
+   * When the click relates to a form (POST or GET) then isFrom
+   * will be returned as true.
    *
    * @param event
    *        The click event.
-   * @return [href, isSameOrigin].
+   * @return [referrerURI, href, isForm].
    */
   _hrefForClickEvent(event) {
     function isHTMLLink(aNode) {
@@ -59,41 +91,34 @@ var ClickEventBlocker = {
               aNode instanceof content.HTMLLinkElement);
     }
 
-    let self = this;
-    function isSameOriginHref(referrerURI, href) {
-      if (!self._allowNavigationInSameOrigin)
-        return null;
-      const securityManager = Services.scriptSecurityManager;
-      try {
-        var targetURI = makeURI(href);
-        securityManager.checkSameOriginURI(referrerURI, targetURI, false);
-        return true;
-      } catch (e) { }
-      return false;
-    }
-
     let node = event.target;
     while (node && !isHTMLLink(node)) {
       node = node.parentNode;
     }
 
-    if (node)
-      return [node.href, isSameOriginHref(node.ownerDocument.baseURIObject, node.href)];
+    if (node) {
+      return [node.ownerDocument.baseURIObject, node.href, false];
+    }
 
     // linkNode will be null if the click wasn't on an anchor element like
     // SVG links (XLink). If there is no linkNode, try simple XLink.
-    let href, baseURI;
+    let href, baseURI
+    let isForm = false;
     node = event.target;
     while (node && !href) {
-      if (node.nodeType == content.Node.ELEMENT_NODE &&
-          (node.localName == "a" ||
-           node.namespaceURI == "http://www.w3.org/1998/Math/MathML")) {
-        href = node.getAttribute("href") ||
-               node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-        if (href) {
-          baseURI = node.ownerDocument.baseURIObject;
-          break;
+      if (node.nodeType == content.Node.ELEMENT_NODE) {
+        if ((node.localName == "a" ||
+             node.namespaceURI == "http://www.w3.org/1998/Math/MathML")) {
+          href = node.getAttribute("href") ||
+                 node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+        } else if (node.localName == "form") {
+          href = node.getAttribute("action");
+          isForm = true;
         }
+      }
+      if (href) {
+        baseURI = node.ownerDocument.baseURIObject;
+        break;
       }
       node = node.parentNode;
     }
@@ -104,8 +129,8 @@ var ClickEventBlocker = {
       link.href = href;
       let uri = Services.io.newURI(href, null, baseURI).spec;
 
-      return [uri, isSameOriginHref(baseURI, uri)];
+      return [baseURI, uri, isForm];
     }
-    return [null, null];
+    return [null, null, false];
   }
 };

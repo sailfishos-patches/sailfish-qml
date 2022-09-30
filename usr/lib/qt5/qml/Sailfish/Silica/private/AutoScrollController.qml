@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2018 Jolla Ltd.
-** Contact: Andrew den Exter <andrew.den.exter@jolla.com>
 ** All rights reserved.
 **
 ** This file is part of Sailfish Silica UI component package.

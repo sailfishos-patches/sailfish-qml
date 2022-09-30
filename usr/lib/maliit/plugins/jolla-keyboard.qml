@@ -54,14 +54,15 @@ SilicaControl {
                                       (MInputMethodQuick.appOrientation == 90 || MInputMethodQuick.appOrientation == 270) :
                                       (MInputMethodQuick.appOrientation == 0 || MInputMethodQuick.appOrientation == 180)
 
-    property int activeIndex: -1
-    property var layoutModel: _layoutModel
-    property var layoutRow: _layoutRow
+    property alias activeIndex: keyboard.currentIndex
+    property alias layoutModel: _layoutModel
 
     property Item phraseEngine // for hwr
 
     property string paletteJson: MInputMethodQuick.extensions.palette || ""
     property var editorPalette: ({})
+
+    property string currentLayout: previousLayoutConfig.value
 
     palette {
         colorScheme: editorPalette.colorScheme
@@ -69,7 +70,9 @@ SilicaControl {
     }
 
     Component.onCompleted: {
-        activeIndex = Math.max(_layoutModel.getLayoutIndex(layoutConfig.value), 0)
+        MInputMethodQuick.actionKeyOverride.setDefaultIcon("image://theme/icon-m-enter")
+        MInputMethodQuick.actionKeyOverride.setDefaultLabel("")
+        activeIndex = activeIndex
     }
 
     onPaletteJsonChanged: {
@@ -93,23 +96,23 @@ SilicaControl {
         var x = 0, y = 0, width = 0, height = 0;
         var angle = MInputMethodQuick.appOrientation
 
-        var columnHeight = inputItems.effectiveHeight
+        var layoutHeight = keyboard.currentLayoutHeight
 
         switch (angle) {
         case 0:
-            y = MInputMethodQuick.screenHeight - columnHeight
+            y = MInputMethodQuick.screenHeight - layoutHeight
+            // fall through
         case 180:
-            x = (MInputMethodQuick.screenWidth - inputItems.width) / 2
-            width = inputItems.width
-            height = columnHeight
+            width = keyboard.width
+            height = layoutHeight
             break;
 
         case 270:
-            x = MInputMethodQuick.screenWidth - columnHeight
+            x = MInputMethodQuick.screenWidth - layoutHeight
+            // fall through
         case 90:
-            y = (MInputMethodQuick.screenHeight - inputItems.width) / 2
-            width = columnHeight
-            height = inputItems.width
+            width = layoutHeight
+            height = keyboard.width
             break;
         }
 
@@ -122,25 +125,41 @@ SilicaControl {
 
         MInputMethodQuick.setScreenRegion(Qt.rect(x, y, width, height))
     }
-    function saveCurrentLayoutSetting() {
-        layoutConfig.value = _layoutModel.get(activeIndex).layout
-    }
 
     function switchLayout(index) {
-        layoutRow.switchLayout(index)
+        keyboard.currentIndex = index
         keyboard.overriddenLayoutFile = ""
     }
 
     function switchToPreviousCharacterLayout() {
-        layoutRow.switchToPreviousCharacterLayout()
-    }
+        var previousLayout = previousLayoutConfig.value + ""
 
+        if (previousLayout.length > 0) {
+            for (var index = 0; index < _layoutModel.count; index++) {
+                var layout = _layoutModel.get(index)
+                if (layout.enabled && layout.layout === previousLayout) {
+                    keyboard.currentIndex = index
+                    return
+                }
+            }
+        }
+
+        for (index = 0; index < _layoutModel.count; index++) {
+            layout = _layoutModel.get(index)
+            if (layout.enabled && layout.type !== "emojis") {
+                keyboard.currentIndex = index
+                return
+            }
+        }
+    }
 
     InputHandlerManager {
         id: handlerManager
     }
 
     DBusAdaptor {
+        id: dbusAdaptor
+
         service: "com.jolla.keyboard"
         path: "/com/jolla/keyboard"
         iface: "com.jolla.keyboard"
@@ -159,10 +178,6 @@ SilicaControl {
             _layoutModel.updateInputHandlers()
             keyboard.inputHandler = basicInputHandler // just to make sure
         }
-
-        // JB#48766: Move keyboard geometry API to Maliit
-        readonly property real keyboardHeight: keyboard.fullyOpen ? keyboard.height : 0.0
-        onKeyboardHeightChanged: emitSignal("keyboardHeightChanged", [keyboardHeight])
     }
 
     ProfileControl { id: soundSettings}
@@ -180,12 +195,17 @@ SilicaControl {
 
         property var inputHandlers: new Array
 
-        onEnabledLayoutsChanged: {
-            if (MInputMethodQuick.active) {
-                _layoutRow.updateLoadersToLayoutAndNeighbours(canvas.activeIndex)
-            }
+        filter: LayoutModel.ShowEnabled
 
+        onEnabledLayoutsChanged: {
             updateInputHandlers()
+        }
+
+        onActiveLayoutChanged: {
+            var index = getLayoutIndex(activeIndex)
+            if (index >= 0) {
+                keyboard.currentIndex = index
+            }
         }
 
         Component.onCompleted: updateInputHandlers()
@@ -247,20 +267,8 @@ SilicaControl {
                     console.warn("input handler instantiation failed for " + handler + ": " + component.errorString())
                 }
             }
-        }
-    }
 
-    ConfigurationValue {
-        id: layoutConfig
-
-        key: "/sailfish/text_input/active_layout"
-        defaultValue: "en.qml"
-
-        onValueChanged: {
-            var index = _layoutModel.getLayoutIndex(value)
-            if (index >= 0) {
-                _layoutRow.switchLayout(index)
-            }
+            inputHandlers = inputHandlers
         }
     }
 
@@ -271,507 +279,397 @@ SilicaControl {
         defaultValue: false
     }
 
+    ConfigurationValue {
+        id: previousLayoutConfig
+
+        key: "/sailfish/text_input/previous_layout"
+        defaultValue: ""
+    }
+
     OpaqueBackgroundItem {
-        x: MInputMethodQuick.appOrientation == 270
+        x: MInputMethodQuick.appOrientation === 270
                 ? canvas.width - width
                 : 0
-        y: MInputMethodQuick.appOrientation == 0
+        y: MInputMethodQuick.appOrientation === 0
                 ? canvas.height - height
                 : 0
 
         width: {
-            if (MInputMethodQuick.appOrientation == 0 || MInputMethodQuick.appOrientation == 180) {
+            if (MInputMethodQuick.appOrientation === 0 || MInputMethodQuick.appOrientation === 180) {
                 return canvas.width
             } else if (!MInputMethodQuick.active || showAnimation.running || hideAnimation.running) {
                 return 0
-            } else if (!newLayoutBackground.visible || currentLayoutBackground.height < newLayoutBackground.height) {
-                return currentLayoutBackground.height
             } else {
-                return newLayoutBackground.height
+                return keyboard.minimumLayoutHeight
             }
         }
         height: {
-            if (MInputMethodQuick.appOrientation == 90 || MInputMethodQuick.appOrientation == 270) {
+            if (MInputMethodQuick.appOrientation === 90 || MInputMethodQuick.appOrientation === 270) {
                 return canvas.height
             } else if (!MInputMethodQuick.active || showAnimation.running || hideAnimation.running) {
                 return 0
-            } else if (!newLayoutBackground.visible || currentLayoutBackground.height < newLayoutBackground.height) {
-                return currentLayoutBackground.height
             } else {
-                return newLayoutBackground.height
+                return keyboard.minimumLayoutHeight
             }
         }
     }
 
-    Item {
-        // container at the of current orientation. allows actual keyboard to show relative to that.
-        id: root
+    ThemeEffect {
+        id: buttonPressEffect
+        effect: ThemeEffect.PressWeak
+    }
 
-        width: MInputMethodQuick.appOrientation == 0 || MInputMethodQuick.appOrientation == 180
-               ? parent.width : parent.height
-        height: 1
-        transformOrigin: Item.TopLeft
+    KeyboardBase {
+        id: keyboard
+
+        property color popperBackgroundColor: canvas.palette.colorScheme === Theme.LightOnDark
+                                              ? Qt.darker(canvas.palette.highlightBackgroundColor, 1.45)
+                                              : Qt.lighter(canvas.palette.highlightBackgroundColor, 1.45)
+        property bool allowLayoutChanges
+        property string mode: "common"
+        property string language: layout ? layout.language : ""
+
+        property bool fullyOpen
+        property bool expandedPaste: true
+         // override based on content type, e.g. for chinese revert to english layout on url
+        property int overrideContentType: -1
+        property string overriddenLayoutFile
+        property alias splitEnabled: splitConfig.value
+        property alias pasteInputHandler: pasteInputHandler
+
+        x: (canvas.width - width) / 2
+        y: (canvas.height - height) / 2
+
+        // Touch events delivered to the keyboard window are clipped to the IMArea so there's no
+        // need to also clip internally and worry about the size of the touch area handling.
+        width: MInputMethodQuick.appOrientation === 0 || MInputMethodQuick.appOrientation === 180
+                ? canvas.width
+                : canvas.height
+        height: MInputMethodQuick.appOrientation === 0 || MInputMethodQuick.appOrientation === 180
+                ? canvas.height
+                : canvas.width
+
         rotation: MInputMethodQuick.appOrientation
-        x: MInputMethodQuick.appOrientation == 180 || MInputMethodQuick.appOrientation == 270
-           ? parent.width : 0
-        y: MInputMethodQuick.appOrientation == 0 || MInputMethodQuick.appOrientation == 270
-           ? parent.height : 0
+
+        portraitMode: portraitLayout
+        layout: {
+            if (mode === "common") {
+                return currentItem ? currentItem.item : null
+            } else if (mode === "number") {
+                return number_portrait.visible ? number_portrait : number_landscape.item
+            } else {
+                return phone_portrait.visible ? phone_portrait : phone_landscape.item
+            }
+        }
+        layoutChangeAllowed: mode === "common"
+
+        dragThreshold: Theme.startDragDistance * 2
+
+        // Initialize the current index, this binding will be broken in Component.onCompleted
+        // and future updates to the current index will be done in a onActiveLayoutChanged
+        // handler which will only assign a value if there is a valid index for the layout.
+        currentIndex: _layoutModel.filter, Math.max(_layoutModel.getLayoutIndex(_layoutModel.activeLayout), 0)
+        interactive: mode === "common" && (!layout || layout.allowSwipeGesture)
+
+        contentItem.visible: keyboard.mode === "common"
+        model: _layoutModel
+
+        onCurrentLayoutHeightChanged: {
+            if (!showAnimation.running) {
+                updateIMArea()
+            }
+
+            // JB#48766: Move keyboard geometry API to Maliit
+            dbusAdaptor.emitSignal("keyboardHeightChanged", [currentLayoutHeight])
+        }
 
         onRotationChanged: updateIMArea()
 
-        ThemeEffect {
-            id: buttonPressEffect
-            effect: ThemeEffect.PressWeak
+        onCurrentItemChanged: {
+            var layout = _layoutModel.get(currentIndex)
+
+            if (canvas.currentLayout !== layout.layout) {
+                previousLayoutConfig.value = canvas.currentLayout
+                canvas.currentLayout = layout.layout
+            }
         }
 
-        KeyboardBackground {
-            id: currentLayoutBackground
-            width: keyboard.width + _layoutRow.switchTransitionPadding
-            height: inputItems.effectiveHeight
-            x: (_layoutRow.layout ? _layoutRow.layout.x : 0) - _layoutRow.switchTransitionPadding / 2
-            anchors.bottom: parent.top
-            opacity: inputItems.opacity
-            transformItem: root
-        }
-
-        KeyboardBackground {
-            id: newLayoutBackground
-            width: keyboard.width + _layoutRow.switchTransitionPadding
-            visible: _layoutRow.nextLoader && _layoutRow.nextLoader.item && _layoutRow.nextLoader.item.visible
-            height: visible ? _layoutRow.nextLoader.item.height : 0
-            x: (visible ? _layoutRow.nextLoader.item.x : 0) - _layoutRow.switchTransitionPadding / 2
-            anchors.bottom: parent.top
-            opacity: inputItems.opacity
-            transformItem: root
-        }
-
-        Column {
-            id: inputItems
-            width: keyboard.width
-            anchors.bottom: parent.top
-
-            property int effectiveHeight: keyboard.height
-
-            onEffectiveHeightChanged: {
-                if (!showAnimation.running) {
-                    updateIMArea()
-                }
+        onLayoutChanged: {
+            if (inputHandler) {
+                inputHandler.active = false // this input handler might not handle new layout
+            }
+            if (layout) {
+                language = layout.languageCode
             }
 
-            KeyboardBase {
-                id: keyboard
+            resetKeyboard()
+            applyAutocaps()
+            updateInputHandler()
 
-                property color popperBackgroundColor: canvas.palette.colorScheme === Theme.LightOnDark
-                                                      ? Qt.darker(canvas.palette.highlightBackgroundColor, 1.45)
-                                                      : Qt.lighter(canvas.palette.highlightBackgroundColor, 1.45)
-                property bool allowLayoutChanges
-                property string mode: "common"
+            if (inputHandler) {
+                inputHandler.reset()
+            }
+        }
 
-                property bool fullyOpen
-                property bool expandedPaste: true
-                 // override based on content type, e.g. for chinese revert to english layout on url
-                property int overrideContentType: -1
-                property string overriddenLayoutFile
-                property alias splitEnabled: splitConfig.value
-                property alias transitionRunning: _layoutRow.transitionRunning
+        function updateLayoutIfAllowed(denyOverride) {
+            if (allowLayoutChanges) {
+                updateLayout(denyOverride)
+            }
+        }
 
-                width: root.width
-                portraitMode: portraitLayout
-                layout: mode === "common" ? _layoutRow.layout
-                                          : mode === "number" ? (number_portrait.visible ? number_portrait
-                                                                                         : number_landscape.item)
-                                                              : (phone_portrait.visible ? phone_portrait
-                                                                                        : phone_landscape.item)
-                layoutChangeAllowed: mode === "common"
-                thresholdX: swipeGestureIsSafe ? (Theme.startDragDistance * 4.0) : (Theme.startDragDistance * 6.0)
-                thresholdY: Theme.startDragDistance * 1.8
-                swipeEnabled: layoutChangeAllowed && (canvas.layoutModel.enabledCount > 1) && !!layout && layout.allowSwipeGesture
-                allowedDirections: SwipeGestureArea.DirectionLeft | SwipeGestureArea.DirectionRight
-                onSwipeAmountChanged: {
-                    if (gestureInProgress) {
-                        layoutRow.updateManualTransition(swipeAmount)
-                    }
-                }
-                onGestureInProgressChanged: {
-                    if (gestureInProgress) {
-                        // Start loading the new layout
-                        layoutRow.switchLayout(getGestureNextLayoutIndex(), true)
+        function updateLayout(denyOverride) {
+            var newMode = mode
 
-                        // Hide all current popups and prevent key presses during the gesture
-                        cancelAllTouchPoints()
-                    } else {
-                        layoutRow.endManualTransition()
-                    }
-                }
-                onDirectionChanged: {
-                    if (gestureInProgress) {
-                        layoutRow.updateTransitionDirection(getGestureNextLayoutIndex())
-                    }
-                }
-                onModeChanged: layoutRow.layout.visible = mode === "common"
+            if (MInputMethodQuick.contentType === Maliit.NumberContentType) {
+                newMode = "number"
+            } else if (MInputMethodQuick.contentType === Maliit.PhoneNumberContentType) {
+                newMode = "phone"
+            } else {
+                newMode = "common"
 
-                function getGestureNextLayoutIndex() {
-                    return (direction === SwipeGestureArea.DirectionLeft) ? getRightAdjacentLayoutIndex() : getLeftAdjacentLayoutIndex()
-                }
+                if (!denyOverride) {
+                    var preferNonComposing = (MInputMethodQuick.contentType !== Maliit.FreeTextContentType
+                                              || MInputMethodQuick.hiddenText)
 
-                function getRightAdjacentLayoutIndex(index) {
-                    // If not argument is provided, work with the current layout index
-                    if (typeof(index) === "undefined") {
-                        index = canvas.activeIndex
-                    }
-
-                    // Try searching for the next one
-                    for (var i = index + 1; i < canvas.layoutModel.count; i++) {
-                        if (canvas.layoutModel.get(i).enabled) {
-                            return i
-                        }
-                    }
-
-                    // Try the lower indexes
-                    for (i = 0; i < index; i++) {
-                        if (canvas.layoutModel.get(i).enabled) {
-                            return i
-                        }
-                    }
-
-                    // Oopsie, there are no other layouts
-                    return index
-                }
-
-                function getLeftAdjacentLayoutIndex(index) {
-                    // If not argument is provided, work with the current layout index
-                    if (typeof(index) === "undefined") {
-                        index = canvas.activeIndex
-                    }
-
-                    // Try searching for the next one
-                    for (var i = index - 1; i >= 0; i--) {
-                        if (canvas.layoutModel.get(i).enabled) {
-                            return i
-                        }
-                    }
-
-                    // Try the lower indexes
-                    for (i = canvas.layoutModel.count - 1; i > index; i--) {
-                        if (canvas.layoutModel.get(i).enabled) {
-                            return i
-                        }
-                    }
-
-                    // Oopsie, there are no other layouts
-                    return index
-                }
-
-                function updateLayoutIfAllowed(denyOverride) {
-                    if (allowLayoutChanges) {
-                        updateLayout(denyOverride)
-                    }
-                }
-
-                function updateLayout(denyOverride) {
-                    var newMode = mode
-
-                    if (MInputMethodQuick.contentType === Maliit.NumberContentType) {
-                        newMode = "number"
-                    } else if (MInputMethodQuick.contentType === Maliit.PhoneNumberContentType) {
-                        newMode = "phone"
-                    } else {
-                        newMode = "common"
-
-                        if (!denyOverride) {
-                            var preferNonComposing = (MInputMethodQuick.contentType !== Maliit.FreeTextContentType
-                                                      || MInputMethodQuick.hiddenText)
-
-                            var newIndex
-                            if (!preferNonComposing && overrideContentType >= 0) {
-                                // Remove override
-                                if (overriddenLayoutFile.length > 0) {
-                                    newIndex = layoutModel.getLayoutIndex(overriddenLayoutFile)
-                                    if (newIndex >= 0) {
-                                        _layoutRow.switchLayout(newIndex)
-                                    }
-                                    overriddenLayoutFile = ""
-                                    inputHandler.active = false
-                                }
-
-                                overrideContentType = -1
-                            } else if (preferNonComposing && overrideContentType != MInputMethodQuick.contentType
-                                       && _layoutRow.layout && _layoutRow.layout.type !== "") {
-                                // apply override, always using english layout.
-                                // do only once per content type to avoid change when focus out+in on an editor
-                                newIndex = layoutModel.getLayoutIndex("en.qml")
-                                if (newIndex >= 0) {
-                                    overrideContentType = MInputMethodQuick.contentType
-                                    overriddenLayoutFile = layoutModel.get(canvas.activeIndex).layout
-                                    _layoutRow.switchLayout(newIndex)
-                                    inputHandler.active = false
-                                }
+                    var newIndex
+                    if (!preferNonComposing && overrideContentType >= 0) {
+                        // Remove override
+                        if (overriddenLayoutFile.length > 0) {
+                            newIndex = layoutModel.getLayoutIndex(overriddenLayoutFile)
+                            if (newIndex >= 0) {
+                                keyboard.currentIndex = newIndex
                             }
+                            overriddenLayoutFile = ""
+                            inputHandler.active = false
                         }
-                    }
 
-                    if (newMode !== mode) {
-                        inputHandler.active = false
-                        mode = newMode
-                    }
-
-                    updateInputHandler()
-                }
-
-                function getInputHandler(layout) {
-                    var layoutModelItem = layoutModel.get(layout.layoutIndex)
-                    if (layoutModelItem === null) {
-                        console.warn("could not find layout model item for layout index:", layout.layoutIndex)
-                        return
-                    }
-
-                    var handler = layoutModelItem.handler
-                    var advancedInputHandler =  _layoutModel.inputHandlers[handler]
-
-                    if (typeof(advancedInputHandler) === "undefined") {
-                        console.warn("invalid inputhandler for " + handler + ", forcing paste input handler")
-                        advancedInputHandler = pasteInputHandler
-                    }
-
-                    if (handler === "") {
-                        return pasteInputHandler
-                    } else if (layout && layout.type === "") {
-                        // non-composing
-                        if (MInputMethodQuick.contentType === Maliit.FreeTextContentType
-                                && !MInputMethodQuick.hiddenText
-                                && MInputMethodQuick.predictionEnabled) {
-                            return advancedInputHandler
-                        } else {
-                            return pasteInputHandler
+                        overrideContentType = -1
+                    } else if (preferNonComposing && overrideContentType != MInputMethodQuick.contentType
+                               && keyboard.layout && keyboard.layout.type !== "") {
+                        // apply override, always using english layout.
+                        // do only once per content type to avoid change when focus out+in on an editor
+                        newIndex = layoutModel.getLayoutIndex("en.qml")
+                        if (newIndex >= 0) {
+                            overrideContentType = MInputMethodQuick.contentType
+                            overriddenLayoutFile = _layoutModel.get(canvas.activeIndex).layout
+                            keyboard.currentIndex = newIndex
+                            inputHandler.active = false
                         }
-                    } else {
-                        // composing
-                        return advancedInputHandler
-                    }
-                }
-
-                function updateInputHandler() {
-                    var previousInputHandler = inputHandler
-
-                    if (MInputMethodQuick.contentType === Maliit.NumberContentType
-                            || MInputMethodQuick.contentType === Maliit.PhoneNumberContentType) {
-                        inputHandler = basicInputHandler
-
-                    } else {
-                        inputHandler = getInputHandler(_layoutRow.layout)
-                    }
-
-                    if ((previousInputHandler !== inputHandler) && previousInputHandler) {
-                        previousInputHandler.active = false
-                    }
-
-                    inputHandler.active = true
-                }
-
-                InputHandler {
-                    id: basicInputHandler
-                }
-
-                PasteInputHandler {
-                    id: pasteInputHandler
-                }
-
-                NumberLayoutPortrait {
-                    id: number_portrait
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: geometry.isLargeScreen ? 0.6 * geometry.keyboardWidthPortrait
-                                                  : geometry.keyboardWidthPortrait
-                    visible: keyboard.mode === "number" && (keyboard.portraitMode || geometry.isLargeScreen)
-                }
-
-                Loader {
-                    id: number_landscape
-                    sourceComponent: (keyboard.mode === "number" && !geometry.isLargeScreen)
-                                     ? landscapeNumberComponent : undefined
-                }
-
-                Component {
-                    id: landscapeNumberComponent
-                    NumberLayoutLandscape {
-                        visible: keyboard.mode === "number" && !number_portrait.visible
-                    }
-                }
-
-                PhoneNumberLayoutPortrait {
-                    id: phone_portrait
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: geometry.isLargeScreen ? 0.6 * geometry.keyboardWidthPortrait
-                                                  : geometry.keyboardWidthPortrait
-                    visible: keyboard.mode === "phone" && (keyboard.portraitMode || geometry.isLargeScreen)
-                }
-
-                Loader {
-                    id: phone_landscape
-                    sourceComponent: (keyboard.mode === "phone" && !geometry.isLargeScreen)
-                                     ? phoneLandscapeComponent : undefined
-                }
-
-                Component {
-                    id: phoneLandscapeComponent
-                    PhoneNumberLayoutLandscape {
-                        visible: keyboard.mode === "phone" && !phone_portrait.visible
-                    }
-                }
-
-                LayoutRow {
-                    id: _layoutRow
-                }
-
-                Connections {
-                    target: Clipboard
-                    onTextChanged: {
-                        if (Clipboard.text) {
-                            keyboard.expandedPaste = true
-                        }
-                    }
-                }
-
-                Loader {
-                    sourceComponent: keyboard.inputHandler && layoutRow.layout && layoutRow.layout.splitActive
-                                     ? keyboard.inputHandler.verticalItem : null
-                    width: geometry.middleBarWidth
-                    height: keyboard.height
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    visible: item !== null && !layoutRow.transitionRunning
-                }
-
-                KeyboardLayoutSwitchHint {
-                    id: switchHint
-                    enabled: keyboard.layout && (keyboard.layout.type !== "hwr") && keyboard.swipeEnabled
-                    onFinished: closeHintDate.value = Date.now() / 1000 + (2 * 24 * 3600) // Set the close hint date 2 days from now
-                    onActiveChanged: if (active) closeHintDate.value = 0 // Clear the other hint when this one is active
-                }
-
-                KeyboardCloseHint {
-                    enabled: !switchHint.active && keyboard.layout && (keyboard.layout.type !== "hwr")
-                             && (closeHintDate.value > 0) && (Date.now() / 1000 >= closeHintDate.value)
-                    onFinished: closeHintDate.value = 0
-
-                    ConfigurationValue {
-                        id: closeHintDate
-                        key: "/sailfish/text_input/close_keyboard_hint_date"
-                        defaultValue: 0
                     }
                 }
             }
+
+            if (newMode !== mode) {
+                inputHandler.active = false
+                mode = newMode
+            }
+
+            updateInputHandler()
         }
+
+        function updateInputHandler() {
+            var previousInputHandler = inputHandler
+
+            if (MInputMethodQuick.contentType === Maliit.NumberContentType
+                    || MInputMethodQuick.contentType === Maliit.PhoneNumberContentType) {
+                inputHandler = basicInputHandler
+
+            } else {
+                inputHandler = keyboard.layout && keyboard.layout.handler ? keyboard.layout.handler
+                                                                          : basicInputHandler
+            }
+
+            if ((previousInputHandler !== inputHandler) && previousInputHandler) {
+                previousInputHandler.active = false
+            }
+
+            inputHandler.active = true
+        }
+
+        KeyboardBackground {
+            y: keyboard.height - height
+            width: keyboard.width
+            height: keyboard.currentLayoutHeight
+
+            transformItem: keyboard
+
+            visible: keyboard.mode !== "common" || !keyboard.layout
+        }
+
+        InputHandler {
+            id: basicInputHandler
+        }
+
+        PasteInputHandler {
+            id: pasteInputHandler
+        }
+
+        NumberLayoutPortrait {
+            id: number_portrait
+            x: (keyboard.width - width) / 2
+            y: keyboard.height - height
+            width: geometry.isLargeScreen ? 0.6 * geometry.keyboardWidthPortrait
+                                          : geometry.keyboardWidthPortrait
+            visible: keyboard.mode === "number" && (keyboard.portraitMode || geometry.isLargeScreen)
+        }
+
+        Loader {
+            id: number_landscape
+            sourceComponent: (keyboard.mode === "number" && !geometry.isLargeScreen)
+                             ? landscapeNumberComponent : undefined
+        }
+
+        Component {
+            id: landscapeNumberComponent
+            NumberLayoutLandscape {
+                y: keyboard.height - height
+                visible: keyboard.mode === "number" && !number_portrait.visible
+            }
+        }
+
+        PhoneNumberLayoutPortrait {
+            id: phone_portrait
+            x: (keyboard.width - width) / 2
+            y: keyboard.height - height
+            width: geometry.isLargeScreen ? 0.6 * geometry.keyboardWidthPortrait
+                                          : geometry.keyboardWidthPortrait
+            visible: keyboard.mode === "phone" && (keyboard.portraitMode || geometry.isLargeScreen)
+        }
+
+        Loader {
+            id: phone_landscape
+            sourceComponent: (keyboard.mode === "phone" && !geometry.isLargeScreen)
+                             ? phoneLandscapeComponent : undefined
+        }
+
+        Component {
+            id: phoneLandscapeComponent
+            PhoneNumberLayoutLandscape {
+                y: keyboard.height - height
+                visible: keyboard.mode === "phone" && !phone_portrait.visible
+            }
+        }
+
 
         Connections {
-            target: MInputMethodQuick
-            onActiveChanged: {
-                if (MInputMethodQuick.active) {
-                    hideAnimation.stop()
-                    if (!_layoutRow.loading) {
-                        showAnimation.start()
-                    }
-                } else {
-                    showAnimation.stop()
-                    hideAnimation.start()
-                }
-            }
-            onContentTypeChanged: keyboard.updateLayoutIfAllowed()
-            onHiddenTextChanged: keyboard.updateLayoutIfAllowed()
-            onPredictionEnabledChanged: keyboard.updateLayoutIfAllowed()
-
-            onFocusTargetChanged: keyboard.allowLayoutChanges = activeEditor
-        }
-
-        Connections {
-            target: _layoutRow
-            onLoadingChanged: {
-                if (!_layoutRow.loading
-                      && MInputMethodQuick.active
-                      && !showAnimation.running
-                      && !keyboard.fullyOpen) {
-                    showAnimation.start()
+            target: Clipboard
+            onTextChanged: {
+                if (Clipboard.text) {
+                    keyboard.expandedPaste = true
                 }
             }
         }
 
-        SequentialAnimation {
-            id: hideAnimation
+        Loader {
+            sourceComponent: keyboard.inputHandler && keyboard.layout && keyboard.layout.splitActive
+                             ? keyboard.inputHandler.verticalItem : null
+            x: (keyboard.width - width) / 2
+            y: keyboard.height - height
+            width: geometry.middleBarWidth
+            height: keyboard.currentLayoutHeight
+            visible: item !== null && !keyboard.moving
+        }
 
-            ScriptAction {
-                script: {
-                    MInputMethodQuick.setInputMethodArea(Qt.rect(0, 0, 0, 0))
-                    keyboard.fullyOpen = false
-                }
+        KeyboardLayoutSwitchHint {
+            id: switchHint
+            y: keyboard.height - height
+            width: keyboard.width
+            height: keyboard.currentLayoutHeight
+            enabled: keyboard.layout && keyboard.layout.type !== "hwr" && keyboard.interactive
+            onFinished: closeHintDate.value = Date.now() / 1000 + (2 * 24 * 3600) // Set the close hint date 2 days from now
+            onActiveChanged: if (active) closeHintDate.value = 0 // Clear the other hint when this one is active
+        }
+
+        KeyboardCloseHint {
+            y: keyboard.height - height
+            width: keyboard.width
+            height: keyboard.currentLayoutHeight
+
+            enabled: !switchHint.active && keyboard.layout && (keyboard.layout.type !== "hwr")
+                     && (closeHintDate.value > 0) && (Date.now() / 1000 >= closeHintDate.value)
+            onFinished: closeHintDate.value = 0
+
+            ConfigurationValue {
+                id: closeHintDate
+                key: "/sailfish/text_input/close_keyboard_hint_date"
+                defaultValue: 0
             }
+        }
+    }
 
-            NumberAnimation {
-                target: inputItems
-                property: "opacity"
-                to: 0
-                duration: 300
+    Connections {
+        target: MInputMethodQuick
+        onActiveChanged: {
+            if (MInputMethodQuick.active) {
+                hideAnimation.stop()
+                showAnimation.start()
+            } else {
+                showAnimation.stop()
+                hideAnimation.start()
             }
+        }
+        onContentTypeChanged: keyboard.updateLayoutIfAllowed()
+        onHiddenTextChanged: keyboard.updateLayoutIfAllowed()
+        onPredictionEnabledChanged: keyboard.updateLayoutIfAllowed()
 
-            ScriptAction {
-                script: {
-                    MInputMethodQuick.setScreenRegion(Qt.rect(0, 0, 0, 0))
-                    keyboard.resetKeyboard()
+        onFocusTargetChanged: keyboard.allowLayoutChanges = activeEditor
+    }
 
-                    // If there is a stuck transition, stop it
-                    if (keyboard.gestureInProgress) {
-                        keyboard.cancelGesture()
-                    }
+    SequentialAnimation {
+        id: hideAnimation
 
-                    // Unload neighbours of current layout to save memory,
-                    // but prevent crash by avoid doing it while transition is running.
-                    if (!_layoutRow.transitionRunning) {
-                        _layoutRow.updateLoaders([canvas.activeIndex])
-                    }
-                }
+        ScriptAction {
+            script: {
+                MInputMethodQuick.setInputMethodArea(Qt.rect(0, 0, 0, 0))
+                keyboard.fullyOpen = false
             }
         }
 
-        SequentialAnimation {
-            id: showAnimation
+        NumberAnimation {
+            target: keyboard
+            property: "opacity"
+            to: 0
+            duration: 300
+        }
 
-            ScriptAction {
-                script: {
-                    // If there is a stuck transition, stop it
-                    if (keyboard.gestureInProgress) {
-                        keyboard.cancelGesture()
-                    }
-
-                    // Load neighbours of current layouts to ensure smooth swipe
-                    _layoutRow.updateLoadersToLayoutAndNeighbours(canvas.activeIndex)
-
-                    canvas.visible = true // framework currently initially hides. Make sure visible
-                    keyboard.updateLayout()
-                    areaUpdater.start() // ensure height has updated before sending it
-                }
+        ScriptAction {
+            script: {
+                MInputMethodQuick.setScreenRegion(Qt.rect(0, 0, 0, 0))
+                keyboard.resetKeyboard()
             }
+        }
+    }
 
-            PauseAnimation { duration: 200 }
+    SequentialAnimation {
+        id: showAnimation
 
-            NumberAnimation {
-                target: inputItems
-                property: "opacity"
-                to: 1.0
-                duration: 200
-            }
-            PropertyAction {
-                target: keyboard
-                property: "fullyOpen"
-                value: true
+        ScriptAction {
+            script: {
+                canvas.visible = true // framework currently initially hides. Make sure visible
+                keyboard.updateLayout()
+                areaUpdater.start() // ensure height has updated before sending it
             }
         }
 
-        Timer {
-            id: areaUpdater
-            interval: 1
-            onTriggered: canvas.updateIMArea()
+        PauseAnimation { duration: 200 }
+
+        NumberAnimation {
+            target: keyboard
+            property: "opacity"
+            to: 1.0
+            duration: 200
         }
-        Component.onCompleted: {
-            MInputMethodQuick.actionKeyOverride.setDefaultIcon("image://theme/icon-m-enter")
-            MInputMethodQuick.actionKeyOverride.setDefaultLabel("")
+        PropertyAction {
+            target: keyboard
+            property: "fullyOpen"
+            value: true
         }
+    }
+
+    Timer {
+        id: areaUpdater
+        interval: 1
+        onTriggered: canvas.updateIMArea()
     }
 }
 

@@ -2,7 +2,6 @@
 **
 ** Copyright (c) 2020 Open Mobile Platform LLC.
 ** Copyright (C) 2013 Jolla Ltd.
-** Contact: Joona Petrell <joona.petrell@jollamobile.com>
 ** All rights reserved.
 ** 
 ** This file is part of Sailfish Silica UI component package.

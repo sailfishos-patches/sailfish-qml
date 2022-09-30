@@ -61,8 +61,10 @@ Page {
     }
 
     Component.onCompleted: {
-        constituentFetcher.target = aggregateContact
-        aggregateContact.fetchConstituents()
+        if (!!aggregateContact) {
+            constituentFetcher.target = aggregateContact
+            aggregateContact.fetchConstituents()
+        }
     }
 
     Connections {

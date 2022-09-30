@@ -14,14 +14,12 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
 
@@ -177,7 +175,7 @@ function EmbedliteDownloadManager()
 EmbedliteDownloadManager.prototype = {
   classID: Components.ID("{71b0a6e8-83ac-4006-af97-d66009db97c8}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
@@ -188,7 +186,7 @@ EmbedliteDownloadManager.prototype = {
       case "profile-after-change":
         Services.obs.removeObserver(this, "profile-after-change");
         Services.obs.addObserver(this, "embedui:download", false);
-        Task.spawn(async function() {
+        (async function() {
           let downloadList = await Downloads.getList(Downloads.ALL);
 
           // Let's remove all existing downloads from the Download List
@@ -203,7 +201,7 @@ EmbedliteDownloadManager.prototype = {
           }
 
           await downloadList.addView(DownloadView);
-        }).then(null, Cu.reportError);
+        })().then(null, Cu.reportError);
         break;
 
       case "embedui:download":
@@ -211,7 +209,7 @@ EmbedliteDownloadManager.prototype = {
 
         switch (data.msg) {
           case "retryDownload":
-            Task.spawn(async function() {
+            (async function() {
               let downloadList = await Downloads.getList(Downloads.ALL);
               let list = await downloadList.getAll();
               for (let download of list) {
@@ -220,11 +218,11 @@ EmbedliteDownloadManager.prototype = {
                   break;
                 }
               }
-            }).then(null, Cu.reportError);
+            })().then(null, Cu.reportError);
             break;
 
           case "cancelDownload":
-            Task.spawn(async function() {
+            (async function() {
               let downloadList = await Downloads.getList(Downloads.ALL);
               let list = await downloadList.getAll();
               for (let download of list) {
@@ -236,11 +234,11 @@ EmbedliteDownloadManager.prototype = {
                   break;
                 }
               }
-            }).then(null, Cu.reportError);
+            })().then(null, Cu.reportError);
             break;
 
           case "addDownload":
-            Task.spawn(async function() {
+            (async function() {
               let list = await Downloads.getList(Downloads.ALL);
               let download = await Downloads.createDownload({
                 source: data.from,
@@ -248,12 +246,12 @@ EmbedliteDownloadManager.prototype = {
               });
               download.start();
               list.add(download);
-            }).then(null, Cu.reportError);
+            })().then(null, Cu.reportError);
             break;
 
           case "saveAsPdf":
             if (Services.ww.activeWindow) {
-              Task.spawn(async function() {
+              (async function() {
                 let list = await Downloads.getList(Downloads.ALL);
                 let download = await Downloads.createDownload({
                   source: Services.ww.activeWindow,
@@ -264,7 +262,7 @@ EmbedliteDownloadManager.prototype = {
                 download["saveAsPdf"] = true;
                 download.start();
                 list.add(download);
-              }).then(null, Cu.reportError);
+              })().then(null, Cu.reportError);
             } else {
               Logger.warn("No active window to print to pdf")
             }

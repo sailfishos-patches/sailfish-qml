@@ -73,7 +73,7 @@ Page {
             MenuItem {
                 //% "New message"
                 text: qsTrId("messages-me-new_conversation")
-                onClicked: mainWindow.newMessage()
+                onClicked: mainWindow.newMessage(PageStackAction.Animated)
             }
         }
 

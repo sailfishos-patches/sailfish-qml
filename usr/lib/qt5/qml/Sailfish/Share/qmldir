@@ -1,0 +1,4 @@
+module Sailfish.Share
+plugin sailfishshareplugin
+
+typeinfo plugins.qmltypes

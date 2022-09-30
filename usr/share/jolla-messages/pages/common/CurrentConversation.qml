@@ -155,9 +155,11 @@ Item {
     }
 
     function _addFakePersonAccounts(person, phoneNumbers, imAccounts) {
+        var i
+
         if (phoneNumbers.length) {
             var numbers = person.phoneDetails || []
-            for (var i = 0; i < phoneNumbers.length; i++) {
+            for (i = 0; i < phoneNumbers.length; i++) {
                 numbers.push({
                     'type': Person.PhoneNumberType,
                     'number': phoneNumbers[i],
@@ -169,7 +171,7 @@ Item {
 
         if (imAccounts.length) {
             var accounts = person.accountDetails || []
-            for (var i = 0; i < imAccounts.length; i++) {
+            for (i = 0; i < imAccounts.length; i++) {
                 accounts.push({
                     'type': Person.OnlineAccountType,
                     'accountUri': imAccounts[i].remoteUid,
@@ -215,15 +217,16 @@ Item {
 
         for (var i = 0; i < matchPeople.length; i++) {
             var remoteUids = []
+            var j
 
             if (phoneMatch) {
                 var numbers = matchPeople[i].phoneDetails
-                for (var j = 0; j < numbers.length; j++) {
+                for (j = 0; j < numbers.length; j++) {
                     remoteUids.push(numbers[j].number)
                 }
             } else {
                 var accounts = matchPeople[i].accountDetails
-                for (var j = 0; j < accounts.length; j++) {
+                for (j = 0; j < accounts.length; j++) {
                     if (accounts[j].accountPath == localUid) {
                         remoteUids.push(accounts[j].accountUri)
                     }
@@ -241,9 +244,7 @@ Item {
     }
 
     function groupMatchesChannel(group, message) {
-        if (group.findGroup(message.localUid, message.remoteUids))
-            return true
-        return false
+        return group.findGroup(message.localUid, message.remoteUids)
     }
 
     function groupIds() {

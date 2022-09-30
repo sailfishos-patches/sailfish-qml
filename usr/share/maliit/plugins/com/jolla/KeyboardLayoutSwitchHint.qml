@@ -35,7 +35,6 @@ Loader {
 
     signal finished
 
-    anchors.fill: parent
     active: enabled && firstTimeUseCounter.active
     onActiveChanged: if (!active && firstTimeUseCounter.value === firstTimeUseCounter.limit) hint.finished()
     sourceComponent: Component {

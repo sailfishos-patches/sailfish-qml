@@ -35,7 +35,7 @@ Image {
         if (type === UserModel.DeviceOwner) {
             file = file + "-admin"
         }
-        return file + (Theme.colorScheme === Theme.LightOnDark ? "-light" : "-dark")
+        return file + (Theme.colorScheme === Theme.LightOnDark ? "-dark" : "-light")
     }
     layer.enabled: true
     layer.effect: ShaderEffect {

@@ -73,10 +73,9 @@ PickerPage {
 
             baseName: Theme.highlightText(documentModel.baseName(model.fileName), documentModel.filter, Theme.highlightColor)
             extension: Theme.highlightText(documentModel.extension(model.fileName), documentModel.filter, Theme.highlightColor)
+            mimeType: model.mimeType
             size: model.fileSize
-            // Should be lastModified but QDocumentGallery (or tracker) doesn't return sane values
-            // Worth adding QFileInfo Qml wrapper to nemo-qml-plugin-filemanager
-            modified: model.lastAccessed
+            modified: model.lastModified
             textFormat: Text.StyledText
 
             ListView.onAdd: AddAnimation { target: documentItem; duration: _animationDuration }

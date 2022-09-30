@@ -64,6 +64,8 @@ Dialog {
         header: DialogHeader {
             id: header
 
+            spacing: 0
+
             //% "Back"
             cancelText: qsTrId("components_pickers-he-multiselect_dialog_back")
 
@@ -150,8 +152,8 @@ Dialog {
         }
 
         ViewPlaceholder {
-            //% "Empty folder"
-            text: qsTrId("components_pickers-ph-empty_folder")
+            //% "No subfolders"
+            text: qsTrId("components_pickers-ph-no_subfolders")
 
             enabled: listView.count == 0 && fileModel.populated
         }

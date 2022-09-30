@@ -53,8 +53,8 @@ KeyboardLayout {
             symView2: "¥"
             accents: "řrŕ"
             accentsShifted: "ŘRŔ"
-            deadKeyAccents: "ˇř"
-            deadKeyAccentsShifted: "ˇŘ"
+            deadKeyAccents: "ˇř´ŕ"
+            deadKeyAccentsShifted: "ˇŘ´Ŕ"
         }
         AccentedCharacterKey {
             caption: "t"
@@ -101,8 +101,8 @@ KeyboardLayout {
             captionShifted: "O"
             symView: "9"
             symView2: "["
-            accents: "öőøôòóoõ"
-            accentsShifted: "ÖŐØÔÒÓOÕ"
+            accents: "öőøòóôoõ"
+            accentsShifted: "ÖŐØÒÓÔOÕ"
             deadKeyAccents: "´ó"
             deadKeyAccentsShifted: "´Ó"
         }
@@ -115,8 +115,8 @@ KeyboardLayout {
             captionShifted: "A"
             symView: "*"
             symView2: "`"
-            accents: "aáăâąàäã"
-            accentsShifted: "AÁĂÂĄÀÄÃ"
+            accents: "aäáăâąàã"
+            accentsShifted: "AÄÁĂÂĄÀÃ"
             deadKeyAccents: "´á"
             deadKeyAccentsShifted: "´Á"
         }
@@ -145,7 +145,16 @@ KeyboardLayout {
         CharacterKey { caption: "h"; captionShifted: "H"; symView: "("; symView2: "{" }
         CharacterKey { caption: "j"; captionShifted: "J"; symView: ")"; symView2: "}" }
         CharacterKey { caption: "k"; captionShifted: "K"; symView: "!"; symView2: "¡" }
-        CharacterKey { caption: "l"; captionShifted: "L"; symView: "?"; symView2: "¿"; accents: "ľĺlł"; accentsShifted: "ĽĹLŁ" }
+        AccentedCharacterKey {
+            caption: "l"
+            captionShifted: "L"
+            symView: "?"
+            symView2: "¿";
+            accents: "ľĺlł"
+            accentsShifted: "ĽĹLŁ"
+            deadKeyAccents: "ˇľ´ĺ"
+            deadKeyAccentsShifted: "ˇĽ´Ĺ"
+        }
         DeadKey {
             caption: "ˇ"
             captionShifted: "ˇ"

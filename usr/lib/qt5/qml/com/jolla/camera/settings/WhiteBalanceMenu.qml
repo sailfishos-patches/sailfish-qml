@@ -4,13 +4,14 @@ import com.jolla.camera 1.0
 
 ExpandingMenu {
     id: menu
-    model: Settings.global.whiteBalanceValues
+    model: CameraConfigs.supportedWhiteBalanceModes
     delegate: ExpandingMenuItem {
         persistentHighlight: true
         settings: Settings.global
         property: "whiteBalance"
         value: modelData
         icon: Settings.whiteBalanceIcon(modelData)
+        visible: icon.length > 0
         Label {
             anchors.verticalCenter: parent.verticalCenter
             x: alignment === Qt.AlignLeft ? parent.width + Theme.paddingLarge : -width - Theme.paddingLarge

@@ -1,9 +1,9 @@
 /****************************************************************************************
 **
+** Copyright (c) 2021 Open Mobile Platform LLC.
 ** Copyright (C) 2013 Jolla Ltd.
-** Contact: Aaron Kennedy <aaron.kennedy@jollamobile.com>
 ** All rights reserved.
-** 
+**
 ** This file is part of Sailfish Silica UI component package.
 **
 ** You may use this file under the terms of BSD license as follows:
@@ -18,7 +18,7 @@
 **     * Neither the name of the Jolla Ltd nor the
 **       names of its contributors may be used to endorse or promote products
 **       derived from this software without specific prior written permission.
-** 
+**
 ** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ** ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 ** WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -36,7 +36,7 @@
 
 var activeContextMenus = new Array
 var activeRemorseItems = new Array
-var pendingRemorseItems = new Object
+var pendingRemorseItems = new Array
 
 function activeChanged(menu, active)
 {
@@ -50,10 +50,11 @@ function activeChanged(menu, active)
             activeContextMenus.splice(index, 1)
 
             if (activeContextMenus.length == 0) {
-                for (var item in pendingRemorseItems) {
-                    _executePendingAction(item)
-                    delete pendingRemorseItems[item]
+                for (var i = 0; i < pendingRemorseItems.length; ++i) {
+                    var item = pendingRemorseItems[i]
+                    _executeRemorseAction(item.item, item.callback, item.closeAfterExecute)
                 }
+                pendingRemorseItems.splice(0, pendingRemorseItems.length)
             }
         }
     }
@@ -80,24 +81,16 @@ function _executeRemorseAction(item, callback, closeAfterExecute)
     }
 }
 
-function _executePendingAction(item)
-{
-    var o = pendingRemorseItems[item] 
-    if (o !== undefined) {
-        _executeRemorseAction(o.item, o.callback, o.closeAfterExecute)
-    }
-}
-
 function remorseItemTrigger(item, callback, closeAfterExecute)
 {
     if (activeContextMenus.length == 0) {
         _executeRemorseAction(item, callback, closeAfterExecute)
     } else {
-        pendingRemorseItems[item] = {
+        pendingRemorseItems.push({
             'item': item,
             'callback': callback,
             'closeAfterExecute': closeAfterExecute
-        }
+        })
     }
 }
 

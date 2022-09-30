@@ -27,9 +27,9 @@ CsdTestPage {
         MultiPointTouchArea {
             anchors.fill: parent
             minimumTouchPoints: 1
-            maximumTouchPoints: 5
+            maximumTouchPoints: 10
 
-            property var availableColors: ["blue", "red", "purple", "orange", "green"]
+            property var availableColors: ["blue", "red", "purple", "orange", "green", "hotpink", "aqua", "greenyellow", "brown", "salmon"]
             property var assignedColors: new Object
             readonly property real dotDiameter: QtQuick.Screen.pixelDensity * 2 // 2 mm
 

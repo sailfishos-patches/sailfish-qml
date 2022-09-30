@@ -217,7 +217,7 @@ Item {
             }
         }
 
-        FadeAnimator {
+        FadeAnimation {
             id: fadeOut
             target: peekArea
             duration: clipEndAnimation.duration

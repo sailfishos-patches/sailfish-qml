@@ -1,7 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Gallery 1.0
-import "scripts/AlbumManager.js" as AlbumManager
 import QtDocGallery 5.0
 
 Page {
@@ -81,16 +80,37 @@ Page {
             }
         }
 
+        function _itemAt(i) {
+            if (i < 0 || i >= docModel.count) {
+                console.warn("Calling GalleryItemPickerPage::_itemAt(i) out of bounds")
+            }
+
+            var item = {
+                "url": "" + docModel.get(i).url,
+                "mimeType": docModel.get(i).mimeType,
+                "selected": false
+            }
+
+            if (docModel.rootType === DocumentGallery.Image) {
+                item["dateTaken"] = docModel.get(i).dateTaken
+            } else {
+                item["lastModified"] = docModel.get(i).lastModified
+            }
+            return item
+        }
+
         function _update()
         {
             if (active && docModel == null) {
                 return
             }
 
+            var i, j
+
             // First time initialization
             if (model.count == 0) {
-                for(var i=0; i < docModel.count; i++) {
-                    model.insert(i, {"url": "" + docModel.get(i).url, "mimeType": docModel.get(i).mimeType, "selected": false})
+                for(i=0; i < docModel.count; i++) {
+                    model.insert(i, _itemAt(i))
 
                     // Just make the model ready when there are enough pics to show
                     if (i > 20) {
@@ -110,12 +130,15 @@ Page {
             //       Maybe using WorkerScript could provide some kind of solution for keeping model
             //       updated.
 
+            var found
+            var url
+
             // Images removed from the document model e.g. someone has removed the image via commandline
             if (model.count > docModel.count) {
-                for (var i=0; i < model.count; i++) {
-                    var url = model.get(i).url
-                    var found = false
-                    for (var j=0; j < docModel.count; j++) {
+                for (i=0; i < model.count; i++) {
+                    url = model.get(i).url
+                    found = false
+                    for (j=0; j < docModel.count; j++) {
                         if (url == docModel.get(j).url) {
                             found = true
                             break
@@ -132,10 +155,10 @@ Page {
 
             // Images have been added
             if (model.count < docModel.count) {
-                for (var i=0; i < docModel.count; i++) {
-                    var url = docModel.get(i).url
-                    var found = false
-                    for (var j=0; j < model.count; j++) {
+                for (i=0; i < docModel.count; i++) {
+                    url = docModel.get(i).url
+                    found = false
+                    for (j=0; j < model.count; j++) {
                         if (url == model.get(j).url) {
                             found = true
                         }
@@ -143,12 +166,11 @@ Page {
                     // New item, let's add it to the model
                     if (!found) {
                         if (i < model.count) {
-                            model.insert(i, {"url": "" + docModel.get(i).url, "mimeType": docModel.get(i).mimeType, "selected": false})
+                            model.insert(i, _itemAt(i))
                         } else {
-                            model.append({"url": "" + docModel.get(i).url, "mimeType": docModel.get(i).mimeType, "selected": false})
+                            model.append(i, _itemAt(i))
                         }
                     }
-
                 }
             }
         }
@@ -161,7 +183,8 @@ Page {
 
         model: selectionModel.ready ? selectionModel.model : null
         header: PageHeader { title: root.title }
-        highlightEnabled: false
+        dateProperty: root.model.rootType === DocumentGallery.Image ? "dateTaken" : "lastModified"
+
         clip: true
 
         anchors {
@@ -189,16 +212,12 @@ Page {
 
         delegate: ThumbnailImage {
             id: thumbnail
-            // Initialize selection status if delegate is instantiated again
-            source: url
-            size: grid.cellSize
 
             onClicked: selectionModel.setSelected(index, !model.selected)
 
-            HighlightItem {
-                anchors.fill: parent
-                active: model.selected
-            }
+            // Initialize selection status if delegate is instantiated again
+            source: url
+            selected: model.selected
         }
     }
 

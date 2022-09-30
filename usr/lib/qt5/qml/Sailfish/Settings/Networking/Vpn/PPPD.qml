@@ -23,6 +23,7 @@ Column {
             pppdReqMPPE.setValue('no-mppe')
         }
         pppdReqMPPEStateful.checked = getBoolProperty('PPPD.ReqMPPEStateful')
+        pppdNoIPv6.checked = getBoolProperty('PPPD.NoIPv6')
         pppdAcceptEAP.checked = !getBoolProperty('PPPD.RefuseEAP')
         pppdAcceptPAP.checked = !getBoolProperty('PPPD.RefusePAP')
         pppdAcceptCHAP.checked = !getBoolProperty('PPPD.RefuseCHAP')
@@ -42,6 +43,7 @@ Column {
         updateProvider('PPPD.ReqMPPE40', pppdReqMPPE.currentIndex === 2 ? 'true' : 'false')
         updateProvider('PPPD.ReqMPPE128', pppdReqMPPE.currentIndex === 3 ? 'true' : 'false')
         updateProvider('PPPD.ReqMPPEStateful', pppdReqMPPEStateful.checked.toString())
+        updateProvider('PPPD.NoIPv6', pppdNoIPv6.checked.toString())
 
         // These are reversed in meaning, if the value is checked, the option should be false
         updateProvider('PPPD.RefuseEAP', (!pppdAcceptEAP.checked).toString())
@@ -94,6 +96,13 @@ Column {
 
         //% "Allow stateful MPPE"
         text: qsTrId("settings_network-la-vpn_pppd_reqmppe_stateful")
+    }
+
+    TextSwitch {
+        id: pppdNoIPv6
+
+        //% "Disable IPv6 (enables IPv6 data leak protection)"
+        text: qsTrId("settings_network-la-vpn_pppd_noipv6")
     }
 
     SectionHeader {

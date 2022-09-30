@@ -167,7 +167,7 @@ Column {
         BackgroundItem {
             height: Math.max(implicitHeight, backupLinkLabel.height + 2*Theme.paddingSmall)
             onClicked: {
-                pageStack.animatorPush("Sailfish.Vault.MainPage")
+                pageStack.animatorPush("Sailfish.Vault.BackupPage")
             }
 
             Icon {

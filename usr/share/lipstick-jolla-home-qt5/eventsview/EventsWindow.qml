@@ -63,7 +63,7 @@ ApplicationWindow {
             id: eventsView
             anchors {
                 topMargin: -eventsView.topMargin
-                fill: desktop
+                fill: parent
             }
             parent: lockScreenLayer && lockScreenLayer.lockScreenEventsEnabled ? eventsContainer : desktop
         }

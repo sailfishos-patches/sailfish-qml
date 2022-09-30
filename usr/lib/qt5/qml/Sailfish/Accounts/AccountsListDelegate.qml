@@ -14,7 +14,9 @@ ListItem {
     signal accountSyncRequested(int accountId)
     signal accountClicked(int accountId, string providerName)
 
-    contentHeight: visible ? Math.max(Theme.itemSizeMedium, column.height + (notSignedIn ? errorLabel.height + Theme.paddingMedium : 0) + 2*Theme.paddingSmall) : 0
+    contentHeight: visible
+                   ? Math.max(icon.height, column.height + (errorLabel.visible ? errorLabel.height : 0)) + 2*Theme.paddingSmall
+                   : 0
     menu: entriesInteractive ? menuComponent : null
 
     Component {
@@ -110,7 +112,7 @@ ListItem {
             right: parent.right
             rightMargin: Theme.horizontalPageMargin
             verticalCenter: parent.verticalCenter
-            verticalCenterOffset: notSignedIn ? -Theme.paddingMedium : 0
+            verticalCenterOffset: errorLabel.visible ? -(errorLabel.height/2) : 0
         }
         Label {
             width: parent.width

@@ -40,12 +40,6 @@ KeyboardRow {
         active: splitActive
         languageLabel: ""
     }
-    CharacterKey {
-        caption: "."
-        captionShifted: "."
-        implicitWidth: punctuationKeyWidth
-        fixedWidth: !splitActive
-        separator: SeparatorState.HiddenSeparator
-    }
+    PeriodKey {}
     EnterKey {}
 }

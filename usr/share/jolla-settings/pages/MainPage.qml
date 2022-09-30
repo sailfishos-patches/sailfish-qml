@@ -34,46 +34,30 @@ Page {
         anchors.fill: parent
         signal moveToSection(string path)
 
+        cacheSize: 3
+        model: settingsModel
         header: TabBar {
-            model: tabBarModel
+            model: settingsModel
+            delegate: TabButton {
+                title: object.title
+            }
         }
 
-        ListModel {
-            id: tabBarModel
+        delegate: SettingsTabItem {
+            id: tabItem
+
+            settingsObject: object
+
+            Connections {
+                target: tabs
+                onMoveToSection: tabItem.moveToSection(path)
+            }
         }
 
         SettingsModel {
             id: settingsModel
             path: []
             depth: 1
-            Component.onCompleted: {
-                var array = []
-                for (var i = 0; i < count; i++) {
-                    tabBarModel.append({"title": settingsModel.objectAt(i).title})
-                    var component = Qt.createQmlObject("
-import QtQuick 2.0
-import Sailfish.Silica 1.0
-import com.jolla.settings 1.0
-
-Component {
-    SettingsTabItem {
-        id: tabItem
-
-        settingsObject: settingsModel.objectAt(" + i + ")
-
-        Connections {
-            target: tabs
-            onMoveToSection: tabItem.moveToSection(path)
-        }
-    }
-}", tabs, "tabComponent")
-                    array.push(component)
-                }
-
-                // TODO: JB#47931 Should be possile to use
-                // QAbstractListModel directly on TabsView.model
-                tabs.model = array
-            }
         }
     }
 }

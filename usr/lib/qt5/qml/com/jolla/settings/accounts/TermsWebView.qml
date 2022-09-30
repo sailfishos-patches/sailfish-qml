@@ -1,32 +1,31 @@
 import QtQuick 2.0
-import QtWebKit 3.0
-import QtWebKit.experimental 1.0
 import Sailfish.Silica 1.0
+import Sailfish.WebView 1.0
+import Sailfish.WebEngine 1.0
 
 Page {
     id: webPage
 
-    property string title
+    property alias title: header.title
     property alias url: webView.url
 
-    SilicaWebView {
+    PageHeader {
+        id: header
+    }
+
+    WebView {
         id: webView
+        privateMode: true
 
-        anchors.fill: parent
-        experimental.autoCorrect: false
-        experimental.temporaryCookies: true
-        experimental.deviceWidth: width
-        experimental.deviceHeight: height
-
-        experimental.preferences.minimumFontSize: Theme.fontSizeTinyBase
-        experimental.preferences.defaultFontSize: Theme.fontSizeTinyBase
-
-        onNavigationRequested: {
-            request.action = (request.url == webPage.url) ? WebView.AcceptRequest : WebView.IgnoreRequest
+        anchors {
+            top: header.bottom
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
         }
 
-        header: PageHeader {
-            title: webPage.title
+        Component.onCompleted: {
+            WebEngineSettings.popupEnabled = false
         }
     }
 }

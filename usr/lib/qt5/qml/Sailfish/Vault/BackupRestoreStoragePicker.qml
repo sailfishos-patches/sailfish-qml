@@ -35,8 +35,8 @@ Column {
     readonly property string _cloudBackupUnitsText: storageListModel.cloudBackupUnits.join(Format.listSeparator)
 
     readonly property string _errorText: {
-        if (_memoryCardError.length > 0) {
-            return _memoryCardError
+        if (_storageError.length > 0) {
+            return _storageError
         } else if (cloudAccountId > 0
                    && networkManagerFactory.instance.state !== ""
                    && networkManagerFactory.instance.state !== "online") {
@@ -45,7 +45,7 @@ Column {
         return ""
     }
 
-    property string _memoryCardError
+    property string _storageError
 
     function activeItem() {
         return storageListModel.get(storageCombo.currentIndex)
@@ -77,17 +77,20 @@ Column {
         }
 
         var data = activeItem()
+        if (!data) {
+            return
+        }
         if (data.type === storageListModel.storageTypeMemoryCard) {
             selectedStorageMounted = data.path.length > 0
             selectedStorageLocked = data.deviceStatus === storageListModel.storageLocked
             cloudAccountId = 0
-            _memoryCardError = data.latestBackupInfo.error || ""
-            memoryCardPath = _memoryCardError.length ? "" : data.path
+            _storageError = data.latestBackupInfo.error || ""
+            memoryCardPath = _storageError.length ? "" : data.path
         } else if (data.type === storageListModel.storageTypeCloud) {
             selectedStorageMounted = true
             selectedStorageLocked = false
             cloudAccountId = data.accountId
-            _memoryCardError = ""
+            _storageError = data.latestBackupInfo.error || ""
             memoryCardPath = ""
         } else {
             console.warn("Unrecognized storage type!")

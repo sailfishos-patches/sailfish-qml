@@ -58,7 +58,20 @@ DockedPanel {
     onActiveChanged: if (!active) hideControls()
     onPositionChanged: if (!slider.pressed) slider.value = position
 
-    background: MediaPlayerPanelBackground { }
+    background: Column {
+        MediaPlayerPanelBackground {
+            id: panelBackground
+
+            width: parent.width
+            height: panel.height
+        }
+
+        Rectangle {
+            width: parent.width
+            height: menuLoader.item ? menuLoader.item.height : 0
+            color: panelBackground.color
+        }
+    }
 
     Column {
         id: column

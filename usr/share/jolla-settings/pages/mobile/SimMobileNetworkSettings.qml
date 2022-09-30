@@ -5,6 +5,7 @@ import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import Sailfish.Settings.Networking 1.0
 import org.nemomobile.systemsettings 1.0
+import com.jolla.settings.system 1.0
 
 Column {
     id: root
@@ -259,6 +260,24 @@ Column {
                 //% "2G only"
                 text: qsTrId("settings_network-me-network_mode_2G_only")
                 visible: radioSettings.availableTechnologies.indexOf(tech) >= 0
+            }
+        }
+    }
+
+
+    Loader {
+        width: root.width
+
+        RpmInfo {
+            id: ims
+            packageName: "ofono-ims-support"
+
+            readonly property bool supported: ims.whatProvides.length > 0
+        }
+
+        Component.onCompleted: {
+            if (ims.supported) {
+                setSource(Qt.resolvedUrl("ImsStatus.qml"), {path: root.modemPath})
             }
         }
     }

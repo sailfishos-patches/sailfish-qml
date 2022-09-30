@@ -63,7 +63,7 @@ MouseArea {
     function _updateAvatarModel() {
         // Get URLs for all avatars that are not covers
         _avatarUrls = contact.avatarUrlsExcluding('cover')
-        _avatarUrl = contact.filteredAvatarUrl(['local', 'picture', ''])
+        _avatarUrl = contact.avatarUrl
         _updateAvatarMenu()
     }
 

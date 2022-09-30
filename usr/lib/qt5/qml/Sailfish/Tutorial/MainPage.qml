@@ -17,7 +17,6 @@ TutorialPage {
     property alias background: pannable
     property alias applicationBackground: applicationBackgroundItem
     property alias applicationGridIndicator: swipeHandle
-    property alias upgradeMode: recap.upgradeMode
     property alias applicationSwitcher: switcher
     property int lessonCounter: 0
     property int maxLessons: lessons.length
@@ -253,37 +252,7 @@ TutorialPage {
         id: recap
 
         z: 1
-
-        descriptionText: {
-            if (lessonCounter === 0) {
-                if (upgradeMode) {
-                    //: The secondary label shown when the tutorial is started after an upgrade
-                    //% "We've made some exciting changes. Start the Tutorial to learn about them!"
-                    return qsTrId("tutorial-la-exciting_changes")
-                } else if (Screen.sizeCategory >= Screen.Large) {
-                    //: The secondary label shown when the tutorial is started (for large screen devices)
-                    //% "Simply hold the device comfortably and follow the instructions on screen to learn how to navigate in Sailfish OS"
-                    return qsTrId("tutorial-la-follow_the_instructions_tablet")
-                } else {
-                    //: The secondary label shown when the tutorial is started (for small screen devices)
-                    //% "Simply hold the device in one hand and follow the instructions on screen to learn how to navigate in Sailfish OS"
-                    return qsTrId("tutorial-la-follow_the_instructions")
-                }
-            } else if (lessonCounter > 0 && lessonCounter < maxLessons) {
-                return lessonLoader.item ? lessonLoader.item.recapText : ""
-            } else {
-                var text = lessonLoader.item ? lessonLoader.item.recapText : ""
-
-                text += "\n\n"
-
-                //: Text shown at the end of the tutorial below tutorial-la-recap_incoming_call
-                //: (or tutorial-la-recap_pulley_menu_alternative in case of Jolla Launcher)
-                //% "This was the last part of the Tutorial. Now jump into the Sailfish experience!"
-                text += qsTrId("tutorial-la-recap_tutorial_completed")
-
-                return text
-            }
-        }
+        recapText: lessonLoader.item ? lessonLoader.item.recapText : ""
     }
 
     Component.onCompleted: buildLessons()

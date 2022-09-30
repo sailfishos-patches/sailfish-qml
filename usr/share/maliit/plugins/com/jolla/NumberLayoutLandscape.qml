@@ -13,6 +13,12 @@ KeyboardLayout {
     width: geometry.keyboardWidthLandscape
     height: 2 * geometry.keyHeightPortrait
 
+    layoutIndex: -1
+    type: ""
+    handler: null
+    languageCode: ""
+
+
     Row {
         NumberKey {
             caption: "1"

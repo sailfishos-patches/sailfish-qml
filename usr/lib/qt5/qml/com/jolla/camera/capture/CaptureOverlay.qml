@@ -3,11 +3,8 @@ import QtQuick.Window 2.0
 import QtMultimedia 5.4
 import QtPositioning 5.1
 import Sailfish.Silica 1.0
-import Sailfish.Media 1.0
 import com.jolla.camera 1.0
 import org.nemomobile.time 1.0
-import org.nemomobile.policy 1.0
-import org.nemomobile.ngf 1.0
 import org.nemomobile.configuration 1.0
 import org.nemomobile.notifications 1.0
 import org.nemomobile.systemsettings 1.0
@@ -216,6 +213,7 @@ SettingsOverlay {
 
         z: settingsOverlay.inButtonLayout ? 1 : 0
         size: Theme.iconSizeMedium
+        anchors.centerIn: parent
         background.visible: icon.opacity < 1.0
         enabled: captureView._canCapture
                     && !captureView._captureOnFocus
@@ -345,22 +343,16 @@ SettingsOverlay {
 
         property real gridWidth: captureView.viewfinderOrientation % 180 == 0 ? focusArea.width : focusArea.height
         property real gridHeight: captureView.viewfinderOrientation % 180 == 0 ? focusArea.height : focusArea.width
-        property real ambienceScale: Math.min(Screen.width, Screen.height) /
-                                     Math.max(Screen.width, Screen.height)
 
         anchors.centerIn: parent
         anchors.verticalCenterOffset: isPortrait ? captureView.viewfinderOffset : 0
         anchors.horizontalCenterOffset: isPortrait ? 0 : captureView.viewfinderOffset
 
-        visible: Settings.mode.viewfinderGrid != "none"
+        visible: Settings.global.viewfinderGrid != "none"
                  && camera.cameraStatus == Camera.ActiveStatus
 
-        width: Settings.mode.viewfinderGrid == "ambience"
-               ? gridWidth * ambienceScale
-               : gridWidth / 3
-        height: Settings.mode.viewfinderGrid == "ambience"
-                ? gridHeight * ambienceScale
-                : gridHeight / 3
+        width: gridWidth / 3
+        height: gridHeight / 3
 
         GridLine {
             anchors {

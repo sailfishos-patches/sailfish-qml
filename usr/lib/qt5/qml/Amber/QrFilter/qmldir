@@ -1,0 +1,2 @@
+module Amber.QrFilter
+plugin qrfilter

@@ -7,7 +7,7 @@ let Util = {
    * General purpose utilities
    */
   getWindowUtils: function getWindowUtils(aWindow) {
-    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    return aWindow.windowUtils;
   },
 
   fuzzyEquals: function fuzzyEquals(a, b) {

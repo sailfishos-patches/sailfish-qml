@@ -1,5 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.WebView 1.0
+import Sailfish.WebEngine 1.0
+import Sailfish.WebView.Popups 1.0
 import com.jolla.settings.accounts 1.0
 
 Dialog {
@@ -8,7 +11,7 @@ Dialog {
     property string legaleseText
     property string externalUrlText
     property string externalUrlLink
-    property alias userAgent: termsView.userAgent
+    property alias userAgent: termsView.httpUserAgent
 
     DialogHeader {
         id: header
@@ -60,19 +63,11 @@ Dialog {
         }
     }
 
-    SilicaWebView {
+    WebView {
         id: termsView
         visible: false
-        overridePageStackNavigation: true
-        property string userAgent: "Mozilla/5.0 (Mobile Linux; U; like Android 4.4.3; Sailfish OS/2.0) AppleWebkit/535.19 (KHTML, like Gecko) Version/4.0 Mobile Safari/535.19"
-        property bool _isScrolledToEnd: (termsView.contentY + termsView.height + 2) >= termsView.contentHeight
-        property bool _isScrolledToBeginning: termsView.contentY <= 2
-        property bool _isFinishedPanning: termsView.atXBeginning && termsView.atXEnd && !termsView.moving
-        experimental.temporaryCookies: true
-        experimental.deviceWidth: termsView.width
-        experimental.deviceHeight: termsView.height
-        experimental.userAgent: userAgent
         url: root.externalUrlLink
+        privateMode: true
         anchors {
             topMargin: -Theme.paddingLarge
             top: header.bottom
@@ -81,17 +76,13 @@ Dialog {
             right: root.right
         }
 
-        experimental.customLayoutWidth: {
-            // VK's Terms Of Service page doesn't render the same
-            // way as Facebook/Google/Twitter/OneDrive etc, because
-            // it doesn't respect the deviceWidth setting.
-            var urlStr = "" + url
-            if (urlStr.indexOf("vk.com/terms") > 0) {
-                return root.width * Theme._webviewCustomLayoutWidthScalingFactor
-            }
+        Component.onCompleted: {
+            WebEngineSettings.popupEnabled = false
+        }
 
-            // For other services, zoom in a bit to make things more readable
-            return root.width * 0.6
+        popupProvider: PopupProvider {
+            // Disable the Save Password dialog
+            passwordManagerPopup: null
         }
     }
 }

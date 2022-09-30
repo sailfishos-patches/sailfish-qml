@@ -26,9 +26,9 @@ ApplicationWindow {
                              browserVisibility === QuickWindow.Window.Minimized ||
                              browserVisibility === QuickWindow.Window.Windowed
 
-    property bool opaqueBackground
     property var rootPage
     property QtObject webView
+    property alias activityDisabledByMdm: mdmView.activity
 
     allowedOrientations: defaultAllowedOrientations
     // For non large screen fix cover to portrait.
@@ -45,9 +45,8 @@ ApplicationWindow {
     pageStack.pageBackground: Component { Background {} }
 
     DisabledByMdmView {
+        id: mdmView
         enabled: !AccessPolicy.browserEnabled
-        //% "Web browsing"
-        activity: qsTrId("sailfish_browser-la-web_browsing");
         onEnabledChanged: {
             if (enabled) {
                 webView.tabModel.clear()
@@ -57,6 +56,12 @@ ApplicationWindow {
             } else {
                 webView.privateMode = false
             }
+        }
+    }
+
+    Component.onCompleted: {
+        if (window.hasOwnProperty("displayMode")) {
+            displayMode = ApplicationDisplayMode.FullPortrait
         }
     }
 }

@@ -5,11 +5,10 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
-const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("chrome://embedlite/content/OrientationChangeHandler.jsm")
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { OrientationChangeHandler } = ChromeUtils.import("chrome://embedlite/content/OrientationChangeHandler.jsm")
 
 XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
                                    "@mozilla.org/embedlite-app-service;1",
@@ -63,7 +62,7 @@ EmbedLiteOrientationChangeHandler.prototype = {
     delete this._orientationListeners[aWindow];
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([EmbedLiteOrientationChangeHandler]);

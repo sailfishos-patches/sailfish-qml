@@ -1,0 +1,3 @@
+module MeeGo.QOfono
+plugin QOfonoQtDeclarative
+typeinfo plugins.qmltypes

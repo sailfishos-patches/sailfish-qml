@@ -16,6 +16,8 @@ import MeeGo.QOfono 0.2
 MouseArea {
     id: root
 
+    propagateComposedEvents: true
+
     property bool selectionVisible
     readonly property bool active: selectionVisible
 
@@ -37,6 +39,9 @@ MouseArea {
 
     property bool _phoneNumberSelected
 
+    property alias startHandleMask: start.mask
+    property alias endHandleMask: end.mask
+
     function selectionRangeUpdated(data) {
         var resolution = contentItem.resolution
         start.lineHeight = data.start.height * resolution
@@ -48,9 +53,11 @@ MouseArea {
         // Don't update root state yet.
         var state = data.src
 
+        var visualViewport = data.visualViewport
+
         // Start marker
-        start.fixedX = (data.start.xPos * resolution) - start.width
-        start.fixedY = data.start.yPos * resolution
+        start.fixedX = (data.start.xPos - visualViewport.offsetLeft) * resolution - start.width
+        start.fixedY = (data.start.yPos - visualViewport.offsetTop) * resolution
         if (!selectionVisible) {
             start.x = start.fixedX
             start.y = start.fixedY
@@ -59,8 +66,8 @@ MouseArea {
         }
 
         // End marker
-        end.fixedX = data.end.xPos * resolution
-        end.fixedY = data.end.yPos * resolution
+        end.fixedX = (data.end.xPos - visualViewport.offsetLeft) * resolution
+        end.fixedY = (data.end.yPos - visualViewport.offsetTop) * resolution
 
         if (!selectionVisible) {
             end.x = end.fixedX
@@ -79,7 +86,8 @@ MouseArea {
             "endHeightShift": endHeightShift,
             "origOffsetX": contentItem.scrollableOffset.x,
             "origOffsetY": contentItem.scrollableOffset.y,
-            "origResolution": resolution
+            "origResolution": resolution,
+            "visualViewport": visualViewport
         }
 
         _selectionData = data
@@ -136,25 +144,30 @@ MouseArea {
 
     function getMarkerBaseMessage(markerTag) {
         var resolution = contentItem.resolution
+        var offsetLeft = _cssRange.visualViewport.offsetLeft * resolution
+        var offsetTop = _cssRange.visualViewport.offsetTop * resolution
         return {
             change: markerTag,
             start: {
-                xPos: (start.x + start.width) / resolution,
-                yPos: start.y / resolution
+                xPos: (start.x + offsetLeft + start.width) / resolution,
+                yPos: (start.y + offsetTop)/ resolution
             },
             end: {
-                xPos: end.x / resolution,
-                yPos: end.y / resolution
+                xPos: (end.x + offsetLeft) / resolution,
+                yPos: (end.y + offsetTop) / resolution
             },
             caret: {
                 xPos: 0,
                 yPos: 0
-            }
+            },
         }
     }
 
     // Selection is copied upon state change.
-    onClicked: clearSelection()
+    onPressed: {
+        clearSelection()
+        mouse.accepted = false
+    }
 
     onStateChanged: {
         // Copy when selection starts and ends.

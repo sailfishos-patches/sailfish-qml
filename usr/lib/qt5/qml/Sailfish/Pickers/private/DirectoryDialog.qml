@@ -96,9 +96,8 @@ PickerDialog {
                 fileModel.toggleSelectedFile(index)
 
                 var fileItem = {
-                    'url': "file://" + model.absolutePath,
+                    'url': model.url,
                     'title': model.fileName,
-                    'lastAccessed': model.accessed,
                     'lastModified': model.modified,
                     'filePath': model.absolutePath,
                     'fileName': model.fileName,

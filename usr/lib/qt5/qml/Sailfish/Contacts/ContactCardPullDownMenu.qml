@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013 - 2019 Jolla Pty Ltd.
- * Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
 */
@@ -100,9 +100,12 @@ PullDownMenu {
                 "type": "text/vcard",
                 "icon": root.contact.avatarPath.toString()
             }
-            pageStack.animatorPush(Qt.resolvedUrl("ContactSharePage.qml"), {"content": content})
+            _shareAction.resources = [content]
+            _shareAction.trigger()
         }
     }
+
+    property var _shareAction: ContactShareAction {}
 
     ContactEditMenuItem {
         contact: root.contact

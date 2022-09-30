@@ -180,9 +180,7 @@ Column {
                 anchors.centerIn: parent
 
                 // binding to avatarUrl ensures the source is refreshed if avatar changes
-                source: !!contact && contact.avatarUrl
-                        ? contact.filteredAvatarUrl(['local', 'picture', ''])
-                        : ""
+                source: !!contact ? contact.avatarUrl : ""
             }
 
             HighlightImage {

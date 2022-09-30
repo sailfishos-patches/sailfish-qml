@@ -3,7 +3,6 @@ import Sailfish.Silica 1.0
 import QtDocGallery 5.0
 import com.jolla.gallery 1.0
 import Sailfish.Gallery 1.0
-import "scripts/AlbumManager.js" as AlbumManager
 
 MediaSourcePage {
     id: gridPage
@@ -72,16 +71,10 @@ MediaSourcePage {
         id: grid
         objectName: "gridView"
 
-        property alias contextMenu: contextMenuItem
-        property Item expandItem
-        property real expandHeight: contextMenu.height
-        property int minOffsetIndex: expandItem != null
-                                     ? expandItem.modelIndex + columnCount - (expandItem.modelIndex % columnCount)
-                                     : 0
-
         anchors.fill: parent
         header: PageHeader { title: gridPage.title }
         model: gridPage.model
+        dateProperty: model.rootType === DocumentGallery.Image ? "dateTaken" : "lastModified"
 
         PullDownMenu {
             visible: model.count > 0
@@ -119,38 +112,27 @@ MediaSourcePage {
             property int modelIndex: index
 
             source: mediaUrl
-            size: grid.cellSize
-            height: isItemExpanded ? grid.contextMenu.height + grid.cellSize : grid.cellSize
-            contentYOffset: index >= grid.minOffsetIndex ? grid.expandHeight : 0.0
-            z: isItemExpanded ? 1000 : 1
-            enabled: isItemExpanded || !grid.contextMenu.active
 
             function remove() {
-                var remorse = removalComponent.createObject(null)
-                remorse.z = thumbnail.z + 1
-
-                remorse.execute(remorseContainerComponent.createObject(thumbnail),
-                                remorse.text,
-                                function() {
-                                    AlbumManager.deleteMedia(thumbnail.mediaUrl)
-                                })
+                remorseDelete(function() { fileRemover.deleteFileSync(thumbnail.mediaUrl) })
             }
 
-
             onClicked: {
-                if (grid.contextMenu.active) {
-                    return
-                }
-
                 pageStack.push(Qt.resolvedUrl("GalleryFullscreenPage.qml"),
                                {currentIndex: index, model: grid.model})
                 _requestedIndex = -1
                 pageStack.currentPage.requestIndex.connect(gridPage.requestIndex)
             }
 
-            onPressAndHold: {
-                grid.expandItem = thumbnail
-                grid.contextMenu.open(thumbnail)
+            menu: Component {
+                ContextMenu {
+                    MenuItem {
+                        objectName: "deleteItem"
+                        //% "Delete"
+                        text: qsTrId("gallery-me-delete")
+                        onClicked: remove()
+                    }
+                }
             }
 
             GridView.onAdd: AddAnimation { target: thumbnail; duration: _animationDuration }
@@ -159,38 +141,6 @@ MediaSourcePage {
                 NumberAnimation { target: thumbnail; properties: "opacity,scale"; to: 0; duration: 250; easing.type: Easing.InOutQuad }
                 PropertyAction { target: thumbnail; property: "GridView.delayRemove"; value: false }
             }
-        }
-
-        ContextMenu {
-            id: contextMenuItem
-            x: parent !== null ? -parent.x : 0.0
-
-            MenuItem {
-                objectName: "deleteItem"
-                //% "Delete"
-                text: qsTrId("gallery-me-delete")
-                onClicked: grid.expandItem.remove()
-            }
-        }
-    }
-
-    // This container is used for making RemorseItem to follow
-    // offset changes if there are multiple deletions ongoing
-    // at the same time.
-    Component {
-        id: remorseContainerComponent
-        Item {
-            y: parent.contentYOffset
-            width: parent.width
-            height: parent.height
-        }
-    }
-
-    Component {
-        id: removalComponent
-        RemorseItem {
-            objectName: "remorseItem"
-            font.pixelSize: Theme.fontSizeSmallBase
         }
     }
 }

@@ -68,8 +68,8 @@ function Dialog(aMultiple, aOptionList) {
 
 // Proxy object for sub window with OPTION elements
 Dialog.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   _init: function(aData) {
     addMessageListener("embedui:selectresponse", this);
@@ -93,8 +93,8 @@ function SelectHelper() {
 }
 
 SelectHelper.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   _selectElement: null,
   _dialog: null, // a proxy for modal subwindow

@@ -2,7 +2,6 @@
 **
 ** Copyright (C) 2014-2015 Jolla Ltd.
 ** Copyright (c) 2019 Open Mobile Platform LLC.
-** Contact: Joona Petrell <joona.petrell@jollamobile.com>
 ** All rights reserved.
 ** 
 ** This file is part of Sailfish Silica UI component package.
@@ -45,6 +44,7 @@ SilicaItem {
     property alias label: labelText.text
     property alias value: valueText.text
     property alias valueFont: valueText.font
+    property alias valueTextFormat: valueText.textFormat
     property real leftMargin: Theme.horizontalPageMargin
     property real rightMargin: Theme.horizontalPageMargin
     // supported: Qt.AlignHCenter and Qt.AlignLeft
@@ -54,6 +54,8 @@ SilicaItem {
     property bool forceValueBelow
     property alias _valueItem: valueText
     readonly property bool _center: alignment === Qt.AlignHCenter
+
+    signal valueLinkActivated(string link)
 
     Text {
         id: labelText
@@ -89,8 +91,10 @@ SilicaItem {
         }
         horizontalAlignment: Text.AlignLeft
         color: detailItem.palette.highlightColor
+        linkColor: detailItem.palette.primaryColor
         font.pixelSize: Theme.fontSizeSmall
         textFormat: Text.PlainText
         wrapMode: Text.Wrap
+        onLinkActivated: detailItem.valueLinkActivated(link)
     }
 }

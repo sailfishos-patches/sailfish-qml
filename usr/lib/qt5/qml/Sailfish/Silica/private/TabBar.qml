@@ -33,19 +33,46 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
-import Nemo.Configuration 1.0
 import "Util.js" as Util
 
-Item {
+SilicaControl {
     id: root
 
     property alias model: _tabButtons.model
+    property alias delegate: _tabButtons.delegate
+    readonly property Item _tabView: Util.findParentWithProperty(root, '__silica_tab_view')
     property bool _oversize: flickable.contentWidth > flickable.width
-    property bool _contentOnRight: flickable.contentX >= (flickable.contentWidth - flickable.width)
-    property bool _isFooter: tabRow._tabView.hasFooter
-    readonly property bool _vanillaStyle: tabBarStyle.value === "vanilla"
+    property bool _isFooter: _tabView && _tabView.hasFooter
+    readonly property bool _vanillaStyle: !_styleConfig || _styleConfig.value === "vanilla"
+    property QtObject _styleConfig
+    readonly property int _currentIndex: _tabView ? _tabView.currentIndex : 0
+    readonly property Item _currentTabButton: _currentIndex >= 0 && _currentIndex < _tabButtons.count
+            ? (tabRow.children, _tabButtons.itemAt(_currentIndex))
+            : null
 
-    state: _isFooter ? "footer" : "header"
+    readonly property real _normalizedDragDistance: _tabView && _tabView.dragging
+            ? _tabView._distance / _tabView.width + _tabView.horizontalSpacing
+            : 0
+    readonly property int _dragDirection: {
+        if (_normalizedDragDistance < 0) {
+            return -1
+        } else if (_normalizedDragDistance > 0) {
+            return 1
+        } else {
+            return 0
+        }
+    }
+    readonly property Item _anchoredTabButton: _dragDirection != 0
+                && _currentIndex >= 0 && _currentIndex < _tabButtons.count
+            ? _tabButtons.itemAt(_dragDirection < 0
+                    ? (_currentIndex + 1) % _tabButtons.count
+                    : (root._currentIndex + _tabButtons.count - 1) % _tabButtons.count)
+            : null
+
+    property string titleRole: "title"
+    property string countRole: "count"
+    property string iconRole: "icon"
+
     height: flickable.height
 
     Flickable {
@@ -54,24 +81,68 @@ Item {
         width: parent.width
         height: tabRow.height
 
-        interactive: tabRow.flickable
-        contentWidth: tabRow.contentWidth
+        contentWidth: tabRow.width
         boundsBehavior: Flickable.StopAtBounds
+
+        contentX: {
+            var x = 0
+            var tabButton = root._currentTabButton
+            if (tabButton) {
+                x = Math.max(0, Math.min(
+                            contentWidth - width, tabButton.x + ((tabButton.width - width) / 2)));
+
+                var anchoredButton = root._anchoredTabButton
+                if (anchoredButton) {
+                    var anchoredX = Math.max(0, Math.min(
+                                contentWidth - width, anchoredButton.x + ((anchoredButton.width - width) / 2)))
+
+                    x = (x * (1 - Math.abs(root._normalizedDragDistance))) + (anchoredX * Math.abs(root._normalizedDragDistance))
+                }
+            }
+            return x
+        }
 
         Behavior on contentX {
             id: contentXBehavior
+            enabled: root._tabView && root._tabView.moving
 
             SmoothedAnimation {
                 duration: 250
-                velocity: Theme.pixelRatio * 500
+                velocity: Theme.pixelRatio * 200
                 easing.type: Easing.InOutQuad
             }
         }
 
-        TabButtonRow {
+        Row {
             id: tabRow
 
-            property real extraMargin: root._oversize ? 0.0 : (root.width - tabRow.contentWidth) * 0.5
+            readonly property alias tabView: root._tabView
+            readonly property alias tabCount: _tabButtons.count
+            readonly property real extraMargin: {
+                var buttons = tabRow.children
+                var buttonsWidth = 0
+                for (var i = 0; i < buttons.length; i++) {
+                    buttonsWidth += buttons[i].contentWidth || 0
+                }
+                return Math.max(0, flickable.width - buttonsWidth) / 2
+            }
+            readonly property int buttonFontSize: {
+                if (root._tabView) {
+                    var buttons = tabRow.children
+                    var availableWidth = root._tabView.width
+                    var largeWidth = 0
+                    for (var i = 0; i < buttons.length; i++) {
+                        var button = buttons[i]
+                        largeWidth = largeWidth + largeFontMetrics.advanceWidth(button.title) + Theme.paddingMedium * 2
+                                   + (button.count >= 0 ? tinyFontMetrics.advanceWidth(button.count) + Theme.paddingSmall * 2 : "")
+                        if (largeWidth > availableWidth) {
+                            return Theme.fontSizeMedium
+                        }
+                    }
+                }
+
+                return Theme.fontSizeLarge
+            }
 
             Repeater {
                 id: _tabButtons
@@ -79,138 +150,66 @@ Item {
                 TabButton {
                     id: tabButton
 
-                    extraMargin: (contentState === "first" || contentState === "last") ? tabRow.extraMargin : 0.0
+                    _tabView: root._tabView
+                    _extraMargin: tabRow.extraMargin
+                    tabCount: _tabButtons.count
+                    titleFontSize: tabRow.buttonFontSize
 
-                    onClicked: {
-                        tabRow._tabView.moveTo(model.index)
-                    }
-
-                    onIsCurrentTabChanged: {
-                        if (isCurrentTab) {
-                            tabFooter.state = "undefined"
-                            // Set a new active button as a reparenting target
-                            tabFooter.nextParent = tabButton
-                            tabFooter.state = root._vanillaStyle ? "reparented_vanilla" : "reparented"
-                        }
-                    }
-
-                    contentState: {
-                        if (tabIndex === 0) {
-                            return "first"
-                        } else if (tabIndex === tabRow._buttons.length - 1) {
-                            return "last"
-                        } else {
-                            return "between"
-                        }
-                    }
-
-                    title: model.title ? model.title : ""
-                    icon.source: model.iconSource ? model.iconSource : ""
-                    tabIndex: model.index
-                    count: model.count ? model.count : 0
+                    title: model[root.titleRole] || ""
+                    icon.source: model[root.iconRole] || ""
+                    count: model[root.countRole] || ""
                 }
-            }
-
-            onUpdatePosition: {
-                contentXBehavior.enabled = animated
-                flickable.contentX = root._oversize ? -pos : 0
             }
         }
 
-        Item {
-            id: transitionLine
+        Rectangle {
+            id: tabFooter
 
-            anchors {
-                bottom: root._isFooter ? undefined : tabRow.bottom
-                top: root._isFooter ? tabRow.top : undefined
+            x: {
+                if (!root._currentTabButton) {
+                    return 0
+                } else if (root._vanillaStyle) {
+                   root._currentTabButton.x + root._currentTabButton.contentItem.x
+                } else {
+                    return root._currentTabButton.x
+                }
             }
+            y: {
+                if (!root._currentTabButton || !root._vanillaStyle) {
+                    return root._isFooter ? 0 : flickable.height - height
+                } else if (root._isFooter) {
+                    return root._currentTabButton.contentItem.y - height - Theme.paddingMedium
+                } else {
+                    return root._currentTabButton.contentItem.y
+                            + root._currentTabButton.contentItem.height
+                            + Theme.paddingMedium
+                }
+            }
+            width: {
+                if (!root._currentTabButton) {
+                    return 0
+                } else if (root._vanillaStyle) {
+                    return root._currentTabButton.contentItem.width
+                } else {
+                    return root._currentTabButton.width
+                }
+            }
+
             height: Theme._lineWidth
-            width: parent.width
-        }
-    }
+            color: root.palette.highlightColor
 
-    Rectangle {
-        id: tabFooter
-
-        property Item nextParent
-        property bool animationDisabled
-
-        width: nextParent.width
-        height: Theme._lineWidth
-        color: Theme.highlightColor
-
-        anchors {
-            bottom: root._isFooter ? undefined : parent.bottom
-            top: root._isFooter ? parent.top : undefined
-        }
-
-        states: [
-            State {
-                name: "reparented"
-                ParentChange {
-                    target: tabFooter
-                    parent: tabFooter.nextParent
-                    x: 0
-                }
-                PropertyChanges {
-                    target: tabFooter
-                    width: tabFooter.nextParent.width
-                }
-            },
-            State {
-                name: "reparented_vanilla"
-
-                ParentChange {
-                    target: tabFooter
-                    parent: tabFooter.nextParent
-                    x: tabFooter.nextParent.contentItem.x
-                }
-                PropertyChanges {
-                    target: tabFooter
-                    width: tabFooter.nextParent.contentItem.width
-                    anchors.margins: -Theme.paddingMedium
-                }
-                AnchorChanges {
-                    target: tabFooter
-                    anchors {
-                        bottom: root._isFooter ? undefined : tabFooter.nextParent.contentItem.bottom
-                        top: root._isFooter ? tabFooter.nextParent.contentItem.top : undefined
-                    }
-                }
+            Behavior on x {
+                enabled: contentXBehavior.enabled
+                SmoothedAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
-        ]
-
-        transitions: Transition {
-            ParentAnimation {
-                NumberAnimation {
-                    properties: "x, width"
-                    duration: tabFooter.animationDisabled ? 0 : 250
-                    easing.type: Easing.InOutQuad
-                }
-                via: transitionLine
+            Behavior on y {
+                enabled: contentXBehavior.enabled
+                SmoothedAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
-        }
-
-        Behavior on width {
-            PropertyAnimation {
-                duration: tabFooter.animationDisabled ? 0 : 200
-                easing.type: Easing.InOutQuad
+            Behavior on width {
+                enabled: contentXBehavior.enabled
+                SmoothedAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
-        }
-
-        Timer {
-            // turn animation on in a half sec
-            running: true
-            interval: 500
-            onTriggered: tabFooter.animationDisabled = false
-        }
-    }
-
-    Component.onCompleted: {
-        // disable animation for a half sec to avoid slight movement during initialization
-        tabFooter.animationDisabled = true
-        if (tabRow._tabView.currentIndex >= 0 && tabRow._tabView.currentIndex < tabRow._buttons.length) {
-            tabFooter.parent = tabRow._buttons[tabRow._tabView.currentIndex]
         }
     }
 
@@ -244,34 +243,34 @@ Item {
         id: horizontalLine
 
         visible: !root._vanillaStyle
-        color: Theme.rgba(Theme.highlightColor, Theme.opacityLow)
+        color: Theme.rgba(root.palette.highlightColor, Theme.opacityLow)
+        y: root._isFooter ? 0 : root.height - height
+        width: root.width
         height: Theme._lineWidth
-        anchors.left: parent.left
-        anchors.right: parent.right
+
     }
 
-    states: [
-        State {
-            name: "header"
-            AnchorChanges {
-                target: horizontalLine
-                anchors.bottom: root.bottom
-                anchors.top: undefined
-            }
-        },
-        State {
-            name: "footer"
-            AnchorChanges {
-                target: horizontalLine
-                anchors.bottom: undefined
-                anchors.top: root.top
-            }
-        }
-    ]
-
-    ConfigurationValue {
-        id: tabBarStyle
-        key: '/desktop/sailfish/silica/tab_bar_style'
-        defaultValue: "vanilla"
+    FontMetrics {
+        id: largeFontMetrics
+        font.pixelSize: Theme.fontSizeLarge
     }
+
+    FontMetrics {
+        id: tinyFontMetrics
+        font.pixelSize: Theme.fontSizeTiny
+    }
+
+
+    Component.onCompleted: {
+        // Avoid hard dependency to Configuration module
+        _styleConfig = Qt.createQmlObject("import Nemo.Configuration 1.0;
+                                        import QtQuick 2.0;
+
+                                        ConfigurationValue {
+                                            id: tabBarStyle
+                                            key: '/desktop/sailfish/silica/tab_bar_style'
+                                            defaultValue: 'vanilla'
+                                        }", root, 'TabStyleConfig')
+    }
+
 }

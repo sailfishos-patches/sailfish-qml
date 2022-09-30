@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (c) 2015 - 2019 Jolla Ltd.
-** Copyright (c) 2019 Open Mobile Platform LLC.
+** Copyright (c) 2019 - 2021 Open Mobile Platform LLC.
 **
 ** License: Proprietary
 **
@@ -101,7 +101,7 @@ SilicaFlickable {
             } else if (menuAction) {
                 lockItem.reset()
                 if ('exec' in menuAction) {
-                    Desktop.instance.switcher.activateWindowFor(menuAction, true, true)
+                    Desktop.instance.switcher.activateWindowFor(menuAction)
                 }
                 menuAction = undefined
             }
@@ -365,6 +365,7 @@ SilicaFlickable {
 
         objectName: "leftIndicator"
 
+        x: offset
         y: lockItem.contentTopMargin
            + ((lockItem.height - lockItem.contentTopMargin - height) / 2)
            - lockItem.verticalOffset
@@ -388,7 +389,7 @@ SilicaFlickable {
 
         objectName: "rightIndicator"
 
-        x: lockItem.width - width
+        x: lockItem.width - width - offset
         y: leftIndicator.y
 
         active: lockItem.allowAnimations && !Lipstick.compositor.notificationsAnimating

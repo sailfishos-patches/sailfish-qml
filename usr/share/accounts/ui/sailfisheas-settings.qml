@@ -100,6 +100,10 @@ AccountSettingsAgent {
             onPageContainerChanged: {
                 if (pageContainer == null) {
                     root.serverSettingsActive = false
+                    if (!credentialsUpdater.running) {
+                        root.delayDeletion = true
+                        settingsDisplay.saveAccount(false, saveConnectionSettings)
+                    }
                 }
             }
 

@@ -9,5 +9,6 @@ OnlineSyncAccountCreationAgent {
         accountManager.service("memotoo-carddav"),
         accountManager.service("memotoo-caldav")
     ]
+    serverAddress: "https://sync.memotoo.com:443"
     calendarPath: "/calDAV/"
 }

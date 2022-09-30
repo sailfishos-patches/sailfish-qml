@@ -1,3 +1,9 @@
+/****************************************************************************
+**
+** Copyright (c) 2016 - 2018 Jolla Ltd.
+** Copyright (c) 2021 Open Mobile Platform LLC.
+**
+****************************************************************************/
 import QtQuick 2.6
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0
@@ -36,7 +42,7 @@ EdgeLayer {
                     Lipstick.compositor.raiseWindow(windowWrapper.window)
                 } else if (!cameraLauncher.isLaunching) {
                     startupWatcher.running = true
-                    cameraLauncher.launchApplication()
+                    Lipstick.compositor.launch(cameraLauncher)
                 }
             }
         }

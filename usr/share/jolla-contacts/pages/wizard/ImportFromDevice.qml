@@ -3,7 +3,6 @@ import Sailfish.Silica 1.0
 
 Page {
     property var importFromFile
-    property var bluetoothPairing
     property var createAccount
     property var abandonImport
 
@@ -38,12 +37,6 @@ Page {
                     id: devicesModel
 
                     Component.onCompleted: {
-                        append({
-                            //: Import from a Lumia
-                            //% "Lumia"
-                            'name': qsTrId("contacts-la-import_from_lumia"),
-                            'deviceType': 'lumia'
-                        })
                         append({
                             //: Import from an Android
                             //% "Android"
@@ -81,17 +74,12 @@ Page {
                         onClicked: {
                             var props = {
                                 'importFromFile': importFromFile,
-                                'bluetoothPairing': bluetoothPairing,
                                 'createAccount': createAccount,
                                 'abandonImport': abandonImport
                             }
                             if (model.deviceType) {
-                                if (model.deviceType == 'lumia') {
-                                    pageStack.animatorPush('SelectLumia.qml', props)
-                                } else {
-                                    props['deviceType'] = model.deviceType
-                                    pageStack.animatorPush('ImportFromDeviceType.qml', props)
-                                }
+                                props['deviceType'] = model.deviceType
+                                pageStack.animatorPush('ImportFromDeviceType.qml', props)
                             } else {
                                 pageStack.animatorPush('ImportFromOther.qml', props)
                             }

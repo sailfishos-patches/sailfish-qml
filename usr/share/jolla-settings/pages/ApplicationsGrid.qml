@@ -18,7 +18,7 @@ Item {
     width: parent.width
     height: gridView.height
 
-    function openSandboxed(name, treeItem, filePath) {
+    function openSandboxed(name, treeItem, icon, filePath) {
         var page
         if (treeItem === undefined || treeItem.type !== "application") {
             if (treeItem !== undefined) {
@@ -32,10 +32,10 @@ Item {
             // is ApplicationSettings should have been already done when the package is installed
             page = treeItem.data()["params"]["source"]
         }
-        pageStack.animatorPush(page, { "applicationName": name, "_desktopFile": filePath })
+        pageStack.animatorPush(page, { "applicationName": name, "applicationIcon": icon, "_desktopFile": filePath })
     }
 
-    function openSettings(name, treeItem) {
+    function openSettings(name, treeItem, icon) {
         var objdata = treeItem.data()
         var entryPath = treeItem.location().join("/")
 
@@ -46,9 +46,10 @@ Item {
                     ? objdata["params"]["properties"]
                     : {}
             properties["applicationName"] = name
+            properties["applicationIcon"] = icon
             pageStack.animatorPush(objdata["params"]["source"], properties)
         } else if (treeItem.type === "application") {
-            pageStack.animatorPush(objdata["params"]["source"], { "applicationName": name })
+            pageStack.animatorPush(objdata["params"]["source"], { "applicationName": name, "applicationIcon": icon })
         } else {
             var pageParams = {
                 "entryPath": entryPath,
@@ -105,9 +106,9 @@ Item {
 
                 onClicked: {
                     if (model.sandboxed) {
-                        root.openSandboxed(text, model.section, model.filePath)
+                        root.openSandboxed(text, model.section, model.iconId, model.filePath)
                     } else if (configurable) {
-                        root.openSettings(text, model.section)
+                        root.openSettings(text, model.section, model.iconId)
                     }
                 }
             }

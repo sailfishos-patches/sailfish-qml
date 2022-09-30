@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (c) 2013 - 2019 Jolla Ltd.
+** Copyright (c) 2013 - 2021 Jolla Ltd.
 ** Copyright (c) 2019 - 2020 Open Mobile Platform LLC.
 **
 ****************************************************************************/
@@ -17,7 +17,7 @@ BrowserWindow {
     id: window
 
     function setBrowserCover(model) {
-        if (!model || model.count === 0) {
+        if (!model || model.count === 0 || !WebUtils.firstUseDone) {
             cover = Qt.resolvedUrl("cover/NoTabsCover.qml")
         } else {
             if (cover != null && window.webView) {
@@ -27,6 +27,8 @@ BrowserWindow {
         }
     }
 
+    //% "Web browsing"
+    activityDisabledByMdm: qsTrId("sailfish_browser-la-web_browsing");
     initialPage: Component {
         BrowserPage {
             id: browserPage

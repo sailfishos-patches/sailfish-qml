@@ -9,9 +9,6 @@ StoreImage {
 
     opacity: imageStatus === Image.Loading ? 0.1 : 1
 
-    // TODO: Remove this workaround!
-    _scaleDownWorkaround: sourceSize.height > height || width === Theme.iconSizeLauncher
-
     Behavior on opacity {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }

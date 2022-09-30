@@ -6,18 +6,19 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import org.nemomobile.systemsettings 1.0
 import Csd 1.0
 import ".."
 
 CsdTestPage {
     id: page
 
-    function allMacsOk() {
-        return macValidator.isMacValid("bluetooth") && macValidator.isMacValid("wireless")
-    }
+    property bool wlanValid: macValidator.isMacValid("wireless", aboutSettings.wlanMacAddress)
+    property bool bluetoothValid: macValidator.isMacValid("bluetooth", macValidator.getMac("bluetooth"))
+    property bool allMacsOk: wlanValid && bluetoothValid
 
     Component.onDestruction: {
-        page.setTestResult(allMacsOk())
+        page.setTestResult(allMacsOk)
         testCompleted(false)
     }
 
@@ -33,7 +34,7 @@ CsdTestPage {
             x: Theme.horizontalPageMargin
             width: parent.width - 2*x
 
-            result: allMacsOk()
+            result: allMacsOk
         }
 
         SectionHeader {
@@ -46,11 +47,11 @@ CsdTestPage {
             width: page.width - (2 * Theme.paddingLarge)
             wrapMode: Text.Wrap
 
-            color: macValidator.isMacValid("wireless")
+            color: wlanValid
                    ? "green"
                    : "red"
 
-            text: macValidator.isMacValid("wireless")
+            text: wlanValid
                     //% "Test passed."
                     ? qsTrId("csd-la-test-passed")
                     //% "Test failed."
@@ -63,7 +64,7 @@ CsdTestPage {
             wrapMode: Text.Wrap
 
             //% "Value: %1"
-            text: qsTrId("csd-la-value").arg(macValidator.getMac("wireless"))
+            text: qsTrId("csd-la-value").arg(aboutSettings.wlanMacAddress)
         }
 
         Label {
@@ -71,7 +72,7 @@ CsdTestPage {
             width: page.width - (2 * Theme.paddingLarge)
             fontSizeMode: Text.HorizontalFit
 
-            visible: !macValidator.isMacValid("wireless")
+            visible: !wlanValid
 
             //% "Acceptance criteria: %1"
             text: qsTrId("csd-la-acceptance-criteria").arg(macValidator.getMacCriteria("wireless"))
@@ -87,11 +88,11 @@ CsdTestPage {
             width: page.width - (2 * Theme.paddingLarge)
             wrapMode: Text.Wrap
 
-            color: macValidator.isMacValid("bluetooth")
+            color: bluetoothValid
                    ? "green"
                    : "red"
 
-            text: macValidator.isMacValid("bluetooth")
+            text: bluetoothValid
                     //% "Test passed."
                     ? qsTrId("csd-la-test-passed")
                     //% "Test failed."
@@ -112,11 +113,15 @@ CsdTestPage {
             width: page.width - (2 * Theme.paddingLarge)
             fontSizeMode: Text.HorizontalFit
 
-            visible: !macValidator.isMacValid("bluetooth")
+            visible: !bluetoothValid
 
             //% "Acceptance criteria: %1"
             text: qsTrId("csd-la-acceptance-criteria").arg(macValidator.getMacCriteria("bluetooth"))
         }
+    }
+
+    AboutSettings {
+        id: aboutSettings
     }
 
     MacValidator {

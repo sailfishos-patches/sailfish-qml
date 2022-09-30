@@ -9,12 +9,11 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import com.jolla.gallery 1.0
 import com.jolla.gallery.nextcloud 1.0
 
-Page {
+MediaSourcePage {
     id: root
-
-    property alias model: view.model
 
     SilicaListView {
         id: view
@@ -24,6 +23,7 @@ Page {
             title: view.model.userDisplayName || view.model.userId
         }
         cacheBuffer: Screen.height
+        model: root.model
 
         delegate: NextcloudAlbumDelegate {
             accountId: model.accountId

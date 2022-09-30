@@ -13,6 +13,7 @@ Item {
     property bool menuOpen
     property Item menuItem
     property int symbolScrollBarWidth
+    property bool symbolScrollBarVisible
 
     readonly property int avatarSize: {
         // use the maximum size available depending on the minimum number of columns
@@ -132,6 +133,7 @@ Item {
                 openMenuOnPressAndHold: false
                 highlighted: down || menuOpen || selectionModelIndex >= 0
                 symbolScrollBarWidth: favoriteBar.symbolScrollBarWidth
+                symbolScrollBarVisible: favoriteBar.symbolScrollBarVisible
 
                 onMenuOpenChanged: {
                     if (menuOpen) {

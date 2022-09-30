@@ -25,6 +25,7 @@ QtObject {
     property string imagesPath
     property string backupsPath
     property bool ignoreSslErrors
+    property bool skipAuthentication
     property var servicesEnabledConfig: ({})
 
     signal success(int newAccountId)
@@ -177,7 +178,11 @@ QtObject {
                 if (!!root.servicesEnabledConfig[serviceName]) {
                     //: In the process of verifying the username/password entered by the user
                     //% "Verifying credentials"
-                    root.updateCreationStatus(qsTrId("components_accounts-la-verifying_credentials"))
+                    var verifyingStatus = qsTrId("components_accounts-la-verifying_credentials")
+                    //: In the process of creating the account with the specified details
+                    //% "Creating account"
+                    var creatingStatus = qsTrId("components_accounts-la-creating_account")
+                    root.updateCreationStatus(root.skipAuthentication ? creatingStatus : verifyingStatus)
 
                     if (!root._accountAuthenticator) {
                         root._accountAuthenticator = _accountAuthenticatorComponent.createObject(root)
@@ -227,7 +232,9 @@ QtObject {
             }
 
             onSignInCompleted: {
-                if (root.provider.name == "nextcloud") {
+                if (root.skipAuthentication) {
+                    authenticator._done(true, "skipped")
+                } else if (root.provider.name == "nextcloud") {
                     sendOcsUserRequest(accountId, serviceName, credentials, root.ignoreSslErrors)
                 } else {
                     sendAuthenticatedRequest(root.serverAddress + root.webdavPath, credentials, root.ignoreSslErrors)

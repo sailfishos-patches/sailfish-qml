@@ -88,7 +88,6 @@ ContactBrowser {
     }
 
     // Select the contact's specific phone number to dial
-    recentContactsCategoryMask: CommHistory.ShortMessagingCategory | CommHistory.MultimediaMessagingCategory | CommHistory.InstantMessagingCategory
     symbolScroller {
         topMargin: 0
     }

@@ -26,8 +26,8 @@ PickerDialog {
 
         property bool searchActive
 
-        highlightEnabled: false
         anchors.fill: parent
+        dateProperty: "lastModified"
         header: SearchDialogHeader {
             width: gridView.width
             dialog: imagePickerDialog
@@ -68,13 +68,10 @@ PickerDialog {
             id: thumbnail
             source: model.url
             size: gridView.cellWidth
+            selected: model.selected
             GridView.onAdd: AddAnimation { target: thumbnail; duration: _animationDuration }
             GridView.onRemove: RemoveAnimation { target: thumbnail; duration: _animationDuration }
             onClicked: imageModel.updateSelected(index, !selected)
-            HighlightItem {
-                anchors.fill: parent
-                active: model.selected || parent.down
-            }
         }
     }
 }

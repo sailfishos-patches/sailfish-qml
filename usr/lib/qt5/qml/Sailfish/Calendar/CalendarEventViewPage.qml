@@ -1,3 +1,10 @@
+/****************************************************************************
+**
+** Copyright (C) 2015 - 2019 Jolla Ltd.
+** Copyright (C) 2020 - 2021 Open Mobile Platform LLC.
+**
+****************************************************************************/
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Calendar 1.0 as Calendar // QTBUG-27645
@@ -10,6 +17,17 @@ Page {
     property alias uniqueId: query.uniqueId
     property alias recurrenceId: query.recurrenceId
     property alias startTime: query.startTimeString
+    property alias cancellation: eventDetails.cancellation
+
+    property bool _deleteEventOnPop
+    signal eventRemovePressed
+
+    onStatusChanged: {
+        if (status == PageStatus.Inactive && _deleteEventOnPop) {
+            query.event.deleteEvent()
+            eventRemovePressed()
+        }
+    }
 
     EventQuery {
         id: query
@@ -63,6 +81,10 @@ Page {
                     onAttendeesChanged: {
                         eventDetails.setAttendees(query.attendees)
                     }
+                }
+                onEventRemovePressed: {
+                    _deleteEventOnPop = true
+                    pageStack.pop()
                 }
             }
         }

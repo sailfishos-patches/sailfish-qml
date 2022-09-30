@@ -63,6 +63,7 @@ Page {
                     description: description,
                     license: license,
                     licenseText: licenseText,
+                    url: url,
                     files: files
                 })
             }

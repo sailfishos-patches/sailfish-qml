@@ -22,7 +22,6 @@ Image {
         } else {
             _storeStatus = Image.Error
         }
-
     }
 
     function loadImage() {
@@ -58,21 +57,10 @@ Image {
         loadImage()
     }
 
-    onWidthChanged: {
-        loadImage()
-    }
-
-    onHeightChanged: {
-        loadImage()
-    }
+    onWidthChanged: loadImage()
+    onHeightChanged: loadImage()
 
     asynchronous: true
-
-    // the scale down workaround makes sure that we still can fallback to do
-    // client-side scaling if the server failed to provide pre-scaled images
-    property bool _scaleDownWorkaround: sourceSize.height > height
-    fillMode: _scaleDownWorkaround ? Image.PreserveAspectFit : Image.Pad
-    smooth: _scaleDownWorkaround
 
     onStatusChanged: {
         if (status === Image.Error && source !== "") {

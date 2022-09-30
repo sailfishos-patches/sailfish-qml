@@ -47,7 +47,7 @@ TabItem {
                         enabled: model.section && (model.section.count(1) > 0
                                     || model.section.type == "page")
 
-                        onClicked: grid.openSettings(model.name, model.section)
+                        onClicked: grid.openSettings(model.name, model.section, model.iconId)
 
                         LauncherIcon {
                             id: appIcon

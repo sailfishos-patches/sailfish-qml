@@ -26,9 +26,9 @@ Column {
             horizontalAlignment: Text.AlignRight
             truncationMode: TruncationMode.Fade
             color: Theme.highlightColor
-            //: Jolla staff recommends this app.
-            //% "Recommended by Jolla"
-            text: qsTrId("jolla-store-la-recommended_by_jolla")
+            //: Store editors recommend these apps.
+            //% "Recommended for you"
+            text: qsTrId("jolla-store-la-recommended_for_you")
         }
 
         Image {
@@ -39,7 +39,7 @@ Column {
                 rightMargin: Theme.horizontalPageMargin
             }
             visible: !busy
-            source: "image://theme/icon-m-jolla?" + Theme.highlightColor
+            source: "image://theme/icon-m-sailfish?" + Theme.highlightColor
         }
 
         BusyIndicator {
@@ -70,9 +70,6 @@ Column {
                 AppImage {
                     anchors.fill: parent
                     image: model ? model.cover : ""
-
-                    // TODO: get rid of this?
-                    _scaleDownWorkaround: true
                 }
 
                 Rectangle {

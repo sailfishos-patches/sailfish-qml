@@ -25,6 +25,7 @@ Page {
     property bool initialized
     property bool disablingSsuRemorse
     property bool disablingRemoteLoginRemorse
+    property bool debugHomeRemorse
 
     property bool showDeveloperModeSettings: developerModeSettings.developerModeEnabled && !devAccountPrompt.active
     readonly property bool hasDeveloperAccount: accountManager.hasAccountForProvider(accountManager.accountIdentifiers, developerAccountProvider)
@@ -836,21 +837,32 @@ Page {
                 }
 
                 TextSwitch {
+                    id: debugHomeSwitch
+
                     visible: root.showDeveloperModeSettings
                     automaticCheck: false
                     checked: developerModeSettings.debugHomeEnabled
-                    enabled: policy.value
+                    enabled: policy.value && !debugHomeRemorse
 
                     //: Content effectively under /home/.system/usr/lib/debug
                     //% "Store debug symbols to home partition"
                     text: qsTrId("settings_developermode-bu-enable_debug_home_location")
 
                     onClicked: {
-                        if (developerModeSettings.debugHomeEnabled) {
-                            developerModeSettings.moveDebugToHome(false)
-                        } else {
-                            developerModeSettings.moveDebugToHome(true)
-                        }
+                        //% "Moving debug symbols from home partition"
+                        var text = developerModeSettings.debugHomeEnabled ? qsTrId("settings_developermode-la-disabled_debug_home")
+                                                                            //% "Moving debug symbols to home partition"
+                                                                          : qsTrId("settings_developermode-la-enabled_debug_home")
+                        debugHomeSwitch.checked = !developerModeSettings.debugHomeEnabled
+                        var remorse = Remorse.popupAction(root, text, function() {
+                            if (developerModeSettings.debugHomeEnabled) {
+                                developerModeSettings.moveDebugToHome(false)
+                            } else {
+                                developerModeSettings.moveDebugToHome(true)
+                            }
+                        })
+                        remorse.canceled.connect(function() { debugHomeSwitch.checked = developerModeSettings.debugHomeEnabled })
+                        debugHomeRemorse = Qt.binding(function () { return remorse && remorse.active })
                     }
                 }
 

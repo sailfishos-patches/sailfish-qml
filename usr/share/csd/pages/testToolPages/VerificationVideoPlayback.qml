@@ -52,8 +52,9 @@ CsdTestPage {
         property int lastPosition
 
         function tryNext() {
-            if (videosModel.status != DocumentGalleryItem.Finished
-                    && videosModel.status != DocumentGalleryItem.Error) {
+            if (videosModel.status != DocumentGalleryModel.Finished
+                    && videosModel.status != DocumentGalleryModel.Error) {
+                tryNextTimer.start()
                 return
             }
             if (videosModel.count == 0 || atLastUrl) {
@@ -230,8 +231,8 @@ CsdTestPage {
                 wrapMode: Text.Wrap
                 font.pixelSize: Theme.fontSizeSmall
                 text: {
-                    if (videosModel.status != DocumentGalleryItem.Finished) {
-                        if (videosModel.status == DocumentGalleryItem.Error) {
+                    if (videosModel.status != DocumentGalleryModel.Finished) {
+                        if (videosModel.status == DocumentGalleryModel.Error) {
                             //% "Error while searching for video media!"
                             return qsTrId("csd-la-video_search_error")
                         } else {
@@ -239,7 +240,7 @@ CsdTestPage {
                             return qsTrId("csd-la-video_searching_for_media")
                         }
                     }
-                    videosModel.count == 0 && videosModel.status == DocumentGalleryItem.Finished
+                    videosModel.count == 0 && videosModel.status == DocumentGalleryModel.Finished
                           //% "Error: cannot find any video media!"
                         ? qsTrId("csd-la-video_cannot_find_media")
                         : video.source

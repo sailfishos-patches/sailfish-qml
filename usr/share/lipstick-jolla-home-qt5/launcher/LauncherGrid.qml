@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013 - 2019 Jolla Ltd.
- * Copyright (c) 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -210,12 +210,12 @@ IconGridViewBase {
                     // for interested parties (non-store client) to pick it up
                     object.launchApplication()
                 } else {
-                    // Don't display covers for sandboxed apps when launching them,
-                    // sailjail-homescreen will take care of that
-                    Desktop.instance.switcher.activateWindowFor(object, !object.isLaunching, !object.isSandboxed)
+                    Desktop.instance.switcher.activateWindowFor(object)
                 }
+                Lipstick.compositor.launcherLayer.hide()
                 gridview.itemLaunched()
             }
+            Lipstick.compositor.launcherLayer.pinned = false
         }
 
         onPressAndHold: {

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014 - 2020 Jolla Ltd.
- * Copyright (c) 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2020 - 2021 Open Mobile Platform LLC.
  *
  * License: Proprietary
  */
@@ -57,11 +57,11 @@ Pannable {
         return null
     }
 
-    function activatePartnerWindow(launcherItem, launch) {
+    function activatePartnerWindow(launcherItem) {
         for (var layer = switcherLayer.rightItem; layer != eventsLayer; layer = layer.rightItem) {
             if (!layer.launcherItem || layer.launcherItem.exec != launcherItem.exec) {
                 continue
-            } else if (!layer.window.window && launch) {
+            } else if (!layer.window.window) {
                 layer.start()
             }
 
@@ -119,10 +119,7 @@ Pannable {
         threshold: homescreen._minimizeThreshold
     }
 
-    dragArea {
-        enabled: !currentItem.maximized && Lipstick.compositor.systemInitComplete
-        opacity: Math.min(1.0, Theme.opacityLow + (1.0 - Theme.opacityLow)*Math.pow((1.0 - Math.min(homescreen.overshoot, Theme.itemSizeExtraLarge*2)/(Theme.itemSizeExtraLarge*2)), 1.5))
-    }
+    dragArea.enabled: !currentItem.maximized && Lipstick.compositor.systemInitComplete
 
     switchThreshold: dragArea.drag.threshold * 1.5
 

@@ -1,0 +1,6 @@
+module Sailfish.TransferEngine
+plugin silicatransferengine
+TransfersPage 1.0 TransfersPage.qml
+ShareFilePreview 1.0 ShareFilePreview.qml
+SharePostPreview 1.0 SharePostPreview.qml
+typeinfo plugins.qmltypes

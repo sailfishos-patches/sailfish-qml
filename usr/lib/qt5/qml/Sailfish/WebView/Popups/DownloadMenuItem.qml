@@ -1,7 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Jolla Ltd.
+** Copyright (c) 2016 Jolla Ltd.
 ** Contact: Raine Makelainen <raine.makelainen@jolla.com>
+** Copyright (c) 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -12,6 +13,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.WebEngine 1.0
+import Sailfish.Pickers 1.0
 
 MenuItem {
     id: root
@@ -21,22 +23,19 @@ MenuItem {
     property string contentType
     property int viewId
 
-    readonly property string downloadFileTargetUrl: {
+    function startDownload() {
         // Hack: Evaluate binding whenever menu is shown.
         var updater = root.parent.visible
 
         // drop query string from URL and split to sections
         var urlSections = linkUrl.split("?")[0].split("/")
-        var leafName = urlSections[urlSections.length - 1]
+        var leafName = decodeURIComponent(urlSections[urlSections.length - 1])
 
         if (leafName.length === 0) {
             leafName = "unnamed_file"
         }
+        var downloadFileTargetUrl = DownloadHelper.createUniqueFileUrl(leafName, targetDirectory)
 
-        return DownloadHelper.createUniqueFileUrl(leafName, targetDirectory)
-    }
-
-    onClicked: {
         if (downloadFileTargetUrl) {
             WebEngine.notifyObservers("embedui:download",
                                       {
@@ -46,6 +45,30 @@ MenuItem {
                                           "contentType": root.contentType,
                                           "viewId": root.viewId
                                       })
+        }
+    }
+
+    onClicked: {
+        if (WebEngineSettings.useDownloadDir) {
+            root.targetDirectory = WebEngineSettings.downloadDir
+            startDownload()
+        } else {
+            pageStack.animatorPush(folderPickerPage)
+        }
+    }
+
+    Component {
+        id: folderPickerPage
+
+        FolderPickerPage {
+            showSystemFiles: false
+            //% "Download to"
+            dialogTitle: qsTrId("sailfish_components_webview_popups-ti-download-to")
+
+            onSelectedPathChanged: {
+                root.targetDirectory = selectedPath
+                startDownload()
+            }
         }
     }
 }

@@ -26,6 +26,7 @@ GridItem {
     property bool _pendingDeletion: Contacts.ContactModelCache._deletingContactId === contactId
 
     property int symbolScrollBarWidth
+    property bool symbolScrollBarVisible
 
     Binding {
         target: favoriteItem
@@ -43,7 +44,8 @@ GridItem {
             Contacts.ContactModelCache.deleteContact(person)
         })
         if (openRemorseBelow) {
-            item.rightMargin = Theme.paddingMedium + symbolScrollBarWidth
+            item.rightMargin = !symbolScrollBarVisible ? Theme.horizontalPageMargin
+                                                       : Theme.paddingMedium + symbolScrollBarWidth
         }
     }
 

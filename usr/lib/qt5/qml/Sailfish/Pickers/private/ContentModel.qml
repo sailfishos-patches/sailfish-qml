@@ -93,8 +93,9 @@ QtObject {
     }
 
     function _contentQuery(filterFunction) {
-        var len = _documentGalleryModel.count;
-        var filteredContent = [];
+        var len = _documentGalleryModel.count
+        var filteredContent = []
+
         for (var i = 0; i < len; ++i) {
             var contentItem = _documentGalleryModel.get(i)
             if (filterFunction(contentItem)) {

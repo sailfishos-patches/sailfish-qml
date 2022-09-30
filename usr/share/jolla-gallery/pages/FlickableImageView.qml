@@ -5,7 +5,7 @@ import QtMultimedia 5.0
 import Sailfish.Gallery 1.0
 import com.jolla.gallery 1.0
 
-SlideshowView {
+PagedView {
     id: root
 
     property bool autoPlay
@@ -19,8 +19,6 @@ SlideshowView {
 
     Component.onCompleted: if (autoPlay) playerLoader.active = true
 
-    itemWidth: width
-    itemHeight: height
     interactive: count > 1 && !(!overlay.active && playing)
 
     property Item previousItem
@@ -37,12 +35,13 @@ SlideshowView {
         readonly property bool isImage: model.mimeType.indexOf("image/") == 0
         readonly property string itemId: model.itemId !== undefined ? model.itemId : ""
         readonly property int duration: model.duration !== undefined ? model.duration : 1
-        readonly property bool isCurrentItem: PathView.isCurrentItem
+        readonly property bool isCurrentItem: PagedView.isCurrentItem
         readonly property bool playing: root.playing && isCurrentItem
         readonly property bool error: item && item.error
 
         // Delay Poster creation until we're in playing state. Without this when auto playing
         // poster will blink at the beginning.
+        active: !autoPlay
         onPlayingChanged: {
             if (autoPlay && playing) {
                 active = true
@@ -51,7 +50,6 @@ SlideshowView {
 
         width: root.width
         height: root.height
-        active: !autoPlay
         sourceComponent: isImage ? imageComponent : videoComponent
         asynchronous: !isCurrentItem
 
@@ -94,8 +92,8 @@ SlideshowView {
                 busy: autoPlay && player && !player.hasVideo && !player.hasError
                 onBusyChanged: if (!busy) { busy = false } // remove binding
 
-                contentWidth: itemWidth
-                contentHeight: itemHeight
+                contentWidth: root.width
+                contentHeight: root.height
                 overlayMode: overlay.active
             }
         }
@@ -105,13 +103,13 @@ SlideshowView {
     Loader {
         id: playerLoader
 
+        parent: root.contentItem
+        z: -1
         active: false
-        width: itemWidth
-        height: itemHeight
+        width: root.width
+        height: root.height
         sourceComponent: GalleryVideoOutput {
             player: GalleryMediaPlayer {
-                id: mediaPlayer
-
                 autoPlay: root.autoPlay
                 active: currentItem && !currentItem.isImage && Qt.application.active
                 source: active ? currentItem.source : ""

@@ -37,10 +37,10 @@ Private.SlideableBase {
             return 0
         } else if ((currentItem.Private.Slide.isLast && !_inverted)
                 || (currentItem.Private.Slide.isFirst && _inverted)) {
-            return Math.max(0, absoluteProgress)
+            return -Math.min(0, absoluteProgress)
         } else if ((currentItem.Private.Slide.isLast && _inverted)
                 || (currentItem.Private.Slide.isFirst && !_inverted)) {
-            return -Math.min(0, absoluteProgress)
+            return Math.max(0, absoluteProgress)
         } else {
             return 0
         }
@@ -191,9 +191,9 @@ Private.SlideableBase {
             } else if (direction === "right") {
                 direction = Private.Slide.Forward
             } else if (currentItem.Private.Slide.backward === item) {
-                direction = Private.Slide.Backward
-            } else if (currentItem.Private.Slide.forward === item) {
                 direction = Private.Slide.Forward
+            } else if (currentItem.Private.Slide.forward === item) {
+                direction = Private.Slide.Backward
             }
 
             // Establish the position the new current item will animate from by anchoring it to the

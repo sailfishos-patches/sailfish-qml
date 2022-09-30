@@ -53,7 +53,12 @@ CameraPage {
             if (switchToImageMode) {
                 Settings.global.captureMode = "image"
             }
-            Settings.cameraDevice = "secondary"
+            if (Settings.frontFacingDeviceId >= 0) {
+                Settings.deviceId = Settings.frontFacingDeviceId
+            } else {
+                console.warn("No front camera detected")
+            }
+
             page.returnToCaptureMode()
             window.activate()
         }

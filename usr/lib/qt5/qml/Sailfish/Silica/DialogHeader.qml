@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2013 Jolla Ltd.
-** Contact: John Brooks <john.brooks@jollamobile.com>
 ** All rights reserved.
 ** 
 ** This file is part of Sailfish Silica UI component package.
@@ -151,7 +150,7 @@ BackgroundItem {
 
         BackgroundItem {
             id: cancelButton
-            property real preferredWidth: Math.min(cancelLabel.implicitWidth*(reserveExtraContent?1.0:cancelLabel.opacity)
+            property real preferredWidth: Math.min(cancelLabel.implicitWidth * (reserveExtraContent ? 1.0 : cancelLabel.opacity)
                                                         + Theme.paddingLarge + Theme.horizontalPageMargin,
                                                    _maxButtonSize)
             height: overlay.height

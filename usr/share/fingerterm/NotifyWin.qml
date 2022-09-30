@@ -26,23 +26,20 @@ PopupWindow {
 
     signal dismissed()
 
-    Item {
+    Text {
         anchors.top: notifyWin.top
         anchors.left: notifyWin.left
         anchors.right: notifyWin.right
         anchors.bottom: okButton.top
+        anchors.margins: window.paddingLarge
 
-        Text {
-            anchors.centerIn: parent
+        color: "#ffffff"
+        text: notifyWin.text
+        font.pointSize: window.uiFontSize
+        verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.Wrap
 
-            color: "#ffffff"
-            text: notifyWin.text
-            font.pointSize: window.uiFontSize
-
-            onLinkActivated: {
-                Qt.openUrlExternally(link)
-            }
-        }
+        onLinkActivated: Qt.openUrlExternally(link)
     }
 
     Button {
@@ -51,10 +48,12 @@ PopupWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: window.paddingMedium
-        text: "OK"
+        //: Button for closing the notification window
+        //% "OK"
+        text: qsTrId("fingerterm-notify_bt_okay")
         onClicked: {
             notifyWin.show = false
-            notifyWin.dismissed();
+            notifyWin.dismissed()
         }
     }
 }

@@ -1,0 +1,3 @@
+singleton BlurMaterial 1.0 BlurMaterial.qml
+singleton HomeMaterials 1.0 HomeMaterials.qml
+singleton LockscreenMaterials 1.0 LockscreenMaterials.qml

@@ -4,7 +4,7 @@ import Sailfish.Silica 1.0
 MouseArea {
     id: menuItem
 
-    property url icon
+    property string icon
     property var value
 
     property string property
@@ -60,9 +60,11 @@ MouseArea {
 
         Image {
             anchors.centerIn: parent
-            source: menuItem.pressed
-                    ? menuItem.icon + "?" + highlightColor
-                    : menuItem.icon + "?" + Theme.lightPrimaryColor
+            source: menuItem.icon != ""
+                    ? (menuItem.pressed
+                       ? menuItem.icon + "?" + highlightColor
+                       : menuItem.icon + "?" + Theme.lightPrimaryColor)
+                    : ""
         }
     }
 }

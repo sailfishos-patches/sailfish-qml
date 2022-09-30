@@ -9,6 +9,7 @@ Page {
     property alias description: descriptionLabel.text
     property alias version: versionDetail.value
     property alias license: licenseDetail.value
+    property string url
     property alias files: filesList.text
     property alias licenseText: licenseTextLabel.text
 
@@ -47,6 +48,22 @@ Page {
                 //% "License"
                 label: qsTrId("settings_package_licenses-la-package_license")
                 alignment: Qt.AlignLeft
+            }
+
+            DetailItem {
+                //% "URL"
+                label: qsTrId("settings_package_licenses-la-package_url")
+                value: {
+                    if (root.url.slice(0, 7) == "http://" || root.url.slice(0, 8) == "https://") {
+                        return "<a href=\"" + root.url + "\">" + root.url + " </a>"
+                    } else {
+                        return root.url
+                    }
+                }
+                valueTextFormat: Text.StyledText
+                alignment: Qt.AlignLeft
+                visible: value !== ""
+                onValueLinkActivated: Qt.openUrlExternally(link)
             }
 
             SectionHeader {

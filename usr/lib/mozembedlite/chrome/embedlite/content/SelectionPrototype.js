@@ -248,7 +248,7 @@ SelectionPrototype.prototype = {
 
       // Don't extend the selection into a new container.
       if (selection.focusNode != focusNode) {
-        let nextContainer = (selection.focusNode.nodeType == Ci.nsIDOMNode.TEXT_NODE) ?
+        let nextContainer = (selection.focusNode.nodeType === content.Node.TEXT_NODE) ?
           selection.focusNode.parentNode : selection.focusNode;
         if (nextContainer.matches &&
             nextContainer.matches(PHONE_NUMBER_CONTAINERS)) {
@@ -324,9 +324,9 @@ SelectionPrototype.prototype = {
 
     let searchUri = "";
     try {
-      let searchEngine = Services.search.currentEngine;
+      let searchEngine = Services.search.defaultEngine;
       if (searchEngine) {
-        searchUri = Services.search.currentEngine.getSubmission(this._cache.text).uri.spec;
+        searchUri = Services.search.defaultEngine.getSubmission(this._cache.text).uri.spec;
       }
     } catch (e) {
       Logger.warn("Failed to get current search engine:", e)
@@ -833,9 +833,10 @@ SelectionPrototype.prototype = {
         let newStartOffset = 0;
         let newEndNode = null;
         let newEndOffset = 0;
+
         for (let idx = 1; idx < selection.rangeCount; idx++) {
           let range = selection.getRangeAt(idx);
-          switch (startRange.compareBoundaryPoints(Ci.nsIDOMRange.START_TO_START, range)) {
+          switch (startRange.compareBoundaryPoints(Range.START_TO_START, range)) {
             case -1: // startRange is before
               newStartNode = startRange.startContainer;
               newStartOffset = startRange.startOffset;
@@ -849,7 +850,7 @@ SelectionPrototype.prototype = {
               newStartOffset = range.startOffset;
               break;
           }
-          switch (startRange.compareBoundaryPoints(Ci.nsIDOMRange.END_TO_END, range)) {
+          switch (startRange.compareBoundaryPoints(Range.END_TO_END, range)) {
             case -1: // startRange is before
               newEndNode = range.endContainer;
               newEndOffset = range.endOffset;
@@ -916,12 +917,16 @@ SelectionPrototype.prototype = {
             let selCtrl = this._getSelectController();
             // Expand the collapsed range such that it occupies a little space.
             if (aMarker == "start") {
+              let extend = true;
+              if (selection.focusOffset === 0) {
+                extend = false;
+              }
               // State: focus = anchor (collapseToEnd does this)
-              selCtrl.characterMove(false, true);
+              selCtrl.characterMove(false, extend);
               // State: focus = (anchor - 1)
               selection.collapseToStart();
               // State: focus = anchor and both are -1 from the original offset
-              selCtrl.characterMove(true, true);
+              selCtrl.characterMove(true, extend);
               // State: focus = anchor + 1, both have been moved back one char
             } else {
               selCtrl.characterMove(true, true);
@@ -966,7 +971,11 @@ SelectionPrototype.prototype = {
     let seldata = {
       start: {}, end: {}, caret: {},
       selection: { left: 0, top: 0, right: 0, bottom: 0 },
-      element: { left: 0, top: 0, right: 0, bottom: 0 }
+      element: { left: 0, top: 0, right: 0, bottom: 0 },
+      visualViewport: {
+        offsetLeft: 0,
+        offsetTop: 0
+      }
     };
 
     // When in an iframe, aRange coordinates are relative to the frame origin.

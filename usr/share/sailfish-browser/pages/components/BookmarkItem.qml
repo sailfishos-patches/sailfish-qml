@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 Open Mobile Platform LLC
+** Copyright (c) 2020 - 2021 Open Mobile Platform LLC
 **
 ****************************************************************************/
 
@@ -11,6 +11,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Browser 1.0
+import Sailfish.WebView.Popups 1.0 as Popups
 
 ListItem {
     id: root
@@ -86,8 +87,7 @@ ListItem {
             MenuItem {
                 //% "Share"
                 text: qsTrId("sailfish_browser-me-share-link")
-                onClicked: pageStack.animatorPush("Sailfish.WebView.Popups.ShareLinkPage",
-                                                  {"link" : model.url, "linkTitle": model.title})
+                onClicked: webShareAction.shareLink(model.url, model.title)
             }
             MenuItem {
                 //% "Copy to clipboard"
@@ -106,11 +106,14 @@ ListItem {
                                                   })
             }
             MenuItem {
-                //% "Edit"
+                // Defined in FavoriteContextMenu.qml
+                // "Edit"
                 text: qsTrId("sailfish_browser-me-edit")
                 onClicked: {
                     var page = pageStack.animatorPush(editDialog,
                                            {
+                                               //% "Edit bookmark"
+                                               "description": qsTrId("sailfish_browser-he-edit-bookmark"),
                                                "url": url,
                                                "title": title,
                                                "index": bookmarkFilterModel.getIndex(model.index)
@@ -123,6 +126,10 @@ ListItem {
                 onClicked: root.remove(model.url)
             }
         }
+    }
+
+    Popups.WebShareAction {
+        id: webShareAction
     }
 
     Component {

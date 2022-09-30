@@ -119,6 +119,7 @@ ZoomableFlickable {
         running: photo.status === Image.Loading && !delayBusyIndicator.running
         size: BusyIndicatorSize.Large
         anchors.centerIn: parent
+        parent: flickable
         Timer {
             id: delayBusyIndicator
             running: photo.status === Image.Loading

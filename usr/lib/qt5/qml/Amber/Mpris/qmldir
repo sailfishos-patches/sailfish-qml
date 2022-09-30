@@ -1,0 +1,3 @@
+module Amber.Mpris
+plugin ambermprisplugin
+typeinfo plugins.qmltypes

@@ -32,9 +32,10 @@ MessageComposerPage {
     errorLabel.localUid: conversation.message.hasChannel
                          ? conversation.message.channels[0].localUid
                          : ""
-    recipientField.requiredProperty: !MessageUtils.hasModem ? PeopleModel.AccountUriRequired
-                                             : (_restrictToPhoneNumber ? PeopleModel.PhoneNumberRequired
-                                                                      : (PeopleModel.AccountUriRequired | PeopleModel.PhoneNumberRequired))
+    recipientField.requiredProperty: !MessageUtils.hasModem
+                                     ? PeopleModel.AccountUriRequired
+                                     : (_restrictToPhoneNumber ? PeopleModel.PhoneNumberRequired
+                                                               : (PeopleModel.AccountUriRequired | PeopleModel.PhoneNumberRequired))
 
     onFocusTextInput: textInput.forceActiveFocus()
 

@@ -4,11 +4,13 @@
 
 const Ci = Components.interfaces;
 const Cr = Components.results;
-const Cu = Components.utils;
 const Cc = Components.classes;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(Services, "embedlite",
                                     "@mozilla.org/embedlite-app-service;1",
@@ -26,11 +28,25 @@ function ContentPermissionPrompt() {
 ContentPermissionPrompt.prototype = {
   classID: Components.ID("{C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt, Ci.nsIEmbedMessageListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionPrompt, Ci.nsIEmbedMessageListener]),
   _pendingRequests: {},
 
   _getReqKey: function(request, type) {
     return request.principal.URI.host + " " + type;
+  },
+
+  // Whether we are in private browsing mode
+  _getInPrivateBrowsing: function(window) {
+    if (window) {
+      return PrivateBrowsingUtils.isContentWindowPrivate(window);
+    }
+    // Assume that we're in private browsing mode if the caller did
+    // not provide a window.  The callers which really care about this
+    // will indeed pass down a window to us, and for those who don't,
+    // we can just assume that we don't want to save the entered
+    // permission information.
+    this.log("We have no chromeWindow so assume we're in a private context");
+    return true;
   },
 
   handleExistingPermission: function handleExistingPermission(request, type) {
@@ -67,22 +83,32 @@ ContentPermissionPrompt.prototype = {
     Services.embedlite.removeMessageListener("embedui:permissions", this);
     let entityName = kEntities[perm.type];
     if (ret.allow) {
-      // If the user checked "Don't ask again", make a permanent exception
-      if (ret.checkedDontAsk) {
-        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION);
-      } else {
-        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION,
-                                        Ci.nsIPermissionManager.EXPIRE_SESSION);
+      // When in private browing, even session storage is skipped to avoid the
+      // decision leaking into normal browsing mode
+      if (!this._getInPrivateBrowsing(request.window)) {
+        // If the user checked "Don't ask again", make a permanent exception
+        if (ret.checkedDontAsk) {
+          Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION);
+        } else {
+          Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION,
+                                          Ci.nsIPermissionManager.EXPIRE_SESSION);
+        }
       }
+      // Allow the request in this case, whether in normal or private browing mode
       cachedreqs.forEach(function(r) { r.allow(); });
     } else {
-      // If the user checked "Don't ask again", make a permanent exception
-      if (ret.checkedDontAsk) {
-        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION);
-      } else {
-        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION,
-                                        Ci.nsIPermissionManager.EXPIRE_SESSION);
+      // When in private browing, even session storage is skipped to avoid the
+      // decision leaking into normal browsing mode
+      if (!this._getInPrivateBrowsing(request.window)) {
+        // If the user checked "Don't ask again", make a permanent exception
+        if (ret.checkedDontAsk) {
+          Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION);
+        } else {
+          Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION,
+                                          Ci.nsIPermissionManager.EXPIRE_SESSION);
+        }
       }
+      // Cancel the request in this case, whether in normal or private browing mode
       cachedreqs.forEach(function(r) { r.cancel(); });
     }
     delete this._pendingRequests[ret.id];
@@ -117,11 +143,16 @@ ContentPermissionPrompt.prototype = {
     let entityName = kEntities[perm.type];
 
     Services.embedlite.addMessageListener("embedui:permissions", this);
-    var winId = Services.embedlite.getIDByWindow(request.window);
-    Services.embedlite.sendAsyncMessage(winId, "embed:permissions",
-                                        JSON.stringify({title: entityName,
-                                                        host: request.principal.URI.host,
-                                                        id: reqkey}));
+    try {
+      var winId = Services.embedlite.getIDByWindow(request.window);
+      Services.embedlite.sendAsyncMessage(winId, "embed:permissions",
+                                          JSON.stringify({title: entityName,
+                                                          host: request.principal.URI.host,
+                                                          id: reqkey,
+                                                          privateBrowsing: this._getInPrivateBrowsing(request.window)}));
+    } catch (e) {
+      Logger.warn("ContentPermissionPrompt: sending async message failed", e)
+    }
   }
 };
 

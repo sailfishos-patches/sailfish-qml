@@ -17,6 +17,11 @@ Page {
 
         Column {
             id: column
+
+            property int internalPadding: Math.max(flickable.height
+                                                   - header.height - label.height - button.height - Theme.paddingLarge*2,
+                                                   Theme.paddingLarge*2) / 2
+
             width: parent.width
 
             PageHeader {
@@ -25,17 +30,25 @@ Page {
                 title: qsTrId("jolla-camera-la-qr_code_header")
             }
 
+            Item {
+                width: 1
+                height: column.internalPadding
+            }
+
             LinkedLabel {
                 id: label
+
                 x: Theme.horizontalPageMargin
+                width: parent.width - 2*x
                 color: highlighted ? Theme.highlightColor : Theme.primaryColor
                 linkColor: Theme.highlightColor
                 shortenUrl: true
-                width: parent.width - Theme.highlightColor
-                height: Math.max(flickable.height - header.height - button.height, implicitHeight) - Theme.paddingLarge
-                anchors.horizontalCenter: parent.horizontalCenter
                 horizontalAlignment: lineCount > 5 ? Text.AlignLeft : Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            }
+
+            Item {
+                width: 1
+                height: column.internalPadding
             }
 
             Button {

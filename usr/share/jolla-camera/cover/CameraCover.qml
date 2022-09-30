@@ -7,9 +7,7 @@ import org.nemomobile.thumbnailer 1.0
 CoverBackground {
     id: cover
 
-    property int coverIndex: galleryActive
-                             ? galleryIndex
-                             : (captureModel != null ? captureModel.count - 1 : 0)
+    property int coverIndex: galleryActive ? galleryIndex : 0
 
     onCoverIndexChanged: {
         repositionTimer.restart()
@@ -89,14 +87,22 @@ CoverBackground {
         CoverIcon {
             id: flashIcon
             visible: icon != ""
-            icon: Settings.mode.flashValues.length > 0
-                  ? Settings.flashIcon(Settings.mode.flash)
+            icon: CameraConfigs.supportedFlashModes.length > 0
+                  ? Settings.flashIcon(Settings.mode.flashMode)
                   : ""
         }
         CoverIcon {
-            icon: Settings.whiteBalanceIcon(Settings.global.whiteBalance)
+            visible: icon != ""
+            icon: CameraConfigs.supportedExposureModes.length > 1
+                  ? Settings.exposureModeIcon(Settings.mode.exposureMode)
+                  : ""
+        }
+        CoverIcon {
+            visible: Settings.mode.exposureMode == Camera.ExposureManual
+            icon: Settings.whiteBalanceIcon(Settings.mode.whiteBalance)
         }
         IsoItem {
+            visible: CameraConfigs.supportedIsoSensitivities.length > 0
             scale: 0.75
             value: Settings.mode.iso
             color: Theme.colorScheme == Theme.LightOnDark

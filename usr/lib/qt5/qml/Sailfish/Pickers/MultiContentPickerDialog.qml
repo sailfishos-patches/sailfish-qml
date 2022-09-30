@@ -77,7 +77,7 @@ PickerDialog {
 
                 var obj = pageStack.animatorPush(Qt.resolvedUrl(model.subview), props,
                                                  pageStack._transitionDuration === 0 ? PageStackAction.Immediate
-                                                                                     : PageStackAction.Animated);
+                                                                                     : PageStackAction.Animated)
                 obj.pageCompleted.connect(function(subview) {
                     subview.accepted.connect(function() {
                         contentPickerDialog._dialogDone(DialogResult.Accepted)
@@ -88,7 +88,6 @@ PickerDialog {
 
         VerticalScrollDecorator {}
     }
-
 
     CategoryModel {
         id: categoryModel

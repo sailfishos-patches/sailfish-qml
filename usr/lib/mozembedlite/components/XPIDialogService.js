@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Ci = Components.interfaces;
-const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Services.scriptloader.loadSubScript("chrome://embedlite/content/Logger.js");
 
@@ -20,7 +19,7 @@ function WebInstallPrompt() {
 
 WebInstallPrompt.prototype = {
   classID: Components.ID("{ce2d8764-c366-11e2-8e71-1bb058e7ef52}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallPrompt]),
+  QueryInterface: ChromeUtils.generateQI([Ci.amIWebInstallPrompt]),
 
   confirm: function(aWindow, aURL, aInstalls) {
 

@@ -10,8 +10,9 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.TransferEngine 1.0
-import org.nemomobile.thumbnailer 1.0
+import Nemo.Thumbnailer 1.0
 import org.nemomobile.transferengine 1.0
+import Nemo.FileManager 1.0
 
 Page {
     id: transfersPage
@@ -263,14 +264,15 @@ Page {
             onClicked: {
                 // Properly finished transfers with local filename should open that file
                 if (status === TransferModel.TransferFinished) {
-                    var path = url
-                    if (path.length > 0 && path[0] == '/') {
-                        path = 'file://' + path
+                    // transfer engine getting confused between paths and urls, fixup here for now
+                    var properUrl = url
+                    if (properUrl.length > 0 && properUrl[0] == '/') {
+                        properUrl = FileEngine.pathToUrl(properUrl)
                     }
 
                     // Only open the URL externally if it's not a http(s) URL
-                    if (path.substr(0, 7) != 'http://' && path.substr(0, 8) != 'https://') {
-                        Qt.openUrlExternally(path)
+                    if (properUrl.substr(0, 7) != 'http://' && properUrl.substr(0, 8) != 'https://') {
+                        Qt.openUrlExternally(properUrl)
                     }
 
                     return

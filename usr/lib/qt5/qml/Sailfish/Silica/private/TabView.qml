@@ -33,237 +33,112 @@
 ****************************************************************************************/
 
 import QtQuick 2.4
-import QtQml.Models 2.2
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import "Util.js" as Util
 
-SilicaControl {
+PagedView {
     id: root
 
-    property alias model: delegateModel.model
-    property int currentIndex
     property Component header
     property Component footer
     property bool hasFooter: footer
     property alias tabBarItem: tabBarLoader.item
     property real tabBarHeight: tabBarItem ? tabBarItem.height : 0
-    property alias moving: slideable.moving
-    property alias panning: slideable.panning
-    readonly property int count: delegateModel.items.count
-    property real yOffset: slideable.currentItem && slideable.currentItem.hasOwnProperty("__silica_tab_container") ? slideable.currentItem.yOffset : 0
-    readonly property alias slideProgress: slideable.progress
-    property bool _initialized
+
+    property string sourceProperty: "modelData"
+
+    property real yOffset: currentItem && currentItem._yOffset || 0
     property alias _headerBackgroundVisible: backgroundRectangle.visible
 
     property Item _page: Util.findPage(root)
-    property int _nextIndex: -1
-    property int _previousIndex: -1
-
-    readonly property int _currentItemIndex: slideable.currentItem
-                ? slideable.currentItem.DelegateModel.itemsIndex
-                : -1
 
     property int __silica_tab_view
 
-    Component.onCompleted: {
-        _initialized = true
+    verticalAlignment: hasFooter ? PagedView.AlignTop : PagedView.AlignBottom
+    cacheSize: 0
 
-        if (!slideable.currentItem) {
-            moveTo(currentIndex, TabViewAction.Immediate)
-        }
-    }
-
-    function moveTo(index, operationType) {
-        if (!_initialized) {
-            currentIndex = index
-        } else if (index >= 0 && index < count) {
-            var item = _ensureItem(index)
-
-            if (item) {
-                slideable.setCurrentItem(
-                            item,
-                            operationType !== TabViewAction.Immediate,
-                            _currentItemIndex > index ? Slide.Forward : Slide.Backward)
-            }
-        }
-    }
-
-    function _ensureItem(index) {
-        var item = delegateModel.items.create(index)
-        if (item) {
-            slideable.cache(item)
-
-            item.Slide._view = slideable
-        }
-        return item
-    }
-
-    onCurrentIndexChanged: {
-        if (_initialized && currentIndex != _currentItemIndex) {
-            moveTo(currentIndex, TabViewAction.Animated)
-        }
-    }
-
-    on_CurrentItemIndexChanged: {
-        if (_initialized && currentIndex != _currentItemIndex) {
-            _previousIndex = currentIndex
-            currentIndex = _currentItemIndex
-        }
-    }
-
-    Item {
-        z: yOffset < 0 && !root.hasFooter ? 0 : 1
-        width: parent.width
-        height: tabBarLoader.height
-        Loader {
-            id: tabBarLoader
-
-            sourceComponent: root.hasFooter ? root.footer : root.header
-            width: parent.width
-            y: root.hasFooter ? root.height - tabBarLoader.height : Math.max(0, -root.yOffset)
-
-            BackgroundRectangle {
-                id: backgroundRectangle
-                anchors.fill: parent
-                anchors.topMargin: (root.yOffset > Theme.paddingSmall) || root.hasFooter ?  0 : Theme.paddingSmall
-                anchors.rightMargin: Theme.paddingSmall
-                color: __silica_applicationwindow_instance._backgroundColor
-            }
-        }
-
-    }
-
-    Slideable {
-        id: slideable
-
+    contentItem {
         y: root.hasFooter ? 0 : tabBarLoader.height
+        height: root.height - tabBarLoader.height
+    }
+
+    Loader {
+        id: tabBarLoader
+
+        sourceComponent: root.hasFooter ? root.footer : root.header
         width: parent.width
-        height: root.hasFooter ? parent.height - tabBarLoader.height : parent.height - y
+        z: root.yOffset < 0 && !root.hasFooter ? -1 : 1
+        y: root.hasFooter ? root.height - tabBarLoader.height : Math.max(0, -root.yOffset)
 
-        // Offload any tab that has been inactive for more than 5 minutes (5*60*1000)
-        cacheSize: 0
-        cacheExpiry: 300000
-
-        focus: true
-
-        onCreateAdjacentItem: {
-            var index = item.DelegateModel.itemsIndex
-            var adjacentItem
-            if (direction === Slide.Forward) {
-                if ((adjacentItem = root._ensureItem(index === delegateModel.items.count - 1 ? 0 : index + 1))) {
-                    adjacentItem.Slide.backward = item
-                    item.Slide.forward = adjacentItem
-                }
-            } else if (direction === Slide.Backward) {
-                if ((adjacentItem = root._ensureItem(index === 0 ? delegateModel.items.count - 1 : index - 1))) {
-                    adjacentItem.Slide.forward = item
-                    item.Slide.backward = adjacentItem
-                }
-            }
+        BackgroundRectangle {
+            id: backgroundRectangle
+            anchors.fill: parent
+            anchors.topMargin: (root.yOffset > Theme.paddingSmall) || root.hasFooter ?  0 : Theme.paddingSmall
+            anchors.rightMargin: Theme.paddingSmall
+            color: __silica_applicationwindow_instance._backgroundColor
         }
     }
 
-    DelegateModel {
-        id: delegateModel
+    delegate: AnimatedLoader {
+        // tab container
+        id: tabLoader
 
-        items.onChanged: {
-            var insertIndex = 0
-            for (var persistentIndex = 0;
-                    persistentIndex < persistedItems.count && insertIndex < inserted.length;
-                    ++persistentIndex) {
-                var item = persistedItems.create(persistentIndex)   // This doesn't actually create an item because it's iterating a list of already created items.
-                var modelIndex = item.DelegateModel.itemsIndex
-                do {
-                    var insert = inserted[insertIndex]
+        readonly property bool isCurrentItem: PagedView.isCurrentItem
+        readonly property real _yOffset: item && item._yOffset || 0
 
-                    if (insert.index - 1 === modelIndex) {
-                        // A new item was inserted in front of a cached item.
-                        item.Slide.forward = null
-                        break
-                    } else if (insert.index + insert.count === modelIndex) {
-                        // A new item was inserted behind a cached item.
-                        item.Slide.backward = null
-                        break
-                    } else if (insert.index < modelIndex) {
-                        ++insertIndex
-                    } else {
-                        break
-                    }
-                } while (insertIndex < inserted.length)
+        property bool loading: Qt.application.active && isCurrentItem && status === AnimatedLoader.Loading
+
+        source: model[root.sourceProperty]
+
+        asynchronous: true
+        animating: tabFadeAnimation.running
+
+        width: item ? item.implicitWidth : root.contentItem.width
+        height: item ? item.implicitHeight : root.contentItem.height
+
+        onAnimate: {
+            if (item) {
+                item.opacity = 0
+                tabFadeAnimation.target = item
+                tabFadeAnimation.from = 0
+                tabFadeAnimation.to = 1
+                tabFadeAnimation.restart()
+            } else if (replacedItem) {
+                tabFadeAnimation.target = replacedItem
+                tabFadeAnimation.from = 1
+                tabFadeAnimation.to = 0
+                tabFadeAnimation.restart()
             }
         }
 
-        delegate: FocusScope {
-            // tab container
-            id: delegate
-
-            readonly property bool isCurrentItem: Slide.isCurrent
-            property real yOffset
-            property bool hasPulley
-
-            readonly property bool _isNextTab: delegate === slideable.alternateItem
-                    && (Slide.forward === slideable.currentItem || Slide.backward === slideable.currentItem)
-
-            on_IsNextTabChanged: {
-                if (_isNextTab) {
-                    _nextIndex = model.index
-                } else if (_nextIndex == model.index) {
-                    _nextIndex = -1
-                }
+        onInitializeItem: {
+            item.focus = true
+            if (item.hasOwnProperty("_tabContainer")) {
+                item._tabContainer = tabLoader
             }
+        }
 
-            parent: slideable.contentItem
-            width: slideable.width
-            height: slideable.height
-            clip: !isCurrentItem || !hasPulley
-            visible: Slide.isExposed
+        onCompleteAnimation: tabFadeAnimation.complete()
 
-            property int __silica_tab_container
+        FadeAnimation {
+            id: tabFadeAnimation
 
-            Component.onCompleted: {
-                slideable.cache(delegate)
+            running: false
+        }
 
-                DelegateModel.inPersistedItems = Qt.binding(function() {
-                    return Slide.keepAlive || Slide.inCache
-                })
+        BusyIndicator {
+            running: !delayBusy.running && loading
 
-                if (root.currentIndex === index && root._currentItemIndex === -1) {
-                    slideable.setCurrentItem(delegate, false)
-                }
-            }
+            x: (tabLoader.width - width) / 2
+            y: root.height/3 - height/2 - tabBarLoader.height
 
-            Slide.isFirst: false
-            Slide.isLast: false
-            Slide.keepAlive: tabLoader.status === Loader.Loading
-                    || (tabLoader.item && !tabLoader.item.allowDeletion)
+            size: BusyIndicatorSize.Large
 
-            Loader {
-                id: tabLoader
-
-                sourceComponent: modelData
-                opacity: !!item ? 1.0 : 0.0
-                Behavior on opacity { FadeAnimation {}}
-                asynchronous: true
-                anchors {
-                    fill: parent
-                    topMargin: hasPulley && !root.hasFooter ? -root.tabBarHeight : 0
-                }
-            }
-
-            BusyIndicator {
-                property bool loading: Qt.application.active && isCurrentItem && tabLoader.status !== Loader.Ready
-                running: !delayBusy.running && loading
-
-                y: root.height/3 - height/2 - tabBarLoader.height
-                anchors.horizontalCenter: parent.horizontalCenter
-                size: BusyIndicatorSize.Large
-
-                Timer {
-                    id: delayBusy
-                    interval: 800
-                    running: parent.loading
-                }
+            Timer {
+                id: delayBusy
+                interval: 800
+                running: tabLoader.loading
             }
         }
     }

@@ -42,9 +42,23 @@ ListItem {
     property bool hasAttachments: modelData.messageParts.length > 0
                                   || attachmentOverlay.visible
     property bool hasText
-    property bool canRetry
+    readonly property bool canRetry: eventStatus >= CommHistory.TemporarilyFailedStatus
+                || (inbound && eventStatus === CommHistory.ManualNotificationStatus)
     property int eventStatus
-    property string eventStatusText: modelData ? mainWindow.eventStatusText(eventStatus, modelData.eventId) : ""
+    readonly property string eventStatusText: {
+        if (inbound && eventStatus === CommHistory.ManualNotificationStatus) {
+            //% "Tap to download multimedia message"
+            return qsTrId("messages-mms_manual_download_prompt")
+        } else if (eventStatus < CommHistory.TemporarilyFailedStatus) {
+            return modelData ? mainWindow.eventStatusText(eventStatus, modelData.eventId) : ""
+        } else if (inbound) {
+            //% "Problem with downloading message"
+            return qsTrId("messages-receive_status_failed")
+        } else {
+            //% "Problem with sending message"
+            return qsTrId("messages-send_status_failed")
+        }
+    }
 
     property date currentDateTime
     property bool showDetails
@@ -173,11 +187,13 @@ ListItem {
     // Retry icon for non-attachment outbound messages
     Image {
         id: retryIcon
-        anchors {
-            left: parent.left
-            verticalCenter: parent.verticalCenter
-            margins: Theme.horizontalPageMargin
-        }
+
+        x: Theme.horizontalPageMargin
+        y: (parent.height - height) / 2
+
+        source: !message.inbound && message.eventStatus >= CommHistory.TemporarilyFailedStatus && attachments.height == 0
+                ? "image://theme/icon-m-reload"
+                : ""
     }
 
     Column {
@@ -265,9 +281,14 @@ ListItem {
         }
 
         // Retry icon for inbound messages (in attachment style)
-        Image {
+        Icon {
             id: attachmentRetryIcon
             anchors.centerIn: parent
+
+            source: message.inbound && (message.eventStatus >= CommHistory.TemporarilyFailedStatus
+                        || message.eventStatus === CommHistory.ManualNotificationStatus)
+                    ? "image://theme/icon-m-refresh"
+                    : ""
         }
     }
 
@@ -388,7 +409,7 @@ ListItem {
             top: mergeTimestamp ? messageText.baseline : messageText.bottom
             topMargin: mergeTimestamp ? (-height) : Theme.paddingSmall
         }
-        opacity: Theme.opacityHigh
+        opacity: message.canRetry ? 1 : Theme.opacityHigh
         height: (showDetails && detailedTimestampLoader.item) ? detailedTimestampLoader.item.height : implicitHeight
 
         Row {
@@ -405,7 +426,9 @@ ListItem {
             Label {
                 id: timestampLabel
 
-                color: messageText.color
+                color: highlighted && message.canRetry
+                        ? messageText.color
+                        : palette.primaryColor
                 font.pixelSize: Theme.fontSizeExtraSmall
                 anchors.baselineOffset: timestamp.mergeTimestamp ? (messageText.height - messageText.lastLineHeight + timestamp.height) : 0
                 text: {
@@ -427,8 +450,7 @@ ListItem {
             HighlightImage {
                 id: warningIcon
 
-                visible: false
-                highlighted: message.highlighted
+                visible: message.canRetry
                 source: "image://theme/icon-s-warning"
                 color: timestampLabel.color
                 anchors.verticalCenter: timestampLabel.verticalCenter
@@ -473,7 +495,6 @@ ListItem {
                     id: simIcon
 
                     anchors.verticalCenter: parent.verticalCenter
-                    highlighted: message.highlighted
                     visible: MessageUtils.multipleEnabledSimCards && message.modemIndex >= 0 && message.modemIndex <= 1
                     source: {
                         if (message.modemIndex === 0)
@@ -514,7 +535,6 @@ ListItem {
                 HighlightImage {
                     visible: message.showDetails && (modelData.readStatus === CommHistory.ReadStatusRead
                                                      || eventStatus === CommHistory.DeliveredStatus)
-                    highlighted: message.highlighted
                     source: "image://theme/icon-s-checkmark"
                     color: timestampLabel.color
                     anchors.verticalCenter: parent.verticalCenter
@@ -522,7 +542,6 @@ ListItem {
 
                 HighlightImage {
                     visible: warningIcon.visible
-                    highlighted: message.highlighted
                     source: "image://theme/icon-s-warning"
                     color: timestampLabel.color
                     anchors.verticalCenter: parent.verticalCenter
@@ -584,84 +603,5 @@ ListItem {
             showDetails = !showDetails
         }
     }
-
-    states: [
-        State {
-            name: "outboundErrorNoAttachment"
-            when: !inbound && eventStatus >= CommHistory.TemporarilyFailedStatus && attachments.height == 0
-            extend: "outboundError"
-
-            PropertyChanges {
-                target: retryIcon
-                source: "image://theme/icon-m-reload?" + (message.highlighted ? Theme.highlightColor : Theme.primaryColor)
-            }
-        },
-        State {
-            name: "outboundError"
-            when: !inbound && eventStatus >= CommHistory.TemporarilyFailedStatus
-            extend: "error"
-
-            PropertyChanges {
-                target: message
-                //% "Problem with sending message"
-                eventStatusText: qsTrId("messages-send_status_failed")
-            }
-        },
-        State {
-            name: "manualReceive"
-            when: inbound && eventStatus === CommHistory.ManualNotificationStatus
-            extend: "inboundError"
-
-            PropertyChanges {
-                target: message
-                //% "Tap to download multimedia message"
-                eventStatusText: qsTrId("messages-mms_manual_download_prompt")
-            }
-        },
-        State {
-            name: "inboundError"
-            when: inbound && eventStatus >= CommHistory.TemporarilyFailedStatus
-            extend: "error"
-
-            PropertyChanges {
-                target: attachmentRetryIcon
-                source: "image://theme/icon-m-refresh?" + (message.highlighted ? Theme.highlightColor : Theme.primaryColor)
-            }
-
-            PropertyChanges {
-                target: message
-                //% "Problem with downloading message"
-                eventStatusText: qsTrId("messages-receive_status_failed")
-            }
-        },
-        State {
-            name: "error"
-
-            PropertyChanges {
-                target: message
-                canRetry: true
-            }
-
-            PropertyChanges {
-                target: messageText
-                opacity: 1
-            }
-
-            PropertyChanges {
-                target: timestamp
-                opacity: 1
-            }
-
-            PropertyChanges {
-                target: timestampLabel
-                color: message.highlighted ? messageText.color : Theme.primaryColor
-            }
-
-            PropertyChanges {
-                target: warningIcon
-                visible: true
-            }
-        }
-    ]
 }
 

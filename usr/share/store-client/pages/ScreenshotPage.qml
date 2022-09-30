@@ -14,32 +14,26 @@ FullscreenContentPage {
         anchors.fill: parent
         itemWidth: width
 
-        delegate: Item {
+        delegate: StoreImage {
+            id: screenshot
             width: slideshow.itemWidth
             height: slideshow.height
 
             Behavior on opacity { FadeAnimation {} }
 
-            StoreImage {
-                id: screenshot
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                image: modelData
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            image: modelData
 
-                Rectangle {
-                    visible: parent.status !== Image.Ready
-                    anchors.fill: parent
-                    color: Theme.rgba(Theme.primaryColor, Theme.opacityFaint)
-                }
+            Rectangle {
+                anchors.fill: parent
+                visible: parent.status !== Image.Ready
+                color: Theme.rgba(Theme.primaryColor, Theme.opacityFaint)
             }
 
             MouseArea {
                 anchors.fill: parent
-
-                onClicked: {
-                    pageStack.pop()
-                }
+                onClicked: pageStack.pop()
             }
         }
     }

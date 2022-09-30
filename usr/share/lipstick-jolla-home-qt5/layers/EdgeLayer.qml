@@ -20,6 +20,11 @@ Layer {
     property alias hintHeight: hintShowAnimation.to
     property alias hintDuration: hintPauseAnimation.duration
 
+    property bool pinned
+    property real pinPosition
+    readonly property bool _transposed: Lipstick.compositor.topmostWindowAngle % 180 !== 0
+    readonly property bool _moving: peekFilter.bottomActive || _dragActive
+
     property real margin
     property real absoluteExposure
     property real maximumExposure
@@ -63,12 +68,14 @@ Layer {
                 || (edge == PeekFilter.Bottom && peekFilter.topActive)
 
     property bool _dragActive: interactiveArea && interactiveArea.drag.active
+    property bool _finishDragWithAnimation: true
+
     on_DragActiveChanged: {
         if (_dragActive) {
             _thresholdOffset = _hintProgress
             hintAnimation.stop()
             peekFilter.gestureStarted()
-        } else {
+        } else if (_finishDragWithAnimation) {
             var threshold = Math.max(peekFilter.threshold, _thresholdOffset)
             var dx = active ? x : x - _rightEdge
             var dy = active ? y : y - _bottomEdge
@@ -123,13 +130,23 @@ Layer {
             }
         } , State {
             name: "peeking"
-            when: edgeLayer._activePeek
+            when: edgeLayer._activePeek && !edgeLayer.pinned
             PropertyChanges {
                 target: edgeLayer
                 x: 0
                 y: 0
                 exposed: true
                 exposure: 1
+            }
+        }, State {
+            name: "pinned"
+            when: edgeLayer.pinned
+            PropertyChanges {
+                target: edgeLayer
+                x: edgeLayer._transposed ? edgeLayer.pinPosition : edgeLayer.x
+                y: edgeLayer._transposed ? edgeLayer.y : edgeLayer.pinPosition
+                exposure: Math.min(1, absoluteExposure / peekFilter.threshold)
+                exposed: true
             }
         }, State {
             name: "hidden"
@@ -174,7 +191,7 @@ Layer {
         Transition {
             id: gestureTransition
             to: "visible,hidden,peeking"
-            from: "showing,hiding,dragging"
+            from: "showing,hiding,dragging,pinned"
             NumberAnimation {
                 target: edgeLayer
                 property: "x"

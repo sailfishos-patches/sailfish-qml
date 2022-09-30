@@ -18,8 +18,9 @@ Column {
         var timeout = getProperty('VPNC.DPDTimeout')
         vpncUseTimeout.checked = timeout && timeout !== '0'
         vpncDpdTimeout.text = timeout
-        vpncSingleDES.checked = getProperty('VPNC.SingleDES') == 'true'
-        vpncNoEncryption.checked = getProperty('VPNC.NoEncryption') == 'true'
+        vpncSingleDES.checked = getProperty('VPNC.SingleDES') === 'true'
+        vpncNoEncryption.checked = getProperty('VPNC.NoEncryption') === 'true'
+        vpncBlockIPv6.checked = getProperty('VPNC.BlockIPv6') === 'true'
         vpncDeviceType.setValue(getProperty('VPNC.DeviceType'))
     }
 
@@ -34,12 +35,9 @@ Column {
         updateProvider('VPNC.AppVersion', vpncAppVersion.text)
         updateProvider('VPNC.NATTMode', vpncNattMode.selection)
         updateProvider('VPNC.DPDTimeout', vpncUseTimeout.checked ? vpncDpdTimeout.filteredText : '')
-        if (vpncSingleDES.checked) {
-            updateProvider('VPNC.SingleDES', 'true')
-        }
-        if (vpncNoEncryption.checked) {
-            updateProvider('VPNC.NoEncryption', 'true')
-        }
+        updateProvider('VPNC.SingleDES', vpncSingleDES.checked.toString())
+        updateProvider('VPNC.NoEncryption', vpncNoEncryption.checked.toString())
+        updateProvider('VPNC.BlockIPv6', vpncBlockIPv6.checked.toString())
         updateProvider('VPNC.DeviceType', vpncDeviceType.selection)
     }
 
@@ -157,6 +155,13 @@ Column {
 
         //% "Enable no encryption"
         text: qsTrId("settings_network-la-vpn_vpnc_no_encryption")
+    }
+
+    TextSwitch {
+        id: vpncBlockIPv6
+
+        //% "Enable IPv6 data leak protection"
+        text: qsTrId("settings_network-la-vpn_vpnc_enable_ipv6_data_leak_protection")
     }
 
     TextSwitch {

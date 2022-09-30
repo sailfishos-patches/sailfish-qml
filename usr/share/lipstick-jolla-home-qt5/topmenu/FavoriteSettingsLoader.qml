@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (c) 2015 - 2020 Jolla Ltd.
-** Copyright (c) 2020 Open Mobile Platform LLC.
+** Copyright (c) 2020 - 2021 Open Mobile Platform LLC.
 **
 ** License: Proprietary
 **
@@ -28,30 +28,33 @@ Loader {
     visible: status === Loader.Ready
 
     function showEventsSettings() {
-        settingsDbus.call("showEventsSettings", [])
+        call("showEventsSettings", [])
     }
 
     function showTopMenuSettings() {
-        settingsDbus.showPage("system_settings/look_and_feel/topmenu")
+        showPage("system_settings/look_and_feel/topmenu")
     }
 
     function showUsersSettings() {
-        settingsDbus.showPage("system_settings/system/users")
+        showPage("system_settings/system/users")
     }
 
     function showAddNewUser() {
-        settingsDbus.call("addNewUser")
+        callSettingsDBus("addNewUser")
     }
 
-    DBusInterface {
-        id: settingsDbus
+    function callSettingsDBus(method, arguments) {
+        Lipstick.compositor.invokeDBusMethod(
+                    "com.jolla.settings",
+                    "/com/jolla/settings/ui",
+                    "com.jolla.settings.ui",
+                    method,
+                    arguments)
+    }
 
-        service: "com.jolla.settings"
-        path: "/com/jolla/settings/ui"
-        iface: "com.jolla.settings.ui"
-
-        function showPage(page) {
-            settingsDbus.call("showPage", page)
+    function showPage(page) {
+        if (page !== "") {
+            callSettingsDBus("showPage", [page])
         }
     }
 
@@ -256,10 +259,9 @@ Loader {
                             target: pageOrActionDelegate.item
                             onTriggered: {
                                 if (model.object.type == "action") {
-                                    gridFavModel.triggerAction(model.index)
-                                    Lipstick.compositor.topMenuLayer.hide()
+                                    Lipstick.compositor.invokeRemoteAction(remoteAction)
                                 } else {
-                                    pageOrActionDelegate.item.goToSettings()
+                                    root.showPage(pageOrActionDelegate.item.settingsPageEntryPath)
                                 }
                             }
                         }

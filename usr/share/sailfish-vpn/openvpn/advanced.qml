@@ -13,7 +13,7 @@ Column {
         openVpnCompLZO.setValue(getProperty('OpenVPN.CompLZO'))
         openVpnConfigFile.path = getProperty('OpenVPN.ConfigFile')
         openVpnAskPass.path = getProperty('OpenVPN.AskPass')
-        openVpnAuthNoCache.checked = getProperty('OpenVPN.AuthNoCache') == 'true'
+        openVpnAuthNoCache.checked = getProperty('OpenVPN.AuthNoCache') === 'true'
         openVpnNSCertType.setValue(getProperty('OpenVPN.NSCertType'))
         openVpnRemoteCertTLS.setValue(getProperty('OpenVPN.RemoteCertTls'))
         openVpnCipher.text = getProperty('OpenVPN.Cipher')
@@ -23,6 +23,7 @@ Column {
         openVpnPing.text = getProperty('OpenVPN.Ping')
         openVpnPingExit.text = getProperty('OpenVPN.PingExit')
         openVpnRemapUsr.setValue(getProperty('OpenVPN.RemapUsr1'))
+        openVpnBlockIPv6.setValue(getProperty('OpenVPN.BlockIPv6'))
         // OpenVPN.TLSRemote deprecated in openvpn 2.3+
     }
 
@@ -34,9 +35,7 @@ Column {
         updateProvider('OpenVPN.CompLZO', openVpnCompLZO.selection)
         updateProvider('OpenVPN.ConfigFile', openVpnConfigFile.path)
         updateProvider('OpenVPN.AskPass', openVpnAskPass.path)
-        if (openVpnAuthNoCache.checked) {
-            updateProvider('OpenVPN.AuthNoCache', 'true')
-        }
+        updateProvider('OpenVPN.AuthNoCache', openVpnAuthNoCache.checked.toString())
         updateProvider('OpenVPN.NSCertType', openVpnNSCertType.selection)
         updateProvider('OpenVPN.RemoteCertTls', openVpnRemoteCertTLS.selection)
         updateProvider('OpenVPN.Cipher', openVpnCipher.text)
@@ -46,6 +45,7 @@ Column {
         updateProvider('OpenVPN.Ping', openVpnPing.filteredText)
         updateProvider('OpenVPN.PingExit', openVpnPingExit.filteredText)
         updateProvider('OpenVPN.RemapUsr1', openVpnRemapUsr.selection)
+        updateProvider('OpenVPN.BlockIPv6', openVpnBlockIPv6.selection)
     }
 
     width: parent.width
@@ -136,22 +136,6 @@ Column {
         label: qsTrId("settings_network-la-vpn_openvpn_complzo")
     }
 
-    ConfigTextField {
-        id: openVpnCipher
-
-        //% "Cipher algorithm"
-        label: qsTrId("settings_network-la-vpn_openvpn_cipher")
-        nextFocusItem: openVpnAuth
-    }
-
-    ConfigTextField {
-        id: openVpnAuth
-
-        //% "Digest algorithm"
-        label: qsTrId("settings_network-la-vpn_openvpn_auth")
-        nextFocusItem: openVpnMTU
-    }
-
     ConfigIntField {
         id: openVpnMTU
         intUpperLimit: 65535
@@ -189,6 +173,37 @@ Column {
 
         //% "Remap restart signal to"
         label: qsTrId("settings_network-la-vpn_openvpn_restart_on_comm_error")
+    }
+
+    SectionHeader {
+        //: Settings pertaining to the communication security
+        //% "Security"
+        text: qsTrId("settings_network-he-vpn_openvpn_security")
+    }
+
+    ConfigComboBox {
+        id: openVpnBlockIPv6
+
+        values: [ "_default", "true", "false" ]
+
+        //: Disabling IPv6 enables data leak protection
+        //% "Disable IPv6"
+        label: qsTrId("settings_network-la-vpn_openvpn_disable_ipv6")
+    }
+
+    ConfigTextField {
+        id: openVpnCipher
+
+        //% "Cipher algorithm"
+        label: qsTrId("settings_network-la-vpn_openvpn_cipher")
+        nextFocusItem: openVpnAuth
+    }
+
+    ConfigTextField {
+        id: openVpnAuth
+
+        //% "Digest algorithm"
+        label: qsTrId("settings_network-la-vpn_openvpn_auth")
     }
 
     SectionHeader {

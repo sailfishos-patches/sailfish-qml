@@ -14,6 +14,10 @@ MouseArea {
     width: parent.width
     height: width
 
+    // Only show setting if it fits the screen also on landscape
+    // E.g. the layout only supports showing maximum of 6 items on 5" HD screen
+    visible: y + height < Screen.width
+
     onSelectedChanged: {
         if (selected) {
             parent.currentItem = menuItem

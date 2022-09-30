@@ -144,7 +144,8 @@ Page {
                         "/sailfish/text_input/close_keyboard_hint_count",
                         "/sailfish/text_input/close_keyboard_hint_date",
                         "/sailfish/voicecall/incoming_call_hint_count",
-                        "/sailfish/weather/pull_down_to_add_another_location_hint_count"
+                        "/sailfish/weather/pull_down_to_add_another_location_hint_count",
+                        "/desktop/lipstick-jolla-home/pinned_launcher_hint_count"
                     ]
                 }
             }

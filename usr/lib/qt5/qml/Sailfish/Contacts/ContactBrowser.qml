@@ -218,7 +218,7 @@ Item {
                 + (mainContactsList.__silica_contextmenu_instance ? mainContactsList.__silica_contextmenu_instance.height : 0)
     }
 
-    readonly property Page _page: {
+    readonly property var _page: {
         var parentItem = root.parent
         while (parentItem) {
             if (parentItem.hasOwnProperty('__silica_page')) {
@@ -573,6 +573,7 @@ Item {
                 favoritesModel: root.favoriteContactsModel
                 selectionModel: root._selectionModel
                 symbolScrollBarWidth: root._searchFiltered ? 0 : symbolScrollBar.width
+                symbolScrollBarVisible: symbolScrollBar.visible
 
                 onContactPressed: _closeVirtualKeyboard()
                 onContactClicked: root._contactClicked(delegateItem, contact)
@@ -626,6 +627,7 @@ Item {
                               ? (pageStack._pageStackIndicator.leftWidth + Theme.paddingMedium)
                               : 0
             symbolScrollBarWidth: root._searchFiltered ? 0 : symbolScrollBar.width
+            symbolScrollBarVisible: symbolScrollBar.visible
 
             contactId: model.contactId
             selectionModel: root._selectionModel

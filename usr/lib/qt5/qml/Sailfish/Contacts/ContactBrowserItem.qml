@@ -16,6 +16,7 @@ ContactItem {
     property var propertyPicker
 
     property int symbolScrollBarWidth
+    property bool symbolScrollBarVisible
 
     signal contactClicked(var contact)
     signal contactPressAndHold(var contact)
@@ -30,7 +31,7 @@ ContactItem {
             var item = remorseDelete(function () {
                 contactModelCache.deleteContact(person)
             })
-            item.rightMargin = searchString.length > 0 ? Theme.horizontalPageMargin
+            item.rightMargin = !symbolScrollBarVisible ? Theme.horizontalPageMargin
                                                        : Theme.paddingMedium + symbolScrollBarWidth
         }
     }

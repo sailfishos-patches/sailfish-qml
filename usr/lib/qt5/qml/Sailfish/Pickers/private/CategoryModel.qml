@@ -70,36 +70,31 @@ ListModel {
         var len = categories.length
         var index = 0
         for (; index < len; ++index) {
-              var category = categories[index]
+            var category = categories[index]
+            category["properties"] = {}
             if (category.subview.indexOf("DocumentPicker") >= 0) {
                 category["contentType"] = ContentType.Document
-                category["properties"] = { "_clearOnBackstep": false }
                 category["iconSource"] = "image://theme/icon-m-file-document"
             } else if (category.subview.indexOf("ImagePicker") >= 0) {
                 category["contentType"] = ContentType.Image
-                category["properties"] = { "_clearOnBackstep": false }
                 category["iconSource"] = "image://theme/icon-m-file-image"
             } else if (category.subview.indexOf("VideoPicker") >= 0) {
                 category["contentType"] = ContentType.Video
-                category["properties"] = { "_clearOnBackstep": false }
                 category["iconSource"] = "image://theme/icon-m-file-video"
             } else if (category.subview.indexOf("MusicPicker") >= 0) {
                 category["contentType"] = ContentType.Music
-                category["properties"] = { "_clearOnBackstep": false }
                 category["iconSource"] = "image://theme/icon-m-file-audio"
             } else if (category.subview.indexOf("DownloadPicker") >= 0) {
                 category["contentType"] = ContentType.Download
-                category["properties"] = { "_clearOnBackstep": false }
                 category["iconSource"] = "image://theme/icon-m-device-download"
             } else if (category.subview.indexOf("FilePicker") >= 0) {
                 category["contentType"] = ContentType.File
-                category["properties"] = {
-                    "showSystemFiles": false,
-                    "_clearOnBackstep": false
-                }
+                category["properties"].showSystemFiles = false
                 category["iconSource"] = "image://theme/icon-m-file-other"
             }
-
+            if (category.subview.indexOf("Dialog") >= 0) {
+                category["properties"]._clearOnBackstep = false
+            }
             append(categories[index])
         }
     }

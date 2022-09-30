@@ -1,6 +1,15 @@
+/*
+ * Copyright (c) 2013 - 2021 Jolla Ltd.
+ * Copyright (c) 2021 Open Mobile Platform LLC.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Messages 1.0
+import Sailfish.Share 1.0
+import Nemo.DBus 2.0
 import org.nemomobile.messages.internal 1.0
 import org.nemomobile.commhistory 1.0
 import org.nemomobile.contacts 1.0
@@ -12,7 +21,6 @@ ApplicationWindow {
 
     property Page mainPage
     property Page conversationPage
-
     property Page editorPage: {
         // When there is a text editing page in the stack (not necessarily at the top,
         // as another page may be invoked from an editing page)
@@ -25,10 +33,18 @@ ApplicationWindow {
     property alias conversationGroup: conversation.contactGroup
     property alias conversationRecipients: conversation.recipients
 
+    property Component _conversationPageComponent
+
     cover: Qt.resolvedUrl("cover/MessagesCover.qml")
     allowedOrientations: defaultAllowedOrientations
     _defaultPageOrientations: Orientation.All
     _defaultLabelFormat: Text.PlainText
+
+    Component.onCompleted: {
+        // Get a head start on compiling the ConversationPage to reduce the amount of time spent
+        // waiting the first time a page is pushed.
+        _conversationPageComponent = Qt.createComponent("pages/ConversationPage.qml", Component.Asynchronous, mainWindow)
+    }
 
     onConversationPageChanged: {
         if (conversationPage === null) {
@@ -44,7 +60,7 @@ ApplicationWindow {
 
     TelepathyChannelManager {
         id: channelManager
-        handlerName: "qmlmessages"
+        handlerName: "org.sailfishos.Messages"
     }
 
     CommGroupManager {
@@ -117,6 +133,45 @@ ApplicationWindow {
         }
 
         inboxObserved: Qt.application.active && pageStack.depth === 1
+    }
+
+    DBusAdaptor {
+        service: "org.sailfishos.Messages"
+        path: "/share"
+        iface: "org.sailfishos.share"
+
+        function shareSms(shareActionConfiguration) {
+            var shareAction = shareActionComponent.createObject(null)
+            shareAction.loadConfiguration(shareActionConfiguration)
+            var resource = shareAction.resources[0]
+            if (!resource) {
+                console.warn("Undefined share resource!")
+                shareAction.destroy()
+                return
+            }
+            var body = ""
+            if (resource.type === "text/plain" || resource.type === "text/x-url") {
+                body = (resource.status || "")
+            } else {
+                console.warn("Unrecognised resource type:", resource.type)
+            }
+            newMessage(PageStackAction.Immediate, body)
+            shareAction.destroy()
+            activateWindow()
+        }
+
+        function shareMms(shareActionConfiguration) {
+            showMainPage(PageStackAction.Immediate)
+            pageStack.push(Qt.resolvedUrl("pages/MmsShare.qml"),
+                           { "shareActionConfiguration": shareActionConfiguration },
+                           PageStackAction.Immediate)
+            activateWindow()
+        }
+    }
+
+    Component {
+        id: shareActionComponent
+        ShareAction { }
     }
 
     function showMainPage(operationType) {
@@ -217,10 +272,13 @@ ApplicationWindow {
         }
     }
 
-    function newMessage(operationType) {
+    function newMessage(operationType, body) {
         showMainPage(PageStackAction.Immediate)
         conversation.clear()
-        pageStack.animatorPush(Qt.resolvedUrl("pages/NewMessagePage.qml"), { }, operationType)
+        pageStack.animatorPush(Qt.resolvedUrl("pages/NewMessagePage.qml"),
+                               { draftText: body || "" },
+                               operationType === undefined ? PageStackAction.Immediate : operationType)
+        activateWindow()
     }
 
     function groupMessageText(group) {

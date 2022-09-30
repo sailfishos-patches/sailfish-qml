@@ -53,7 +53,7 @@ InputHandler {
                 Connections {
                     target: suggestionModel
                     onStringsChanged: verticalList.showRemoveButton = false
-                    onKeyClick: horizontalList.showRemoveButton = false
+                    onKeyClick: verticalList.showRemoveButton = false
                 }
             }
         }

@@ -5,11 +5,10 @@ MouseArea {
     property alias icon: image
     property alias background: backgroundCircle
     property real size: Theme.itemSizeSmall
+    property int verticalCenterOffset
 
     width: Theme.itemSizeExtraLarge
     height: Theme.itemSizeExtraLarge
-
-    anchors.centerIn: parent
 
     Rectangle {
         id: backgroundCircle
@@ -18,13 +17,18 @@ MouseArea {
         width: image.width
         height: width
 
-        anchors.centerIn: parent
-
+        anchors {
+            centerIn: parent
+            verticalCenterOffset: parent.verticalCenterOffset
+        }
         color: Theme.secondaryHighlightColor
     }
 
     Image {
         id: image
-        anchors.centerIn: parent
+        anchors {
+            centerIn: parent
+            verticalCenterOffset: parent.verticalCenterOffset
+        }
     }
 }

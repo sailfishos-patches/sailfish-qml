@@ -16,8 +16,9 @@ InputHandler {
 
         fetchCount: fetchMany ? 120 : 20
         mohuEnabled: mohuConfig.value
-        inputMode: layoutRow.layout ? layoutRow.layout.inputMode : ""
-        inputMethod: layoutRow.layout ? layoutRow.layout.type : ""
+        inputMode: keyboard.layout ? keyboard.layout.inputMode : ""
+        inputMethod: keyboard.layout ? keyboard.layout.type : ""
+
 
         onInputMethodChanged: handler.clearPreedit()
         onInputModeChanged: handler.clearPreedit()
@@ -293,7 +294,7 @@ InputHandler {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: inputItems.height
+        height: keyboard.currentLayoutHeight
 
         visible: xt9CpModel.fetchMany
         color: handler.palette.highlightDimmerColor

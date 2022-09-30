@@ -95,17 +95,19 @@ Column {
         }
     }
 
-    Label {
+    ClickableTextLabel {
         id: forgottenPasswordDetails
         x: Theme.horizontalPageMargin
         width: parent.width - x*2
-        wrapMode: Text.Wrap
         font.pixelSize: Theme.fontSizeSmall
-        color: Theme.highlightColor
         opacity: 0
 
         //: Explains how to deal with a forgotten password for the Jolla account
-        //% "Please go to account.jolla.com to reset your password. You also need to have access to the email address you provided when creating the account."
+        //% "Please go to %1account.jolla.com%2 to reset your password. You also need to have access to the email address you provided when creating the account."
         text: qsTrId("settings_accounts-la-forgot_your_password_solution")
+                        .arg("<u><font color=\"" + (pressed ? Theme.highlightColor : Theme.primaryColor) + "\">")
+                        .arg("</font></u>")
+
+        onClicked: Qt.openUrlExternally("https://account.jolla.com/registration/password/reset/")
     }
 }

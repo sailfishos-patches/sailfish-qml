@@ -1,7 +1,6 @@
 /****************************************************************************************
 **
 ** Copyright (C) 2015 Jolla Ltd.
-** Contact: Joona Petrell <joona.petrell@jollamobile.com>
 ** All rights reserved.
 **
 ** This file is part of Sailfish Silica UI component package.

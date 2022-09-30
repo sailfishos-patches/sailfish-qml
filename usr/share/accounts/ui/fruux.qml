@@ -9,4 +9,6 @@ OnlineSyncAccountCreationAgent {
         accountManager.service("fruux-carddav"),
         accountManager.service("fruux-caldav")
     ]
+    // can't load from the service without an account because a&sso doesn't support that.
+    serverAddress: "https://dav.fruux.com"
 }

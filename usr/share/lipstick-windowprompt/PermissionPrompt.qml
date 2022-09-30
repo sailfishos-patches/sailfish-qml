@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020 Open Mobile Platform LLC.
+ * Copyright (c) 2020 - 2021 Open Mobile Platform LLC.
+ * Copyright (c) 2021 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -23,20 +24,22 @@ SystemDialog {
         root.promptConfig = promptConfig
         raise()
         show()
+        // Trigger here to reset if another dialog is displayed without destructing the component
+        autoDismissTimer.restart()
     }
 
     function reply(accept) {
-        manager.sendPermissionReply(root.promptConfig.replyId, accept, root.promptConfig.requiredPermissions)
+        promptConfig["accepted"] = accept
         root.done(root, false)
     }
 
-    contentHeight: flickable.height + buttons.height
+    contentHeight: flickable.height + autoDismissText.height + buttons.height + Theme.paddingSmall
 
     onDismissed: root.reply(false)
 
     SilicaFlickable {
         id: flickable
-        readonly property real availableHeight: screenHeight - reservedHeight - buttons.height
+        readonly property real availableHeight: screenHeight - reservedHeight - buttons.height - autoDismissText.height - Theme.paddingSmall
         property real originalContentHeight: content.height
         property bool menuHasBeenOpened
         contentHeight: content.height
@@ -137,24 +140,80 @@ SystemDialog {
         VerticalScrollDecorator {}
     }
 
+    Label {
+        id: autoDismissText
+
+        readonly property int visibleTime: 30
+        property int remainingVisibleTime: visibleTime
+
+        //: Dialog closes automatically after certain time has passed, this is shown just before that
+        //% "This dialog will be closed in %1 s"
+        text: qsTrId("lipstick-jolla-home-la-text_before_auto_dismiss").arg(remainingVisibleTime)
+        font.pixelSize: Theme.fontSizeSmall
+        color: Theme.highlightColor
+        wrapMode: Text.Wrap
+        horizontalAlignment: Text.AlignHCenter
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: buttons.top
+        }
+        x: Theme.horizontalPageMargin
+        width: parent.width - 2 * x
+        visible: !hideTimer.running
+
+        Timer {
+            interval: 10000
+            running: !hideTimer.running && autoDismissText.remainingVisibleTime > 10
+            repeat: true
+            onTriggered: autoDismissText.remainingVisibleTime -= 10
+        }
+
+        Timer {
+            id: hideTimer
+            interval: autoDismissTimer.interval - autoDismissText.visibleTime * 1000
+        }
+    }
+
     Row {
         id: buttons
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        width: root.width
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom
+        }
+        width: parent.width
 
         SystemDialogTextButton {
             //% "Cancel"
             text: qsTrId("lipstick-jolla-home-bt-cancel")
-            width: root.width / 2
-            onClicked: root.reply(false)
+            width: parent.width / 2
+            onClicked: {
+                root.dismiss()
+                root.reply(false)
+            }
         }
 
         SystemDialogTextButton {
             //% "Accept"
             text: qsTrId("lipstick-jolla-home-bt-accept")
-            width: root.width / 2
-            onClicked: root.reply(true)
+            width: parent.width / 2
+            onClicked: {
+                root.dismiss()
+                root.reply(true)
+            }
         }
+    }
+
+    /*
+     * D-Bus activation timeout is 120 seconds, make this just a little less
+     * to allow the application to start before it times out
+     */
+    Timer {
+        id: autoDismissTimer
+        interval: 115000
+        onTriggered: {
+            root.dismiss()
+            root.reply(false)
+        }
+        onRunningChanged: if (running) hideTimer.start()
     }
 }

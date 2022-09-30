@@ -17,6 +17,7 @@ import org.nemomobile.dbus 2.0
 import org.nemomobile.contacts 1.0
 import org.nemomobile.notifications 1.0
 import org.nemomobile.voicecall 1.0 as VoiceCall
+import com.jolla.voicecall 1.0
 import "common/CallHistory.js" as CallHistory
 
 import "pages/dialer"
@@ -342,16 +343,6 @@ ApplicationWindow {
         filterType: PeopleModel.FilterAll
     }
 
-    ToggleCallKey {
-        onPressed: {
-            if (main.state === 'incoming') {
-                telephony.incomingCall.answer()
-            } else if (telephony.primaryCall) {
-                telephony.primaryCall.hangup()
-            }
-        }
-    }
-
     MessagesInterface { id: messaging }
 
     VoiceCallManager {
@@ -533,14 +524,12 @@ ApplicationWindow {
 
     Component {
         id: voicecallAdaptor
-        DBusAdaptor {
-            service: "com.jolla.voicecall.ui"
-            path: "/"
-            iface: "com.jolla.voicecall.ui"
-            function show(args) {
+        VoicecallUiAdaptor {
+
+            onShow: {
                 ensureMainPage(function() { main.activate() })
             }
-            function showOngoing() {
+            onShowOngoing: {
                 if (main.state == 'null' || main.state == 'disconnected') {
                     return
                 }
@@ -549,7 +538,7 @@ ApplicationWindow {
                 updateVisibility()
                 showCallView()
             }
-            function openUrl(arg) {
+            onOpenUrl: {
                 if (arg[0] == undefined) {
                     return false
                 }
@@ -566,18 +555,16 @@ ApplicationWindow {
                 }
                 return number != ""
             }
-            function dial(number) {
+            onDial: {
                 main.dialNumberOrService(number)
-                return true
             }
-            function dialViaModem(modemPath, number) {
+            onDialViaModem: {
                 telephony.dialNumberOrService(number, modemPath)
-                return true
             }
-            function showCellularErrorDialog() {
+            onShowCellularErrorDialog: {
                 main.showCellularErrorDialog()
             }
-            function openContactCard(number) {
+            onOpenContactCard: {
                 var person = people.personByPhoneNumber(number)
                 var personObject = !!person ? person : ContactCreator.createContact({"phoneNumbers": [number]})
                 pageStack.push(
@@ -585,6 +572,13 @@ ApplicationWindow {
                             { "contact": personObject, "activeDetail": number },
                             PageStackAction.Immediate)
                 main.activate()
+            }
+            onToggleCall: {
+                if (main.state === 'incoming' || main.state === 'silenced') {
+                    telephony.incomingCall.answer()
+                } else if (telephony.primaryCall) {
+                    telephony.primaryCall.hangup()
+                }
             }
         }
     }

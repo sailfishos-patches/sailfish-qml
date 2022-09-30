@@ -24,11 +24,6 @@ Image {
 
     state: "hidden"
 
-    anchors {
-        verticalCenter: parent.verticalCenter
-        margins: offset
-    }
-
     source: "image://theme/graphics-edge-swipe-arrow"
     rotation: 90
     width: sourceSize.width

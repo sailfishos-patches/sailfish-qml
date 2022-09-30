@@ -30,10 +30,10 @@ PickerDialog {
 
         property bool searchActive
 
-        highlightEnabled: false
         anchors.fill: parent
         // reference column width: 960 / 4
         columnCount: Math.floor(width / (Theme.pixelRatio * 240))
+        dateProperty: "lastModified"
 
         header: SearchDialogHeader {
             width: gridView.width
@@ -79,13 +79,10 @@ PickerDialog {
             duration: model.duration > 3600 ? formatter.formatDuration(model.duration, Formatter.DurationLong) :
                                               formatter.formatDuration(model.duration, Formatter.DurationShort)
             title: model.title
+            selected: model.selected
             GridView.onAdd: AddAnimation { target: thumbnail; duration: _animationDuration }
             GridView.onRemove: RemoveAnimation { target: thumbnail; duration: _animationDuration }
             onClicked: videoModel.updateSelected(index, !selected)
-            HighlightItem {
-                anchors.fill: parent
-                active: model.selected || parent.down
-            }
         }
     }
 }

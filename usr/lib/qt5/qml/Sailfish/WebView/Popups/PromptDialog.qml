@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2013-2016 Jolla Ltd.
-** Contact: Dmitry Rozhkov <dmitry.rozhkov@jollamobile.com>
+** Copyright (c) 2013 - 2020 Jolla Ltd.
+** Copyright (c) 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -12,27 +12,48 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-UserPrompt {
+Dialog {
     id: dialog
 
-    property alias text: input.placeholderText
-    property alias value: input.text
-
     canAccept: input.text.length > 0
-    //: Text on the Accept dialog button that accepts browser's prompt() messages
-    //% "Ok"
-    acceptText: qsTrId("sailfish_components_webview_popups-he-accept_prompt")
 
-    TextField {
-        id: input
+    property alias text: prompt.text
+    property alias value: prompt.value
+    property alias defaultValue: prompt.defaultValue
 
-        anchors.centerIn: parent
-        width: parent.width
-        focus: true
-        label: text.length > 0 ? dialog.text : ""
-        inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
-        EnterKey.enabled: text.length > 0
-        EnterKey.iconSource: "image://theme/icon-m-enter-accept"
-        EnterKey.onClicked: dialog.accept()
+    property alias acceptText: prompt.acceptText
+    property alias cancelText: prompt.cancelText
+    property alias title: prompt.title
+    property alias preventDialogsVisible: prompt.preventDialogsVisible
+    property alias preventDialogsPrefillValue: prompt.preventDialogsPrefillValue
+    property alias preventDialogsValue: prompt.preventDialogsValue
+
+    PromptPopupInterface {
+        id: prompt
+
+        anchors.fill: parent
+        value: input.text
+
+        onAccepted: dialog.accept()
+
+        UserPromptUi {
+            anchors.fill: parent
+            dialog: dialog
+            popupInterface: prompt
+
+            TextField {
+                id: input
+                height: implicitHeight
+                width: parent.width
+                focus: true
+                label: text.length > 0 ? prompt.text : ""
+                text: prompt.defaultValue
+                placeholderText: prompt.text
+                inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+                EnterKey.enabled: text.length > 0
+                EnterKey.iconSource: "image://theme/icon-m-enter-accept"
+                EnterKey.onClicked: prompt.accepted()
+            }
+        }
     }
 }

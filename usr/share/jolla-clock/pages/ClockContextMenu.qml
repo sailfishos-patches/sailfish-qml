@@ -1,5 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import com.jolla.clock.private 1.0
+
 
 ContextMenu {
     property Item item
@@ -11,6 +13,10 @@ ContextMenu {
         //% "Reset"
         text: qsTrId("clock-me-reset")
         onClicked: {
+            if (alarm.enabled) {
+                Clock.cancelNotifications(alarm.id)
+            }
+
             alarm.enabled = false
             alarm.reset()
             alarm.save()

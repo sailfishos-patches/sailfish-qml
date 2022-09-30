@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2015 - 2019 Jolla Ltd.
-** Copyright (C) 2020 Open Mobile Platform LLC.
+** Copyright (C) 2020 - 2021 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
@@ -20,6 +20,9 @@ Column {
     property alias showDescription: descriptionText.visible
     property alias showHeader: eventHeader.visible
     property bool showSelector: !showHeader // by default, show calendar selector if colored header is not visible
+    property bool cancellation
+
+    signal eventRemovePressed
 
     function setAttendees(attendeeList) {
         attendees.model = attendeeList
@@ -106,7 +109,7 @@ Column {
                 font.pixelSize: Theme.fontSizeMedium
                 visible: !parent.multiDay
                 //% "All day"
-                text: root.event ? (root.event.allDay ? qsTrId("sailfish_calendar-la-all_day")
+                text: root.event && root.occurrence ? (root.event.allDay ? qsTrId("sailfish_calendar-la-all_day")
                                                       : (Format.formatDate(root.occurrence.startTime, Formatter.TimeValue)
                                                          + " - "
                                                          + Format.formatDate(root.occurrence.endTime, Formatter.TimeValue))
@@ -130,7 +133,7 @@ Column {
         width: parent.width - 2*Theme.horizontalPageMargin
         height: reminderText.height
         x: Theme.horizontalPageMargin
-        visible: root.event && root.event.reminder >= 0
+        visible: root.event && (root.event.reminder >= 0 || !isNaN(root.event.reminderDateTime.getTime()))
 
         Label {
             id: reminderText
@@ -138,11 +141,23 @@ Column {
             anchors.left: parent.left
             color: Theme.highlightColor
             wrapMode: Text.Wrap
-            //: %1 gets replaced with reminder time, e.g. "15 minutes before"
-            //% "Reminder %1"
-            text: root.event ? qsTrId("sailfish_calendar-view-reminder")
+            text: {
+                if (root.event && root.event.reminder >= 0) {
+                    //: %1 gets replaced with reminder time, e.g. "15 minutes before"
+                    //% "Reminder %1"
+                    return qsTrId("sailfish_calendar-view-reminder")
                                .arg(Calendar.CommonCalendarTranslations.getReminderText(root.event.reminder))
-                             : ""
+                } else if (root.event && !isNaN(root.event.reminderDateTime.getTime())) {
+                    //: %1 is replaced by the date in format like Monday 2nd November 2020
+                    //: %2 is replaced by the time.
+                    //% "Reminder %1, %2"
+                    return qsTrId("sailfish_calendar-view-reminder-date-time")
+                               .arg(Format.formatDate(event.reminderDateTime, Format.DateFull))
+                               .arg(Format.formatDate(event.reminderDateTime, Format.TimeValue))
+                } else {
+                    return ""
+                }
+            }
         }
         Image {
             id: reminderIcon
@@ -172,9 +187,9 @@ Column {
             Label {
                 id: locationText
 
-                width: parent.width - locationIcon.width
+                width: parent.width - locationIcon.width - Theme.paddingMedium
                 height: contentHeight
-                x: locationIcon.width
+                x: locationIcon.width + Theme.paddingMedium
                 anchors.top: lineCount > 1 ? parent.top : undefined
                 anchors.verticalCenter: lineCount > 1 ? undefined : locationIcon.verticalCenter
                 color: Theme.highlightColor
@@ -185,7 +200,16 @@ Column {
         }
 
         Loader {
-            active: event && event.rsvp
+            active: cancellation
+            width: parent.width
+            sourceComponent: CalendarEventRemove {
+                readOnly: !event || root.event.readOnly
+                onEventRemovePressed: root.eventRemovePressed()
+            }
+        }
+
+        Loader {
+            active: event && event.rsvp && !cancellation
             width: parent.width
             sourceComponent: Item {
                 width: parent.width
@@ -251,12 +275,12 @@ Column {
 
             property var model: []
 
-            width: parent.width - 2*x
-            x: Theme.horizontalPageMargin
+            width: parent.width
             visible: model.length > 0
 
             Row {
-                width: parent.width
+                width: parent.width - 2*x
+                x: Theme.horizontalPageMargin
                 height: Theme.itemSizeSmall
 
                 spacing: Theme.paddingMedium
@@ -283,10 +307,9 @@ Column {
                 delegate: CalendarAttendeeDelegate {
                     id: attendeeItem
 
-                    x: attendeesLabel.x
-                    width: parent.width - x - Theme.horizontalPageMargin
-
+                    leftMargin: Theme.horizontalPageMargin + attendeesLabel.x
                     name: modelData.name
+                    email: modelData.email
                     secondaryText: {
                         if (modelData.isOrganizer) {
                             //% "Organizer"
@@ -299,13 +322,10 @@ Column {
                         }
                     }
                     participationStatus: modelData.participationStatus
-                    nameColor: palette.highlightColor
                 }
             }
 
             BackgroundItem {
-                x: -attendees.x
-                width: root.width
                 height: Theme.itemSizeSmall
 
                 visible: attendees.model.length > 5
@@ -316,7 +336,7 @@ Column {
                 }
 
                 Label {
-                    x: attendeesLabel.x + attendees.x
+                    x: Theme.horizontalPageMargin + attendeesLabel.x
                     y: (parent.height - height) / 2
 
                     //% "Show more..."
@@ -363,6 +383,15 @@ Column {
             id: query
             targetUid: (root.event && root.event.calendarUid) ? root.event.calendarUid : ""
         }
+    }
+
+    SyncWarningItem {
+        width: parent.width - 2 * Theme.horizontalPageMargin
+        x: Theme.horizontalPageMargin
+        syncFailure: root.event ? root.event.syncFailure : CalendarEvent.NoSyncFailure
+        visible: syncFailure != CalendarEvent.NoSyncFailure
+        withDetails: true
+        color: Theme.highlightColor
     }
 }
 

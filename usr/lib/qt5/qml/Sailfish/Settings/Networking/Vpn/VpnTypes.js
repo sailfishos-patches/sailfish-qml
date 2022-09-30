@@ -110,9 +110,11 @@ function presentationName(input) {
         //: Indicator for default selection; user has not specified a value
         //% "Default"
         return qsTrId("settings_network-me-vpn_default_option")
+    case "true":
     case "yes":
         //% "Yes"
         return qsTrId("settings_network-me-vpn_presentation_yes")
+    case "false":
     case "no":
         //% "No"
         return qsTrId("settings_network-me-vpn_presentation_no")

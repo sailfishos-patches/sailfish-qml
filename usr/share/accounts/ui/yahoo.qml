@@ -9,6 +9,7 @@ OnlineSyncAccountCreationAgent {
         accountManager.service("yahoo-carddav"),
         accountManager.service("yahoo-caldav")
     ]
+    serverAddress: "https://caldav.calendar.yahoo.com"
     calendarPath: "/dav/" + username + "/Calendar/"
     //% "Yahoo! ID"
     usernameLabel: qsTrId("settings_accounts-la-yahoo_id")

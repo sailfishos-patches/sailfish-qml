@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (c) 2013 - 2020 Jolla Ltd.
-** Copyright (c) 2020 Open Mobile Platform LLC.
+** Copyright (c) 2020 - 2021 Open Mobile Platform LLC.
 **
 ** License: Proprietary
 **
@@ -10,11 +10,11 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2 as QtQuick
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.configuration 1.0
 import org.nemomobile.systemsettings 1.0
 import org.nemomobile.devicelock 1.0
 import Nemo.DBus 2.0 as NemoDBus
 import Nemo.FileManager 1.0
+import Nemo.Configuration 1.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica 1.0 as SS
 import Sailfish.Ambience 1.0
@@ -106,6 +106,8 @@ Compositor {
         }
     }
 
+    property QtObject launcherModel
+
     readonly property bool peekingAtHome: peekLayer.peeking
     readonly property bool topMenuPeeking: topMenuLayerItem.exposed && !topMenuLayerItem.opaque
     onTopMenuPeekingChanged: {
@@ -157,15 +159,6 @@ Compositor {
 
     property int homeOrientation: Qt.PortraitOrientation
 
-    property bool directRendering: appLayer.active && !homeLayer.visible && topmostWindow && topmostWindow.window
-                                   && !topmostWindow.window.isInProcess
-                                   && !(dialogLayer.contentItem.children.length > 1
-                                        || alarmLayer.contentItem.children.length > 1
-                                        || notificationLayer.contentItem.children.length
-                                        || launcherLayer.visible
-                                        || overlayLayer.contentItem.childrenRect.width
-                                        || overlayLayer.contentItem.childrenRect.height)
-    fullscreenSurface: directRendering ? topmostWindow.window.surface : null
     screenOrientation: {
         if (orientationLock == "portrait") return Qt.PortraitOrientation
         else if (orientationLock == "portrait-inverted") return Qt.InvertedPortraitOrientation
@@ -459,7 +452,15 @@ Compositor {
         topMenuLayerItem.hide()
 
         if (w == alarmLayerItem.window) {
-            // Nothing to do, allow this window to become current window.
+            if (showApplicationOverLockscreen) {
+                // If the the device is currently locked or locks while an alarm or call is active
+                // prevent returning directly after the window is dismissed.
+                // If the application window becomes current again this binding will be canceled.
+                showApplicationOverLockscreen = Qt.binding(function() {
+                    return !deviceIsLocked
+                })
+            }
+            // Nothing more to do, allow this window to become current window.
         } else if (alarmLayerItem.window && !force) {
             if (w != launcherLayerItem.window) {
                 return
@@ -470,7 +471,8 @@ Compositor {
             return
         } else if (w == cameraLayerItem.window
                    || (showApplicationOverLockscreen && w == appLayerItem.window)) {
-            // Nothing to do, allow this window to become current window.
+            showApplicationOverLockscreen = w === appLayerItem.window
+            // Nothing more to do, allow this window to become current window.
         } else if (w == lockScreenLayerItem.window) {
             homeLayerItem.lastActiveLayer = homeLayerItem.switcher
             showApplicationOverLockscreen = Desktop.startupWizardRunning
@@ -553,6 +555,25 @@ Compositor {
         }
     }
 
+    function launch(item, arguments) {
+        launchManager.launch(item, arguments || [])
+    }
+
+    function invokeRemoteAction(remoteAction) {
+        launchManager.invokeRemoteAction(remoteAction)
+    }
+
+    function invokeDBusMethod(service, path, iface, method, arguments) {
+        launchManager.invokeDBusMethod(service, path, iface, method, arguments || [])
+    }
+
+    LaunchManager {
+        id: launchManager
+
+        launcherModel: root.launcherModel
+        onLaunching: Desktop.instance.switcher.activateWindowFor(item)
+    }
+
     LayersParent {
         id: layersParent
 
@@ -606,6 +627,8 @@ Compositor {
                     }
 
                     anchors.fill: parent
+
+                    visible: root.homeVisible
 
                     dimmer {
                         offset: Math.abs(homeLayerItem.events.offset)
@@ -713,6 +736,8 @@ Compositor {
 
             LayerEdgeIndicator {
                 id: launcherEdgeHandle
+
+                highlighted: Lipstick.compositor.launcherLayer.pinned
                 parent: peekLayer.exposed && !peekLayer.peeking
                         ? indicatorApplicationForeground
                         : indicatorHomeForeground
@@ -720,6 +745,17 @@ Compositor {
                          && (launcherLayer.exposed || (homeLayer.active && homeLayer.wallpaperVisible))
                 offset: (indicatorHomeForeground.inverted ? -1 : 1)
                         * (indicatorHomeForeground.transposed ? -launcherLayer.x : launcherLayer.y)
+
+                opacity: {
+                    if (launcherLayer.peekFilter.bottomActive) {
+                        return launcherLayer.contentOpacity
+                    } else if (launcherLayerItem.closeFromEdge) {
+                        return peekLayer.contentOpacity
+                    } else {
+                        return exposed ? 1.0 : 0.0
+                    }
+                }
+                opacityBehavior.enabled: !launcherLayerItem.closeFromEdge && !launcherLayer.peekFilter.bottomActive
             }
         }
 
@@ -815,6 +851,7 @@ Compositor {
                 appLayer.closed()
                 alarmLayerItem.closed()
                 topMenuLayerItem.active = false
+                launcherLayerItem.resetPinning()
 
                 if (cameraLayerItem.active) {
                     setCurrentWindow(root.deviceIsLocked
@@ -1117,6 +1154,13 @@ Compositor {
                 }
             }
 
+
+            MouseArea {
+                anchors.fill: parent
+                visible: launcherLayerItem.pinned
+                onClicked: launcherLayerItem.resetPinning()
+            }
+
             RotatingItem {
                 id: indicatorApplicationForeground
             }
@@ -1124,6 +1168,7 @@ Compositor {
             LauncherLayer {
                 id: launcherLayerItem
 
+                indicatorApplicationForeground: indicatorApplicationForeground
                 peekingAtHome: peekLayer.peeking
                 interactiveArea: layersParent.launcherInteractiveArea
 
@@ -1148,6 +1193,7 @@ Compositor {
                 }
 
                 onClosed: if (launcherLayerItem.closedFromBottom) launcherEdgeHandle.animate = false
+                onPinnedChanged: if (_dragActive && pinned) setCurrentWindow(launcherLayerItem.window)
             }
 
             Rectangle {
@@ -1279,6 +1325,43 @@ Compositor {
                 }
                 return pushDown
             }
+        }
+    }
+
+    MouseTracker {
+        id: mouseTracker
+
+        anchors.fill: parent
+        enabled: displayCursor.value && available && !lipstickSettings.lowPowerMode
+        rotation: QtQuick.Screen.angleBetween(Lipstick.compositor.topmostWindowOrientation, QtQuick.Screen.primaryOrientation)
+
+        onAvailableChanged: if (available) mouseVisibilityTimer.restart()
+        onMouseXChanged: if (available) mouseVisibilityTimer.restart()
+        onMouseYChanged: if (available) mouseVisibilityTimer.restart()
+
+        Timer {
+            id: mouseVisibilityTimer
+
+            // Hide after 10 minutes of idle
+            interval: 10 * 60 * 1000
+        }
+
+        ConfigurationValue {
+            id: displayCursor
+            key: "/desktop/sailfish/compositor/display_cursor"
+            defaultValue: false
+        }
+
+        Image {
+            // JB#56057: Support custom pointer graphics with different hotspot co-ordinates
+            // Now the hotspot co-ordinates below need to be updated if graphic-pointer-default icon is changed
+            property real hotspotX: 13/48 * width
+            property real hotspotY: 4/48 * height
+            x: mouseTracker.mouseX - hotspotX
+            y: mouseTracker.mouseY - hotspotY
+            opacity: mouseTracker.enabled && mouseVisibilityTimer.running ? 1.0 : 0.0
+            Behavior on opacity { FadeAnimator {}}
+            source: "image://theme/graphic-pointer-default"
         }
     }
 
