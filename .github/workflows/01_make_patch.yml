@@ -14,7 +14,7 @@ jobs:
           mkdir -p .github/patch_data
           git fetch origin
           git diff origin/${{ github.base_ref }}  -- . ':!.github' ':!patch' > .github/patch_data/unified_diff.patch
-          cp patch/*.qml patch/*.png patch/*.js patch/*.svg patch/*.qm .github/patch_data
+          cp patch/*.qml patch/*.png patch/*.js patch/*.svg patch/*.qm .github/patch_data |:
         
       - name: Upload build result
         uses: actions/upload-artifact@v2
