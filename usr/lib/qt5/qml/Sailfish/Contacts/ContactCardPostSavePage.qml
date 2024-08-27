@@ -3,14 +3,23 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as SailfishContacts
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 ContactCardPage {
     id: root
 
     property int contactId
     property var peopleModel
 
+    /*!
+      \internal
+    */
     property bool _loaded
 
+    /*!
+      \internal
+    */
     function _loadSavedContact() {
         if (!_loaded && contactId > 0) {
             contact = root.peopleModel.personById(contactId)

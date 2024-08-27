@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Sailfish.Settings.Networking 1.0
 import Nemo.KeepAlive 1.2
 

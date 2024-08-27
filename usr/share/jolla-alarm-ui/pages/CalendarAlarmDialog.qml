@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.alarmui 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
 AlarmDialogBase {
     id: root
@@ -44,6 +44,7 @@ AlarmDialogBase {
                 closeDialog(AlarmDialogStatus.Dismissed)
                 var ok = calendar.typedCall("viewEvent",
                                             [
+                                                { "type":"s", "value": alarm.notebookUid },
                                                 { "type":"s", "value": alarm.calendarEventUid },
                                                 { "type":"s", "value": alarm.calendarEventRecurrenceId },
                                                 { "type":"s", "value": Qt.formatDateTime(alarm.startDate, Qt.ISODate) }
@@ -69,7 +70,9 @@ AlarmDialogBase {
         }
         horizontalAlignment: Text.AlignHCenter
         maximumLineCount: 4
-        text: alarm.title
+        //: Fallback text on calendar alarm for events without a title
+        //% "(Unnamed event)"
+        text: alarm.title.trim() != "" ? alarm.title : qsTrId("jolla-alarm-la-untitled_calendar_event")
         wrapMode: Text.Wrap
     }
 

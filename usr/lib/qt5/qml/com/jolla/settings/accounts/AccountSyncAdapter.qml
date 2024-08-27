@@ -8,7 +8,7 @@
 import QtQuick 2.6
 import Sailfish.Accounts 1.0
 import Nemo.DBus 2.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 QtObject {
     id: root

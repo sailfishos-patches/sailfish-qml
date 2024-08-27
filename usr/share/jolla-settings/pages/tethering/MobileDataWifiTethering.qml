@@ -2,7 +2,7 @@ import QtQuick 2.0
 import Sailfish.Settings.Networking 1.0
 import Nemo.Connectivity 1.0
 import Nemo.DBus 2.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import com.jolla.connection 1.0
 
 Item {
@@ -18,7 +18,7 @@ Item {
 
     function stopTethering() {
         delayedTetheringSwitch.start()
-        connectionAgent.stopTethering()
+        connectionAgent.stopTethering("wifi")
     }
 
     function startTethering() {
@@ -61,7 +61,7 @@ Item {
 
     ConnectionAgent {
         id: connectionAgent
-        onTetheringFinished: delayedTetheringSwitch.stop()
+        onWifiTetheringFinished: delayedTetheringSwitch.stop()
     }
 
     NetworkManager {

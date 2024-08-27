@@ -72,11 +72,20 @@ CsdTestPage {
 
     BottomButton {
         id: startButton
-        visible: !_testing
-        enabled: route.wiredOutputConnected
+        visible: !_testing && route.wiredOutputConnected
         //% "Start"
         text: qsTrId("csd-la-start")
         onClicked: startTest()
+    }
+
+    FailBottomButton {
+        visible: !_testing && !route.wiredOutputConnected
+        //% "Headset not detected - test can't be executed"
+        reason: qsTrId("csd-la-disabled_headset_not_detected")
+        onClicked: {
+            setTestResult(false)
+            testCompleted(true)
+        }
     }
 
     Column {

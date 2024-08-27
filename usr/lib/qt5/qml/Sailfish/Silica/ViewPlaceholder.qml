@@ -37,6 +37,7 @@ import "private/Util.js" as Util
 
 SilicaItem {
     id: placeholder
+
     property Item flickable
     property alias text: mainLabel.text
     property alias textFormat: mainLabel.textFormat
@@ -70,6 +71,7 @@ SilicaItem {
     InfoLabel { id: mainLabel }
     Text {
         id: hintLabel
+
         x: leftMargin
         anchors.top: mainLabel.bottom
         width: parent.width - parent.leftMargin - parent.rightMargin
@@ -87,6 +89,7 @@ SilicaItem {
     Component {
         // content we don't need until we're active
         id: activeContent
+
         PulleyAnimationHint {
             flickable: placeholder.flickable
             width: parent.width - 2 * Theme.paddingLarge

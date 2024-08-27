@@ -1,0 +1,4 @@
+module Sailfish.Encryption
+plugin settingsencryptionplugin
+typeinfo plugins.qmltypes
+EncryptionService 1.0 EncryptionService.qml

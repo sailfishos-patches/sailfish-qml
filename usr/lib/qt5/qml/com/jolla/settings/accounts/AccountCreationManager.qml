@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2013 - 2022 Jolla Ltd.
  * Copyright (c) 2020 Open Mobile Platform LLC.
  *
  * License: Proprietary
@@ -9,9 +9,10 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import Sailfish.Policy 1.0
-import MeeGo.Connman 0.2
+import Sailfish.Settings.Networking 1.0
+import Connman 0.2
 import com.jolla.settings.accounts 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.systemsettings 1.0
 import Nemo.Notifications 1.0
 

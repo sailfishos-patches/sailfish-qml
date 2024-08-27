@@ -22,11 +22,20 @@ CsdTestPage {
     BottomButton {
         //% "Start"
         text: qsTrId("csd-la-start")
-        visible: !page.started
-        enabled: !route.wiredOutputConnected
+        visible: !page.started && !route.wiredOutputConnected
         onClicked: {
             page.started = true
             playStereo.play()
+        }
+    }
+
+    FailBottomButton {
+        visible: !page.started && route.wiredOutputConnected
+        //% "Headset detected - test can't be executed"
+        reason: qsTrId("csd-la-disabled_headset_detected")
+        onClicked: {
+            setTestResult(false)
+            testCompleted(true)
         }
     }
 

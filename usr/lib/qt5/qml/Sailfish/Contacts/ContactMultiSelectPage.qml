@@ -3,6 +3,9 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Page {
     id: root
     allowedOrientations: Orientation.All
@@ -16,10 +19,16 @@ Page {
     signal shareClicked(var content)
     signal deleteClicked(var contactIds)
 
+    /*!
+      \internal
+    */
     function _deleteSelection() {
         root.deleteClicked(selectedContacts.allContactIds())
     }
 
+    /*!
+      \internal
+    */
     function _shareSelection() {
         // share all of the selected contacts
         var vcardName = "" + root.selectedContacts.count + "-contacts.vcf"
@@ -36,6 +45,9 @@ Page {
         root.shareClicked(content)
     }
 
+    /*!
+      \internal
+    */
     function _doSelectionOperation(selectAll) {
         contactBrowser.selectedContacts.removeAllContacts()
         if (selectAll) {

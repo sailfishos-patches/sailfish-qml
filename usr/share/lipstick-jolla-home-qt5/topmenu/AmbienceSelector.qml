@@ -5,15 +5,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.5
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import Sailfish.Ambience 1.0
 import Sailfish.Gallery 1.0
 import Nemo.DBus 2.0
 import Nemo.Thumbnailer 1.0
-import org.nemomobile.notifications 1.0 as SystemNotifications
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.lipstick 0.1
 import org.nemomobile.devicelock 1.0
 import com.jolla.lipstick 0.1
@@ -34,17 +33,6 @@ Item {
     height: ambienceList.height
     visible: ambiencesEnabled.value
     clip: ambienceList.y < 0
-
-    Timer {
-        id: ambiencePreviewTimer
-        interval: 200
-        onTriggered: ambiencePreviewNotification.publish()
-    }
-
-    SystemNotifications.Notification {
-        id: ambiencePreviewNotification
-        category: "x-jolla.ambience.preview"
-    }
 
     ConfigurationValue {
         id: ambiencesEnabled
@@ -85,19 +73,8 @@ Item {
             NumberAnimation { property: "x"; duration: 500; easing.type: Easing.InOutQuad }
         }
 
-        model: AmbienceInstallModel {
-            source: AmbienceModel {
-                id: ambienceModel
-            }
-
-            onAmbienceInstalling: {
-                ambiencePreviewNotification.summary = displayName
-                ambiencePreviewNotification.body = coverImage
-                // Give some time for the TOH dialog to fade out
-                ambiencePreviewTimer.restart()
-            }
-
-            onAmbienceInstalled: ambienceModel.makeCurrent(index)
+        model: AmbienceModel {
+            id: ambienceModel
         }
 
         delegate: ListItem {
@@ -109,7 +86,6 @@ Item {
 
             width: root.itemSize
             contentHeight: width
-            highlightedColor: Theme.rgba(highlightBackgroundColor || Theme.highlightBackgroundColor, Theme.highlightBackgroundOpacity)
             openMenuOnPressAndHold: Desktop.deviceLockState === DeviceLock.Unlocked
 
             onClicked: {

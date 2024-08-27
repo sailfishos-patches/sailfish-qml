@@ -15,8 +15,8 @@ SynchronizedWallpaperLoader {
     function properties(item, ambience) {
         var properties = {
             "sourceItem": item,
-            "colorScheme": ambience.colorScheme,
-            "highlightColor": ambience.highlightColor
+            "colorScheme": ambience ? ambience.colorScheme : Theme.LightOnDark,
+            "highlightColor": ambience ? ambience.highlightColor : Theme.highlightColor
         }
 
         for (var property in applicationProperties) {

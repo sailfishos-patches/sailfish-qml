@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2016 - 2023 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -61,6 +61,7 @@ AllModemsPage {
 
         Column {
             id: content
+
             width: page.width
             spacing: Theme.paddingLarge
 
@@ -71,6 +72,7 @@ AllModemsPage {
 
             Item {
                 id: resultsItem
+
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2*x
                 height: resultLabel.implicitHeight
@@ -84,15 +86,16 @@ AllModemsPage {
 
                 ResultLabel {
                     id: resultLabel
+
                     result: (cellCount > 0) && allModemsWithSimsHaveCells && locationSettings.cellPositioningEnabled
                     anchors.verticalCenter: parent.verticalCenter
                     opacity: resultsItem.busy ? 0 : 1
                     Behavior on opacity { FadeAnimation {}}
-                    text: result ?
-                        //% "%n cell(s) found"
-                        qsTrId("csd-la-cells_found", cellCount) :
-                        //% "Cell positioning is unavailable"
-                        qsTrId("csd-la-cell_positioning_unavailable")
+                    text: result
+                          ? //% "%n cell(s) found"
+                            qsTrId("csd-la-cells_found", cellCount)
+                          : //% "Cell positioning is unavailable"
+                            qsTrId("csd-la-cell_positioning_unavailable")
                 }
             }
 
@@ -117,6 +120,7 @@ AllModemsPage {
 
             OfonoExtCellInfo {
                 id: cellInfo
+
                 modemPath: modelData
                 onValidChanged: if (valid) page.supported = true
             }
@@ -131,6 +135,7 @@ AllModemsPage {
 
             Repeater {
                 id: cellList
+
                 model: cellInfo.valid ? cellInfo.cells : []
                 delegate: cellDelegate
             }
@@ -145,7 +150,17 @@ AllModemsPage {
             readonly property int offset: Theme.horizontalPageMargin
             readonly property bool gsm: cell.valid && (cell.type == OfonoExtCell.GSM)
             readonly property bool lte: cell.valid && (cell.type == OfonoExtCell.LTE)
+            readonly property bool nr: cell.valid && (cell.type == OfonoExtCell.NR)
             readonly property bool wcdma: cell.valid && (cell.type == OfonoExtCell.WCDMA)
+
+            function formatCellInt(value) {
+                // javascript number handling ftw, comparing with == is not enough
+                if (Math.abs(value - OfonoExtCell.InvalidValue) < 0.1) {
+                    return "-"
+                } else {
+                    return value
+                }
+            }
 
             OfonoExtCell {
                 id: cell
@@ -162,15 +177,17 @@ AllModemsPage {
                     font.bold: true
                     text: (cell.type == OfonoExtCell.GSM) ? "GSM" :
                           (cell.type == OfonoExtCell.LTE) ? "LTE" :
+                          (cell.type == OfonoExtCell.NR) ? "NR" :
                           (cell.type == OfonoExtCell.WCDMA) ? "WCDMA" : cell.type
                 }
                 Image {
+                    id: mask
+
                     readonly property int bars: cell.signalStrength / 6
                     anchors.bottom: type.baseline
-                    id: mask
                     height: type.font.pixelSize
                     visible: (cell.valid && cell.registered)
-                    source: "image://theme/icon-status-cellular-" + Math.min(bars,5)
+                    source: "image://theme/icon-status-cellular-" + Math.min(bars, 5)
                 }
             }
 
@@ -178,56 +195,56 @@ AllModemsPage {
                 x: offset
                 width: parent.width - x
                 visible: cell.valid && cell.mcc >= 0
-                text: "mcc: " + cell.mcc
+                text: "mcc: " + formatCellInt(cell.mcc)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: cell.valid && cell.mnc >= 0
-                text: "mnc: " + cell.mnc
+                text: "mnc: " + formatCellInt(cell.mnc)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: (gsm || wcdma) && cell.lac >= 0
-                text: "lac: " + cell.lac
+                text: "lac: " + formatCellInt(cell.lac)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: (gsm || wcdma) && cell.cid >= 0
-                text: "cid: " + cell.cid
+                text: "cid: " + formatCellInt(cell.cid)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: wcdma && cell.psc >= 0
-                text: "psc: " + cell.psc
+                text: "psc: " + formatCellInt(cell.psc)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: lte && cell.ci >= 0
-                text: "ci: " + cell.ci
+                text: "ci: " + formatCellInt(cell.ci)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
-                visible: lte && cell.pci >= 0
-                text: "pci: " + cell.pci
+                visible: (lte || nr) && cell.pci >= 0
+                text: "pci: " + formatCellInt(cell.pci)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
-                visible: lte && cell.tac >= 0
-                text: "tac: " + cell.tac
+                visible: (lte || nr) && cell.tac >= 0
+                text: "tac: " + formatCellInt(cell.tac)
             }
 
             Label {
@@ -241,35 +258,83 @@ AllModemsPage {
                 x: offset
                 width: parent.width - x
                 visible: lte && cell.rsrp >= 0
-                text: "rsrp: " + cell.rsrp
+                text: "rsrp: " + formatCellInt(cell.rsrp)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: lte && cell.rsrq >= 0
-                text: "rsrq: " + cell.rsrq
+                text: "rsrq: " + formatCellInt(cell.rsrq)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: lte && cell.rssnr >= 0
-                text: "rssnr: " + cell.rssnr
+                text: "rssnr: " + formatCellInt(cell.rssnr)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: lte && cell.cqi >= 0
-                text: "cqi " + cell.cqi
+                text: "cqi " + formatCellInt(cell.cqi)
             }
 
             Label {
                 x: offset
                 width: parent.width - x
                 visible: lte && cell.timingAdvance >= 0
-                text: "timingAdvance: " + cell.timingAdvance
+                text: "timingAdvance: " + formatCellInt(cell.timingAdvance)
+            }
+
+            Label {
+                x: offset
+                width: parent.width - x
+                visible: nr && cell.nci != ""
+                text: "nci: " + cell.nci
+            }
+
+            Label {
+                x: offset
+                width: parent.width - x
+                visible: nr && cell.ssRsrp >= 0
+                text: "ssRsrp: " + formatCellInt(cell.ssRsrp)
+            }
+
+            Label {
+                x: offset
+                width: parent.width - x
+                visible: nr && cell.ssRsrq >= 0
+                text: "ssRsrq: " + formatCellInt(cell.ssRsrq)
+            }
+
+            Label {
+                x: offset
+                width: parent.width - x
+                visible: nr && cell.ssSinr >= 0
+                text: "ssSinr: " + formatCellInt(cell.ssSinr)
+            }
+            Label {
+                x: offset
+                width: parent.width - x
+                visible: nr && cell.csiRsrp >= 0
+                text: "csiRsrp: " + formatCellInt(cell.csiRsrp)
+            }
+
+            Label {
+                x: offset
+                width: parent.width - x
+                visible: nr && cell.csiRsrq >= 0
+                text: "csiRsrq: " + formatCellInt(cell.csiRsrq)
+            }
+
+            Label {
+                x: offset
+                width: parent.width - x
+                visible: nr && cell.csiSinr >= 0
+                text: "csiSinr: " + formatCellInt(cell.csiSinr)
             }
 
             Label {

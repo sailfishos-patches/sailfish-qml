@@ -5,18 +5,17 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
-import org.nemomobile.lipstick 0.1
 
 Loader {
     id: loader
 
     property Item eventsView
-    property string widgetFilePath: StandardPaths.resolveImport("Sailfish.Calendar.CalendarWidget")
+    readonly property string widgetFilePath: StandardPaths.qmlImportPath + "Sailfish/Calendar/CalendarWidget.qml"
     property bool widgetExists: fileUtils.exists(widgetFilePath)
     property bool eventsVisible: eventsViewVisible
 

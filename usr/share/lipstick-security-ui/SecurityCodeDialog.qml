@@ -23,7 +23,8 @@ PasswordInputDialog {
 
     minimumLength: agent.minimumCodeLength
     maximumLength: agent.maximumCodeLength
-    inputMethodHints: agent.codeInputIsKeyboard ? Qt.ImhPreferNumbers : Qt.ImhDigitsOnly
+    alphanumericToggleEnabled: true
+    digitsOnly: true
     passwordMaskDelay: 0
 
     onConfirmed: {

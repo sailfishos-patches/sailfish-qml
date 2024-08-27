@@ -103,6 +103,7 @@ CsdTestPage {
     }
 
     Battery { id: battery }
+    BatteryStatus { id: batteryStatus }
 
     DisplaySettings {
         id: displaySettings
@@ -145,6 +146,8 @@ CsdTestPage {
 
         property int _SHORT_TEST_SAMPLES: 30
 
+        property var savedChargingMode
+
         function startTest() {
             if (!displaySettings.populated)
                 return
@@ -152,7 +155,8 @@ CsdTestPage {
             testing = true
 
             // Setup test
-            battery.disableCharger()
+            savedChargingMode = batteryStatus.chargingMode
+            batteryStatus.chargingMode = BatteryStatus.DisableCharging
 
             sx = 0
             sy = 0
@@ -178,7 +182,7 @@ CsdTestPage {
             displaySettings.brightness = testController.brightness
             displaySettings.ambientLightSensorEnabled = testController.ambient
 
-            battery.enableCharger()
+            batteryStatus.chargingMode = savedChargingMode
 
             if (samples >= _SHORT_TEST_SAMPLES) {
                 shortTimeTestPassed = beta > -0.3 && rsq > 0.85

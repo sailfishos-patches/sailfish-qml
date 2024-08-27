@@ -7,7 +7,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0 as Private
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 import ".."
 
 CsdTestPage {
@@ -144,7 +144,7 @@ CsdTestPage {
     }
 
     Timer {
-        // The typedCall() from org.nemomobile.dbus.DBusInterface offers no way
+        // The typedCall() from Nemo.DBus.DBusInterface offers no way
         // to deal with D-Bus error replies. This timer is used as a workaround
         // for dealing with situations such as not having the daemon running.
         id: ipcTimeout

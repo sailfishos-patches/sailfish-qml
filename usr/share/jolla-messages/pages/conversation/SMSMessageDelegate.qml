@@ -87,9 +87,9 @@ ListItem {
             dateString = Format.formatDate(modelData.startTime, Formatter.WeekdayNameStandalone)
             timeString = Format.formatDate(date, Formatter.TimeValue)
         } else if (shorten) {
-            timeString = Format.formatDate(date, Formatter.DurationElapsedShort)
+            timeString = Format.formatDate(date, Formatter.TimeElapsedShort)
         } else {
-            timeString = Format.formatDate(date, Formatter.DurationElapsed)
+            timeString = Format.formatDate(date, Formatter.TimeElapsed)
         }
 
         if (dateString) {
@@ -143,7 +143,7 @@ ListItem {
             bottomMargin: (groupFirst ? Theme.paddingSmall : 0)
         }
 
-        radius: Theme.paddingLarge
+        radius: Math.min(Theme.paddingLarge, height / 2)
         roundedCorners: {
             // Note: MessagesView has a BottomToTop layout direction, so groupFirst is the bottom-most
             var result = Corners.None

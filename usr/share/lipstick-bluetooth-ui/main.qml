@@ -5,13 +5,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
 import Sailfish.Lipstick 1.0
 import Nemo.DBus 2.0
-import org.nemomobile.notifications 1.0 as Nemo
+import Nemo.Notifications 1.0 as Nemo
 import org.kde.bluezqt 1.0 as BluezQt
 import com.jolla.lipstick 0.1
 
@@ -20,7 +20,6 @@ ApplicationWindow {
 
     property BluetoothAuthorizationWindow _serviceAuthWindow
     property QtObject bluetoothManager: BluezQt.Manager
-    property bool monitorManagerObjectChanges: true
     property bool windowsVisible: pairing._windowVisible
                                    || (_serviceAuthWindow && _serviceAuthWindow.windowVisible)
     readonly property bool keepAlive: windowsVisible
@@ -55,7 +54,6 @@ ApplicationWindow {
             if (_serviceAuthWindow.windowVisible) {
                 _serviceAuthWindow.lower()
             }
-            root.monitorManagerObjectChanges = false
             return true
         }
         return false
@@ -88,14 +86,15 @@ ApplicationWindow {
         SystemDialog {
             function execute() {
                 //% "Turning Bluetooth off"
-                remorse.execute(qsTrId("lipstick-jolla-home-la-bluetoothoff"));
+                remorse.execute(qsTrId("lipstick-jolla-home-la-bluetoothoff"))
             }
 
             function cancel() {
                 remorse.cancel()
             }
 
-            contentHeight: remorse.height
+            // the popup wouldn't per se need a background, but 0 sized dialog blurs the view
+            contentHeight: remorse.height + remorse.y + Theme.paddingSmall
             visible: true
 
             onDismissed: remorse.trigger()
@@ -199,22 +198,18 @@ ApplicationWindow {
         signal finishAction(int error)
 
         onInitiatedPairingRequest: {
-            root.monitorManagerObjectChanges = true
             pairing.initiatedPairingRequest(deviceAddress, deviceName)
         }
 
         onAgentPairingAction: {
-            root.monitorManagerObjectChanges = true
             pairing.agentPairingAction(deviceAddress, deviceName, action, passkey, requestId)
         }
 
         onAgentServiceAuthorizationAction: {
-            root.monitorManagerObjectChanges = true
             root._agentServiceAuthorizationRequest(deviceAddress, deviceName, uuid, requestId)
         }
 
         onFinishAction: {
-            root.monitorManagerObjectChanges = false
             if (pairing.finishPairing(error)) {
                 return
             }
@@ -222,11 +217,5 @@ ApplicationWindow {
                 return
             }
         }
-    }
-
-    Binding {
-        target: bluetoothManager
-        property: "monitorObjectManagerInterfaces"
-        value: root.monitorManagerObjectChanges
     }
 }

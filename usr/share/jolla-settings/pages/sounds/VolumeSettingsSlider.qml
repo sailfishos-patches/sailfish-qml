@@ -9,6 +9,9 @@ SettingsControl {
 
     VolumeSliderController {
         slider: slider
+        volumeControlActive: true
+        stepSize: 10
+        maximumValue: maximumVolume * stepSize
     }
 
     SettingsSlider {

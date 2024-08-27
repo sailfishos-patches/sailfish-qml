@@ -14,6 +14,9 @@ import Sailfish.Gallery.private 1.0
 import Nemo.Notifications 1.0
 import "private"
 
+/*!
+  \inqmlmodule Sailfish.Gallery
+*/
 Dialog {
     id: root
 
@@ -29,12 +32,33 @@ Dialog {
     property alias contrast: previewImage.previewContrast
     property alias imageRotation: previewImage.previewRotation
 
+    /*!
+      \internal
+    */
     property bool _lightAndContrastMode
+    /*!
+      \internal
+    */
     property bool _cropMenu
+    /*!
+      \internal
+    */
     property string _cropType: "none"
+    /*!
+      \internal
+    */
     property int _cropRatio: cropOnly ? aspectRatio : -1.0
+    /*!
+      \internal
+    */
     property bool _checkRotation
+    /*!
+      \internal
+    */
     property bool _checkLevels
+    /*!
+      \internal
+    */
     property bool _checkCrop
     property bool editInProgress
     property bool editSuccessful

@@ -18,32 +18,66 @@ CsdTestPage {
     property int valueLow: -1
     property int valueHigh: -1
     property int currentLightValue
-    
-    Column {
-        width: parent.width
 
-        spacing: Theme.paddingLarge
-        CsdPageHeader {
-            //% "Light sensor"
-            title: qsTrId("csd-he-light_sensor")
-        }
-        DescriptionItem {
-            id: guideText
-            //% "1. Cover the light sensor <br>2. Uncover the sensor and put light source over it <br>"
-            text: qsTrId("csd-la-verification_light_sensor_description")
-        }
-        Label {
-            x: Theme.paddingLarge
-            //% "Lowest sensor value: %1<br>Highest sensor value: %2<br>Difference pass criteria: %3<br>Difference: %4<br>Current light value: %5"
-            text: qsTrId("csd-la-verification_light_sensor_value").arg(valueLow).arg(valueHigh).arg(passCriteria).arg(sensorDifference).arg(currentLightValue)
-        }
-        ResultLabel {
-            id: passText
-            x: Theme.paddingLarge
-            visible: false
-            result: true
+    readonly property int columnWidth: orientation == Orientation.Landscape ? width/2 : width
+
+    SilicaFlickable {
+        anchors.fill: parent
+        contentHeight: contentColumn.height + Theme.paddingLarge
+
+        VerticalScrollDecorator {}
+
+        Column {
+            id: contentColumn
+
+            width: parent.width
+            CsdPageHeader {
+                //% "Light sensor"
+                title: qsTrId("csd-he-light_sensor")
+            }
+
+            Flow {
+                width: parent.width
+                Column {
+                    width: columnWidth
+                    spacing: Theme.paddingLarge
+
+                    DescriptionItem {
+                        id: guideText
+                        //% "1. Cover the light sensor <br>2. Uncover the sensor and put light source over it <br>"
+                        text: qsTrId("csd-la-verification_light_sensor_description")
+                    }
+                    Label {
+                        x: Theme.paddingLarge
+                        //% "Lowest sensor value: %1<br>Highest sensor value: %2<br>Difference pass criteria: %3<br>Difference: %4<br>Current light value: %5"
+                        text: qsTrId("csd-la-verification_light_sensor_value").arg(valueLow).arg(valueHigh).arg(passCriteria).arg(sensorDifference).arg(currentLightValue)
+                    }
+                }
+                Column {
+                    width: columnWidth
+                    spacing: Theme.paddingLarge
+
+                    ResultLabel {
+                        id: passText
+                        x: Theme.paddingLarge
+                        visible: false
+                        result: true
+                    }
+
+                    FailBottomButton {
+                        id: failButton
+                        anchors.bottom: undefined
+                        anchors.bottomMargin: 0
+                        onClicked: {
+                            setTestResult(false)
+                            testCompleted(true)
+                        }
+                    }
+                }
+            }
         }
     }
+
     LightSensor {
         id: lightSensor
         active: true
@@ -71,14 +105,6 @@ CsdTestPage {
                     // lighting conditions as well.
                 }
             }
-        }
-    }
-
-    FailBottomButton {
-        id: failButton
-        onClicked: {
-            setTestResult(false)
-            testCompleted(true)
         }
     }
 }

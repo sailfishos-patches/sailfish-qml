@@ -1,5 +1,6 @@
 module Sailfish.Gallery.private
 plugin sailfishgalleryplugin
+typeinfo plugins.qmltypes
 AvatarCropDialog 1.0 AvatarCropDialog.qml
 FlickableDebugItem 1.0 FlickableDebugItem.qml
 ImageEditPreview 1.0 ImageEditPreview.qml

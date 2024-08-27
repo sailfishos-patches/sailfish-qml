@@ -314,7 +314,7 @@ SystemWindow {
                 /// VPN connect prompt; %1 is the VPN name
                 //% "Connect to %1"
                 title: qsTrId("lipstick-jolla-home-he-enter_vpn_credentials").arg(vpnName)
-                topPadding: Screen.sizeCategory >= Screen.Large ? 2*Theme.paddingLarge : Theme.paddingLarge
+                tight: true
             }
 
             Column {

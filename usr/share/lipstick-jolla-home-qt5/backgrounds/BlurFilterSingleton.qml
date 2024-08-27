@@ -6,7 +6,6 @@
 
 import QtQuick 2.6
 import Sailfish.Silica.Background 1.0
-import Sailfish.Ambience 1.0
 import com.jolla.lipstick 0.1
 
 GlassBlur {

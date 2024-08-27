@@ -1,13 +1,13 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Sailfish.Bluetooth 1.0
 import com.jolla.settings.bluetooth.translations 1.0
 import org.kde.bluezqt 1.0 as BluezQt
-import Nemo.Ssu 1.1 as Ssu
 import Nemo.DBus 2.0
 import Sailfish.Policy 1.0
 import com.jolla.settings.system 1.0
+import org.nemomobile.systemsettings 1.0
 
 Page {
     id: root
@@ -164,6 +164,7 @@ Page {
 
             TextField {
                 id: deviceNameField
+
                 width: parent.width
 
                 //: Name of bluetooth device
@@ -172,14 +173,16 @@ Page {
 
                 // Show default name as hint when no text is entered. Don't do this when adapter is
                 // unavailable to avoid confusion if the name normally has a non-default value.
-                placeholderText: adapter ? Ssu.DeviceInfo.displayName(Ssu.DeviceInfo.DeviceModel) : ""
+                placeholderText: adapter ? deviceInfo.prettyName : ""
 
-                //Make sure there's adapter. If adapter use adapter name. If no adapter name use ssu name.
-                text: adapter ? (adapter.name ? adapter.name : adapter.name = Ssu.DeviceInfo.displayName(Ssu.DeviceInfo.DeviceModel)) : ""
+                //Make sure there's adapter. If adapter use adapter name. If no adapter name use device info name.
+                text: adapter ? (adapter.name ? adapter.name
+                                              : adapter.name = deviceInfo.prettyName)
+                              : ""
 
                 onActiveFocusChanged: {
                     if (!activeFocus && adapter) {
-                        var newName = text.length ? text : Ssu.DeviceInfo.displayName(Ssu.DeviceInfo.DeviceModel)
+                        var newName = text.length ? text : deviceInfo.prettyName
                         if (adapter.name != newName) {
                             adapter.name = newName
                         } else {
@@ -245,6 +248,10 @@ Page {
                 }
             }
         }
+    }
+
+    DeviceInfo {
+        id: deviceInfo
     }
 
     Connections {

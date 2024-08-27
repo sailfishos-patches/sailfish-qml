@@ -11,7 +11,7 @@ Column {
     }
 
     AboutText {
-        text: "Jolla Oy<br>ATTN: Source Code Requests<br>Polttimonkatu 3<br>33210 Tampere<br>FINLAND"
+        text: "Jollyboys Ltd.<br>ATTN: Source Code Requests<br>Polttimonkatu 3<br>33210 Tampere<br>FINLAND"
     }
 
     AboutText {

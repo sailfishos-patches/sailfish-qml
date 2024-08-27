@@ -23,7 +23,6 @@ PinInput {
     }
 
     titleText: feedbackHandler.acceptTitle
-    okText: feedbackHandler.confirmText
     subTitleText: descriptionText
 
     showOkButton: authenticationInput && authenticationInput.status === AuthenticationInput.Authenticating
@@ -33,9 +32,8 @@ PinInput {
 
     minimumLength: authenticationInput ? authenticationInput.minimumCodeLength : 0
     maximumLength: authenticationInput ? authenticationInput.maximumCodeLength : 64
-    inputMethodHints: authenticationInput && authenticationInput.codeInputIsKeyboard
-            ? Qt.ImhPreferNumbers
-            : Qt.ImhDigitsOnly
+    digitInputOnly: false
+    enableInputMethodChange: true
     suggestionsEnforced: authenticationInput && authenticationInput.codeGeneration === AuthenticationInput.MandatoryCodeGeneration
     passwordMaskDelay: 0
 

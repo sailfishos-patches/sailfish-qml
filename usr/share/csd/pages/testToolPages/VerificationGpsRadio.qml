@@ -94,6 +94,8 @@ CsdTestPage {
         contentWidth: column.width
         contentHeight: column.height
 
+        bottomMargin: Theme.paddingLarge
+
         Column {
             id: column
 

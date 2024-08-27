@@ -8,7 +8,7 @@
 ****************************************************************************/
 
 import QtQml 2.2
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 NetworkManager {
     id: flightMode

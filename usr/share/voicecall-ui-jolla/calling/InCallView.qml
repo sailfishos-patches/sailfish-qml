@@ -11,7 +11,7 @@ import Sailfish.Bluetooth 1.0
 import Sailfish.Policy 1.0
 import Sailfish.Telephony 1.0
 import Nemo.Configuration 1.0
-import org.nemomobile.notifications 1.0
+import Nemo.Notifications 1.0
 import org.nemomobile.systemsettings 1.0
 import org.nemomobile.voicecall 1.0 as VoiceCall
 import "../common/CallHistory.js" as CallHistory
@@ -38,16 +38,6 @@ SilicaFlickable {
     onIsMicrophoneMutedChanged: microphoneSwitch.checked = isMicrophoneMuted
 
     onCallStateChanged: {
-        if (bluetoothAudio == null) {
-            // Create this object on demand to reduce system load from responding to detection of
-            // nearby Bluetooth devices when there are no on-going calls.
-            bluetoothAudio = bluetoothAudioComponent.createObject(root)
-        } else if (bluetoothAudio.available) {
-            if (callState == 'dialing' || callState == 'incoming') {
-                bluetoothAudio.reset()
-            }
-        }
-
         if (callState == 'null' || callState == 'disconnected') {
             if (inCallKeypad) {
                 inCallKeypad.fade()
@@ -60,6 +50,16 @@ SilicaFlickable {
 
             // Dismiss the notice about premium or toll-free number
             Notices._dismissCurrent()
+        } else {
+            if (bluetoothAudio == null) {
+                // Create this object on demand to reduce system load from responding to detection of
+                // nearby Bluetooth devices when there are no on-going calls.
+                bluetoothAudio = bluetoothAudioComponent.createObject(root)
+            } else if (bluetoothAudio.available) {
+                if (callState == 'dialing' || callState == 'incoming') {
+                    bluetoothAudio.reset()
+                }
+            }
         }
 
         // Show a notice when calling a premium-rate or toll-free phone number
@@ -180,7 +180,8 @@ SilicaFlickable {
         }
         MenuItem {
             // GSM 02.84 states that the maximum number of remote parties is 5
-            visible: main.state === "active" && telephony.heldCall && (!telephony.conferenceCall || telephony.conferenceCall.childCalls.count < 5)
+            visible: main.state === "active" && telephony.heldCall
+                     && (!telephony.conferenceCall || telephony.conferenceCall.childCalls.count < 5)
             //% "Merge calls"
             text: qsTrId("voicecall-me-merge_calls")
             onDelayedClick: {
@@ -198,7 +199,8 @@ SilicaFlickable {
         Repeater {
             model: telephony.voiceCalls
             delegate: MenuItem {
-                visible: (callCount == 1 || (statusText === "held" && !telephony.silencedCall) || isSilenced) && parentCall == null && telephony.voiceCalls.count >= 1
+                visible: (callCount == 1 || (statusText === "held" && !telephony.silencedCall) || isSilenced)
+                         && parentCall == null && telephony.voiceCalls.count >= 1
                 onVisibleChanged: updateAction()
                 property int callCount: telephony.effectiveCallCount
                 onCallCountChanged: updateAction()
@@ -206,7 +208,7 @@ SilicaFlickable {
                 onCallStatusChanged: updateAction()
                 property string mainState: main.state
                 onMainStateChanged: updateAction()
-                property bool isSilenced: telephony.silencedCall ? telephony.silencedCall.handlerId == instance.handlerId : false
+                property bool isSilenced: telephony.silencedCall && telephony.silencedCall.handlerId == instance.handlerId
 
                 onDelayedClick: {
                     if (isSilenced) {
@@ -302,7 +304,10 @@ SilicaFlickable {
         }
 
         HighlightImage {
-            opacity: telephony.primaryCall && telephony.primaryCall.isForwarded && !dtmfLabelTimer.running && (main.state === "active" || main.state === "calling" || main.state === "incoming") ? 1.0 : 0.0
+            opacity: telephony.primaryCall && telephony.primaryCall.isForwarded
+                     && !dtmfLabelTimer.running
+                     && (main.state === "active" || main.state === "calling" || main.state === "incoming")
+                     ? 1.0 : 0.0
             Behavior on opacity { FadeAnimation {} }
             x: (parent.width - stateLabel.contentWidth)/2 - width - Theme.paddingMedium
             anchors.verticalCenter: stateLabel.verticalCenter
@@ -427,7 +432,10 @@ SilicaFlickable {
 
         Row {
             id: buttonRow
-            property bool callButtonsEnabled: main.state !== 'null' && main.state !== "silenced" && main.state !== "disconnected" && main.state !== "incoming"
+            property bool callButtonsEnabled: main.state !== 'null'
+                                              && main.state !== "silenced"
+                                              && main.state !== "disconnected"
+                                              && main.state !== "incoming"
             spacing: Theme.paddingSmall
             enabled: callButtonsEnabled
             opacity: callButtonsEnabled ? 1.0 : 0.0
@@ -441,7 +449,8 @@ SilicaFlickable {
             Switch {
                 id: bluetoothAudioSwitch
                 visible: bluetoothAudioAvailable && bluetoothAudio.supportsCallAudio
-                icon.source: bluetoothAudioAvailable && bluetoothAudio.jollaIcon != "" ? "image://theme/" + bluetoothAudio.jollaIcon : ""
+                icon.source: bluetoothAudioAvailable && bluetoothAudio.iconName != ""
+                             ? "image://theme/" + bluetoothAudio.iconName : ""
                 automaticCheck: false
                 checked: !speakerSwitch.checked && bluetoothAudioAvailable && bluetoothAudio.callAudioEnabled
 

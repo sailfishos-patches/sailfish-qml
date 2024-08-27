@@ -100,7 +100,7 @@ KeyboardLayout {
             captionShifted: "."
             symView: "."
             symView2: "."
-            implicitWidth: punctuationKeyWidthNarrow
+            implicitWidth: punctuationKeyWidth
             fixedWidth: !splitActive
         }
         TinyCharacterKey {
@@ -121,7 +121,7 @@ KeyboardLayout {
             captionShifted: "?"
             symView: "!"
             symView2: "!"
-            implicitWidth: punctuationKeyWidthNarrow
+            implicitWidth: punctuationKeyWidth
             fixedWidth: !splitActive
             separator: SeparatorState.HiddenSeparator
         }

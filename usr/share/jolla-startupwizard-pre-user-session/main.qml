@@ -12,7 +12,8 @@ import Sailfish.Lipstick 1.0
 import com.jolla.settings.system 1.0
 import com.jolla.startupwizard 1.0
 import org.nemomobile.systemsettings 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
+import QtQuick.Window 2.2 as QtQuick
 
 // Don't use ApplicationWindow as it involves covers and other features that can't be handled
 // before the user session begins.
@@ -132,8 +133,8 @@ Window {
         pageStack.animatorPush(welcomeComponent)
     }
 
-    width: Screen.width
-    height: Screen.height
+    width: root.QtQuick.Screen.primaryOrientation === Qt.PortraitOrientation ? Screen.width : Screen.height
+    height: root.QtQuick.Screen.primaryOrientation === Qt.PortraitOrientation ? Screen.height : Screen.width
 
     StartupWizardManager {
         id: wizardManager

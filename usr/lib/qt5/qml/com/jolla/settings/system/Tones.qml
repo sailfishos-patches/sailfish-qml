@@ -35,12 +35,25 @@ Item {
 
         ToneItem {
             visible: modemManager.availableModems.length > 0
-            //% "Ringtone"
-            defaultText: qsTrId("settings_sound-la-ringtone")
+
+            defaultText: modemManager.availableModems.length === 1
+                         ? //% "Ringtone"
+                           qsTrId("settings_sound-la-ringtone")
+                         : //% "Ringtone - SIM1"
+                           qsTrId("settings_sound-la-ringtone_sim1")
             //% "Current ringtone"
             currentText: qsTrId("settings_sound-la-current_ringtone")
             enabledProperty: "ringerToneEnabled"
             fileProperty: "ringerToneFile"
+        }
+
+        ToneItem {
+            visible: modemManager.availableModems.length > 1
+            //% "Ringtone - SIM2"
+            defaultText: qsTrId("settings_sound-la-ringtone_sim2")
+            currentText: qsTrId("settings_sound-la-current_ringtone")
+            enabledProperty: "ringerTone2Enabled"
+            fileProperty: "ringerTone2File"
         }
 
 /*

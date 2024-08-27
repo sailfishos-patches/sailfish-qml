@@ -1,8 +1,11 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Page {
     id: root
 
@@ -13,12 +16,33 @@ Page {
 
     //=== internal/private members follow
 
+    /*!
+      \internal
+    */
     property string _fileName
+    /*!
+      \internal
+    */
     property bool _fileImport: _fileName != ''
+    /*!
+      \internal
+    */
     property int _readCount
+    /*!
+      \internal
+    */
     property int _savedCount
+    /*!
+      \internal
+    */
     property bool _error
+    /*!
+      \internal
+    */
     property var _importedContactId
+    /*!
+      \internal
+    */
     property bool _simImportStarted
 
     onStatusChanged: {
@@ -44,6 +68,9 @@ Page {
         }
     }
 
+    /*!
+      \internal
+    */
     function _statusText() {
         if (busyIndicator.running) {            
             if (_fileImport) {

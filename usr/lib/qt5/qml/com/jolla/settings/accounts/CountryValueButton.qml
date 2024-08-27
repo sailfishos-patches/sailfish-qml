@@ -2,7 +2,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Timezone 1.0
 import com.jolla.settings.accounts 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
 ValueButton {
     id: root
@@ -69,8 +69,10 @@ ValueButton {
 
     Component {
         id: countryPickerComponent
+
         CountryPicker {
             model: countryModel
+            showUndefinedCountry: true
         }
     }
 }

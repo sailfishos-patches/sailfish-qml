@@ -1,23 +1,27 @@
 import QtQuick 2.1
 import Sailfish.Silica 1.0
 
-// Replaces the content of a ContextMenu with the SimPicker
-// Usage:
-//
-// ContextMenu {
-//   id: contextMenu
-//   SimPickerMenuItem {
-//     id: simSelector
-//     menu: contextMenu
-//     Behavior on opacity { FadeAnimation {} }
-//     onSimSelected: dial(remoteUid, sim)
-//   }
-//   MenuItem {
-//     text: "Call"
-//     onClicked: simSelector.active = true
-//   }
-// }
-//
+/*!
+  \brief Replaces the content of a ContextMenu with the SimPicker
+  \inqmlmodule Sailfish.Telephony
+
+  Usage:
+  \qml
+  ContextMenu {
+      id: contextMenu
+      SimPickerMenuItem {
+          id: simSelector
+          menu: contextMenu
+          Behavior on opacity { FadeAnimation {} }
+          onSimSelected: dial(remoteUid, sim)
+      }
+      MenuItem {
+          text: "Call"
+          onClicked: simSelector.active = true
+      }
+  }
+  \endqml
+*/
 
 SimPicker {
     id: simSelector

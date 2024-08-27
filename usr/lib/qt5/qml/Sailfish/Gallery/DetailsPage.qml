@@ -5,6 +5,9 @@ import QtDocGallery 5.0
 import Sailfish.Gallery.private 1.0
 import "private"
 
+/*!
+  \inqmlmodule Sailfish.Gallery
+*/
 Page {
     id: page
 
@@ -79,7 +82,7 @@ Page {
                                   // Media
                                   'duration',
                                   // Photo
-                                  'dateTaken', 'cameraManufacturer', 'cameraModel',
+                                  'dateTaken', 'cameraManufacturer', 'cameraModel', 'orientation',
                                   // exposureProgram is not supported by Tracker thus not enabled.
                                   // https://github.com/qtproject/qtdocgallery/blob/0b9ca223d4d5539ff09ce49a841fec4c24077830/src/gallery/qdocumentgallery.cpp#L799
                                   'exposureTime',
@@ -104,14 +107,22 @@ Page {
                     filePathDetail.value: model.filePath
                     fileSizeDetail.value: Format.formatFileSize(model.fileSize)
                     typeDetail.value: model.mimeType
-                    sizeDetail.value: formatDimensions(model.width, model.height)
+                    sizeDetail.value: {
+                        if (model.orientation === 90 || model.orientation === 270) {
+                            return formatDimensions(model.height, model.width)
+                        } else {
+                            return formatDimensions(model.width, model.height)
+                        }
+                    }
 
                     dateTakenDetail.value: model.dateTaken != ""
                             ? Format.formatDate(model.dateTaken, Format.Timepoint)
                             : ""
                     cameraManufacturerDetail.value: model.cameraManufacturer
                     cameraModelDetail.value: model.cameraModel
-                    exposureTimeDetail.value: model.exposureTime
+                    exposureTimeDetail.value: model.exposureTime != ""
+                                              ? formatExposure(model.exposureTime)
+                                              : ""
                     fNumberDetail.value: model.fNumber != ""
                             ? formatFNumber(model.fNumber)
                             : ""
@@ -155,16 +166,23 @@ Page {
             Loader {
                 width: parent.width
                 active: itemModel.status === DocumentGalleryModel.Error
-                        || (itemModel.status === DocumentGalleryModel.Error && itemModel.count == 0)
+                        || (itemModel.status === DocumentGalleryModel.Finished && itemModel.count == 0)
 
                 sourceComponent: ImageDetailsItem {
                     filePathDetail.value: fileInfo.file
                     fileSizeDetail.value: Format.formatFileSize(fileInfo.size)
                     typeDetail.value: fileInfo.mimeType
-                    sizeDetail.value: metadata.valid
-                                ? formatDimensions(metadata.width, metadata.height)
-                                : ""
-
+                    sizeDetail.value: {
+                        if (metadata.valid) {
+                            if (metadata.orientation === 90 || metadata.orientation === 270) {
+                                formatDimensions(metadata.height, metadata.width)
+                            } else {
+                                formatDimensions(metadata.width, metadata.height)
+                            }
+                        } else {
+                            return ""
+                        }
+                    }
                     FileInfo {
                         id: fileInfo
 
@@ -178,7 +196,6 @@ Page {
                     }
                 }
             }
-
         }
 
         VerticalScrollDecorator { }

@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.5
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
@@ -28,8 +28,11 @@ Rectangle {
         launcherGrid.setEditMode(false)
         opacity = 0.0
         enabled = false
+        Lipstick.compositor.launcherLayer.pinned = false
         destroy(450)
     }
+
+    onVisibleChanged: if (!visible) launcherFolder.close()
 
     z: 10
     opacity: 0.0
@@ -49,14 +52,12 @@ Rectangle {
         target: Lipstick.compositor
         onDisplayOff: launcherFolder.close()
     }
-    Connections {
-        target: Lipstick.compositor.launcherLayer
-        onActiveChanged: if (!Lipstick.compositor.launcherLayer.active) launcherFolder.close()
-    }
+
     Connections {
         target: model
         onItemRemoved: if (model.itemCount === 0) launcherFolder.close()
     }
+
     Connections {
         target: launcherGrid.reorderItem
         onYChanged: {
@@ -99,8 +100,12 @@ Rectangle {
 
         Rectangle {
             id: header
+
+            property int topPadding: launcherGrid.orientation == Orientation.Portrait
+                                     ? Screen.topCutout.height : 0
+
             width: parent.width
-            height: launcherGrid.cellHeight - Theme.fontSizeExtraSmall/2
+            height: topPadding + launcherGrid.cellHeight - Theme.fontSizeExtraSmall/2
             gradient: Gradient {
                 GradientStop { position: 0.0; color: Theme.rgba(Theme.primaryColor, 0.0) }
                 GradientStop { position: 1.0; color: Theme.rgba(Theme.primaryColor, 0.15) }
@@ -118,7 +123,7 @@ Rectangle {
                 height: parent.height
                 x: launcherGrid.x // launcherGrid is centered in it's parent
                 LauncherIcon {
-                    y: (launcherGrid.cellHeight - height - Theme.fontSizeExtraSmall)/2
+                    y: header.topPadding + (launcherGrid.cellHeight - height - Theme.fontSizeExtraSmall) / 2
                     icon: model.iconId
                     anchors.horizontalCenter: parent.horizontalCenter
                     pressed: icon.pressed && icon.containsMouse
@@ -144,13 +149,10 @@ Rectangle {
 
             TextField {
                 id: titleEditor
-                anchors {
-                    left: icon.right
-                    leftMargin: -Theme.paddingLarge
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
-                autoScrollEnabled: false
+
+                x: icon.x + icon.width - Theme.paddingLarge
+                width: parent.width - x - icon.x
+                y: header.topPadding + (launcherGrid.cellHeight - height - Theme.fontSizeExtraSmall) / 2
                 font.pixelSize: Theme.fontSizeExtraLarge
                 font.family: Theme.fontFamilyHeading
                 text: model.title
@@ -245,8 +247,12 @@ Rectangle {
 
                 VerticalScrollDecorator {}
 
+                header: null
                 y: Theme.fontSizeExtraSmall/2
-                height: cellHeight * visibleRowCount
+                topMargin: 0
+                bottomMargin: 0
+                height: visibleRowCount >= 2 ? cellHeight * visibleRowCount
+                                             : Math.round(cellHeight * 1.5)
                 cacheBuffer: height
                 displayMarginBeginning: Theme.fontSizeExtraSmall/2
                 displayMarginEnd: Theme.fontSizeExtraSmall/2
@@ -269,9 +275,12 @@ Rectangle {
                 }
                 return false
             }
-            property bool shown: (launcherGrid.launcherEditMode && launcherGrid.reorderItem ||
-                                  model.itemCount > launcherGrid.columns * visibleRowCount) && !selectIcon
-            height: launcherGrid.cellHeight - Theme.fontSizeExtraSmall/2
+            property bool shown: (launcherGrid.launcherEditMode && launcherGrid.reorderItem
+                                  || model.itemCount > launcherGrid.columns * visibleRowCount)
+                                 && !selectIcon
+
+            height: visibleRowCount >= 2 ? launcherGrid.cellHeight - Theme.fontSizeExtraSmall/2
+                                         : Math.round(launcherGrid.cellHeight / 2)
             width: parent.width
             y: parent.height - (shown ? height : 0)
             Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }

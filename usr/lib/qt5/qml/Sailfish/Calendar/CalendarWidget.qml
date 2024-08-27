@@ -9,8 +9,8 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Calendar 1.0 as Calendar // QTBUG-27645
 import org.nemomobile.calendar.lightweight 1.0
-import org.nemomobile.dbus 2.0
-import org.nemomobile.time 1.0
+import Nemo.DBus 2.0
+import Nemo.Time 1.0
 
 Column {
     id: calendarWidget
@@ -51,8 +51,8 @@ Column {
         }
     }
 
-    function showEvent(uid, recurrenceId, startDate) {
-        dbusInterface.call("viewEvent", [uid, recurrenceId, Qt.formatDateTime(startDate, Qt.ISODate)])
+    function showEvent(instanceId, startDate) {
+        dbusInterface.call("viewEventByIdentifier", [instanceId, Qt.formatDateTime(startDate, Qt.ISODate)])
     }
 
     function showCalendar(dateString) {
@@ -183,7 +183,7 @@ Column {
                         calendarWidget.requestUnlock()
                         actionPending = true
                     } else {
-                        showEvent(uid, recurrenceId, startTime)
+                        showEvent(instanceId, startTime)
                     }
                 }
 
@@ -191,7 +191,7 @@ Column {
                     target: calendarWidget
                     onCheckPendingAction: {
                         if (actionPending) {
-                            calendarWidget.showEvent(uid, recurrenceId, startTime)
+                            calendarWidget.showEvent(instanceId, startTime)
                             actionPending = false
                         }
                     }

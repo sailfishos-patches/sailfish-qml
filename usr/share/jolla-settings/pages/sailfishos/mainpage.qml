@@ -2,7 +2,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Vault 1.0
 import Sailfish.Policy 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.systemsettings 1.0
 import com.jolla.settings.sailfishos 1.0
 import com.jolla.settings.system 1.0 as MdmBanner
@@ -49,7 +49,6 @@ Page {
                                             && updateProgress === 0
         readonly property bool haveDetails: updateStatus === StoreInterface.UpdateAvailable
                                             || updateStatus === StoreInterface.PreparingForUpdate
-        readonly property bool downloading: updateProgress > 0 && updateProgress < 100
         readonly property bool downloaded: updateProgress === 100
         readonly property bool ssuRndModeRequiresRegistration: ssu.deviceMode & Ssu.RndMode && !ssu.registered
         readonly property bool ssuCbetaRequiresRegistration: ssu.domain === "cbeta" && !ssu.registered

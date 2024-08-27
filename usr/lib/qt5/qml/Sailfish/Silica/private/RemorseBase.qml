@@ -46,7 +46,7 @@ SwipeItem {
     //% "Undo"
     property string cancelText: fontMetrics.advanceWidth(_cancelTextFull) > labels.width
                                 ? qsTrId("components-la-undo")
-                                :  _cancelTextFull
+                                : _cancelTextFull
 
     //% "Tap to undo"
     property string _cancelTextFull: qsTrId("components-la-tap-to-undo")

@@ -17,6 +17,8 @@ Column {
         openVpnNSCertType.setValue(getProperty('OpenVPN.NSCertType'))
         openVpnRemoteCertTLS.setValue(getProperty('OpenVPN.RemoteCertTls'))
         openVpnCipher.text = getProperty('OpenVPN.Cipher')
+        openVpnDataCiphers.text = getProperty('OpenVPN.DataCiphers')
+        openVpnDataCiphersFallback.text = getProperty('OpenVPN.DataCiphersFallback')
         openVpnAuth.text = getProperty('OpenVPN.Auth')
         openVpnMTU.text = getProperty('OpenVPN.MTU')
         openVpnDeviceType.setValue(getProperty('OpenVPN.DeviceType'))
@@ -39,6 +41,8 @@ Column {
         updateProvider('OpenVPN.NSCertType', openVpnNSCertType.selection)
         updateProvider('OpenVPN.RemoteCertTls', openVpnRemoteCertTLS.selection)
         updateProvider('OpenVPN.Cipher', openVpnCipher.text)
+        updateProvider('OpenVPN.DataCiphers', openVpnDataCiphers.text)
+        updateProvider('OpenVPN.DataCiphersFallback', openVpnDataCiphersFallback.text)
         updateProvider('OpenVPN.Auth', openVpnAuth.text)
         updateProvider('OpenVPN.MTU', openVpnMTU.filteredText)
         updateProvider('OpenVPN.DeviceType', openVpnDeviceType.selection)
@@ -196,6 +200,22 @@ Column {
 
         //% "Cipher algorithm"
         label: qsTrId("settings_network-la-vpn_openvpn_cipher")
+        nextFocusItem: openVpnDataCiphers
+    }
+
+     ConfigTextField {
+        id: openVpnDataCiphers
+
+        //% "Available cipher algorithms to use"
+        label: qsTrId("settings_network-la-vpn_openvpn_data_ciphers")
+        nextFocusItem: openVpnDataCiphersFallback
+    }
+
+    ConfigTextField {
+        id: openVpnDataCiphersFallback
+
+        //% "Fallback cipher algorithm"
+        label: qsTrId("settings_network-la-vpn_openvpn_data_ciphers_fallback")
         nextFocusItem: openVpnAuth
     }
 

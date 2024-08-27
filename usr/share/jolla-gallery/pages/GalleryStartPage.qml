@@ -72,8 +72,7 @@ Page {
         imageViewerPage = pageStack.push(
                         Qt.resolvedUrl("GalleryFullscreenPage.qml"),
                         { model: viewerModel,
-                          currentIndex: viewerModel.count - urls.length,
-                          viewerOnlyMode: true
+                          currentIndex: viewerModel.count - urls.length
                         },
                         PageStackAction.Immediate)
         if (viewerAction) {

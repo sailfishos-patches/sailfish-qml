@@ -11,109 +11,126 @@ import ".."
 
 CsdTestPage {
     id: page
-    property bool result: compass.level === 1
-    property real passingCalibrationLevel: 1
+    readonly property real passingCalibrationLevel: 1
+    property bool testPassed
+    readonly property int testDuration: 25
+    readonly property int testSubsampleRate: 4
+    property int testRemainingSamples: testDuration * testSubsampleRate
+    readonly property int testRemainingTime: testRemainingSamples / testSubsampleRate
+    readonly property bool testRunning: !testPassed && testRemainingSamples > 0
 
-    function showPassOrFail() {
-        if (page.result || timer.count == 25) {
-            timer.running = false
-            setTestResult(page.result)
+    onTestRunningChanged: {
+        if (!testRunning) {
+            setTestResult(testPassed)
             testCompleted(false)
         }
-
-        timer.count = timer.count + 1
     }
 
-    Compass {
-        id: compass
-        dataRate: 100
-        active: page.status == PageStatus.Active
-        property real level
-        property real azimuth
+    SilicaFlickable {
+        anchors.fill: parent
+        contentHeight: contentColumn.height + Theme.paddingLarge
 
-        onReadingChanged: {
-            level = compass.reading.calibrationLevel
-            azimuth = compass.reading.azimuth
-            if (compass.reading.calibrationLevel === 1) {
-                timer.stop()
-                page.showPassOrFail()
+        VerticalScrollDecorator {
+            Component.onCompleted: showDecorator()
+        }
+
+        Column {
+            id: contentColumn
+            width: parent.width
+            spacing: Theme.paddingLarge
+            CsdPageHeader {
+                //% "Compass sensor"
+                title: qsTrId("csd-he-compass_sensor")
+            }
+            DescriptionItem {
+                //% "1. Please wave your device in a figure 8 for 5-20 seconds to calibrate the sensor."
+                text: qsTrId("csd-la-compass_description")
+            }
+
+            SectionHeader {
+                //% "Compass test result"
+                text: qsTrId("csd-he-compass_test_result")
+            }
+
+            Label {
+                width: parent.width - 2*Theme.paddingLarge
+                wrapMode: Text.Wrap
+                x: Theme.paddingLarge
+                text:  //% "Pass calibration level: %0"
+                       qsTrId("csd-la-pass_calibration_level").arg(page.passingCalibrationLevel) +
+                       //% "Current calibration level: %0"
+                       "\n\n" + qsTrId("csd-la-calibration_level").arg(compassSubsampleTimer.calibrationLevel) +
+                       //% "Current azimuth: %0"
+                       "\n\n" + qsTrId("csd-la-azimuth").arg(compassSubsampleTimer.azimuth)
+            }
+
+            Label {
+                x: Theme.paddingLarge
+                visible: !page.testRunning
+                width: parent.width - 2*Theme.paddingLarge
+                wrapMode: Text.Wrap
+                font.pixelSize: Theme.fontSizeExtraLarge
+                font.family: Theme.fontFamilyHeading
+                color: page.testPassed ? "green" : "red"
+                text: {
+                    if (page.testPassed) {
+                        //% "Pass"
+                        return qsTrId("csd-la-pass")
+                    }
+                    //% "Fail"
+                    return qsTrId("csd-la-fail")
+                }
+            }
+
+            Label {
+                visible: page.testRunning
+                width: parent.width - 2*Theme.paddingLarge
+                wrapMode: Text.Wrap
+                x: Theme.paddingLarge
+                text: //% "Checking compass..."
+                      qsTrId("csd-la-checking_compass") + "\n\n" +
+                      //% "Time remaining: %1"
+                      qsTrId("csd-la-compass_timer %1").arg(page.testRemainingTime)
             }
         }
     }
 
-    Column {
-        id: column1
-
-        width: parent.width
-        spacing: Theme.paddingLarge
-        CsdPageHeader {
-            //% "Compass sensor"
-            title: qsTrId("csd-he-compass_sensor")
-        }
-        DescriptionItem {
-            //% "1. Please wave your device in a figure 8 for 5-20 seconds to calibrate the sensor."
-            text: qsTrId("csd-la-compass_description")
-        }
-    }
-
-    Column {
-        id: column2
-        width: page.width
-        spacing: Theme.paddingLarge
-        anchors.top: column1.bottom
-
-        CsdPageHeader {
-            //% "Compass test result"
-            title: qsTrId("csd-he-compass_test_result")
-        }
-
-        Label {
-            id: description
-            visible: timer.running
-            width: parent.width - 2*Theme.paddingLarge
-            wrapMode: Text.Wrap
-            x: Theme.paddingLarge
-            //% "Checking compass..."
-            text: qsTrId("csd-la-checking_compass") + "\n\n" +
-                  //% "Time remaining: %1"
-                  qsTrId("csd-la-compass_timer %1").arg(25 - timer.count)
-        }
-
-        Label {
-            id: resultLabel
-            width: parent.width - 2*Theme.paddingLarge
-            wrapMode: Text.Wrap
-            x: Theme.paddingLarge
-            text:  //% "Pass calibration level: %0"
-                   qsTrId("csd-la-pass_calibration_level").arg(page.passingCalibrationLevel) +
-                   //% "Current calibration level: %0"
-                   "\n\n" + qsTrId("csd-la-calibration_level").arg(compass.level) +
-                   //% "Current azimuth: %0"
-                   "\n\n" + qsTrId("csd-la-azimuth").arg(compass.azimuth)
-        }
-
-        Label {
-            id: label
-            x: Theme.paddingLarge
-            visible: !timer.running
-            width: parent.width - 2*Theme.paddingLarge
-            wrapMode: Text.Wrap
-            font.pixelSize: Theme.fontSizeExtraLarge
-            font.family: Theme.fontFamilyHeading
-            color: page.result ? "green" : "red"
-            //% "Pass"
-            text: page.result ? qsTrId("csd-la-pass")
-                              :  //% "Fail"
-                                qsTrId("csd-la-fail")
-        }
-    }
-
     Timer {
-        id: timer
-        property int count
-        interval: 1000
-        running: true
+        id: compassSubsampleTimer
+        property real calibrationLevel
+        property real azimuth
+        interval: 1000 / page.testSubsampleRate
+        running: page.status == PageStatus.Active
         repeat: true
-        onTriggered: page.showPassOrFail()
+        onTriggered: {
+            calibrationLevel = compassSensor.calibrationLevel
+            azimuth = compassSensor.azimuth
+            if (page.testRemainingSamples > 0) {
+                if (calibrationLevel >= page.passingCalibrationLevel) {
+                    page.testPassed = true
+                    page.testRemainingSamples = 0
+                }  else {
+                    page.testRemainingSamples -= 1
+                }
+            }
+        }
+    }
+
+    Compass {
+        id: compassSensor
+        /* Test code change history suggests that a relatively high datarate
+         * is needed for the actual calibration at lower SW levels to complete
+         * in expected manner / time. However, we do not want to reevaluate
+         * test status / update screen at such pace. Therefore: cache the
+         * latest sensor values seen in here and then use timer to subsample
+         * at pace that makes sense for test logic / updating ui elements. */
+        dataRate: 100
+        property real calibrationLevel
+        property real azimuth
+        active: page.status == PageStatus.Active
+        onReadingChanged: {
+            calibrationLevel = reading.calibrationLevel
+            azimuth = reading.azimuth
+        }
     }
 }

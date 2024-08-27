@@ -61,14 +61,12 @@ Connections {
         case AuthenticationInput.Authorize:
             //% "Authorize"
             ui.titleText = qsTrId("settings_devicelock-he-authorize")
-            ui.okText = confirmText
             ui.descriptionText = data.message || ""
             ui.suggestionsEnabled = false
             ui.requireSecurityCode = false
             break
         case AuthenticationInput.EnterSecurityCode:
             ui.titleText = acceptTitle
-            ui.okText = confirmText
             ui.descriptionText = data.message || ""
             ui.suggestionsEnabled = false
             ui.requireSecurityCode = true
@@ -78,9 +76,10 @@ Connections {
         case AuthenticationInput.SuggestSecurityCode:
             ui.titleText = enterNewSecurityCode
             ui.descriptionText = data.message || ""
-            ui.okText = enterText
             ui.suggestionsEnabled = agent.codeGeneration === AuthenticationInput.OptionalCodeGeneration
             ui.requireSecurityCode = true
+            ui.validator = /^[a-zA-Z0-9 ,.!?;:&%#()=+-]*$/
+
             if (data.securityCode) {
                 ui.suggestionsEnabled = true
                 ui.suggestSecurityCode(data.securityCode)
@@ -93,7 +92,6 @@ Connections {
             //% "Re-enter new security code"
             ui.titleText = qsTrId("settings_devicelock-he-reenter_new_security_code")
             ui.descriptionText = data.message || ""
-            ui.okText = enterText
             break
         case AuthenticationInput.SecurityCodesDoNotMatch:
             //: Shown when a new security code is entered twice for confirmation but the two entered lock codes are not the same.

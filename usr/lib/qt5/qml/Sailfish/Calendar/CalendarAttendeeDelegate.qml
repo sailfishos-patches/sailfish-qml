@@ -11,6 +11,7 @@ BackgroundItem {
     property string secondaryText
     property int participationStatus
     property int leftMargin: Theme.horizontalPageMargin
+    property int rightMargin: Theme.horizontalPageMargin
 
     height: extraText.text !== "" ? Theme.itemSizeMedium : Theme.itemSizeExtraSmall
 
@@ -26,8 +27,8 @@ BackgroundItem {
         y: (root.height - height - (extraText.text !== "" ? extraText.height : 0)) / 2
 
         width: statusIcon.status === Image.Ready
-                ? statusIcon.x - Theme.paddingMedium - 2*x
-                : root.width - 2*x
+               ? statusIcon.x - Theme.paddingMedium - x
+               : root.width - x - root.rightMargin
 
         truncationMode: TruncationMode.Fade
         text: root.name.length > 0 ? root.name : root.email
@@ -42,7 +43,7 @@ BackgroundItem {
         font.pixelSize: Theme.fontSizeSmallBase
         color: highlighted ? palette.secondaryHighlightColor : palette.secondaryColor
         truncationMode: TruncationMode.Fade
-        width: parent.width - x
+        width: parent.width - x - root.rightMargin
         text: root.secondaryText.length > 0 ? root.secondaryText
                                             : root.name.length > 0 ? root.email
                                                                    : ""
@@ -51,7 +52,7 @@ BackgroundItem {
     Icon {
         id: statusIcon
 
-        x: root.width - width
+        x: root.width - width - root.rightMargin
         y: nameLabel.y + (nameLabel.height - height) / 2
 
         source: {

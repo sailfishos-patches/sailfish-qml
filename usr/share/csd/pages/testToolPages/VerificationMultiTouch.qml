@@ -13,6 +13,7 @@ import ".."
 CsdTestPage {
     id: page
     backNavigation: false
+    onOrientationChanged: canvas.clear()
 
     Private.WindowGestureOverride {
         id: windowGestureOverride

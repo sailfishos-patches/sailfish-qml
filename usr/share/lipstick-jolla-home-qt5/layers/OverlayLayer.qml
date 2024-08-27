@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
@@ -9,16 +9,9 @@ Item {
     property alias contentItem: overlayLayer
 
     onChildrenChanged: updateWindows()
+    z: 10000 // ensure on top of siblings after reparenting
 
-    readonly property Item activeFocusItem: root.activeFocusItem
-                // There's no notification for item flags, but the only known instances of
-                // ItemAcceptsInputMethod changing dynamically is the TextInput/Edit read only
-                // property. By including it in the binding we'll force a re-evaluation if
-                // the property both exists and changes.
-                && !root.activeFocusItem.readOnly
-                && JollaSystemInfo.itemAcceptsInputMethod(root.activeFocusItem)
-            ? root.activeFocusItem
-            : null
+    property Item activeFocusItem
 
     onActiveFocusItemChanged: {
         // Search for the layer of the focus item

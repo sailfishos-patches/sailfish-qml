@@ -44,7 +44,10 @@ BounceEffect {
         when: bounceEffect.active && bounceEffect.flickable.interactive
         target: bounceEffect.flickable && bounceEffect.flickable.contentItem
         property: "opacity"
-        value: Theme.opacityLow + (1.0 - Theme.opacityLow)*Math.pow((1.0 - Math.min(bounceEffect.difference, Theme.itemSizeExtraLarge*2)/(Theme.itemSizeExtraLarge*2)), 1.5)
+        value: Theme.opacityLow
+               + (1.0 - Theme.opacityLow)
+               * Math.pow((1.0 - Math.min(bounceEffect.difference, Theme.itemSizeExtraLarge*2) / (Theme.itemSizeExtraLarge*2)),
+                          1.5)
     }
     FadeAnimation {
         id: fadeInAnimation

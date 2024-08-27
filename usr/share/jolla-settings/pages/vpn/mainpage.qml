@@ -8,10 +8,11 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import com.jolla.settings.system 1.0
 import Sailfish.Settings.Networking.Vpn 1.0
 import org.nemomobile.systemsettings 1.0
+import Nemo.Connectivity 1.0
 import Qt.labs.folderlistmodel 2.1
 
 Page {

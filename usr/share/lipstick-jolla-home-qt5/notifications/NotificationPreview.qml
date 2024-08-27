@@ -18,10 +18,11 @@ import "../systemwindow"
 SystemWindow {
     id: notificationWindow
 
+    property bool active
     property QtObject notification: notificationPreviewPresenter.notification
     property bool showNotification: notification != null && (notification.previewBody || notification.previewSummary)
-    property string summaryText: showNotification ? notification.previewSummary : ""
-    property string bodyText: showNotification ? notification.previewBody : ""
+    property string summaryText: (showNotification && notification) ? notification.previewSummary : ""
+    property string bodyText: (showNotification && notification) ? notification.previewBody : ""
     // we didn't earlier use app name on the popup so there can be transient notification that have only inferred
     // name set. As that's not always correct, showing transient notification name only if it's explicitly set.
     property string appNameText: notification != null ? (notification.isTransient ? notification.explicitAppName
@@ -35,7 +36,17 @@ SystemWindow {
     property bool _invoked
 
     property string pendingAction
+    property string pendingActionText
     property QtObject pendingNotification
+    property int _availableHeight: notificationWindow.height
+                                   - (notificationWindow.transpose
+                                      ? Qt.inputMethod.keyboardRectangle.width
+                                      : Qt.inputMethod.keyboardRectangle.height)
+    property int _biggestCorner: Math.max(Screen.topLeftCorner.radius,
+                                          Screen.topRightCorner.radius,
+                                          Screen.bottomLeftCorner.radius,
+                                          Screen.bottomRightCorner.radius)
+
 
     Binding {
         // Invocation typically closes the notification, so bind the current values
@@ -89,13 +100,14 @@ SystemWindow {
         return -1
     }
 
-    function _triggerAction(actionName) {
+    function _triggerAction(actionName, actionText) {
         if (Desktop.deviceLockState !== DeviceLock.Unlocked) {
             pendingAction = actionName
+            pendingActionText = actionText ? actionText : ""
             pendingNotification = notification
         } else {
             notificationWindow._invoked = true
-            notification.actionInvoked(actionName)
+            notification.actionInvoked(actionName, actionText)
         }
 
         // Always hide the notification preview after it is tapped
@@ -105,10 +117,10 @@ SystemWindow {
         Lipstick.compositor.unlock()
     }
 
-    onVisibleChanged: if (!visible) popupArea.expanded = false
+    onActiveChanged: if (!active) popupArea.expanded = false
 
     opacity: 0
-    visible: false
+    visible: active && !actionRow.replyActivationPending
 
     InverseMouseArea {
         id: outsideArea
@@ -116,7 +128,12 @@ SystemWindow {
         anchors.fill: popupArea
         enabled: false
 
-        onPressedOutside: if (popupArea.expanded) notificationWindow.notificationExpired()
+        onPressedOutside: {
+            if (popupArea.expanded) {
+                notificationFeedbackPlayer.removeNotification(notification.id)
+                notificationWindow.notificationExpired()
+            }
+        }
     }
 
     Binding {
@@ -130,13 +147,15 @@ SystemWindow {
         onDeviceIsLockedChanged: {
             if (pendingAction.length > 0 && !Lipstick.compositor.lockScreenLayer.deviceIsLocked) {
                 notificationWindow._invoked = true
-                pendingNotification.actionInvoked(pendingAction)
+                pendingNotification.actionInvoked(pendingAction, pendingActionText)
                 pendingAction = ""
+                pendingActionText = ""
             }
         }
         onShowingLockCodeEntryChanged: {
             if (!Lipstick.compositor.lockScreenLayer.showingLockCodeEntry) {
                 pendingAction = ""
+                pendingActionText = ""
             }
         }
     }
@@ -149,7 +168,18 @@ SystemWindow {
     Private.SwipeItem {
         id: popupArea
 
-        readonly property int baseX: Theme.paddingSmall
+        readonly property int baseX: {
+            // handle top notch separately
+            if (Lipstick.compositor.topmostWindowOrientation === Qt.PortraitOrientation
+                    && Screen.topCutout.height > Theme.paddingLarge) {
+                // assuming pushed down enough to avoid corners
+                return Theme.paddingSmall
+            }
+
+            return Math.max(_biggestCorner, Theme.paddingSmall,
+                            Lipstick.compositor.topmostWindowOrientation === Qt.LandscapeOrientation
+                            ? Screen.topCutout.height : 0)
+        }
 
         property bool expanded
         property real textOpacity: 0
@@ -159,13 +189,23 @@ SystemWindow {
 
         onSwipedAway: {
             notificationWindow.state = ""
+            notificationFeedbackPlayer.removeNotification(notification.id)
             notificationWindow.notificationExpired()
         }
 
         objectName: "NotificationPreview_popupArea"
 
         _showPress: false
-        y: Theme.paddingMedium
+        y: {
+            if (Qt.inputMethod.visible && popupArea.height > notificationWindow._availableHeight) {
+                // simple way to make sure the text area visible above the keyboard
+                return -actionRow.y + (notificationWindow._availableHeight - actionRow.height)
+            }
+
+            return Theme.paddingMedium
+                    + (Screen.hasCutouts && Lipstick.compositor.topmostWindowOrientation === Qt.PortraitOrientation
+                       ? Screen.topCutout.height : 0)
+        }
         width: displayWidth
         swipeDistance: notificationWindow.width
         height: expanded
@@ -231,10 +271,12 @@ SystemWindow {
                     right: parent.right
                     verticalCenter: popupPreviewScrollContainer.verticalCenter
                 }
-                visible: !popupArea.expanded
+                visible: !popupArea.expanded || actionRow.replyTextActive
                 source: "image://theme/icon-m-change-type"
                 highlighted: dropDownMouseArea.containsMouse
                 color: palette.primaryColor
+                transformOrigin: Item.Center
+                rotation: actionRow.replyTextActive ? 180 : 0
             }
 
             MouseArea {
@@ -245,9 +287,13 @@ SystemWindow {
                 enabled: dropDownArrow.visible
 
                 onClicked: {
-                    scrollAnimation.reset()
-                    popupArea.expanded = true
-                    outsideArea.enabled = true
+                    if (actionRow.replyTextActive) {
+                        actionRow.replyTextActive = false
+                    } else {
+                        scrollAnimation.reset()
+                        popupArea.expanded = true
+                        outsideArea.enabled = true
+                    }
                 }
             }
 
@@ -386,15 +432,19 @@ SystemWindow {
             NotificationActionRow {
                 id: actionRow
 
-                onActionInvoked: _triggerAction(actionName)
+                onActionInvoked: _triggerAction(actionName, actionText)
 
+                notification: notificationWindow.notification
                 active: !notificationWindow._invoked
+                textAreaMaxHeight: notificationWindow._availableHeight / 2
                 anchors {
                     top: notificationIcon.loaded && notificationIcon.height > popupExpandedText.height ? notificationIcon.bottom
                                                                                                        : popupExpandedText.bottom
                     topMargin: Theme.paddingMedium
                     right: parent.right
                     rightMargin: Theme.paddingMedium
+                    left: parent.left
+                    leftMargin: Theme.paddingMedium
                 }
             }
         }
@@ -409,7 +459,10 @@ SystemWindow {
         height: Lipstick.compositor.homeLayer.statusBar.height
         y: -height
 
-        onClicked: notificationWindow.notificationExpired()
+        onClicked: {
+            notificationFeedbackPlayer.removeNotification(notification.id)
+            notificationWindow.notificationExpired()
+        }
 
         Rectangle {
             anchors.fill: parent
@@ -422,17 +475,30 @@ SystemWindow {
 
             anchors {
                 verticalCenter: bannerArea.verticalCenter
+                verticalCenterOffset: Screen.hasCutouts
+                                      && Lipstick.compositor.topmostWindowOrientation === Qt.PortraitOrientation
+                                      ? Screen.topCutout.height / 2 : 0
                 left: bannerArea.left
-                leftMargin: Theme.horizontalPageMargin
+                leftMargin: {
+                    if (Lipstick.compositor.topmostWindowOrientation === Qt.PortraitOrientation
+                            && Screen.topCutout.height > Theme.paddingLarge) {
+                        return Theme.horizontalPageMargin
+                    }
+
+                    return Math.max(_biggestCorner, Theme.horizontalPageMargin)
+                }
             }
             // only one image shown so using fallbacks. image-path should be better than no image at all.
             source: {
                 // don't use guessed appIcon on transient notifications, similar to appNameText
-                if (notificationWindow.appIconUrl != "" && (!notification.isTransient
-                                                            || notification.appIconOrigin != Notification.InferredValue)) {
-                    return Notifications.iconSource(notificationWindow.appIconUrl)
-                } else if (notification && notification.hints["image-path"] != "") {
-                    return Notifications.iconSource(notification.hints["image-path"])
+                if (notification) {
+                    if (notificationWindow.appIconUrl != ""
+                            && (!notification.isTransient
+                                || notification.appIconOrigin != Notification.InferredValue)) {
+                        return Notifications.iconSource(notificationWindow.appIconUrl)
+                    } else if (notification.hints["image-path"] != "") {
+                        return Notifications.iconSource(notification.hints["image-path"])
+                    }
                 }
                 return ""
             }
@@ -462,34 +528,24 @@ SystemWindow {
         }
     }
 
-    Loader {
-        id: ambiencePreviewLoader
-    }
-
-    Component {
-        id: ambiencePreviewComponent
-        AmbiencePreview {
-            onFinished: notificationWindow.notificationComplete()
-        }
-    }
-
-    Binding {
-        target: notificationFeedbackPlayer
-        property: "minimumPriority"
-        value: lipstickSettings.lockscreenVisible ? 100 : 0
-    }
-
     Timer {
         id: displayTimer
+
         interval: 0
-        repeat: false
         onTriggered: displayNotification()
     }
 
     Timer {
+        id: delayedShowNext
+
+        interval: 0
+        onTriggered: notificationPreviewPresenter.showNextNotification()
+    }
+
+    Timer {
         id: forceHideTimer
+
         interval: 7000
-        repeat: false
         onTriggered: {
             notificationTimer.duration = 3000
             notificationTimer.start()
@@ -539,38 +595,11 @@ SystemWindow {
     onAppIconUrlChanged: refreshPeriod()
 
     function displayNotification() {
-        // We use two different presentation styles: one that can be clicked and one that cannot.
-        // Check for configurations that can't be correctly activated
-        if (notification.remoteActions.length == 0) {
-            if (notification.previewSummary && notification.previewBody) {
-                // Notifications with preview summary + preview body should have actions, as tapping on the preview pop-up should trigger some action
-                console.log('Warning: Notification has both preview summary and preview body but no actions. Remove the preview body or add an action:', notification.appName, notification.category, notification.previewSummary, notification.previewBody)
-            }
-        } else {
-            if (notification.previewSummary && !notification.previewBody) {
-                // Notifications with preview summary but no body should not have any actions, as the small preview banner is too small to receive presses
-                console.log('Warning: Notification has an action but only shows a preview summary. Add a preview body or remove the actions:', notification.appName, notification.category, notification.previewSummary, notification.previewBody)
-            } else if ((!notification.previewSummary && !notification.previewBody) && notification.hints['transient'] == true) {
-                console.log('Warning: Notification has actions but is transient and without a preview, its actions will not be triggerable from the UI:', notification.appName, notification.category, notification.previewSummary, notification.previewBody)
-            }
-        }
-
         if (showNotification) {
-            if (notification.category === "x-jolla.ambience.preview") {
-                ambiencePreviewLoader.sourceComponent = ambiencePreviewComponent
-                var preview = ambiencePreviewLoader.item
-                if (preview) {
-                    preview.displayName = notification.previewSummary
-                    preview.coverImage = notification.previewBody
-                    preview.show()
-                    state = "showAmbience"
-                }
-            } else {
-                var actions = notification.remoteActions
-                // Show preview banner or pop-up
-                var hasMultipleLines = (notification.previewSummary.length > 0 && notification.previewBody.length > 0)
-                state = actions.length > 0 || hasMultipleLines ? "showPopup" : "showBanner"
-            }
+            var actions = notification.remoteActions
+            // Show preview banner or pop-up
+            var hasMultipleLines = (notification.previewSummary.length > 0 && notification.previewBody.length > 0)
+            state = actions.length > 0 || hasMultipleLines ? "showPopup" : "showBanner"
         }
     }
 
@@ -614,7 +643,9 @@ SystemWindow {
     function notificationComplete() {
         state = ""
         _invoked = false
-        notificationPreviewPresenter.showNextNotification()
+        actionRow.reset()
+        // avoid binding loop in case notification is completed from notification change handler
+        delayedShowNext.start()
     }
 
     states: [
@@ -623,7 +654,7 @@ SystemWindow {
             PropertyChanges {
                 target: notificationWindow
                 opacity: 1
-                visible: true
+                active: true
             }
             PropertyChanges {
                 target: popupArea
@@ -644,7 +675,7 @@ SystemWindow {
             PropertyChanges {
                 target: notificationWindow
                 opacity: 1
-                visible: true
+                active: true
             }
             PropertyChanges {
                 target: popupPreviewScroll
@@ -657,7 +688,7 @@ SystemWindow {
             PropertyChanges {
                 target: notificationWindow
                 opacity: 1
-                visible: true
+                active: true
             }
             PropertyChanges {
                 target: bannerArea
@@ -671,21 +702,13 @@ SystemWindow {
             PropertyChanges {
                 target: notificationWindow
                 opacity: 1
-                visible: true
+                active: true
             }
             PropertyChanges {
                 target: bannerArea
                 // Keep the text at whatever scroll position it is currently in
                 x: bannerArea.x
                 contentOpacity: 1
-            }
-        },
-        State {
-            name: "showAmbience"
-            PropertyChanges {
-                target: notificationWindow
-                opacity: 1
-                visible: true
             }
         }
     ]

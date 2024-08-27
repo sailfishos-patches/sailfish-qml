@@ -51,8 +51,8 @@ Dialog {
             opacity: applicationModel.populated ? 0 : 1
             Behavior on opacity { FadeAnimation {} }
 
-            //: Heading for page that allows user to install Android™ App Support.
-            //% "Get Android™ App Support"
+            //: Heading for page that allows user to install Android™ AppSupport.
+            //% "Get Android™ AppSupport"
             text: qsTrId("startupwizard-he-get_android_app_support")
         }
 
@@ -73,7 +73,7 @@ Dialog {
                 font.family: Theme.fontFamilyHeading
                 color: Theme.highlightColor
 
-                //: Heading for page that allows user to install Android™ App Support.
+                //: Heading for page that allows user to install Android™ AppSupport.
                 //% "Do you want to use Android™ apps?"
                 text: qsTrId("startupwizard-he-do_you_want_to_use_android_apps")
             }
@@ -87,8 +87,8 @@ Dialog {
                 font.pixelSize: Theme.fontSizeExtraSmall
                 visible: applicationModel.androidSupportPackageAvailable
 
-                //: Hint to user to install Android™ App Support.
-                //% "If you want to use Android apps on the device, select this to install Android App Support."
+                //: Hint to user to install Android™ AppSupport.
+                //% "If you want to use Android apps on the device, select this to install Android AppSupport."
                 text: qsTrId("startupwizard-la-install_android_support")
             }
 
@@ -152,11 +152,6 @@ Dialog {
                     }
                 }
             }
-        }
-
-        ViewPlaceholder {
-            // Shown only if no selections are available
-            enabled: applicationModel.populated && applicationModel.count == 0
         }
     }
 }

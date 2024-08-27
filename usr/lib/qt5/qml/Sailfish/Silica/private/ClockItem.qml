@@ -4,6 +4,7 @@ import Nemo.Configuration 1.0
 
 Row {
     id: clock
+
     //: "translate as non-empty if am/pm indicator starts the 12h time pattern"
     //% ""
     property string startWithAp: qsTrId("components-la-time_start_with_ap")
@@ -11,8 +12,8 @@ Row {
 
     property int hourMode: timeFormatConfig.value === "24" ? DateTime.TwentyFourHours
                                                            : DateTime.TwelveHours
-    layoutDirection: (startWithAp !== "" && startWithAp !== "components-la-time_start_with_ap") ? Qt.RightToLeft
-                                                                                                : Qt.LeftToRight
+    layoutDirection: (startWithAp !== "" && startWithAp !== "components-la-time_start_with_ap")
+                     ? Qt.RightToLeft : Qt.LeftToRight
 
     Label {
         id: timeText

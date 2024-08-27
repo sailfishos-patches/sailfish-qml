@@ -101,7 +101,7 @@ Rectangle {
 
     Component.onCompleted: {
         // avoid hard dependency to ngf module
-        _ngfEffect = Qt.createQmlObject("import org.nemomobile.ngf 1.0; NonGraphicalFeedback { event: 'pulldown_highlight' }",
+        _ngfEffect = Qt.createQmlObject("import Nemo.Ngf 1.0; NonGraphicalFeedback { event: 'pulldown_highlight' }",
                            highlightItem, 'NonGraphicalFeedback');
     }
 

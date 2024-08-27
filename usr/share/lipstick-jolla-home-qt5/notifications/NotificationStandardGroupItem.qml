@@ -134,7 +134,7 @@ NotificationGroupItem {
                         contentLeftMargin: groupHeader.textLeftMargin
                         summaryText: notification ? notification.summary : ""
                         bodyText: notification ? notification.body : ""
-                        timestampText: notification ? (root._timestampCounter, Format.formatDate(notification.timestamp, Formatter.DurationElapsedShort)) : ""
+                        timestampText: notification ? (root._timestampCounter, Format.formatDate(notification.timestamp, Formatter.TimeElapsedShort)) : ""
 
                         animateContentResizing: boundedNotificationModel.updating
                         animateAddition: defaultAnimateAddition

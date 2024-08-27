@@ -16,6 +16,7 @@ SilicaItem {
 
     Label {
         id: textItem
+
         anchors.centerIn: parent
         color: selectionCell.active ? selectionCell.palette.primaryColor
                                     : selectionCell.palette.secondaryColor

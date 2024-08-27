@@ -11,12 +11,15 @@ import Sailfish.Silica.private 1.0
 import Sailfish.Telephony 1.0
 import Sailfish.Contacts 1.0 as SailfishContacts
 import Sailfish.AccessControl 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import org.nemomobile.contacts 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 import "contactcard/contactcardmodelfactory.js" as ModelFactory
 import "contactcard"
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 SilicaFlickable {
     id: root
 
@@ -27,7 +30,13 @@ SilicaFlickable {
     property bool hidePhoneActions: cellular1Status.modemPath.length === 0 && cellular2Status.modemPath.length === 0 || !actionPermitted
     property bool disablePhoneActions: !cellular1Status.registered && !cellular2Status.registered
 
+    /*!
+      \internal
+    */
     property QtObject _messagesInterface
+    /*!
+      \internal
+    */
     property date _today: new Date()
 
     function refreshDetails() {
@@ -36,6 +45,9 @@ SilicaFlickable {
         ModelFactory.getContactCardDetailsModel(details.model, contact)
     }
 
+    /*!
+      \internal
+    */
     function _asyncRefresh() {
         if (contact.complete) {
             contact.completeChanged.disconnect(_asyncRefresh)
@@ -68,11 +80,39 @@ SilicaFlickable {
         return _messagesInterface
     }
 
+    /*!
+      \internal
+    */
     function _scrollToFit(item, newItemHeight) {
         var newContentY = Math.max(item.mapToItem(root.contentItem, 0, newItemHeight).y - root.height,
                                    root.contentY)
         repositionAnimation.to = newContentY
         repositionAnimation.start()
+    }
+
+    function appendIfExists(query, key, value) {
+        if (value != "") {
+            return query + "&"+ key + "=" + encodeURIComponent(value)
+        } else {
+            return query
+        }
+    }
+
+    function openAddress(street, city, region, zipcode, country) {
+        var content = [street, city, region, zipcode, country]
+        content = content.filter(function(item) { return item != "" } )
+
+        // q= is android extension, containing a search query. try to combine all the details there
+        var geoUri = "geo:0,0?q=" + encodeURIComponent(content.join(","))
+
+        // these are sailfish extension, having the fields separately
+        geoUri = appendIfExists(geoUri, "street", street)
+        geoUri = appendIfExists(geoUri, "city", city)
+        geoUri = appendIfExists(geoUri, "region", region)
+        geoUri = appendIfExists(geoUri, "zipcode", zipcode)
+        geoUri = appendIfExists(geoUri, "country", country)
+
+        Qt.openUrlExternally(geoUri)
     }
 
     onContactChanged: {
@@ -181,9 +221,9 @@ SilicaFlickable {
 
                     onAddressClicked: {
                         console.log("Address: " + address)
-                        mapsInterface.openAddress(addressParts["street"], addressParts["city"],
-                                                  addressParts["region"], addressParts["zipcode"],
-                                                  addressParts["country"])
+                        root.openAddress(addressParts["street"], addressParts["city"],
+                                         addressParts["region"], addressParts["zipcode"],
+                                         addressParts["country"])
                     }
 
                     onCopyToClipboardClicked: {
@@ -376,17 +416,6 @@ SilicaFlickable {
 
         function dialViaModem(modemPath, number) {
             call('dialViaModem', [ modemPath, number ])
-        }
-    }
-    DBusInterface {
-        id: mapsInterface
-
-        service: "org.sailfishos.maps"
-        path: "/"
-        iface: "org.sailfishos.maps"
-
-        function openAddress(street, city, region, zipcode, country) {
-            call('openAddress', [street, city, region, zipcode, country])
         }
     }
     DBusInterface {

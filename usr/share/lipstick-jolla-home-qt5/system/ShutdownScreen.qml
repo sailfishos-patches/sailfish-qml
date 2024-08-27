@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0

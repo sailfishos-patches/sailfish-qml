@@ -35,13 +35,14 @@ ListItem {
                 startTime: model.occurrence.startTime
                 endTime: model.occurrence.endTime
                 font.pixelSize: Theme.fontSizeLarge
+                font.strikeout: model.event.status == CalendarEvent.StatusCancelled
                 color: root.highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
             }
 
             Label {
                 id: displayLabel
                 width: root.width - 2*Theme.paddingMedium - Theme.paddingSmall - Theme.horizontalPageMargin + Theme.paddingMedium
-                text: model.event.displayLabel
+                text: CalendarTexts.ensureEventTitle(model.event.displayLabel)
                 font.pixelSize: Theme.fontSizeMedium
                 truncationMode: TruncationMode.Fade
                 color: root.highlighted ? Theme.highlightColor : Theme.primaryColor

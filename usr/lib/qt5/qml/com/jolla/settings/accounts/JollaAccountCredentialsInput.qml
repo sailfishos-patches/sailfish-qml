@@ -16,7 +16,8 @@ Column {
     property bool highlightInvalidFields
 
     property bool canValidateCredentials: !busy && username !== ""
-            && ((root.state == "signIn" && passwordValidator.hasValidValue && !signInFailed) || (root.state == "createNewAccount" && confirmPasswordValidator.hasValidValue))
+                                          && ((root.state == "signIn" && passwordValidator.hasValidValue && !signInFailed)
+                                              || (root.state == "createNewAccount" && confirmPasswordValidator.hasValidValue))
     property bool busy: usernameValidator.validating || confirmPasswordValidator.validating || signInFactory.signingIn
     property bool usernameValid: _usernameStatus == AccountFactory.UsernameAvailable
     property bool signInFailed: _signInStatus < 0
@@ -140,7 +141,9 @@ Column {
     AccountUsernameField {
         id: usernameField
         errorHighlight: (!text && root.highlightInvalidFields)
-                        || (root.state == "createNewAccount" && root._usernameStatus != AccountFactory.UsernameAvailable && _usernameStatus != AccountFactory.UsernameNotChecked)
+                        || (root.state == "createNewAccount"
+                            && root._usernameStatus != AccountFactory.UsernameAvailable
+                            && _usernameStatus != AccountFactory.UsernameNotChecked)
                         || (root.state == "signIn" && root.signInFailed)
 
         onTextChanged: {
@@ -294,16 +297,17 @@ Column {
 
     Item {
         id: passwordConfirmContainer
+
         width: parent.width
         height: 0
         clip: true
 
         PasswordField {
             id: passwordConfirmField
+
             width: parent.width
             errorHighlight: !text && root.highlightInvalidFields
                             || (!confirmPasswordValidator.hasValidValue && confirmPasswordValidator.progressDisplayed)
-
             //% "Re-enter password"
             label: qsTrId("settings_accounts-la-password_confirm")
 

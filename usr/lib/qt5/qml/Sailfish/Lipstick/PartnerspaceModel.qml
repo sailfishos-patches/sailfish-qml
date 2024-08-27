@@ -1,6 +1,6 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import Nemo.DBus 2.0
 
 LauncherWatcherModel {

@@ -16,7 +16,8 @@ Item {
 
     // if textfield has a label, only show error banner when the textfield has text, else there
     // would be an odd gap between the textfield text and the banner
-    readonly property bool progressDisplayed: (!textField || !textField.labelVisible || textField.text.length > 0) && validationProgressLabel.text.length
+    readonly property bool progressDisplayed: (!textField || !textField.labelVisible || textField.text.length > 0)
+                                              && validationProgressLabel.text.length
 
     signal validationRequested()
     signal validationCanceled()

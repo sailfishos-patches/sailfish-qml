@@ -7,7 +7,7 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as SailfishContacts
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 
 AddressBookComboBox {
     id: root

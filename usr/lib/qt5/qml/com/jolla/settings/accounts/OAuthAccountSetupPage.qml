@@ -2,6 +2,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
 import com.jolla.settings.accounts 1.0
+import com.jolla.signonuiservice 1.0
 
 AccountBusyPage {
     id: root
@@ -17,6 +18,10 @@ AccountBusyPage {
 
     signal accountCredentialsUpdated(int accountId, var responseData)
     signal accountCredentialsUpdateError(string errorMessage)
+
+    SignonUiService {
+        id: _jolla_signon_ui_service
+    }
 
     function prepareAccountCreation(accountProvider, signonServiceName, signonSessionData) {
         if (_busy) {
@@ -62,11 +67,12 @@ AccountBusyPage {
             }
 
             // also ensure that we set up embedding / etc correctly:
-            if (typeof jolla_signon_ui_service !== "undefined") {
+            if (typeof _jolla_signon_ui_service !== "undefined") {
                 sip.setParameter("Title", accountProvider.displayName)
-                sip.setParameter("InProcessServiceName", jolla_signon_ui_service.inProcessServiceName)
-                sip.setParameter("InProcessObjectPath", jolla_signon_ui_service.inProcessObjectPath)
-                jolla_signon_ui_service.inProcessParent = webViewContainer
+                sip.setParameter("InProcessServiceName", _jolla_signon_ui_service.inProcessServiceName)
+                sip.setParameter("InProcessObjectPath", _jolla_signon_ui_service.inProcessObjectPath)
+                _jolla_signon_ui_service.inProcessParent = webViewContainer
+                _jolla_signon_ui_service.openListeningPort()
             }
 
             account.signInCredentialsUpdated.connect(_accountUpdateSucceeded)
@@ -145,11 +151,17 @@ AccountBusyPage {
         }
 
         // also ensure that we set up embedding / etc correctly:
-        if (typeof jolla_signon_ui_service !== "undefined") {
+        if (typeof _jolla_signon_ui_service !== "undefined") {
             params["Title"] = accountProvider.displayName
-            params["InProcessServiceName"] = jolla_signon_ui_service.inProcessServiceName
-            params["InProcessObjectPath"] = jolla_signon_ui_service.inProcessObjectPath
-            jolla_signon_ui_service.inProcessParent = webViewContainer
+            params["InProcessServiceName"] = _jolla_signon_ui_service.inProcessServiceName
+            params["InProcessObjectPath"] = _jolla_signon_ui_service.inProcessObjectPath
+            _jolla_signon_ui_service.inProcessParent = webViewContainer
+            // The listening port will be available immediately or not at all
+            _jolla_signon_ui_service.openListeningPort()
+            // AccountFactory will replace Callback instances of "localhost" with "http://127.0.0.1:" + params["Port"]
+            // This is needed for the request_token step of the 3-legged OAuth 1.0a flow (twitter)
+            // The request is sent by signond, but the reply is handled by libjollasignonuiservice
+            params["Port"] = _jolla_signon_ui_service.listeningPort
         }
 
         return params

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2016 - 2023 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -16,7 +16,7 @@ CsdTestPage {
     property bool runGSensorTest: Features.supported("GSensor")
 
     property bool _runBothTests: runGyroTest && runGSensorTest
-    property int _resultsColumnWidth: _runBothTests ? width/2 : width
+    property int _resultsColumnWidth: _runBothTests && orientation == Orientation.Landscape ? width/2 : width
 
     function _checkForFinished() {
         if ((!runGyroTest || gyroTest.done) && (!runGSensorTest || gSensorTest.done)) {
@@ -25,7 +25,11 @@ CsdTestPage {
         }
     }
 
-    allowedOrientations: _runBothTests ? Orientation.Landscape : Orientation.Portrait
+    // Workaround for string.arg(real) with zero format controls
+    function rounded(val) {
+        var sign = val < 0 ? "" : "+"
+        return sign + val.toFixed(4)
+    }
 
     GyroTest {
         id: gyroTest
@@ -49,7 +53,7 @@ CsdTestPage {
         }
     }
 
-    Flickable {
+    SilicaFlickable {
         anchors.fill: parent
         contentHeight: contentColumn.height + Theme.paddingLarge
 
@@ -113,13 +117,7 @@ CsdTestPage {
 
                         //: X, Y and Z values of the Gyroscope sensor
                         //% "X: %1<br>Y: %2<br>Z: %3"
-                        text: {
-                            if (gyroTest.running) {
-                                return qsTrId("csd-la-gyro_output").arg(gyroTest.sensorX).arg(gyroTest.sensorY).arg(gyroTest.sensorZ)
-                            } else {
-                                return qsTrId("csd-la-gyro_output").arg(gyroTest.valueX).arg(gyroTest.valueY).arg(gyroTest.valueZ)
-                            }
-                        }
+                        text: qsTrId("csd-la-gyro_output").arg(rounded(gyroTest.curX)).arg(rounded(gyroTest.curY)).arg(rounded(gyroTest.curZ))
                     }
 
                     Label {
@@ -137,16 +135,14 @@ CsdTestPage {
                         visible: gyroTest.done
                         x: Theme.horizontalPageMargin
 
-                        //% "Pass"
-                        text: gyroResultLabel.result ? qsTrId("csd-la-pass") + "\n" +
-                                                       "X: " + gyroTest.sensorX + "\n" +
-                                                       "Y: " + gyroTest.sensorY + "\n" +
-                                                       "Z: " + gyroTest.sensorZ :
-                                                       //% "Fail"
-                                                       qsTrId("csd-la-fail")+ "\n" +
-                                                       "X: " + gyroTest.sensorX + "\n" +
-                                                       "Y: " + gyroTest.sensorY + "\n" +
-                                                       "Z: " + gyroTest.sensorZ
+                        text: (gyroResultLabel.result
+                              //% "Pass"
+                              ? qsTrId("csd-la-pass")
+                              //% "Fail"
+                              : qsTrId("csd-la-fail"))
+                              + "\nX: %1".arg(rounded(gyroTest.avgX))
+                              + "\nY: %1".arg(rounded(gyroTest.avgY))
+                              + "\nZ: %1".arg(rounded(gyroTest.avgZ))
                     }
 
                     Label {
@@ -187,11 +183,11 @@ CsdTestPage {
                         width: parent.width - 2*x
                         wrapMode: Text.Wrap
                         text: //% "Gx: %0 (min: %1, max: %2)"
-                              qsTrId("csd-la-accelerometer_readings_x").arg(Math.round(gSensorTest.gsensorX * 1000) / 1000).arg(gSensorTest.minX).arg(gSensorTest.maxX) + "\n" +
+                              qsTrId("csd-la-accelerometer_readings_x").arg(rounded(gSensorTest.curX)).arg(gSensorTest.minX).arg(gSensorTest.maxX) + "\n" +
                               //% "Gy: %0 (min: %1, max: %2)"
-                              qsTrId("csd-la-accelerometer_readings_y").arg(Math.round(gSensorTest.gsensorY * 1000) / 1000).arg(gSensorTest.minY).arg(gSensorTest.maxY) + "\n" +
+                              qsTrId("csd-la-accelerometer_readings_y").arg(rounded(gSensorTest.curY)).arg(gSensorTest.minY).arg(gSensorTest.maxY) + "\n" +
                               //% "Gz: %0 (min: %1, max: %2)"
-                              qsTrId("csd-la-accelerometer_readings_z").arg(Math.round(gSensorTest.gsensorZ * 1000) / 1000).arg(gSensorTest.minZ).arg(gSensorTest.maxZ)
+                              qsTrId("csd-la-accelerometer_readings_z").arg(rounded(gSensorTest.curZ)).arg(gSensorTest.minZ).arg(gSensorTest.maxZ)
 
 
                     }
@@ -201,22 +197,17 @@ CsdTestPage {
                         visible: gSensorTest.done
                         x: Theme.horizontalPageMargin
 
-                        //% "Pass"
-                        text: gSensorResultLabel.result ? qsTrId("csd-la-pass") + "\n" +
-                                                          //% "Gx: %0 (min: %1, max: %2)"
-                                                          qsTrId("csd-la-accelerometer_readings_x").arg(gSensorTest.averageGsensorX).arg(gSensorTest.minX).arg(gSensorTest.maxX) + "\n" +
-                                                          //% "Gy: %0 (min: %1, max: %2)"
-                                                          qsTrId("csd-la-accelerometer_readings_y").arg(gSensorTest.averageGsensorY).arg(gSensorTest.minY).arg(gSensorTest.maxY) + "\n" +
-                                                          //% "Gz: %0 (min: %1, max: %2)"
-                                                          qsTrId("csd-la-accelerometer_readings_z").arg(gSensorTest.averageGsensorZ).arg(gSensorTest.minZ).arg(gSensorTest.maxZ) :
-                                                          //% "Fail"
-                                                          qsTrId("csd-la-fail") + "\n" +
-                                                          //% "Gx: %0 (min: %1, max: %2)"
-                                                          qsTrId("csd-la-accelerometer_readings_x").arg(gSensorTest.averageGsensorX).arg(gSensorTest.minX).arg(gSensorTest.maxX) + "\n" +
-                                                          //% "Gy: %0 (min: %1, max: %2)"
-                                                          qsTrId("csd-la-accelerometer_readings_y").arg(gSensorTest.averageGsensorY).arg(gSensorTest.minY).arg(gSensorTest.maxY) + "\n" +
-                                                          //% "Gz: %0 (min: %1, max: %2)"
-                                                          qsTrId("csd-la-accelerometer_readings_z").arg(gSensorTest.averageGsensorZ).arg(gSensorTest.minZ).arg(gSensorTest.maxZ)
+                        text: (gSensorResultLabel.result
+                              //% "Pass"
+                              ? qsTrId("csd-la-pass")
+                              //% "Fail"
+                              : qsTrId("csd-la-fail"))
+                              //% "Gx: %0 (min: %1, max: %2)"
+                              + "\n" + qsTrId("csd-la-accelerometer_readings_x").arg(rounded(gSensorTest.avgX)).arg(gSensorTest.minX).arg(gSensorTest.maxX)
+                              //% "Gy: %0 (min: %1, max: %2)"
+                              + "\n" + qsTrId("csd-la-accelerometer_readings_y").arg(rounded(gSensorTest.avgY)).arg(gSensorTest.minY).arg(gSensorTest.maxY)
+                              //% "Gz: %0 (min: %1, max: %2)"
+                              + "\n" + qsTrId("csd-la-accelerometer_readings_z").arg(rounded(gSensorTest.avgZ)).arg(gSensorTest.minZ).arg(gSensorTest.maxZ)
                     }
 
                     Label {

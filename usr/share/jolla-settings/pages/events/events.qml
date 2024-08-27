@@ -43,7 +43,8 @@ Page {
             Label {
                 x: Theme.horizontalPageMargin
                 width: parent.width - 2*x
-                //: List of Events widgets that can be installed from store. %1 is replaced with a localised concatenation of widget names e.g: "Weather and Calendar".
+                //: List of Events widgets that can be installed from store. %1 is replaced with
+                //: a localised concatenation of widget names e.g: "Weather and Calendar".
                 //% "Install %1 from Store."
                 text: qsTrId("settings_events-la-install_from_store").arg(unavailableWidgets.value)
                 visible: unavailableWidgets.value.length > 0
@@ -83,7 +84,8 @@ Page {
                 text: qsTrId("settings_events-la-access_events_when_device_locked")
                 onClicked: lipstickSettings.lock_screen_events = !lipstickSettings.lock_screen_events
 
-                //% "When enabled you can check weather, upcoming events and notifications from Lock Screen without unlocking the device"
+                //% "When enabled you can check upcoming events and notifications "
+                //% "from Lock Screen without unlocking the device"
                 description: qsTrId("settings_events-la-access_events_when_device_locked_description")
 
                 ConfigurationGroup {

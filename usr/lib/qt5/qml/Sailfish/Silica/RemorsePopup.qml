@@ -94,6 +94,21 @@ RemorseBase {
     z: 1
     _wideMode: screen.sizeCategory > Screen.Medium
     _screenMargin: 0
+    leftMargin: {
+        if (_page && _page.orientation == Orientation.Portrait && Screen.topCutout.height > Theme.paddingLarge) {
+            // assuming the popup pushed down enough not to need further corner avoidance
+            return Theme.horizontalPageMargin
+        }
+
+        var biggestCorner = Math.max(Screen.topLeftCorner.radius,
+                                     Screen.topRightCorner.radius,
+                                     Screen.bottomLeftCorner.radius,
+                                     Screen.bottomRightCorner.radius)
+
+        // popup is quite close to the edge so avoid the whole rounding area
+        return Math.max(biggestCorner, Theme.horizontalPageMargin)
+    }
+    rightMargin: leftMargin
 
     states: [
         State {
@@ -105,7 +120,8 @@ RemorseBase {
             PropertyChanges {
                 target: remorsePopup
                 visible: true
-                y: Theme.paddingMedium
+                y: (_page && _page.orientation == Orientation.Portrait ? Screen.topCutout.height : 0)
+                   + Theme.paddingMedium
                 _contentOpacity: 1
             }
         },

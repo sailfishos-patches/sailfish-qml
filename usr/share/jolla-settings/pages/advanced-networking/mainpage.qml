@@ -110,7 +110,10 @@ Page {
             ProxyForm {
                 id: proxyForm
                 network: netProxy
-                enabled: !disabledByMdmBanner.active
+                enabled: netProxySwitch.checked && !disabledByMdmBanner.active
+                //: Referring to the network proxy method to use for all connections
+                //% "Global proxy configuration"
+                comboLabel: qsTrId("settings_network-la-global_proxy_configuration")
             }
         }
     }

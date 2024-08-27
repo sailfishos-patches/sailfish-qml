@@ -3,6 +3,9 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as Contacts
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Page {
     id: presencePage
 
@@ -11,6 +14,9 @@ Page {
 
     property Component presenceSwitchBar: presenceSwitchBarComponent
 
+    /*!
+      \internal
+    */
     property bool _presenceAvailable
 
     function scheduleUpdatePresenceModel() {

@@ -47,7 +47,7 @@ ContactBrowser {
         }
 
         if (_contactActionType === Telephony.Call
-                && Telephony.promptForVoiceSim
+                && telephony.promptForSim()
                 && propertyData.propertyType === "phoneNumber") {
 
             propertyPicker.closeOnSelection = false

@@ -9,10 +9,10 @@ import QtMultimedia 5.4
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import com.jolla.camera 1.0
-import org.nemomobile.policy 1.0
-import org.nemomobile.ngf 1.0
-import org.nemomobile.dbus 2.0
-import org.nemomobile.notifications 1.0
+import Nemo.Policy 1.0
+import Nemo.Ngf 1.0
+import Nemo.DBus 2.0
+import Nemo.Notifications 1.0
 import org.nemomobile.systemsettings 1.0
 
 import "../settings"

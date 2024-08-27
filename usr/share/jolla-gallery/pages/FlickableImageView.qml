@@ -112,7 +112,7 @@ PagedView {
             player: GalleryMediaPlayer {
                 autoPlay: root.autoPlay
                 active: currentItem && !currentItem.isImage && Qt.application.active
-                source: active ? currentItem.source : ""
+                source: (currentItem && !currentItem.isImage) ? currentItem.source : ""
                 onPlayingChanged: {
                     if (playing && overlay.active) {
                         // go fullscreen for playback if triggered via Play icon.

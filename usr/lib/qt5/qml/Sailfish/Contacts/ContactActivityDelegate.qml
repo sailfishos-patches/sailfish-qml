@@ -5,6 +5,9 @@ import Sailfish.Telephony 1.0
 import org.nemomobile.contacts 1.0
 import org.nemomobile.commhistory 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 ListItem {
     id: root
 

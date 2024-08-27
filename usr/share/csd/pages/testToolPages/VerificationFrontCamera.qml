@@ -9,15 +9,12 @@ import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import com.jolla.settings.system 1.0
 import QtMultimedia 5.4
-import org.nemomobile.configuration 1.0
 import ".."
 
 CameraTestPage {
     id: page
 
     imagePreview.mirror: true
-    viewfinderResolution: viewfinderResolution.value
-    imageCaptureResolution: imageResolution.value
 
     CsdPageHeader {
         id: header
@@ -40,16 +37,6 @@ CameraTestPage {
                 }
             }
         }
-    }
-
-    ConfigurationValue {
-        id: viewfinderResolution
-        key: "/apps/jolla-camera/secondary/image/viewfinderResolution"
-    }
-
-    ConfigurationValue {
-        id: imageResolution
-        key: "/apps/jolla-camera/secondary/image/imageResolution"
     }
 
     PolicyValue {

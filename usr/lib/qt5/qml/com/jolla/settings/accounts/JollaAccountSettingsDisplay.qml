@@ -15,7 +15,7 @@ StandardAccountSettingsDisplay {
         font.pixelSize: Theme.fontSizeSmall
 
         //: Brief description for the Jolla account page
-        //% "Your Jolla account is your pathway to applications and software updates."
+        //% "Your Jolla account is your pathway to applications, add-ons and software updates."
         text: qsTrId("settings_accounts-la-jolla_account_description")
     }
 

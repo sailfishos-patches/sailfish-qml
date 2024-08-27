@@ -1,0 +1,3 @@
+module org.freedesktop.contextkit.providers.battery
+plugin contextkitbatteryprovider
+typeinfo plugins.qmltypes

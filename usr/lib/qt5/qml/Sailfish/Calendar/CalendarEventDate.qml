@@ -7,6 +7,7 @@ Row {
     property date eventDate
     property bool showTime
     property bool timeContinued
+    property bool cancelled
     property bool useTwoLines: !fitsOneLine
     readonly property bool fitsOneLine: metrics.width < (maximumWidth - (timeText.visible ? (timeText.width + spacing) : 0))
     property alias font: timeText.font
@@ -43,6 +44,7 @@ Row {
         Text {
             visible: useTwoLines
             font.pixelSize: Theme.fontSizeSmall
+            font.strikeout: root.cancelled
             color: root.color
             text: Format.formatDate(eventDate, Format.WeekdayNameStandalone)
         }
@@ -78,6 +80,7 @@ Row {
         anchors.bottom: parent.bottom
         visible: showTime
         font.pixelSize: Theme.fontSizeMedium
+        font.strikeout: root.cancelled
         color: root.color
         text: Format.formatDate(eventDate, Formatter.TimeValue) + (timeContinued ? " -" : "")
     }

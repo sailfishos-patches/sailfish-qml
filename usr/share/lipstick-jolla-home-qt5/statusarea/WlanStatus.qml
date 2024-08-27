@@ -1,6 +1,6 @@
 import QtQml 2.2
 import com.jolla.lipstick 0.1
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 QtObject {
     id: wlan

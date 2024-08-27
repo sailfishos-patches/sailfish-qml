@@ -5,16 +5,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.devicelock 1.0
-import org.nemomobile.ngf 1.0
+import Nemo.Ngf 1.0
 import Sailfish.Silica 1.0
-import Sailfish.Ambience 1.0
 import com.jolla.lipstick 0.1
 import Sailfish.Lipstick 1.0
-import org.nemomobile.notifications 1.0
+import Nemo.Notifications 1.0
 import "../compositor"
 import "../main"
 import "../statusarea"
@@ -40,6 +39,12 @@ ApplicationWindow {
 
             property bool vignetteActive
 
+            // This must be synchronized with tk_lock state. Hence, connect to
+            // device lock state reported by Desktop.qml that is from system bus.
+            readonly property bool systemStartedAndUnlocked: systemStarted.value && Desktop.deviceLockState === DeviceLock.Unlocked
+            readonly property bool deviceLockCodeInUse: DeviceLock.automaticLocking != -1
+            readonly property bool dismissLockscreenOnBootup: Lipstick.compositor.experimentalFeatures.dismiss_lockscreen_on_bootup
+
             palette.colorScheme: lockScreen.lowPowerMode ? Theme.LightOnDark : undefined
 
             onVignetteActiveChanged: {
@@ -54,7 +59,7 @@ ApplicationWindow {
                 id: systemStarted
 
                 value: (!startupWizardExpiry.running || Lipstick.compositor.appLayer.opaque)
-                            && (PinQueryAgent.simStatus != PinQueryAgent.SimUndefined || PinQueryAgent.simPinCompleted)
+                       && (PinQueryAgent.simStatus != PinQueryAgent.SimUndefined || PinQueryAgent.simPinCompleted)
             }
 
             Timer {
@@ -99,7 +104,8 @@ ApplicationWindow {
                         lockScreen.nextPannableItem(false, false)
                     } else {
                         lockScreen.reset()
-                        if (Lipstick.compositor.showDeviceLock && deviceLockItem.locked) {
+                        if (Lipstick.compositor.pendingShowUnlockScreen && deviceLockItem.locked) {
+                            Lipstick.compositor.pendingShowUnlockScreen = false
                             lockScreen.nextPannableItem(false, true)
                         }
                     }
@@ -152,7 +158,7 @@ ApplicationWindow {
                     if (lipstickSettings.lockscreenVisible && !Lipstick.compositor.cameraLayer.active) {
                         Lipstick.compositor.setCurrentWindow(Lipstick.compositor.lockScreenLayer.window)
                     } else if (!lipstickSettings.lockscreenVisible && Desktop.deviceLockState == DeviceLock.Locked) {
-                        Lipstick.compositor.showDeviceLock = true
+                        Lipstick.compositor.pendingShowUnlockScreen = true
                     }
                 }
             }
@@ -275,22 +281,24 @@ ApplicationWindow {
                 }
             }
 
-            Connections {
-                target: Desktop
-
-                // This must be synchronized with tk_lock state. Hence, connect to
-                // device lock state reported by Desktop.qml that is from system bus.
-                onDeviceLockStateChanged: {
-                    if (systemStarted.value && Desktop.deviceLockState === DeviceLock.Unlocked) {
-                        if (!DeviceLock.enabled) {
+            onSystemStartedAndUnlockedChanged: {
+                if (systemStartedAndUnlocked) {
+                    if (!deviceLockCodeInUse) {
+                        // We can end up here only due to the singular Undefined -> Unlocked device lock state
+                        // transition that is seen during lipstick startup when device lock code is not in use
+                        if (dismissLockscreenOnBootup) {
+                            // Optional behvior selectable via dconf: land to home/launcher
+                            lockScreen.unlock(false)
+                        } else {
+                            // Default behevior: land to lockscreen
                             if (deviceLockContainer.isCurrentItem) {
                                 lockScreen.setCurrentItem(lockContainer, lockScreen.visible)
                             }
-                        } else if (!lockScreen.nextPannableItem(true, false)) {
-                            lockScreen.unlock(true)
-                        } else if (lockScreen.pinQueryPannable) {
-                            lockScreen.pinQueryPannable.deviceWasLocked = true
                         }
+                    } else if (!lockScreen.nextPannableItem(true, false)) {
+                        lockScreen.unlock(true)
+                    } else if (lockScreen.pinQueryPannable) {
+                        lockScreen.pinQueryPannable.deviceWasLocked = true
                     }
                 }
             }
@@ -315,14 +323,13 @@ ApplicationWindow {
                         lockScreen.nextPannableItem(false, false)
                         lockScreen.open(false)
 
-                        if (lockedOut ) {
+                        if (lockedOut) {
                             lipstickSettings.lockScreen(true)
                         }
                     } else {
                         lockScreen.activate(lockScreenPage.vignetteActive)
                         lipstickSettings.lockScreen(true)
                     }
-
                 }
 
                 onNotice: {
@@ -396,9 +403,6 @@ ApplicationWindow {
                             && !lockScreenPage.displayOnFromLowPowerMode
 
                 readonly property bool pendingPannableItem: deviceLockItem.locked || needPinQuery
-
-                // Suffix that should be added to all theme icons that are shown in low power mode
-                property string iconSuffix: lipstickSettings.lowPowerMode ? ('?' + Theme.highlightColor) : ''
 
                 property color textColor: Lipstick.compositor.lockScreenLayer.textColor
                 readonly property bool locked: lipstickSettings.lockscreenVisible || Desktop.deviceLockState >= DeviceLock.Locked
@@ -600,7 +604,6 @@ ApplicationWindow {
 
                             visible: systemStarted.value
                             allowAnimations: Lipstick.compositor.lockScreenLayer.vignette.opened
-                            iconSuffix: lockScreen.iconSuffix
                             clock.followPeekPosition: !parent.rightItem
 
                             Binding { target: lockItem.mpris.item; property: "enabled"; value: !lockScreen.lowPowerMode }
@@ -652,7 +655,7 @@ ApplicationWindow {
                                         && item.authenticationInput.status !== AuthenticationInput.Idle
                                     ? 1
                                     : 0
-                            headingVerticalOffset: statusBar.y + statusBar.height + Theme.paddingLarge
+                            headingVerticalOffset: statusBar.y + statusBar.height
 
                             enabled: locked && !lockScreen.moving && deviceLockContainer.isCurrentItem
                             focus: !Desktop.startupWizardRunning

@@ -43,6 +43,7 @@ ValueButton {
     property alias currentItem: controller.currentItem
     property alias automaticSelection: controller.automaticSelection
     readonly property bool _menuOpen: controller.menuOpen
+    property alias _controller: controller
 
     height: _menuOpen ? menu.height + contentItem.height : contentItem.height
     value: controller.value

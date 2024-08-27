@@ -6,7 +6,7 @@ Column {
     spacing: Theme.paddingLarge
 
     AboutText {
-        //% "Jolla and Sailfish are trademarks or registered trademarks of Jolla Ltd. Jolla's product names are either trademarks or registered trademarks of Jolla. Jolla’s software is protected by copyright, trademark, trade secrets and other intellectual property rights of Jolla and its licensors."
-        text: qsTrId("settings_about-la-jolla_trademark_notification")
+        //% "Jolla and Sailfish are trademarks or registered trademarks of Jollyboys Ltd. ('Our'). Our product names are either our trademarks or registered trademarks. Our Software is protected by copyright, trademark, trade secrets and other intellectual property rights."
+        text: qsTrId("settings_about-la-jolla_trademarks")
     }
 }

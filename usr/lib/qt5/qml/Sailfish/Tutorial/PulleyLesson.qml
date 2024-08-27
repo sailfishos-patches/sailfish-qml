@@ -9,7 +9,7 @@ import QtTest 1.0
 import QtGraphicalEffects 1.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
-import org.nemomobile.time 1.0
+import Nemo.Time 1.0
 import "private"
 
 Lesson {

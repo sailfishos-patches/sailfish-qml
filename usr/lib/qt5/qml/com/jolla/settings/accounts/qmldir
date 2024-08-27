@@ -6,6 +6,7 @@ JollaAccountCreationSecondDialog 1.0 JollaAccountCreationSecondDialog.qml
 JollaAccountSignInDialog 1.0 JollaAccountSignInDialog.qml
 JollaAccountSettingsDialog 1.0 JollaAccountSettingsDialog.qml
 JollaAccountSettingsDisplay 1.0 JollaAccountSettingsDisplay.qml
+JollaAccountAddOnsPage 1.0 JollaAccountAddOnsPage.qml
 AccountsPage 1.0 AccountsPage.qml
 AccountsView 1.0 AccountsView.qml
 AccountsViewLogic 1.0 AccountsViewLogic.qml
@@ -23,7 +24,6 @@ AccountBusyPage 1.0 AccountBusyPage.qml
 AccountMainSettingsDisplay 1.0 AccountMainSettingsDisplay.qml
 AccountServiceSettingsDisplay 1.0 AccountServiceSettingsDisplay.qml
 AccountSyncAdapter 1.0 AccountSyncAdapter.qml
-NetworkCheckDialog 1.0 NetworkCheckDialog.qml
 AccountUsernameField 1.0 AccountUsernameField.qml
 SyncPastPeriodOptions 1.0 SyncPastPeriodOptions.qml
 SyncScheduleOptions 1.0 SyncScheduleOptions.qml

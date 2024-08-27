@@ -69,7 +69,7 @@ NotificationGroupMember {
 
         Label {
             id: timestampLabel
-            text: Format.formatDate(root.timestamp, Format.DurationElapsed)
+            text: Format.formatDate(root.timestamp, Format.TimeElapsed)
             font.pixelSize: Theme.fontSizeExtraSmall
             color: Theme.secondaryColor
         }

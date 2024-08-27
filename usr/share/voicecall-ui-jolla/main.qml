@@ -13,9 +13,9 @@ import Sailfish.Telephony 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Policy 1.0
 import Sailfish.Contacts 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 import org.nemomobile.contacts 1.0
-import org.nemomobile.notifications 1.0
+import Nemo.Notifications 1.0
 import org.nemomobile.voicecall 1.0 as VoiceCall
 import com.jolla.voicecall 1.0
 import "common/CallHistory.js" as CallHistory
@@ -345,7 +345,7 @@ ApplicationWindow {
 
     MessagesInterface { id: messaging }
 
-    VoiceCallManager {
+    AppVoiceCallManager {
         id: telephony
 
         onUnrecoverableCallError: showCellularErrorDialog()

@@ -16,8 +16,6 @@ Page {
     property alias enterNewPinText: devicelockinput.enterNewPinText
     property alias confirmNewPinText: devicelockinput.confirmNewPinText
     property alias showCancelButton: devicelockinput.showCancelButton
-    property alias okText: devicelockinput.okText
-    property alias cancelText: devicelockinput.cancelText
 
     property alias securityCode: devicelockinput.securityCode
 

@@ -63,8 +63,7 @@ Page {
         if (days > 0) {
             //: E.g. Expiring in 2 days, 3 hours and 1 minute, time measurements are localized separately
             //% "Expiring in %0, %1 and %2"
-            text =
-                    qsTrId("clock-la-expiring_in_days_hours_minutes").arg(daysText).arg(hoursText).arg(minutesText)
+            text = qsTrId("clock-la-expiring_in_days_hours_minutes").arg(daysText).arg(hoursText).arg(minutesText)
         } else if (hours > 0) {
             //: E.g. Expiring in 1 hour and 13 minutes, time measurements are localized separately
             //% "Expiring in %0 and %1"

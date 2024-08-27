@@ -145,7 +145,7 @@ Private.SilicaMouseArea {
     property alias _windowOpacity: page.opacity
 
     property bool _opaqueBackground: background !== null && background != backgroundComponent
-    readonly property bool _exposed:  pageContainer
+    readonly property bool _exposed: pageContainer
                 && __stack_container
                 && pageContainer.visible
                 && ((pageContainer._currentContainer === __stack_container)
@@ -198,7 +198,7 @@ Private.SilicaMouseArea {
         // bindings will be broken so property changes due to state fast-forwarding aren't propagated.
         property real width: page.isPortrait ? page._horizontalDimension : page._verticalDimension
         property real height: page.isPortrait ? page._verticalDimension : page._horizontalDimension
-        property real orientation:  Orientation.Portrait
+        property real orientation: Orientation.Portrait
         property real rotation
 
         onDesiredPageOrientationChanged: _updatePageOrientation()

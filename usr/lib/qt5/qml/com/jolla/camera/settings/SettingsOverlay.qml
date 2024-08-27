@@ -2,6 +2,7 @@ import QtQuick 2.4
 import QtMultimedia 5.6
 import Sailfish.Silica 1.0
 import com.jolla.camera 1.0
+import Nemo.Configuration 1.0
 
 PinchArea {
     id: overlay
@@ -133,7 +134,10 @@ PinchArea {
     }
 
     CameraDeviceToggle {
-        onSelected: Settings.deviceId = deviceId
+        onSelected: {
+            Settings.deviceId = deviceId
+            camera.digitalZoom = 1.0
+        }
 
         parent: {
             switch(_overlayPosition.backCameraToggle) {
@@ -397,7 +401,9 @@ PinchArea {
             enabled: overlay._exposed
             visible: overlay._exposed
 
-            columns: Math.min(count, Math.floor((parent.width + spacing - 2 * Theme.horizontalPageMargin)/(overlay._menuWidth + spacing)))
+            columns: Math.min(count,
+                              Math.floor((parent.width + spacing - 2 * Theme.horizontalPageMargin)
+                                         / (overlay._menuWidth + spacing)))
             spacing: overlay._menuItemHorizontalSpacing
 
             Item {
@@ -458,13 +464,15 @@ PinchArea {
             SettingsMenu {
                 id: exposureModeMenu
 
-                active: model.length > 1 || CameraConfigs.supportedIsoSensitivities.length == 0
+                active: model.length > 1
+                        || (!experimentalModes.value && CameraConfigs.supportedIsoSensitivities.length == 0)
                 width: overlay._menuWidth
                 title: Settings.exposureModeText
                 header: upperHeader
-                // Disabled in 4.4.0
-                model: CameraConfigs.supportedIsoSensitivities.length == 0
-                       ? [Camera.ExposureManual] : []
+                model: experimentalModes.value
+                       ? CameraConfigs.supportedExposureModes
+                       : CameraConfigs.supportedIsoSensitivities.length == 0
+                         ? [Camera.ExposureManual] : []
                 delegate: SettingsMenuItem {
                     settings: Settings.mode
                     property: "exposureMode"
@@ -527,7 +535,9 @@ PinchArea {
     Row {
         id: topRow
 
-        property real _topRowMargin: overlay.topButtonRowHeight/2 - overlay._menuWidth/2
+        property real _topRowMargin: Math.max(overlay.topButtonRowHeight/2 - overlay._menuWidth/2,
+                                              (Screen.hasCutouts && overlay.isPortrait)
+                                              ? (Screen.topCutout.height + Theme.paddingSmall) : 0)
 
         anchors.horizontalCenter: parent.horizontalCenter
         spacing: grid.spacing
@@ -561,14 +571,15 @@ PinchArea {
         Item {
             width: overlay._menuWidth
             height: width
-            // Disabled in 4.4.0
-            visible: CameraConfigs.supportedIsoSensitivities.length == 0
+            visible: experimentalModes.value ? CameraConfigs.supportedExposureModes.length > 1
+                                             : CameraConfigs.supportedIsoSensitivities.length == 0
             y: topRow.dragY(exposureModeMenu.currentItem ? exposureModeMenu.currentItem.y : 0)
 
             Icon {
                 anchors.centerIn: parent
                 color: Theme.lightPrimaryColor
-                source: Settings.exposureModeIcon(Camera.ExposureManual /*Settings.mode.exposureMode*/)
+                source: Settings.exposureModeIcon(experimentalModes.value ? Settings.mode.exposureMode
+                                                                          : Camera.ExposureManual)
             }
         }
 
@@ -769,5 +780,12 @@ PinchArea {
                   : //% "Select location for the landscape capture key"
                     qsTrId("camera-la-landscape-capture-key-location")
         }
+    }
+
+    ConfigurationValue {
+        id: experimentalModes
+
+        key: "/apps/jolla-camera/enable_experimental_modes"
+        defaultValue: false
     }
 }

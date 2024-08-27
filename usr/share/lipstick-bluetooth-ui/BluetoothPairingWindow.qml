@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.0
 import Nemo.DBus 2.0
 import Sailfish.Silica 1.0
@@ -299,6 +299,7 @@ SystemDialog {
 
             BusyIndicator {
                 id: busyIndicator
+
                 size: BusyIndicatorSize.Large
                 anchors.horizontalCenter: parent.horizontalCenter
                 visible: running
@@ -306,6 +307,7 @@ SystemDialog {
 
             Label {
                 id: passkeyLabel
+
                 width: parent.width
                 color: Theme.highlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
@@ -317,6 +319,7 @@ SystemDialog {
 
             TextField {
                 id: passkeyInputField
+
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width - (Theme.paddingLarge * 4)
 
@@ -335,7 +338,7 @@ SystemDialog {
 
                 EnterKey.enabled: text || inputMethodComposing
                 EnterKey.iconSource: "image://theme/icon-m-enter-close"
-                EnterKey.onClicked: root.focus = true
+                EnterKey.onClicked: content.focus = true
             }
 
             TrustBluetoothDeviceSwitch {
@@ -359,6 +362,7 @@ SystemDialog {
 
                 SystemDialogTextButton {
                     id: cancelButton
+
                     x: confirmButton.visible ? 0 : (parent.width/2) - (width/2)
                     y: parent.height - height
                     width: confirmButton.visible ? root.width / 2 : root.width
@@ -376,6 +380,7 @@ SystemDialog {
 
                 SystemDialogTextButton {
                     id: confirmButton
+
                     x: cancelButton.visible ? parent.width - width : (parent.width/2) - (width/2)
                     y: parent.height - height
                     width: cancelButton.visible ? root.width / 2 : root.width

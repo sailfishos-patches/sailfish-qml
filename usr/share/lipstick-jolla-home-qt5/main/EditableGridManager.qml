@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.6
 
 QtObject {
     property Item view

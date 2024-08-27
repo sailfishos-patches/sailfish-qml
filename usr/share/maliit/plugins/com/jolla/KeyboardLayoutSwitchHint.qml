@@ -80,6 +80,7 @@ Loader {
 
     FirstTimeUseCounter {
         id: firstTimeUseCounter
+
         limit: 2
         defaultValue: 0
         key: "/sailfish/text_input/switch_keyboard_hint_count"

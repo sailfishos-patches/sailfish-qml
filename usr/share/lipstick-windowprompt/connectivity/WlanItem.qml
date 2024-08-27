@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Settings.Networking 1.0
 
@@ -15,19 +15,22 @@ ListItem {
     property bool connected: modelData && (modelData.state == "online" || modelData.state == "ready")
     property bool highlightContent: connected || menuOpen || down
     property color baseColor: highlightContent ? Theme.highlightColor : Theme.primaryColor
+    property int horizontalMargin: Theme.paddingLarge
 
     openMenuOnPressAndHold: false
     highlightedColor: "transparent"
 
     Image {
         id: icon
-        x: Theme.paddingLarge
+
+        x: listItem.horizontalMargin
         anchors.verticalCenter: parent.verticalCenter
         source: "image://theme/icon-m-wlan-" + WlanUtils.getStrengthString(modelData.strength) + "?" + listItem.baseColor
     }
 
     Label {
         id: serviceName
+
         anchors {
             left: icon.right
             leftMargin: Theme.paddingSmall
@@ -54,11 +57,12 @@ ListItem {
 
     Label {
         id: bssidLabel
+
         anchors {
             leftMargin: Theme.paddingMedium
             verticalCenter: parent.verticalCenter
             right: secureIcon.visible ? secureIcon.left : parent.right
-            rightMargin: secureIcon.visible ? Theme.paddingSmall : Theme.paddingLarge
+            rightMargin: secureIcon.visible ? Theme.paddingSmall : listItem.horizontalMargin
         }
         font.pixelSize: Theme.fontSizeExtraSmall
         visible: !modelData.name
@@ -68,7 +72,8 @@ ListItem {
 
     Image {
         id: secureIcon
-        x: parent.width - width - Theme.paddingLarge
+
+        x: parent.width - width - listItem.horizontalMargin
         anchors.verticalCenter: parent.verticalCenter
         source: "image://theme/icon-s-secure?" + listItem.baseColor
         visible: modelData.security ? modelData.security.indexOf("none") == -1 : false

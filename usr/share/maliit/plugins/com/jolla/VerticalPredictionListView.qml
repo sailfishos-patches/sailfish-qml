@@ -13,8 +13,14 @@ PredictionListView {
 
     clip: true
 
+    Component.onCompleted: {
+        if (Clipboard.hasText) {
+            stateChange.restart()
+        }
+    }
+
     onPredictionsChanged: {
-        if (!clipboardChange.running) {
+        if (!stateChange.running) {
             view.positionViewAtIndex(0, ListView.Beginning)
         }
     }
@@ -90,11 +96,19 @@ PredictionListView {
         target: Clipboard
         onTextChanged: {
             verticalList.positionViewAtBeginning()
-            clipboardChange.restart()
+            stateChange.restart()
         }
     }
+    Connections {
+        target: MInputMethodQuick
+        onFocusTargetChanged: {
+            verticalList.positionViewAtBeginning()
+            stateChange.restart()
+        }
+    }
+
     Timer {
-        id: clipboardChange
+        id: stateChange
         interval: 1000
     }
 }

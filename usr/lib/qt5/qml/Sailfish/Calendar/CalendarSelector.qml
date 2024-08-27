@@ -51,7 +51,7 @@ BackgroundItem {
                     visible: source != ""
                 }
                 Label {
-                    text: root.localCalendar ? CommonCalendarTranslations.getLocalCalendarName()
+                    text: root.localCalendar ? CalendarTexts.getLocalCalendarName()
                                              : root.name
 
                     color: Theme.highlightColor

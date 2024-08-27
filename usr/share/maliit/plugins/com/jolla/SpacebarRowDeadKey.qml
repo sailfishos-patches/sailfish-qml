@@ -19,12 +19,13 @@ KeyboardRow {
     }
     DeadKey {
         id: deadKey
-        implicitWidth: punctuationKeyWidthNarrow
+
+        implicitWidth: punctuationKeyWidth
         fixedWidth: !splitActive
         separator: SeparatorState.HiddenSeparator
     }
     ContextAwareCommaKey {
-        implicitWidth: punctuationKeyWidthNarrow
+        implicitWidth: punctuationKeyWidth
     }
     SpacebarKey {}
     SpacebarKey {
@@ -33,8 +34,9 @@ KeyboardRow {
     }
     PeriodKey {
         id: periodKey
+
         accentsShifted: accents
-        implicitWidth: punctuationKeyWidthNarrow
+        implicitWidth: punctuationKeyWidth
     }
     EnterKey {}
 }

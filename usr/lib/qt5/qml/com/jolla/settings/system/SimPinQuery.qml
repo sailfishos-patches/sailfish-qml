@@ -7,8 +7,8 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import org.nemomobile.notifications 1.0
-import MeeGo.QOfono 0.2
+import Nemo.Notifications 1.0
+import QOfono 0.2
 
 Item {
     id: root
@@ -18,7 +18,6 @@ Item {
     property alias multiSimManager: pinInput.multiSimManager
     property alias showCancelButton: pinInput.showCancelButton
     property alias showBackgroundGradient: pinInput.showBackgroundGradient
-    property alias cancelText: pinInput.cancelText
     property alias emergency: pinInput.emergency
 
     property int _confirmedPinType

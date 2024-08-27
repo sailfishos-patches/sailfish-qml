@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2016 - 2023 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -11,81 +11,93 @@ import Csd 1.0
 import ".."
 
 Item {
-    id: root
-
-    property real sensorX
-    property real sensorY
-    property real sensorZ
-
-    property real valueX
-    property real valueY
-    property real valueZ
-
     property bool running
     property bool done
     property bool testPassed
-    property int secondsRemaining: timer2.count == 0 ? 0 : Math.round(16 - (timer2.count / 2))
+
+    // Actual sampling rate might vary from one device to another
+    // Normalize ui visuals by doing timer based subsampling
+    readonly property int subsampleRate: 2
+    readonly property int sampleRate: subsampleRate * 2 + 1
+    readonly property int samplesNeeded: 32
+    property int samplesAcquired
+    readonly property int secondsRemaining: (samplesNeeded - samplesAcquired + subsampleRate - 1) / subsampleRate
+
+    // The latest sensor values seen
+    property real rawX
+    property real rawY
+    property real rawZ
+
+    // The latest sensor values picked for use
+    property real curX
+    property real curY
+    property real curZ
+
+    // Average of the first samplesNeeded picked values
+    property real avgX
+    property real avgY
+    property real avgZ
+
+    // Pass/Fail limits from config
+    readonly property real gyroMin: CsdHwSettings.gyroMin
+    readonly property real gyroMax: CsdHwSettings.gyroMax
 
     function start() {
-        if (running) {
-            return
-        }
-        testPassed = false
-        done = false
-        running = true
-
-        timer2.start()
-        timer1.start()
-    }
-
-    function _retrieveGyroData() {
-        if (timer2.count < 32) {
-            sensor.updateGyroSensor()
-            timer2.count = timer2.count + 1
-        }
-
-        var sensorResult = sensor.getResult
-        if (!timer1.running) {
-            root.testPassed = sensorResult
-            done = true
-            running = false
-        }
-
-        sensorX = sensor.getXResult
-        sensorY = sensor.getYResult
-        sensorZ = sensor.getZResult
-    }
-
-    Timer {
-        id: timer1
-        interval: 16500
-        onTriggered: {
-            timer2.stop()
-            root._retrieveGyroData()
+        if (!running) {
+            testPassed = false
+            done = false
+            running = true
+            subsampleTimer.start()
         }
     }
 
-    Timer {
-        id: timer2
-        property int count
-        interval: 500
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root._retrieveGyroData()
+    function _subsample() {
+        curX = rawX
+        curY = rawY
+        curZ = rawZ
+        _accumulate()
     }
 
-    GyroSensor {
-        id: sensor
+    function _accumulate() {
+        if (samplesAcquired < samplesNeeded) {
+            avgX += curX
+            avgY += curY
+            avgZ += curZ
+            if (++samplesAcquired == samplesNeeded) {
+                _average()
+            }
+        }
+    }
+
+    function _average() {
+        avgX /= samplesAcquired
+        avgY /= samplesAcquired
+        avgZ /= samplesAcquired
+
+        testPassed = (avgX || avgY || avgZ)
+                     && gyroMin < avgX && avgX < gyroMax
+                     && gyroMin < avgY && avgY < gyroMax
+                     && gyroMin < avgZ && avgZ < gyroMax
+        done = true
+        running = false
     }
 
     Gyroscope {
+        dataRate: sampleRate
         active: true
         onReadingChanged: {
             if (reading) {
-                valueX = reading.x
-                valueY = reading.y
-                valueZ = reading.z
+                rawX = reading.x
+                rawY = reading.y
+                rawZ = reading.z
             }
         }
+    }
+
+    Timer {
+        id: subsampleTimer
+        interval: 1000 / subsampleRate
+        repeat: true
+        onTriggered: _subsample()
     }
 }

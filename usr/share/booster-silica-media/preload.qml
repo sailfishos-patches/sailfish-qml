@@ -3,10 +3,10 @@ import Sailfish.Silica 1.0
 import Sailfish.Gallery 1.0
 import QtMultimedia 5.4
 import QtDocGallery 5.0
-import org.nemomobile.ngf 1.0
-import org.nemomobile.dbus 2.0
-import org.nemomobile.policy 1.0
-import org.nemomobile.thumbnailer 1.0
+import Nemo.Ngf 1.0
+import Nemo.DBus 2.0
+import Nemo.Policy 1.0
+import Nemo.Thumbnailer 1.0
 
 ApplicationWindow {
     cover: null  // don't create a cover - the switcher will try to show it

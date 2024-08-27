@@ -98,7 +98,7 @@ Column {
         //: beginning of a sentence, thus a colon is needed after "Last checked".
         //% "Last checked: %1"
         text: qsTrId("settings_sailfishos-la-last_checked").arg(
-                  Format.formatDate(storeIf.lastChecked, Formatter.DurationElapsed))
+                  Format.formatDate(storeIf.lastChecked, Formatter.TimeElapsed))
         color: Theme.secondaryHighlightColor
         font.pixelSize: Theme.fontSizeExtraSmall
         visible: (storeIf.updateStatus === StoreInterface.UpToDate ||

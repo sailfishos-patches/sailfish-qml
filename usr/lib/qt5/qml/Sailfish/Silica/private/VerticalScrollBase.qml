@@ -63,9 +63,10 @@ SilicaItem {
     opacity: (timer.moving && _inBounds) || timer.running || highlighted ? 1.0 : 0.0
     visible: flickable.contentHeight > flickable.height
     Behavior on opacity { FadeAnimation { duration: 400 } }
-    y: Math.max(margin, Math.min(
-                (parent.height / flickable.height) * (_headerSpacing + (flickable.contentY - flickable.originY + _topMenuSpacing) * _sizeRatio),
-                (parent.height - height - margin)))
+    y: Math.max(margin,
+                Math.min((parent.height / flickable.height)
+                         * (_headerSpacing + (flickable.contentY - flickable.originY + _topMenuSpacing) * _sizeRatio),
+                         (parent.height - height - margin)))
 
     Component.onCompleted: {
         if (!flickable) {

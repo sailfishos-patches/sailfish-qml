@@ -8,6 +8,7 @@ AccountCreationAgent {
 
     property alias provider: authDialog.accountProvider
     property alias services: authDialog.services
+    property var sharedScheduleServices: services
 
     property alias usernameLabel: authDialog.usernameLabel
     property alias username: authDialog.username
@@ -124,6 +125,7 @@ AccountCreationAgent {
                     accountProvider: root.accountProvider
                     autoEnableAccount: true
                     services: root.services
+                    sharedScheduleServices: root.sharedScheduleServices
                     allowCalendarRefresh: false
 
                     onAccountSaveCompleted: {

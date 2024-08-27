@@ -1,7 +1,7 @@
 // Copyright (C) 2013 Jolla Ltd.
 // Contact: Pekka Vuorela <pekka.vuorela@jollamobile.com>
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import com.meego.maliitquick 1.0
 
@@ -9,12 +9,14 @@ Column {
     id: keyboardLayout
 
     width: parent ? parent.width : 0
+    bottomPadding: portraitMode ? Math.max(MInputMethodQuick.appOrientation === 180 ? Screen.topCutout.height : 0,
+                                           geometry.cornerPadding)
+                                : 0
 
     property string type: model ? model.type : ""
     property bool portraitMode
     property int keyHeight
     property int punctuationKeyWidth
-    property int punctuationKeyWidthNarrow
     property int shiftKeyWidth
     property int functionKeyWidth
     property int shiftKeyWidthNarrow
@@ -90,7 +92,7 @@ Column {
         sourceComponent: active && keyboardLayout.handler ? keyboardLayout.handler.topItem : null
         width: parent.width
         visible: active
-        clip: keyboard.moving
+        clip: keyboard.moving || keyboard.hasHorizontalPadding
         asynchronous: false
         opacity: (canvas.activeIndex === keyboardLayout.layoutIndex) ? 1.0 : 0.0
         Behavior on opacity { FadeAnimation {}}
@@ -104,7 +106,6 @@ Column {
         if (portraitMode) {
             keyHeight = geometry.keyHeightPortrait
             punctuationKeyWidth = geometry.punctuationKeyPortait
-            punctuationKeyWidthNarrow = geometry.punctuationKeyPortraitNarrow
             shiftKeyWidth = geometry.shiftKeyWidthPortrait
             functionKeyWidth = geometry.functionKeyWidthPortrait
             shiftKeyWidthNarrow = geometry.shiftKeyWidthPortraitNarrow
@@ -114,7 +115,6 @@ Column {
         } else {
             keyHeight = geometry.keyHeightLandscape
             punctuationKeyWidth = geometry.punctuationKeyLandscape
-            punctuationKeyWidthNarrow = geometry.punctuationKeyLandscapeNarrow
             functionKeyWidth = geometry.functionKeyWidthLandscape
 
             var shouldSplit = keyboard.splitEnabled && splitSupported

@@ -1,13 +1,14 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Settings.Networking 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Nemo.DBus 2.0
 
 Column {
     id: root
 
+    property int horizontalMargin: Theme.paddingLarge
     property string path
     property bool canAccept: {
         if (network.ssid.length > 0 && (!identityField.required || network.identity.length > 0)) {
@@ -61,12 +62,13 @@ Column {
     SystemDialogHeader {
         //% "Add network"
         title: qsTrId("lipstick_jolla_home-he-add_network")
-        topPadding: Screen.sizeCategory >= Screen.Large ? 2*Theme.paddingLarge : Theme.paddingLarge // align with ConnectionSelector
+        tight: true // align with ConnectionSelector
     }
 
     SsidField {
         id: ssidField
 
+        textMargin: root.horizontalMargin
         network: root.network
 
         property bool moveFocus: identityField.required || passphraseField.required
@@ -87,10 +89,14 @@ Column {
 
     HiddenSwitch {
         network: root.network
+        leftMargin: root.horizontalMargin
+        rightMargin: root.horizontalMargin
     }
 
     EncryptionComboBox {
         network: root.network
+        leftMargin: root.horizontalMargin
+        rightMargin: root.horizontalMargin
     }
 
     Item {
@@ -101,13 +107,18 @@ Column {
 
     EapComboBox {
         network: root.network
+        leftMargin: root.horizontalMargin
+        rightMargin: root.horizontalMargin
     }
 
     InnerAuthComboBox {
         network: root.network
+        leftMargin: root.horizontalMargin
+        rightMargin: root.horizontalMargin
     }
 
     CACertChooser {
+        horizontalMargin: root.horizontalMargin
         network: root.network
 
         onFromFileSelected: {
@@ -124,12 +135,13 @@ Column {
                             "clientCertFile": root.network.clientCertFile,
                             "hidden": root.network.hidden
                         })
-            settingsDBus.call("showAddNetworkDialog");
+            settingsDBus.call("showAddNetworkDialog")
             root.closeDialog()
         }
     }
 
     ClientCertChooser {
+        horizontalMargin: root.horizontalMargin
         network: root.network
 
         onKeyFromFileSelected: {
@@ -147,7 +159,7 @@ Column {
                             "clientCertFile": root.network.clientCertFile,
                             "hidden": root.network.hidden
                         })
-            settingsDBus.call("showAddNetworkDialog");
+            settingsDBus.call("showAddNetworkDialog")
             root.closeDialog()
         }
         onCertFromFileSelected: {
@@ -165,7 +177,7 @@ Column {
                             "clientCertFile": "custom",
                             "hidden": root.network.hidden
                         })
-            settingsDBus.call("showAddNetworkDialog");
+            settingsDBus.call("showAddNetworkDialog")
             root.closeDialog()
         }
     }
@@ -173,6 +185,7 @@ Column {
     IdentityField {
         id: identityField
 
+        textMargin: root.horizontalMargin
         network: root.network
 
         immediateUpdate: true
@@ -183,6 +196,7 @@ Column {
     PassphraseField {
         id: passphraseField
 
+        textMargin: root.horizontalMargin
         network: root.network
         immediateUpdate: true
         EnterKey.enabled: root.canAccept

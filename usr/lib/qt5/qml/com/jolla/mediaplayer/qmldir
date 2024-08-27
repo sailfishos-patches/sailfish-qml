@@ -1,0 +1,27 @@
+module com.jolla.mediaplayer
+plugin mediaplayerplugin
+AddToPlaylistPage 1.0 AddToPlaylistPage.qml
+AlbumArt 1.0 AlbumArt.qml
+singleton AudioPlayer 1.0 AudioPlayer.qml
+Container 1.0 Container.qml
+CoverArt 1.0 CoverArt.qml
+GriloTrackerModel 1.0 GriloTrackerModel.qml
+MediaContainerListDelegate 1.0 MediaContainerListDelegate.qml
+MediaContainerIconDelegate 1.0 MediaContainerIconDelegate.qml
+MediaContainerPlaylistDelegate 1.0 MediaContainerPlaylistDelegate.qml
+MediaListDelegate 1.0 MediaListDelegate.qml
+MediaPlayerDockedPanel 1.0 MediaPlayerDockedPanel.qml
+MediaPlayerListView 1.0 MediaPlayerListView.qml
+ProxyMprisPlayer 1.0 ProxyMprisPlayer.qml
+NewPlaylistDialog 1.0 NewPlaylistDialog.qml
+NowPlayingMenuItem 1.0 NowPlayingMenuItem.qml
+PlayQueuePage 1.0 PlayQueuePage.qml
+PlaylistColors 1.0 PlaylistColors.js
+PlaylistManager 1.0 PlaylistManager.qml
+SearchPageHeader 1.0 SearchPageHeader.qml
+VisualAudioAppModel 1.0 VisualAudioAppModel.qml
+VisualAudioModel 1.0 VisualAudioModel.qml
+TrackerHelpers 1.0 TrackerHelpers.js
+RegExpHelpers 1.0 RegExpHelpers.js
+PlaylistTrackerHelpers 1.0 PlaylistTrackerHelpers.js
+AudioTrackerHelpers 1.0 AudioTrackerHelpers.js

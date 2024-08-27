@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.systemsettings 1.0
 import Nemo.Mce 1.0
@@ -13,38 +13,58 @@ import Nemo.Mce 1.0
 SilicaItem {
     id: batteryStatusIndicator
 
-    property string iconSuffix
     property alias icon: batteryStatusIndicatorImage.source
     property alias text: batteryStatusIndicatorText.text
     property alias color: batteryStatusIndicatorText.color
-    property real totalHeight: height
     property bool usbPreparingMode
+    readonly property bool isCharging: batteryStatus.chargerStatus == BatteryStatus.Connected
 
     height: Theme.iconSizeExtraSmall
-    width: batteryStatusIndicatorText.x+batteryStatusIndicatorText.width
+    width: batteryStatusIndicatorText.x + batteryStatusIndicatorText.width
+    visible: deviceInfo.hasFeature(DeviceInfo.FeatureBattery)
 
     BatteryStatus {
         id: batteryStatus
     }
+
     McePowerSaveMode {
         id: mcePowerSaveMode
     }
 
-    readonly property bool isCharging: batteryStatus.chargerStatus == BatteryStatus.Connected
+    DeviceInfo {
+        id: deviceInfo
+    }
 
-    Icon {
+    Item {
         id: chargeItem
+
         anchors.verticalCenter: parent.verticalCenter
         height: chargeCableIcon.height
-        width: chargeCableIcon.width + chargeCableIcon.x
+        // assuming root item is in a container with 0 position being screen left edge
+        width: chargeCableIcon.width + batteryStatusIndicator.x
+        x: isCharging ? -extensionCord.width // normal charge cable starts at 0
+                      : (-batteryStatusIndicator.x - width)
         clip: chargeCableAnim.running
+
+        Behavior on x { NumberAnimation { id: chargeCableAnim; duration: 500; easing.type: Easing.InOutQuad } }
+
         Icon {
             id: chargeCableIcon
-            source: "image://theme/icon-status-charge-cable" + iconSuffix
+
+            source: "image://theme/icon-status-charge-cable"
             anchors.verticalCenter: parent.verticalCenter
             visible: isCharging || chargeCableAnim.running
-            x: isCharging ? 0 : -width
-            Behavior on x { NumberAnimation { id: chargeCableAnim; duration: 500; easing.type: Easing.InOutQuad } }
+            anchors.right: chargeItem.right
+        }
+
+        // some extra cord if the indicator needs to be indented
+        Icon {
+            id: extensionCord
+
+            source: "image://theme/icon-status-charge-extension"
+            anchors.verticalCenter: parent.verticalCenter
+            visible: chargeCableIcon.visible
+            anchors.right: chargeCableIcon.left
         }
 
         layer.enabled: usbPreparingMode
@@ -84,9 +104,9 @@ SilicaItem {
 
     Icon {
         id: batteryStatusIndicatorImage
+
         anchors.verticalCenter: parent.verticalCenter
-        x: Math.max(chargeItem.width, Theme.paddingMedium)
-        source: sourceValue
+        x: Math.max(0, chargeItem.x + chargeItem.width)
 
         readonly property bool baseNameEquals: sourceValue.indexOf(source) === 0 || source.toString().indexOf(sourceValue) === 0
         property string sourceValue: {
@@ -98,14 +118,16 @@ SilicaItem {
             } else if (mcePowerSaveMode.active) {
                 name = "powersave"
             }
-            return ["image://theme/icon-status-", name, iconSuffix].join("")
+            return "image://theme/icon-status-" + name
         }
 
         // delay updating state to coincide with cable animation touching the indicator
         onSourceValueChanged: statusChangeTimer.restart()
+        Component.onCompleted: source = sourceValue // avoid binding in start
 
         Timer {
             id: statusChangeTimer
+
             interval: batteryStatusIndicatorImage.baseNameEquals ? 0 : chargeCableAnim.duration/2
             onTriggered: batteryStatusIndicatorImage.source = batteryStatusIndicatorImage.sourceValue
         }
@@ -113,6 +135,7 @@ SilicaItem {
 
     Text {
         id: batteryStatusIndicatorText
+
         anchors {
             left: batteryStatusIndicatorImage.right
             leftMargin: Theme.paddingSmall

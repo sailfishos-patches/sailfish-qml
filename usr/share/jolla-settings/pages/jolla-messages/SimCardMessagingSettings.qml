@@ -9,11 +9,11 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.AccessControl 1.0
 import com.jolla.messages.settings.translations 1.0
-import org.nemomobile.configuration 1.0
-import org.nemomobile.notifications 1.0
+import Nemo.Configuration 1.0
+import Nemo.Notifications 1.0
 import org.nemomobile.ofono 1.0
-import MeeGo.QOfono 0.2
-import MeeGo.Connman 0.2
+import QOfono 0.2
+import Connman 0.2
 
 Column {
     id: simCardMessagingSettings

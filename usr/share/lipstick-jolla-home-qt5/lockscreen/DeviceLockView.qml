@@ -7,13 +7,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import com.jolla.lipstick 0.1
 import com.jolla.settings.system 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.devicelock 1.0
-import org.nemomobile.ngf 1.0
+import Nemo.Ngf 1.0
 import org.nemomobile.lipstick 0.1
 
 DeviceLockInput {
@@ -29,15 +29,15 @@ DeviceLockInput {
 
     // Don't show emergency call button if device has no voice capability, in case something happen and
     // the value is undefined show it since this is critical functionality
-    showEmergencyButton: Desktop.simManager.enabledModems.length > 0 || !Desktop.simManager.ready
+    showEmergencyButton: Desktop.deviceInfo.hasCellularVoiceCallFeature && (Desktop.simManager.enabledModems.length > 0 || !Desktop.simManager.ready)
     focus: !Desktop.startupWizardRunning
+    pasteDisabled: true
 
     Timer {
         id: resetTimer
         interval: 300
         onTriggered: {
             pininput.titleText = pininput.enterSecurityCode
-            pininput.lastChance = false
             pininput.emergency = false
             pininput._resetView()
         }

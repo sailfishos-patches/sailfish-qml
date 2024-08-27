@@ -1,8 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Timezone 1.0
-import org.nemomobile.time 1.0
-import org.nemomobile.alarms 1.0
+import Nemo.Time 1.0
+import Nemo.Alarms 1.0
 import com.jolla.clock.private 1.0
 import "../common"
 
@@ -66,7 +66,7 @@ CoverBackground {
 
             onLayoutDataChanged: _calculatePaddings()
 
-            // TODO: only display enabled alarms once org.nemomobile.time alarm model supports filtering
+            // TODO: only display enabled alarms once Nemo.Time alarm model supports filtering
 
             model: enabledAlarmsModel
             maximumCount: _stopwatchMode ? 0 : (_maximumItems - timersView.visualCount)

@@ -22,12 +22,6 @@ CsdTestPage {
     property int minimumPlayingTime: runInTests
                                      ? page.parameters["RunInTestTime"] * 60*1000 : 15000
 
-
-    allowedOrientations: firstVideoLoaded ? ((video.contentRect.height > video.contentRect.width) ?
-                                                 Orientation.Portrait : Orientation.Landscape) :
-                                            Orientation.Portrait
-    orientation: allowedOrientations
-
     property bool originalAmbientLightSensor
     property int originalBrightness
 

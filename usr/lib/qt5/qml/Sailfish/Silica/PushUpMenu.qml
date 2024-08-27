@@ -41,7 +41,6 @@ PulleyMenuBase {
 
     property real topMargin: _menuLabel ? 0 : Theme.paddingLarge
     property real bottomMargin: Theme.itemSizeSmall
-    property real _contentEnd: contentColumn.height + topMargin
     property Item _menuLabel: {
         var firstChild = contentColumn.visible && Util.childAt(contentColumn, width/2, 1)
         if (firstChild && firstChild.hasOwnProperty("__silica_menulabel")) {
@@ -55,6 +54,7 @@ PulleyMenuBase {
     spacing: 0
     y: flickable.originY + flickable.contentHeight + _contentDeficit
 
+    _contentEnd: contentColumn.height + topMargin
     _contentColumn: contentColumn
     _isPullDownMenu: false
     _inactiveHeight: 0
@@ -62,12 +62,18 @@ PulleyMenuBase {
     _inactivePosition: Math.round(y + _inactiveHeight + spacing - flickable.height)
     _finalPosition: _inactivePosition + _activeHeight
     _menuIndicatorPosition: -Theme.paddingSmall + spacing
-    _highlightIndicatorPosition: Math.max(Math.min(_dragDistance, _contentEnd) - _menuItemHeight + spacing,
-        _menuIndicatorPosition + (_dragDistance/(_menuItemHeight+_topDragMargin)*(Theme.paddingSmall+_topDragMargin)))
+    _highlightIndicatorPosition: Math.max(Math.min(_dragDistance, _contentEnd)
+                                          - _menuItemHeight + spacing,
+                                          _menuIndicatorPosition + (_dragDistance / (_menuItemHeight + _topDragMargin)
+                                                                    * (Theme.paddingSmall + _topDragMargin)))
 
     property Component background: Rectangle {
         id: bg
-        anchors { fill: parent; topMargin: (pushUpMenu.spacing - _shadowHeight) * Math.min(1, _dragDistance/Theme.itemSizeSmall) }
+
+        anchors {
+            fill: parent
+            topMargin: (pushUpMenu.spacing - _shadowHeight) * Math.min(1, _dragDistance/Theme.itemSizeSmall)
+        }
         opacity: pushUpMenu.active ? 1.0 : 0.0
         gradient: Gradient {
             GradientStop { position: 0.0; color: Theme.rgba(pushUpMenu.backgroundColor, 0.0) }
@@ -92,7 +98,7 @@ PulleyMenuBase {
             if (menuContentY >= 0) {
                 if (flickable.dragging && !_bounceBackRunning) {
                     _highlightMenuItem(contentColumn, menuContentY - y - _menuItemHeight)
-                } else if (quickSelect){
+                } else if (quickSelect) {
                     _quickSelectMenuItem(contentColumn, menuContentY - y - _menuItemHeight)
                 }
             }
@@ -111,7 +117,9 @@ PulleyMenuBase {
 
     // Ensure that we are positioned at the bottom limit, even if the content does not fill the height
     property real _contentDeficit: Math.max(flickable.height - (flickable.contentHeight + _pdmHeight + spacing), 0)
-    property real _pdmHeight: flickable.pullDownMenu ? (flickable.pullDownMenu._inactiveHeight + flickable.pullDownMenu.spacing) : 0
+    property real _pdmHeight: flickable.pullDownMenu
+                              ? (flickable.pullDownMenu._inactiveHeight + flickable.pullDownMenu.spacing)
+                              : 0
 
     function _addToFlickable(flickableItem) {
         if (flickableItem.pushUpMenu !== undefined) {

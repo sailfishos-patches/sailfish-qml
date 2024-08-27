@@ -1,4 +1,4 @@
-.import MeeGo.Connman 0.2 as Connman
+.import Connman 0.2 as Connman
 
 function maybeJoin(strlist) {
     return strlist && strlist.length > 0 ? strlist.join(",") : ""

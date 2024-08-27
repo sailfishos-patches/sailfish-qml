@@ -51,6 +51,10 @@ Notification {
             //% "SIM card disabled"
             previewBody = qsTrId("settings-la-sim_card_disabled")
             break
+        case SettingsControlError.NoEthernetDevice:
+            //% "No ethernet device active"
+            previewBody = qsTrId("settings-la-no_ethernet_device")
+            break
         default:
             // No notification
             console.warn("Trying to send an unknown error notification. Source of programming error.")

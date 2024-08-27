@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 import Sailfish.Lipstick 1.0
@@ -22,7 +22,7 @@ StackLayer {
     onQueueWindow: {
         if (Desktop.startupWizardRunning) {
             if (JollaSystemInfo.matchingPidForCommand(window.window.processId, '/usr/bin/jolla-startupwizard', true) !== -1
-                        || JollaSystemInfo.matchingPidForCommand(window.window.processId, '/usr/bin/sailfish-browser', true) !== -1) {
+                        || JollaSystemInfo.matchingPidForCommand(window.window.processId, '/usr/bin/sailfish-captiveportal', true) !== -1) {
                 contentItem.appendItem(window)
             }
         } else if (!Desktop.instance.switcher.checkMinimized(window.window.windowId)) {

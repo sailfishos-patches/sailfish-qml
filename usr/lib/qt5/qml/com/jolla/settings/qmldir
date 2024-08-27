@@ -18,3 +18,4 @@ SettingsErrorNotification 1.0 SettingsErrorNotification.qml
 SettingsTabItem 1.0 SettingsTabItem.qml
 ApplicationSettings 1.0 ApplicationSettings.qml
 PermissionsSection 1.0 PermissionsSection.qml
+ApplicationsModel 1.0 ApplicationsModel.qml

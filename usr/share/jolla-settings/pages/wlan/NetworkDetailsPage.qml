@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Sailfish.Settings.Networking 1.0
 
 Page {
@@ -12,13 +12,24 @@ Page {
         anchors.fill: parent
         contentHeight: column.height + Theme.paddingLarge
 
+        PullDownMenu {
+            MenuItem {
+                //% "Edit"
+                text: qsTrId("settings_network-me-edit")
+                onClicked: pageStack.animatorPush("AdvancedSettingsPage.qml", {"network": network})
+            }
+        }
+
         Column {
             id: column
             width: parent.width
 
             PageHeader {
                 title: network.name
-                description: {
+            }
+
+            SectionHeader {
+                text: {
                     switch (network.state) {
                     case "online":
                         //% "Connected"
@@ -31,6 +42,12 @@ Page {
                         return qsTrId("settings_network-la-not_connected")
                     }
                 }
+            }
+
+            DetailItem {
+                //% "Hardware Address"
+                label: qsTrId("settings_network-la-hardware_address")
+                value: network.ethernet["Address"] || "-"
             }
 
             DetailItem {
@@ -125,7 +142,7 @@ Page {
 
             Column {
                 width: parent.width
-                visible: ipv4Address.value.length > 0 || ipv6Address.value.length > 0
+                visible: network.ipv4["Address"] !== undefined || network.ipv6["Address"] !== undefined
 
                 SectionHeader {
                     //% "Addresses"
@@ -140,25 +157,37 @@ Page {
                 }
 
                 DetailItem {
-                    id: ipv4Address
                     //% "IPv4 address"
                     label: qsTrId("settings_network-la-ipv4_address")
                     value: network.ipv4["Address"]
-                    visible: value.length > 0
+                    visible: network.ipv4["Address"] !== undefined
                 }
 
                 DetailItem {
-                    id: ipv6Address
+                    //% "IPv4 Netmask"
+                    label: qsTrId("settings_network-la-ipv4_netmask")
+                    value: network.ipv4["Netmask"] || "-"
+                    visible: network.ipv4["Address"] !== undefined
+                }
+
+                DetailItem {
+                    //% "IPv4 Gateway"
+                    label: qsTrId("settings_network-la-ipv4_gateway")
+                    value: network.ipv4["Gateway"] || "-"
+                    visible: network.ipv4["Address"] !== undefined
+                }
+
+                DetailItem {
                     //% "IPv6 address"
                     label: qsTrId("settings_network-la-ipv6_address")
-                    value: network.ipv6["Address"]
-                    visible: value.length > 0
+                    value: network.ipv6["Address"] + "/" + network.ipv6["PrefixLength"]
+                    visible: network.ipv6["Address"] !== undefined
                 }
+
                 DetailItem {
                     //% "DNS servers"
                     label: qsTrId("settings_network-la-dns_servesr")
-                    value: network.nameservers ? network.nameservers.join(" ") : ""
-                    visible: value.length > 0
+                    value: network.nameservers ? network.nameservers.join("\n") : "-"
                 }
             }
         }

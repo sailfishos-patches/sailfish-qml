@@ -1,6 +1,9 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+/*!
+  \inqmlmodule Sailfish.Gallery
+*/
 ThumbnailImage {
     property alias duration: durationLabel.text
     property alias title: titleLabel.text

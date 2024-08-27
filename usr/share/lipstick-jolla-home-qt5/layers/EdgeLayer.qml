@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
@@ -96,6 +96,7 @@ Layer {
     clip: edgeLayer._showActive
                 || edgeLayer._hideActive
                 || edgeLayer._smoothClip
+                || edgeLayer.pinned
                 || (interactiveArea && interactiveArea.drag.active)
                 || gestureTransition.running
                 || visibleTransition.running

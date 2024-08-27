@@ -3,7 +3,7 @@ import Sailfish.Silica 1.0
 import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.lipstick 0.1
 
 Page {

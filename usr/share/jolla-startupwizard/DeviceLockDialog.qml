@@ -36,8 +36,6 @@ MandatoryDeviceLockInputPage {
     //% "User data encrypted"
     subTitleText: homeEncrypted && !lockCodeSet ? qsTrId("startupwizard-la-user_data_encrypted") : ""
 
-    //% "Skip"
-    cancelText: qsTrId("startupwizard-la-skip_security_code")
     showCancelButton: !homeEncrypted
 
     onStatusChanged: {

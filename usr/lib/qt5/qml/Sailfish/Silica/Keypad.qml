@@ -106,7 +106,7 @@ SilicaControl {
         pressedButtonBackground.y = itemCenter.y - pressedButtonBackground.height/2
     }
 
-    width: parent.width
+    width: parent ? parent.width : column.implicitWidth
     implicitHeight: column.implicitHeight
 
     Component.onCompleted: {

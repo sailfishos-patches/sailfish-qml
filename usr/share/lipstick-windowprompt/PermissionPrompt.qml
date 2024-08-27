@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 - 2021 Open Mobile Platform LLC.
- * Copyright (c) 2021 Jolla Ltd.
+ * Copyright (c) 2021 - 2022 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -22,6 +22,7 @@ SystemDialog {
 
     function init(promptConfig) {
         root.promptConfig = promptConfig
+        // Column refreshes are lazy, so content.Height won't yet be correct at this point
         raise()
         show()
         // Trigger here to reset if another dialog is displayed without destructing the component
@@ -39,26 +40,47 @@ SystemDialog {
 
     SilicaFlickable {
         id: flickable
-        readonly property real availableHeight: screenHeight - reservedHeight - buttons.height - autoDismissText.height - Theme.paddingSmall
-        property real originalContentHeight: content.height
-        property bool menuHasBeenOpened
+
+        readonly property real availableHeight: screenHeight - reservedHeight - buttons.height
+                                                - autoDismissText.height - Theme.paddingSmall
+        property real originalContentHeight
+        property bool menuOpen
+
         contentHeight: content.height
         height: Math.min(originalContentHeight, availableHeight)
         width: parent.width
         clip: contentHeight > availableHeight || contentHeight > originalContentHeight
-        onMenuHasBeenOpenedChanged: if (menuHasBeenOpened) originalContentHeight = content.height // break binding
+
+        Binding on originalContentHeight {
+            when: !flickable.menuOpen
+            value: content.height
+            // Default restore mode in Qt 5 is Binding.RestoreBinding
+            // After Qt 6.0 the below line will need to be added
+            //restoreMode: Binding.RestoreNone
+        }
 
         Column {
             id: content
 
             topPadding: Theme.paddingLarge
+                        + (Screen.hasCutouts && root.orientation === Qt.PortraitOrientation
+                           ? Screen.topCutout.height : 0)
             spacing: Theme.paddingLarge
             width: parent.width
 
             Image {
                 property string icon: root.promptConfig.icon || ""
-                source: icon != "" ? ((icon.indexOf("/") == 0 ? "file://" : "image://theme/") + icon)
-                                   : ""
+                source: {
+                    if (icon !== "") {
+                        if (icon.indexOf("/") === 0) {
+                            return "file://" + icon
+                        } else {
+                            return LauncherUtil.resolveIconPath(icon) || "image://theme/" + icon
+                        }
+                    } else {
+                        return ""
+                    }
+                }
                 anchors.horizontalCenter: parent.horizontalCenter
                 height: Theme.iconSizeLauncher
                 width: Theme.iconSizeLauncher
@@ -90,10 +112,9 @@ SystemDialog {
                         contentItem.clip: expanded
                         contentHeight: description.implicitHeight + 2*description.y
                         width: parent.width
-                        onClicked: {
-                            flickable.menuHasBeenOpened = true
-                            openMenu()
-                        }
+                        onClicked: openMenu()
+                        // We rely on the fact only one menu can be open at a time
+                        onMenuOpenChanged: flickable.menuOpen = menuOpen
                         Behavior on contentHeight { NumberAnimation { duration: 100; easing.type: Easing.InOutQuad } }
 
                         Label {

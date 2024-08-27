@@ -3,6 +3,9 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Item {
     id: favoriteBar
 
@@ -21,6 +24,9 @@ Item {
         return width / minColumnCount
     }
 
+    /*!
+      \internal
+    */
     readonly property bool _transitionsEnabled: allowAnimations.running
                                                 && !pageStack.currentPage.orientationTransitionRunning
 

@@ -1,0 +1,3 @@
+module Sailfish.Shell.Effects
+plugin SailfishShellEffectsPlugin
+classname SailfishShellEffectsPlugin

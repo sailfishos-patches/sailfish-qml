@@ -1,6 +1,9 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 
+/*!
+  \inqmlmodule Sailfish.Gallery
+*/
 Column {
     property alias filePathDetail: filePathItem
     property alias fileSizeDetail: fileSizeItem
@@ -37,6 +40,18 @@ Column {
         //: Camera focal length in millimeters
         //% "%1 mm"
         return qsTrId("components_gallery-value-focal-length").arg(focalLength)
+    }
+
+    function formatExposure(exposureTime) {
+        if (exposureTime >= 1) {
+            //: Camera exposure time in seconds or fraction of seconds
+            //% "%1 s"
+            return qsTrId("components_gallery-value-exposure_time").arg(exposureTime)
+        } else if (exposureTime > 0) {
+            return qsTrId("components_gallery-value-exposure_time").arg("1/" + Math.round(1 / exposureTime))
+        } else {
+            return exposureTime
+        }
     }
 
     function formatGpsCoordinates(latitude, longitude, altitude) {

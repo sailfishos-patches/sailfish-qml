@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2013 - 2022 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -8,6 +8,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.startupwizard 1.0
 import org.nemomobile.systemsettings 1.0
+import Nemo.Configuration 1.0
 
 Page {
     id: root
@@ -73,11 +74,21 @@ Page {
 
     Image {
         opacity: busyIndicator.opacity
+        visible: osLogoSettings.showLogo
         anchors {
             bottom: parent.bottom
             bottomMargin: parent.height/8
             horizontalCenter: parent.horizontalCenter
         }
-        source: "image://theme/icon-os-state-update?" + startupWizardManager.defaultHighlightColor()
+        source: osLogoSettings.logoPath + "?" + startupWizardManager.defaultHighlightColor()
+    }
+
+    ConfigurationGroup {
+        id: osLogoSettings
+
+        path: "/apps/jolla-startupwizard"
+
+        property bool showLogo: true
+        property string logoPath: "image://theme/graphic-os-logo"
     }
 }

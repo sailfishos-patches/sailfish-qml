@@ -2,6 +2,9 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as Contacts
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 MouseArea {
     id: root
 
@@ -12,13 +15,28 @@ MouseArea {
     property real contentHeight: (!readOnly || avatarAvailable) ? Math.round(Screen.width / 3) : avatarImage.implicitHeight
 
     readonly property bool avatarAvailable: avatarImage.available
+    /*!
+      \internal
+    */
     property ListModel _avatarUrlModel: ListModel {}
+    /*!
+      \internal
+    */
     property var _avatarUrls: []
+    /*!
+      \internal
+    */
     property string _avatarUrl
+    /*!
+      \internal
+    */
     property Item _contextMenu
 
     signal contactModified()
 
+    /*!
+      \internal
+    */
     function _setAvatarPath(path) {
         contact.avatarPath = path
         contactModified()
@@ -26,6 +44,9 @@ MouseArea {
         _updateAvatarMenu()
     }
 
+    /*!
+      \internal
+    */
     function _changeAvatar() {
         if (_avatarUrl === '' &&
             (!_avatarUrls.length || (_avatarUrls.length == 1 && _avatarUrls[0] == ''))) {
@@ -48,6 +69,9 @@ MouseArea {
         _contextMenu.open(root.menuParent)
     }
 
+    /*!
+      \internal
+    */
     function _avatarFromGallery() {
         // TODO fix bug: if the contact card is popped immediately after the image is selected, the contact
         // is not saved with the new image.
@@ -60,6 +84,9 @@ MouseArea {
         pageStack.animatorPush(picker)
     }
 
+    /*!
+      \internal
+    */
     function _updateAvatarModel() {
         // Get URLs for all avatars that are not covers
         _avatarUrls = contact.avatarUrlsExcluding('cover')
@@ -67,6 +94,9 @@ MouseArea {
         _updateAvatarMenu()
     }
 
+    /*!
+      \internal
+    */
     function _removeFileScheme(url) {
         var fileScheme = 'file:///'
         if (url && url.length >= fileScheme.length && url.substring(0, fileScheme.length) == fileScheme) {
@@ -75,6 +105,9 @@ MouseArea {
         return url
     }
 
+    /*!
+      \internal
+    */
     function _updateAvatarMenu() {
         if (_contextMenu && _contextMenu.height > 0) {
             // Don't update while the context menu is open

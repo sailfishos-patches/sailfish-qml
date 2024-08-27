@@ -1,0 +1,3 @@
+module Sailfish.Shell.Gestures
+plugin SailfishShellGesturesPlugin
+classname SailfishShellGesturesPlugin

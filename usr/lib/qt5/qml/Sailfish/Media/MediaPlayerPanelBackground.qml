@@ -1,6 +1,10 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+/*!
+  \qmltype MediaPlayerPanelBackground
+  \inqmlmodule Sailfish.Media
+*/
 Rectangle {
     id: root
 

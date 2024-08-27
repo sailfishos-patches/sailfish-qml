@@ -1,10 +1,9 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.contacts 1.0
 import com.jolla.settings.accounts 1.0
-import com.jolla.signonuiservice 1.0
 
 Dialog {
     id: root
@@ -22,7 +21,6 @@ Dialog {
     }
 
     function createAccount(providerName) {
-        jolla_signon_ui_service.inProcessParent = root
         accountCreator.endDestination = pageStack.currentPage
         accountCreator.endDestinationAction = PageStackAction.Pop
         accountCreator.startAccountCreationForProvider(providerName, {}, PageStackAction.Push)
@@ -135,12 +133,6 @@ Dialog {
     }
     AccountCreationManager {
         id: accountCreator
-    }
-    SignonUiService {
-        // Note: this ID is required to have this name:
-        id: jolla_signon_ui_service
-        inProcessServiceName: "com.jolla.people"
-        inProcessObjectPath: "/JollaPeopleSignonUi"
     }
 
     Component {

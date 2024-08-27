@@ -7,6 +7,7 @@ import com.jolla.keyboard 1.0
 
 SilicaItem {
     id: popperCell
+
     width: geometry.accentPopperCellWidth
     height: geometry.popperHeight
 
@@ -16,6 +17,7 @@ SilicaItem {
 
     Label {
         id: textItem
+
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter

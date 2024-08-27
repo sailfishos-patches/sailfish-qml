@@ -9,11 +9,20 @@ import Sailfish.Accounts 1.0
 import Sailfish.Contacts 1.0 as SailfishContacts
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 QtObject {
     property var addressBook
     property var simManager
 
+    /*!
+      \internal
+    */
     readonly property var _accountProvider: SailfishContacts.ContactAccountCache.accountManager.providerForAccount(addressBook.accountId)
+    /*!
+      \internal
+    */
     readonly property int _modemIndex: (!!simManager && addressBook.name === "SIM")
                                        ? simManager.indexOfModem(addressBook.extendedMetaData["ModemPath"])
                                        : -1
@@ -53,6 +62,9 @@ QtObject {
 
     readonly property url iconUrl: SailfishContacts.ContactsUtil.addressBookIconUrl(addressBook, _accountProvider)
 
+    /*!
+      \internal
+    */
     readonly property var _account: Account {
         identifier: addressBook.accountId
     }

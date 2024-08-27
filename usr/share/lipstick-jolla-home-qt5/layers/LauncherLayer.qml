@@ -1,7 +1,8 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import org.nemomobile.lipstick 0.1
+import "../backgrounds"
 
 EdgeLayer {
     id: launcherLayer
@@ -110,6 +111,12 @@ EdgeLayer {
     hintDuration: 600
     _finishDragWithAnimation: !pinned && !_wasPinning
 
+    MenuBackground {
+        z: -1
+        anchors.fill: parent
+        parent: launcherLayer.contentItem
+    }
+
     Timer {
         // long-press timer to detect pinning
         interval: 400
@@ -117,8 +124,10 @@ EdgeLayer {
                  && (absoluteExposure > cellHeight/2 && (maximumExposure - absoluteExposure) > cellHeight/2)
         onRunningChanged: launcherLayer._startPinPosition = launcherLayer._transposed ? launcherLayer.x : launcherLayer.y
         onTriggered: {
-            launcherLayer.pinPosition = launcherLayer._transposed ? launcherLayer.x : launcherLayer.y
-            launcherLayer.pinned = true
+            if (Lipstick.compositor.multitaskingHome) {
+                launcherLayer.pinPosition = launcherLayer._transposed ? launcherLayer.x : launcherLayer.y
+                launcherLayer.pinned = true
+            }
         }
     }
 

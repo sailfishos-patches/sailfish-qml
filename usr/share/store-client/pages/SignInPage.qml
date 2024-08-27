@@ -77,25 +77,16 @@ Page {
                 if (jollaStore.connectionState === JollaStore.Unauthorized) {
                     switch (jollaStore.accountState) {
                     case AccountState.NeedsUpdate:
-                        //: View placeholder text shown when there's some problem with the account
-                        //: that requires the user to go to settings and sign in again.
-                        //% "Jolla account needs to be updated"
-                        return qsTrId("jolla-store-li-account_needs_update")
+                        return jollaStore.accountNeedsUpdateMessage()
                     case AccountState.NoAccount:
-                        //: View placeholder when there's no Jolla account created or the user has not yet signed in
-                        //% "Jolla account needed"
-                        return qsTrId("jolla-store-li-account_needed")
+                        return jollaStore.accountNeededMessage();
                     case AccountState.NetworkError:
-                        //: View placeholder when there's a network error during signing in
-                        //% "Network connection failure. Try again later."
-                        return qsTrId("jolla-store-li-account_network_error")
+                        return jollaStore.accountNetworkErrorMessage()
                     default:
                         return ""
                     }
                 } else {
-                    //: View placeholder when being offline
-                    //% "Sorry, cannot connect to store right now. Please try again later."
-                    return qsTrId("jolla-store-li-being_offline")
+                    return jollaStore.beingOfflineMessage()
                 }
             }
             hintText: {

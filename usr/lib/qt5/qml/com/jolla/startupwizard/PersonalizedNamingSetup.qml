@@ -6,14 +6,18 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
-import Nemo.Ssu 1.1 as Ssu
+import Connman 0.2
+import org.nemomobile.systemsettings 1.0
 
 Item {
     id: root
 
     function personalizeBroadcastNames() {
-        wifiTechnology.tetheringId = Ssu.DeviceInfo.displayName(Ssu.DeviceInfo.DeviceModel)
+        wifiTechnology.tetheringId = deviceInfo.prettyName
+    }
+
+    DeviceInfo {
+        id: deviceInfo
     }
 
     NetworkManagerFactory {

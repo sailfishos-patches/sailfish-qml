@@ -5,14 +5,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.6
 import QtFeedback 5.0
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import org.nemomobile.lipstick 0.1
 import Nemo.DBus 2.0
-import org.nemomobile.notifications 1.0 as Nemo
-import org.nemomobile.configuration 1.0
+import Nemo.Notifications 1.0 as Nemo
+import Nemo.Configuration 1.0
 import com.jolla.lipstick 0.1
 
 import "main"
@@ -61,9 +61,8 @@ ApplicationWindow {
         allowedOrientations: Orientation.All
 
         property alias switcher: switcher
-        property bool coversVisible: Lipstick.compositor.switcherLayer.visible
-
         readonly property bool active: Lipstick.compositor.switcherLayer.active && Lipstick.compositor.systemInitComplete
+
         onActiveChanged: {
             if (!active) {
                 hintTimer.stop()
@@ -79,8 +78,8 @@ ApplicationWindow {
             }
         }
 
-        onCoversVisibleChanged: {
-            if (coversVisible) {
+        onVisibleChanged: {
+            if (visible) {
                 CoverControl.status = Cover.Activating
                 CoverControl.status = Cover.Active
             } else {
@@ -105,7 +104,11 @@ ApplicationWindow {
         Timer {
             id: hintTimer
             interval: 1000
-            onTriggered: if (!Lipstick.compositor.topMenuHinting) Lipstick.compositor.launcherLayer.showHint()
+            onTriggered: {
+                if (!Lipstick.compositor.topMenuHinting && Lipstick.compositor.multitaskingHome) {
+                    Lipstick.compositor.launcherLayer.showHint()
+                }
+            }
         }
 
         Switcher {
@@ -114,6 +117,7 @@ ApplicationWindow {
         }
 
         Binding {
+            when: Lipstick.compositor.multitaskingHome
             target: Lipstick.compositor.switcherLayer
             property: "contentY"
             value: switcher.contentY
@@ -153,19 +157,23 @@ ApplicationWindow {
             onCancelTransfer: bluetoothObexSystemAgent.cancelTransfer(transferPath)
         }
 
-        VoicecallAgent {
-            onDialNumber: voicecall.dial(number)
-        }   
+        Loader {
+            active: Desktop.deviceInfo.hasCellularVoiceCallFeature
+            sourceComponent: Component {
+                VoicecallAgent {
+                    property QtObject voicecall: DBusInterface {
+                        service: "com.jolla.voicecall.ui"
+                        path: "/"
+                        iface: "com.jolla.voicecall.ui"
 
-        DBusInterface {
-            id: voicecall
-            service: "com.jolla.voicecall.ui"
-            path: "/" 
-            iface: "com.jolla.voicecall.ui"
+                        function dial(number) {
+                            call('dial', number)
+                        }
+                    }
 
-            function dial(number) {
-                call('dial', number)
-            }   
+                    onDialNumber: voicecall.dial(number)
+                }
+            }
         }
 
         ShutterKeyHandler {

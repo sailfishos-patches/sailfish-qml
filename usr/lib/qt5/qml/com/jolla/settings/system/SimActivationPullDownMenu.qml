@@ -2,9 +2,9 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
 import Sailfish.Policy 1.0
-import MeeGo.QOfono 0.2
-import MeeGo.Connman 0.2
-import org.nemomobile.dbus 2.0
+import QOfono 0.2
+import Connman 0.2
+import Nemo.DBus 2.0
 import org.nemomobile.ofono 1.0
 
 /*

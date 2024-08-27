@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import com.jolla.settings 1.0
@@ -132,7 +132,7 @@ Page {
 
                     onClicked: {
                         if (wifiTechnology.tethering)
-                            connectionAgent.stopTethering(true)
+                            connectionAgent.stopTethering("wifi", true)
                         else
                             wifiListModel.powered = !wifiListModel.powered
                     }
@@ -183,7 +183,7 @@ Page {
 
         model: wifiListModel.available ? savedNetworks : null
 
-        delegate: NetworkItemDelegate { width: parent.width }
+        delegate: WlanItem { width: parent.width }
 
         // This is shown when connman is completely broken
         Component {

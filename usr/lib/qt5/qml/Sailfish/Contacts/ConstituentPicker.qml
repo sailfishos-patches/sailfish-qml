@@ -10,16 +10,25 @@ import Sailfish.Contacts 1.0
 import Sailfish.Telephony 1.0
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Page {
     id: root
 
     property var aggregateContact
     property var peopleModel
     property bool autoSelect: true
+    /*!
+      \internal
+    */
     property var _autoSelectedId
 
     signal constituentClicked(var constituentId)
 
+    /*!
+      \internal
+    */
     function _reload(contactIds) {
         if (autoSelect && contactIds.length === 1) {
             _autoSelectedId = contactIds[0]

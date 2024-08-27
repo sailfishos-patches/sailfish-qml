@@ -9,7 +9,7 @@ import QtQuick 2.0
 import QtQml.Models 2.1
 import Sailfish.Silica 1.0
 import com.jolla.startupwizard 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.systemsettings 1.0
 import Sailfish.Accounts 1.0
 import Sailfish.Store 1.0
