@@ -29,7 +29,7 @@ Item {
         TimeStampLabel {
             id: timeStampLabel
             anchors.verticalCenter: parent.verticalCenter
-            formatType: time.getFullYear() !== main.today.getFullYear() ? Format.DateMedium : Formatter.TimepointRelativeCurrentDay
+            formatType: Formatter.TimepointRelative
         }
     }
 }

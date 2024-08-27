@@ -45,6 +45,6 @@ BusyIndicator {
 
     y: _page || !parent ? Math.round(_portrait ? Screen.height/4 : Screen.width/4)
                         : parent.height/4
-    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.horizontalCenter: parent && parent.horizontalCenter || undefined
     size: BusyIndicatorSize.Large
 }

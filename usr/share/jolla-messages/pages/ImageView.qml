@@ -43,7 +43,7 @@ FullscreenContentPage {
         anchors.fill: parent
         additionalActions: Component {
             IconButton {
-                icon.source: "image://theme/icon-m-download"
+                icon.source: "image://theme/icon-m-cloud-download"
                 onClicked: {
                     root.copy()
                     pageStack.pop()

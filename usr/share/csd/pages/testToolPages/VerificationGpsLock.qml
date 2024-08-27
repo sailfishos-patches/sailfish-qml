@@ -9,7 +9,7 @@ import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import com.jolla.settings.system 1.0
 import QtPositioning 5.0
-import org.nemomobile.time 1.0
+import Nemo.Time 1.0
 import org.nemomobile.systemsettings 1.0
 import Csd 1.0
 import ".."
@@ -151,6 +151,8 @@ CsdTestPage {
 
         contentWidth: column.width
         contentHeight: column.height
+
+        bottomMargin: Theme.paddingLarge
 
         Column {
             id: column

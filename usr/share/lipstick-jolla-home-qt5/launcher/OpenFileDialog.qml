@@ -8,7 +8,7 @@ SystemWindow {
     id: root
 
     property string content
-    property bool isUri: true
+    property bool isGeoUri: openFileModel.url.toString().substring(0, 4) == "geo:"
 
     property real reservedHeight: ((Screen.sizeCategory < Screen.Large) ? 0.2 * Screen.height : 0.4 * Screen.height) - 1
     property bool verticalOrientation: Lipstick.compositor.topmostWindowOrientation === Qt.PrimaryOrientation
@@ -48,18 +48,22 @@ SystemWindow {
                     bottomPadding: 0
 
                     title: openFileModel.isFile
-                            //% "Open file"
-                            ? qsTrId("lipstick-jolla-home-la-open_file")
-                              //% "Open link"
-                            : qsTrId("lipstick-jolla-home-la-open_link")
+                            ? //% "Open file"
+                              qsTrId("lipstick-jolla-home-la-open_file")
+                            : root.isGeoUri
+                              ? //% "Open location"
+                                qsTrId("lipstick-jolla-home-la-open_location")
+                              : //% "Open link"
+                                qsTrId("lipstick-jolla-home-la-open_link")
                     //% "Attempting to open"
-                    description: qsTrId("lipstick-jolla-home-la-attempting_to_open_file")
+                    description: root.isGeoUri ? "" : qsTrId("lipstick-jolla-home-la-attempting_to_open_file")
                 }
 
                 Label {
                     x: (Screen.sizeCategory < Screen.Large) ? Theme.horizontalPageMargin : 0 // Match the padding inside SystemDialogHeader
                     width: parent.width - (2 * x)
 
+                    visible: !root.isGeoUri // not pretty enough to show
                     color: Theme.highlightColor
                     wrapMode: Text.Wrap
                     maximumLineCount: 2

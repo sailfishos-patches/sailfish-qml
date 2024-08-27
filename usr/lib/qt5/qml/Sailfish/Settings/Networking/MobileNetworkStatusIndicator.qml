@@ -8,7 +8,7 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
 Item {
     id: root
@@ -19,13 +19,13 @@ Item {
 
     property bool showMaximumStrength
     property bool showRoamingStatus
-    property string iconSuffix
+    property bool highlighted
 
     property bool _simPresent: !!simManager && simManager.ready && simManager.modemHasPresentSim(modemPath)
     property bool _masked: Telephony.multiSimSupported
 
     function _imagePath(iconName) {
-        return "image://theme/icon-status-" + iconName + iconSuffix
+        return "image://theme/icon-status-" + iconName
     }
 
     height: Theme.iconSizeExtraSmall
@@ -36,8 +36,9 @@ Item {
             bottom: signalStrengthIndicator.bottom
             left: signalStrengthIndicator.left
         }
+        color: root.highlighted ? palette.highlightColor : palette.primaryColor
         source: showRoamingStatus && networkRegistration.status === "roaming"
-                ? "image://theme/icon-status-roaming" + iconSuffix
+                ? "image://theme/icon-status-roaming"
                 : ""
     }
 
@@ -60,7 +61,7 @@ Item {
 
         property var source: img
         property var maskSource: mask
-        property color color: palette.primaryColor
+        property color color: root.highlighted ? palette.highlightColor : palette.primaryColor
 
         fragmentShader: "
             varying highp vec2 qt_TexCoord0;

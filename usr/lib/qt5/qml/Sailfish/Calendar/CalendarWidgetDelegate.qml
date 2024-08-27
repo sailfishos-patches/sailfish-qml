@@ -8,6 +8,7 @@
 import QtQuick 2.4
 import Sailfish.Silica 1.0
 import org.nemomobile.calendar.lightweight 1.0
+import Sailfish.Calendar 1.0
 
 BackgroundItem {
     id: delegate
@@ -43,6 +44,7 @@ BackgroundItem {
             width: Math.max(maxTimeLabelWidth, implicitWidth)
             color: highlighted ? Theme.secondaryHighlightColor : Theme.secondaryColor
             font.pixelSize: delegate.pixelSize
+            font.strikeout: cancelled
             //% "All day"
             text: allDay ? qsTrId("sailfish_calendar-la-all_day")
                          : Format.formatDate(startTime, Formatter.TimeValue)
@@ -60,7 +62,7 @@ BackgroundItem {
             width: parent.width - timeLabel.width - colorBar.width - 2*parent.spacing
 
             color: highlighted ? Theme.highlightColor : Theme.primaryColor
-            text: displayLabel
+            text: CalendarTexts.ensureEventTitle(displayLabel)
             truncationMode: TruncationMode.Fade
             font.pixelSize: delegate.pixelSize
         }

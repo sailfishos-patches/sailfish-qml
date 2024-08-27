@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Nemo.DBus 2.0
 import org.nemomobile.lipstick 0.1
@@ -55,8 +55,9 @@ ApplicationWindow {
             }
 
             Image {
-                y: menu.expanded && menu.contentHeight >= page.height + height && menu.atYEnd ? page.height - height :
-                                                                                                menu.exposedArea.height - height
+                y: menu.expanded && menu.contentHeight >= page.height + height && menu.atYEnd
+                   ? page.height - height
+                   : menu.exposedArea.height - height
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: "image://theme/graphic-edge-swipe-handle-bottom"
                 rotation: 180

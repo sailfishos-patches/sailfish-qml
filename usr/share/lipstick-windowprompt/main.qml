@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.0
 import Sailfish.Silica 1.0
 import com.jolla.lipstick 0.1
@@ -18,7 +18,7 @@ ApplicationWindow {
     property string _componentName
 
     function singleShot(timeout, callback) {
-        var timer = Qt.createQmlObject("import QtQuick 2.0; Timer {}", root, "singleShot")
+        var timer = Qt.createQmlObject("import QtQuick 2.6; Timer {}", root, "singleShot")
         timer.interval = timeout
         timer.repeat = false
         timer.triggered.connect(callback)

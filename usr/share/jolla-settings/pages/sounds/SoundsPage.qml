@@ -3,7 +3,7 @@ import Sailfish.Silica 1.0
 import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import QtFeedback 5.0
 
 Page {
@@ -90,6 +90,10 @@ Page {
                 }
             }
 
+            RingtoneVolumeSlider {
+                width: parent.width
+            }
+
             VolumeSlider {
                 width: parent.width
             }
@@ -146,7 +150,7 @@ Page {
             }
 
             SectionHeader {
-                //% "Do not disturb"
+                //% "Do not disturb mode"
                 text: qsTrId("settings_sounds-la-do_not_disturb")
             }
             TextSwitch {
@@ -159,10 +163,80 @@ Page {
                 onClicked: doNotDisturb.value = !doNotDisturb.value
             }
 
+            ComboBox {
+                id: dndRingtoneCombobox
+
+                //% "Ringtone for incoming calls"
+                label: qsTrId("settings_sounds-la-do_not_disturb_ringtone")
+                menu: ContextMenu {
+                    MenuItem {
+                        property string value: "off"
+                        //: No ringtone on incoming calls on do no disturb mode
+                        //% "Off"
+                        text: qsTrId("settings_sounds-la-do_not_disturb_ringtone_off")
+                    }
+                    MenuItem {
+                        property string value: "favorites"
+                        //: Favorite contacts have ringtone on incoming calls on do no disturb mode
+                        //% "Only favorite contacts"
+                        text: qsTrId("settings_sounds-la-do_not_disturb_ringtone_favorites")
+                    }
+                    MenuItem {
+                        property string value: "contacts"
+                        //: Known contacts have ringtone on incoming calls on do no disturb mode
+                        //% "Only contacts"
+                        text: qsTrId("settings_sounds-la-do_not_disturb_ringtone_contacts")
+                    }
+                    MenuItem {
+                        property string value: "on"
+                        //: Ringtone plays on incoming calls on do no disturb mode
+                        //% "On"
+                        text: qsTrId("settings_sounds-la-do_not_disturb_ringtone_on")
+                    }
+                }
+
+                //% "Allow some incoming calls to play ringtones as exceptions to ‘Do not disturb’ mode"
+                description: qsTrId("settings_sounds-la-do_not_disturb_ringtone_exceptions")
+
+                onCurrentItemChanged: {
+                    if (currentItem) {
+                        doNotDisturbRingtone.value = currentItem.value
+                    }
+                }
+                Component.onCompleted: updateIndex()
+
+
+                function updateIndex() {
+                    currentIndex = valueToIndex(doNotDisturbRingtone.value)
+                }
+
+                function valueToIndex(config) {
+                    switch(config) {
+                    case "off":
+                        return 0
+                    case "favorites":
+                        return 1
+                    case "contacts":
+                        return 2
+                    case "on":
+                    case "default":
+                        return 3
+                    }
+                }
+            }
+
             ConfigurationValue {
                 id: doNotDisturb
                 defaultValue: false
                 key: "/lipstick/do_not_disturb"
+            }
+
+            ConfigurationValue {
+                id: doNotDisturbRingtone
+
+                defaultValue: "on"
+                key: "/lipstick/do_not_disturb_ringtone"
+                onValueChanged: dndRingtoneCombobox.updateIndex()
             }
         }
         VerticalScrollDecorator {}

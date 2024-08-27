@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
 import Sailfish.Silica 1.0
@@ -50,7 +50,7 @@ SystemWindow {
 
                 //% "You can either wait or close the application."
                 description: qsTrId("lipstick-jolla-home-la-application_hanged_description")
-                topPadding: transpose ? Theme.paddingLarge : 2*Theme.paddingLarge
+                semiTight: true
             }
             Row {
                 id: buttonRow

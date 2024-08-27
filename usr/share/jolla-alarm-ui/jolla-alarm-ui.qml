@@ -1,8 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import org.nemomobile.alarms 1.0
+import Nemo.Alarms 1.0
 import com.jolla.alarmui 1.0
-import org.nemomobile.dbus 2.0 as NemoDBus
+import Nemo.DBus 2.0 as NemoDBus
 import "pages"
 
 ApplicationWindow {
@@ -111,7 +111,9 @@ ApplicationWindow {
                     notificationManager.publishMissedClockNotification(date, displayedAlarm.title, displayedAlarm.id, !!snoozed)
                 } else if (displayedAlarm.type === Alarm.Calendar) {
                     var occurrence = displayedAlarm.startDate
-                    notificationManager.publishMissedCalendarNotification(occurrence, displayedAlarm.calendarEventUid,
+                    notificationManager.publishMissedCalendarNotification(occurrence,
+                                                                          displayedAlarm.notebookUid,
+                                                                          displayedAlarm.calendarEventUid,
                                                                           displayedAlarm.calendarEventRecurrenceId,
                                                                           Qt.formatDateTime(occurrence, Qt.ISODate),
                                                                           displayedAlarm.title, displayedAlarm.id, !!snoozed)

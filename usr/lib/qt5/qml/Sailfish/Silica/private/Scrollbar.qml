@@ -57,7 +57,7 @@ VerticalScrollBase {
     _range: flickable.contentHeight + _topMenuSpacing + _bottomMenuSpacing - parent.height
 
     ColorBackground {
-        property real contrast: scrollbar.highlighted ? 1.65 :  1.35
+        property real contrast: scrollbar.highlighted ? 1.65 : 1.35
 
         anchors.fill: parent
         radius: Theme.paddingMedium

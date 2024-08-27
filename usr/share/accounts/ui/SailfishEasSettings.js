@@ -1,26 +1,32 @@
-function saveSettings(settings) {
+function saveSettings(settings, prefix) {
+    if (prefix === undefined) {
+        prefix = "sailfisheas"
+    }
     // General
     account.setConfigurationValue("", "conflict_policy", settings.conflictsIndex === 0 ? 1 : 0)
     account.setConfigurationValue("", "disable_provision", !settings.provision)
     account.setConfigurationValue("", "folderSyncPolicy", settings.syncPolicy)
 
     // Mail
-    account.setConfigurationValue("sailfisheas-email", "signature", settings.signature)
-    account.setConfigurationValue("sailfisheas-email", "signatureEnabled", settings.signatureEnabled)
-    account.setConfigurationValue("sailfisheas-email", "enabled", settings.mail)
-    account.setConfigurationValue("sailfisheas-email", "sync_past_time", pastTimeValueFromIndex(settings.pastTimeEmailIndex, 2, true))
+    account.setConfigurationValue(prefix + "-email", "signature", settings.signature)
+    account.setConfigurationValue(prefix + "-email", "signatureEnabled", settings.signatureEnabled)
+    account.setConfigurationValue(prefix + "-email", "enabled", settings.mail)
+    account.setConfigurationValue(prefix + "-email", "sync_past_time", pastTimeValueFromIndex(settings.pastTimeEmailIndex, 2, true))
 
     // Calendar
-    account.setConfigurationValue("sailfisheas-calendars", "name", account.displayName)
-    account.setConfigurationValue("sailfisheas-calendars", "enabled", settings.calendar)
-    account.setConfigurationValue("sailfisheas-calendars", "sync_past_time", pastTimeValueFromIndex(settings.pastTimeCalendarIndex, 4, false))
+    account.setConfigurationValue(prefix + "-calendars", "name", account.displayName)
+    account.setConfigurationValue(prefix + "-calendars", "enabled", settings.calendar)
+    account.setConfigurationValue(prefix + "-calendars", "sync_past_time", pastTimeValueFromIndex(settings.pastTimeCalendarIndex, 4, false))
 
     // Contacts
-    account.setConfigurationValue("sailfisheas-contacts", "enabled", settings.contacts)
-    account.setConfigurationValue("sailfisheas-contacts", "sync_local", settings.contacts2WaySync)
+    account.setConfigurationValue(prefix + "-contacts", "enabled", settings.contacts)
+    account.setConfigurationValue(prefix + "-contacts", "sync_local", settings.contacts2WaySync)
 }
 
-function saveConnectionSettings(connectionSettings) {
+function saveConnectionSettings(connectionSettings, prefix) {
+    if (prefix === undefined) {
+        prefix = "sailfisheas"
+    }
     if (connectionSettings !== null) {
         account.setConfigurationValue("", "connection/accept_all_certificates", connectionSettings.acceptSSLCertificates)
         account.setConfigurationValue("", "connection/domain", connectionSettings.domain)
@@ -31,8 +37,9 @@ function saveConnectionSettings(connectionSettings) {
         account.setConfigurationValue("", "connection/username", connectionSettings.username)
 
         //Email address is also need in the email service, to be used as from address
-        account.setConfigurationValue("sailfisheas-email", "emailaddress", connectionSettings.emailaddress)
+        account.setConfigurationValue(prefix + "-email", "emailaddress", connectionSettings.emailaddress)
 
+        account.setConfigurationValue("", "default_credentials_username", settings.username || settings.emailaddress)
         account.setConfigurationValue("", "SslCertCredentialsId", connectionSettings.sslCredentialsId)
         account.setConfigurationValue("", "connection/ssl_certificate_path",
                                       (connectionSettings.hasSslCertificate && connectionSettings.sslCredentialsId > 0)

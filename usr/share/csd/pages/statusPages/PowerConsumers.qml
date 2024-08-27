@@ -10,11 +10,11 @@ import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
 import Sailfish.Lipstick 1.0
 import Csd 1.0
-import org.nemomobile.time 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.Time 1.0
+import Nemo.DBus 2.0
 import org.nemomobile.systemsettings 1.0
 import com.jolla.settings.system 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Nemo.Mce 1.0
 
 Page {
@@ -385,14 +385,13 @@ Page {
         property bool technologyPathsValid: wlanNetworkTechnology.path !== "" && mobileNetworkTechnology.path !== ""
 
         function updateTechnologies() {
-            if (available && technologiesEnabled) {
+            if (available) {
                 wlanNetworkTechnology.path = networkManager.technologyPathForType("wifi")
                 mobileNetworkTechnology.path = networkManager.technologyPathForType("cellular")
             }
         }
 
         onAvailableChanged: updateTechnologies()
-        onTechnologiesEnabledChanged: updateTechnologies()
         onTechnologiesChanged: updateTechnologies()
     }
 
@@ -402,8 +401,8 @@ Page {
 
     NetworkTechnology {
         id: mobileNetworkTechnology
-        property bool uploading: false
-        property bool downloading: false
+        property bool uploading
+        property bool downloading
     }
 
     BluetoothStatus {

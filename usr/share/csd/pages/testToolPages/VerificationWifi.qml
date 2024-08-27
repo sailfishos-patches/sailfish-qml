@@ -9,7 +9,7 @@ import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import com.jolla.settings.system 1.0
 import Sailfish.Settings.Networking 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import ".."
 
 CsdTestPage {
@@ -142,19 +142,29 @@ CsdTestPage {
         }
     }
 
-    Column {
-        id: contentColumn
-        anchors.top: mdmBanner.active ? mdmBanner.bottom : header.bottom
-        anchors.topMargin: mdmBanner.active ? Theme.paddingLarge : 0
-        x: Theme.horizontalPageMargin
-        width: parent.width - 2*x
-        height: parent.height - header.height - (mdmBanner.active ? (mdmBanner.height+Theme.paddingLarge) : 0) - (buttonSet.height + buttonSet.anchors.bottomMargin)
-        spacing: Theme.paddingLarge
+
+    SilicaFlickable {
+        anchors {
+            top: mdmBanner.active ? mdmBanner.bottom : header.bottom
+            topMargin: mdmBanner.active ? Theme.paddingLarge : 0
+            bottom: buttonSet.top
+            bottomMargin: Theme.paddingLarge
+            left: parent.left
+            right: parent.right
+        }
+        contentHeight: contentColumn.height
         clip: true
 
+        VerticalScrollDecorator {
+            Component.onCompleted: showDecorator()
+        }
+
         Column {
-            id: topInfoColumn
-            width: parent.width
+            id: contentColumn
+
+            x: Theme.horizontalPageMargin
+            width: parent.width - 2*x
+            spacing: Theme.paddingLarge
 
             Label {
                 width: parent.width
@@ -181,70 +191,58 @@ CsdTestPage {
                 text: qsTrId("csd-la-wifi_networks")
                 visible: wifiTechModel.count > 0
             }
-        }
 
-        SilicaFlickable {
-            id: results
-            width: parent.width
-            height: parent.height - topInfoColumn.height
-            contentHeight: foundNetworks.height
-            clip: true
-
-            Column {
-                id: foundNetworks
-                width: parent.width
-                Repeater {
-                    model: wifiTechModel
-                    delegate: Column {
+            Repeater {
+                model: wifiTechModel
+                delegate: Column {
+                    width: parent.width
+                    Item {
                         width: parent.width
-                        Item {
-                            width: parent.width
-                            height: wifiName.height
+                        height: wifiName.height
 
-                            Label {
-                                id: wifiName
-                                anchors {
-                                    left: parent.left
-                                    right: icon.right
-                                }
-                                text: networkService.name
-                                      ? networkService.name
-                                        //% "Hidden network"
-                                      : qsTrId("csd-la-hidden_network")
-                                color: Theme.highlightColor
+                        Label {
+                            id: wifiName
+                            anchors {
+                                left: parent.left
+                                right: icon.right
                             }
+                            text: networkService.name
+                                  ? networkService.name
+                                    //% "Hidden network"
+                                  : qsTrId("csd-la-hidden_network")
+                            color: Theme.highlightColor
+                        }
 
-                            Image {
-                                id: icon
-                                anchors {
-                                    right: parent.right
-                                }
-                                source: "image://theme/icon-m-wlan-" + WlanUtils.getStrengthString(modelData.strength) + "?" + Theme.highlightColor
+                        Image {
+                            id: icon
+                            anchors {
+                                right: parent.right
                             }
+                            source: "image://theme/icon-m-wlan-" + WlanUtils.getStrengthString(modelData.strength) + "?" + Theme.highlightColor
                         }
+                    }
 
-                        Label {
-                            text: networkService.frequency + " MHz"
-                            color: Theme.secondaryHighlightColor
-                            font.pixelSize: Theme.fontSizeSmall
-                        }
+                    Label {
+                        text: networkService.frequency + " MHz"
+                        color: Theme.secondaryHighlightColor
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
 
-                        Label {
-                            text: networkService.strength + " %"
-                            color: Theme.secondaryHighlightColor
-                            font.pixelSize: Theme.fontSizeSmall
-                        }
+                    Label {
+                        text: networkService.strength + " %"
+                        color: Theme.secondaryHighlightColor
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
 
-                        Label {
-                            text: networkService.security
-                            color: Theme.secondaryHighlightColor
-                            font.pixelSize: Theme.fontSizeSmall
-                        }
+                    Label {
+                        text: networkService.security
+                        color: Theme.secondaryHighlightColor
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
 
-                        Item {
-                            width: parent.width
-                            height: Theme.paddingLarge
-                        }
+                    Item {
+                        width: parent.width
+                        height: Theme.paddingLarge
                     }
                 }
             }
@@ -253,6 +251,7 @@ CsdTestPage {
 
     Column {
         id: buttonSet
+        visible: timerLabel.visible || restartButton.visible || exitButton.visible
         anchors {
             left: parent.left
             leftMargin: Theme.horizontalPageMargin
@@ -268,6 +267,7 @@ CsdTestPage {
             width: parent.width
             wrapMode: Text.Wrap
             font.bold: true
+            visible: opacity > 0
             opacity: timeoutTimer.running ? 1 : 0
             Behavior on opacity { FadeAnimation { } }
 

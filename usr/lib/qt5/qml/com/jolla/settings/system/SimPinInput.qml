@@ -1,8 +1,8 @@
 import QtQuick 2.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
 PinInput {
     id: root

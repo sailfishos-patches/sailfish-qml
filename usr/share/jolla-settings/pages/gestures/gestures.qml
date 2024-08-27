@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 – 2019 Jolla Ltd.
+ * Copyright (c) 2013 - 2022 Jolla Ltd.
  * Copyright (c) 2019 Open Mobile Platform LLC.
  *
  * License: Proprietary
@@ -10,12 +10,15 @@ import Sailfish.Silica 1.0
 import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.lipstick 0.1
 
 Page {
     id: page
 
+    readonly property bool hasOrientationSensor: (deviceInfo.hasFeature(DeviceInfo.FeatureAccelerationSensor)
+                                                  || deviceInfo.hasFeature(DeviceInfo.FeatureGyroSensor))
+    readonly property bool flipoverGestureSupported: hasOrientationSensor
     SilicaFlickable {
 
         anchors.fill: parent
@@ -58,11 +61,13 @@ Page {
             }
 
             SectionHeader {
+                visible: flipoverGestureSupported
                 //% "Sensor gestures"
                 text: qsTrId("settings_shortcuts-la-sensor_gestures")
             }
 
             TextSwitch {
+                visible: flipoverGestureSupported
                 automaticCheck: false
                 checked: displaySettings.flipoverGestureEnabled
                 //% "Flip to silence calls and alarms"
@@ -161,4 +166,6 @@ Page {
     }
 
     DisplaySettings { id: displaySettings }
+
+    DeviceInfo { id: deviceInfo }
 }

@@ -49,7 +49,7 @@ Shared.Background {
             pageStack.animatorPush(Qt.resolvedUrl("../SettingsPage.qml"))
         } else {
             if (webView && webView.tabModel.count === 0) {
-                webView.clearSurface();
+                webView.clearSurface()
             }
             // let gecko figure out how to handle malformed URLs
             var pageUrl = url
@@ -198,7 +198,7 @@ Shared.Background {
 
         drag.onActiveChanged: {
             if (!drag.active) {
-                if (overlay.y < dragThreshold) {
+                if (overlay.y < dragThreshold || overlayAnimator.direction === "upwards") {
                     if (state === "certOverlay") {
                         overlayAnimator.showInfoOverlay(false)
                     } else {

@@ -3,6 +3,11 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+/*!
+  \qmltype MediaListItem
+  \inqmlmodule Sailfish.Media
+  \inherits Sailfish.Silica.ListItem
+*/
 ListItem {
     id: mediaListItem
 

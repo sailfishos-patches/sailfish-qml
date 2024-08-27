@@ -302,6 +302,10 @@ function SelectionHandler() {
    * content values.
    */
   this._onSelectionCopy = function _onSelectionCopy(aMsg) {
+    if (!this._cache || !this._cache.selection) {
+      return;
+    }
+
     let tap = {
       xPos: aMsg.xPos,
       yPos: aMsg.yPos,
@@ -365,7 +369,7 @@ function SelectionHandler() {
   this._onFail = function _onFail(aDbgMessage) {
     if (aDbgMessage && aDbgMessage.length > 0)
       Logger.debug(aDbgMessage);
-    this.sendAsync("Content:SelectionFail");
+    this.sendAsync("Content:SelectionFail", {});
     this._clearSelection();
     this.closeSelection();
   }

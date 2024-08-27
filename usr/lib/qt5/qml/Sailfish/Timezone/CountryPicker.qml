@@ -5,6 +5,7 @@ import Sailfish.Timezone 1.0
 Page {
     id: root
 
+    property bool showUndefinedCountry
     property alias model: view.model
 
     signal countryClicked(string countryName, string countryCode)
@@ -58,6 +59,23 @@ Page {
                     if (view.contentY > (Screen.height / 2)) {
                         searchField.focus = false
                     }
+                }
+            }
+
+            BackgroundItem {
+                id: undefinedCountryItem
+
+                visible: root.showUndefinedCountry && searchField.text == ""
+                height: Theme.itemSizeSmall
+                onClicked: root.countryClicked("", "")
+
+                Label {
+                    x: Theme.horizontalPageMargin
+                    anchors.verticalCenter: parent.verticalCenter
+                    //: list option for selecting unspecified country
+                    //% "No country"
+                    text: qsTrId("components_timezone-la-undefined_country")
+                    color: undefinedCountryItem.down ? Theme.highlightColor : Theme.primaryColor
                 }
             }
         }

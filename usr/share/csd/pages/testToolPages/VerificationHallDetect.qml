@@ -7,7 +7,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Csd 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 import ".."
 
 CsdTestPage {
@@ -60,7 +60,7 @@ CsdTestPage {
             mce.originalValue = r
         })
         mce.typedCall("set_config", [ { type: "s", value: "/system/osso/dsm/locks/lid_sensor_enabled"}, {type: "v", value: false} ])
-        _ngfEffect = Qt.createQmlObject("import org.nemomobile.ngf 1.0; NonGraphicalFeedback { event: 'unlock_device' }",
+        _ngfEffect = Qt.createQmlObject("import Nemo.Ngf 1.0; NonGraphicalFeedback { event: 'unlock_device' }",
                                         page, 'NonGraphicalFeedback');
     }
 

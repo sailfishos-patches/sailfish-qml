@@ -3,22 +3,34 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as Contacts
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 ListModel {
     property int requiredProperty
 
     property QtObject contact
     onContactChanged: setProperties(getSelectableProperties())
 
+    /*!
+      \internal
+    */
     property var _emailUpdater: Connections {
         target: requiredProperty & PeopleModel.EmailAddressRequired ? contact : null
         onEmailDetailsChanged: setProperties(getSelectableProperties())
     }
 
+    /*!
+      \internal
+    */
     property var _phoneUpdater: Connections {
         target: requiredProperty & PeopleModel.PhoneNumberRequired ? contact : null
         onPhoneDetailsChanged: setProperties(getSelectableProperties())
     }
 
+    /*!
+      \internal
+    */
     property var _accountUpdater: Connections {
         target: requiredProperty & PeopleModel.AccountUriRequired ? contact : null
         onAccountDetailsChanged: setProperties(getSelectableProperties())

@@ -8,6 +8,7 @@ MobileNetworkStatusIndicator 1.0 MobileNetworkStatusIndicator.qml
 NetworkingMobileDataConnection 1.0 NetworkingMobileDataConnection.qml
 NetworkAddressField 1.0 NetworkAddressField.qml
 NetworkField 1.0 NetworkField.qml
+NetworkCheckDialog 1.0 NetworkCheckDialog.qml
 NetworkConfig 1.0 NetworkConfig.qml
 PassphraseField 1.0 PassphraseField.qml
 SsidField 1.0 SsidField.qml
@@ -18,3 +19,12 @@ EapComboBox 1.0 EapComboBox.qml
 InnerAuthComboBox 1.0 InnerAuthComboBox.qml
 ClientCertChooser 1.0 ClientCertChooser.qml
 AnonymousIdentityField 1.0 AnonymousIdentityField.qml
+AutoDetectProxyForm 1.0 AutoDetectProxyForm.qml
+AutoConfigProxyForm 1.0 AutoConfigProxyForm.qml
+IPv4AddressField 1.0 IPv4AddressField.qml
+IPv4Form 1.0 IPv4Form.qml
+IpPortField 1.0 IpPortField.qml
+ManualProxyForm 1.0 ManualProxyForm.qml
+ProxyForm 1.0 ProxyForm.qml
+AdvancedSettingsColumn 1.0 AdvancedSettingsColumn.qml
+ManualProxyDialog 1.0 ManualProxyDialog.qml

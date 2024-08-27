@@ -20,7 +20,6 @@ Dialog {
     property alias firstName: firstNameField.text
     property alias lastName: lastNameField.text
     property alias email: emailField.text
-    property alias phoneNumber: phoneField.text
     property alias countryCode: countryButton.countryCode
     property alias countryName: countryButton.countryName
     property string languageLocale: languageModel.locale(languageModel.currentIndex)
@@ -47,7 +46,6 @@ Dialog {
                     firstNameField.text,
                     lastNameField.text,
                     birthday,
-                    phoneField.text,
                     countryCode,
                     languageLocale,
                     "Jolla", "Jolla")
@@ -83,16 +81,6 @@ Dialog {
             })
             _selfPerson.emailDetails = emails
         }
-        var myPhone = phoneNumber.trim()
-        if (myPhone !== "") {
-            var numbers = _selfPerson.phoneDetails
-            numbers.push({
-                'type': Person.PhoneNumberType,
-                'number': myPhone,
-                'index': -1
-            })
-            _selfPerson.phoneDetails = numbers
-        }
         if (birthday && !isNaN(birthday.getTime())) {
             _selfPerson.birthday = birthday
         }
@@ -116,11 +104,9 @@ Dialog {
         return details[details.length - 1][property]
     }
 
-    // note phone field is optional
     canAccept: firstNameField.text !== ""
                && lastNameField.text !== ""
                && !emailField.errorHighlight
-               && countryCode !== ""
                && languageLocale !== ""
                && birthdayButton.isOldEnough(birthday)
 
@@ -270,38 +256,13 @@ Dialog {
                       : ""
 
                 EnterKey.enabled: text || inputMethodComposing
-                EnterKey.iconSource: "image://theme/icon-m-enter-next"
-                EnterKey.onClicked: phoneField.focus = true
-                errorHighlight: (!text || !root._emailRegex.test(text)) && checkMandatoryFields
-            }
-
-            TextField {
-                id: phoneField
-                width: parent.width
-                inputMethodHints: Qt.ImhDialableCharactersOnly
-
-                //% "Phone number (optional)"
-                label: qsTrId("settings_accounts-la-phone_optional")
-
-                //% "Enter phone number (optional)"
-                placeholderText: qsTrId("settings_accounts-ph-phone_optional")
-
-                text: root._selfPerson != null
-                      ? root._selectSelfPersonMultiValueField(root._selfPerson.phoneDetails, 'number')
-                      : ""
-
-                EnterKey.enabled: true
                 EnterKey.iconSource: "image://theme/icon-m-enter-close"
                 EnterKey.onClicked: root.focus = true
+                errorHighlight: (!text || !root._emailRegex.test(text)) && checkMandatoryFields
             }
 
             CountryValueButton {
                 id: countryButton
-
-                // TODO: change hardcoded color to upcoming theme error color
-                valueColor: countryCode === "" && checkMandatoryFields
-                            ? "#ff4d4d"
-                            : Theme.highlightColor
 
                 onCountrySelected: {
                     root.focus = true
@@ -418,7 +379,8 @@ Dialog {
                 color: Theme.highlightColor
 
                 //: Explains why it's necessary to ask for the user's birthday and country information when creating a Jolla account.
-                //% "This information is needed to show appropriate content in the Jolla Store. Some apps or content may be age-restricted or only released in certain areas."
+                //% "This information is needed to show appropriate content in the Jolla Store. "
+                //% "Some apps or content may be age-restricted or only released in certain areas."
                 text: qsTrId("settings_accounts-la-why_ask_for_personal_info")
             }
         }

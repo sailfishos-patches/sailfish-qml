@@ -7,7 +7,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
@@ -125,7 +125,7 @@ SystemDialog {
                          //% "Unlock memory card"
                        : qsTrId("lipstick-jolla-home-he-memory_card_encrypted_unlock")
 
-                topPadding: Screen.sizeCategory >= Screen.Large ? 2*Theme.paddingLarge : Theme.paddingLarge
+                tight: true
                 bottomPadding: Theme.paddingLarge
             }
 

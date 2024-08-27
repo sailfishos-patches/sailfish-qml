@@ -1,7 +1,10 @@
 import QtQml 2.2
 import Sailfish.Telephony 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
+/*!
+  \inqmlmodule Sailfish.Telephony
+*/
 QtObject {
     id: root
 

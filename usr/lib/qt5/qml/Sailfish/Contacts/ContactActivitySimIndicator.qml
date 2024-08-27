@@ -1,6 +1,9 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Row {
     id: root
 
@@ -12,6 +15,9 @@ Row {
     property color color: palette.secondaryColor
     property color highlightColor: palette.secondaryHighlightColor
 
+    /*!
+      \internal
+    */
     readonly property int _modemIndex: simManager && simManager.simNames.length && imsi.length > 0
                                        ? simManager.indexOfModemFromImsi(imsi)
                                        : -1

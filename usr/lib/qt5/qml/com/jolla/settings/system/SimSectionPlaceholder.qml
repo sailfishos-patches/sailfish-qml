@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
 /*
   This provides a placeholder item to be shown when a SIM is inactive or not present.

@@ -140,12 +140,16 @@ CsdTestPage {
             }
         }
 
-        Flickable {
+        SilicaFlickable {
             id: results
             width: parent.width
             height: parent.height - topInfoColumn.height
             contentHeight: picker.height
             clip: true
+
+            VerticalScrollDecorator {
+                Component.onCompleted: showDecorator()
+            }
 
             BluetoothDevicePicker {
                 id: picker

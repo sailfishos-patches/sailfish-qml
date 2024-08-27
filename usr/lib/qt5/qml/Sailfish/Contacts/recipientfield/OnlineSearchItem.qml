@@ -5,7 +5,7 @@
  */
 
 import QtQuick 2.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Nemo.Notifications 1.0
 import Nemo.DBus 2.0
 import Sailfish.Contacts 1.0 as Contacts

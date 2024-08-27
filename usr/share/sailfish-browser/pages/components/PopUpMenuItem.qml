@@ -8,7 +8,7 @@
 
 import QtQuick 2.2
 import Sailfish.Silica 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
 Item {
     id: root
@@ -82,13 +82,34 @@ Item {
                 text: qsTrId("sailfish_browser-la-add_to_apps_grid")
                 onClicked: {
                     overlay.animator.showChrome()
-                    pageStack.animatorPush("AddToAppGridDialog.qml",
-                                                  {
-                                                      "url": url,
-                                                      "title": title,
-                                                      "desktopBookmarkWriter": desktopBookmarkWriter,
-                                                      "bookmarkWriterParent": pageStack
-                                                  })
+                    var page = webView.contentItem
+                    var writer = desktopBookmarkWriter
+                    var stack = pageStack
+                    if (!page.favicon) {
+                        // Empty favicon, grab icon from the page
+                        function handleThumbnailResult(data) {
+                            stack.animatorPush("AddToAppGridDialog.qml", {
+                                "url": page.url,
+                                "title": page.title,
+                                "icon": data,
+                                "desktopBookmarkWriter": writer,
+                                "bookmarkWriterParent": stack
+                            })
+                            page.onThumbnailResult.disconnect(handleThumbnailResult)
+                        }
+
+                        page.onThumbnailResult.connect(handleThumbnailResult)
+                        // 256x256 is the maximum icon size
+                        page.grabThumbnail(Qt.size(256, 256))
+                    } else {
+                        pageStack.animatorPush("AddToAppGridDialog.qml", {
+                            "url": url,
+                            "title": title,
+                            "icon": page.favicon,
+                            "desktopBookmarkWriter": desktopBookmarkWriter,
+                            "bookmarkWriterParent": pageStack
+                        })
+                    }
                 }
             }
 

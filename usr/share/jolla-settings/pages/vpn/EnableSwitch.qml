@@ -7,16 +7,18 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Nemo.DBus 2.0
 import com.jolla.settings 1.0
-import org.nemomobile.systemsettings 1.0
+import Nemo.Connectivity 1.0
 
 SettingsToggle {
     id: root
 
     property string _connectionName
-    readonly property bool waitForConnection: (!networkManager.connected || (SettingsVpnModel.bestState <= VpnConnection.Configuration)) && SettingsVpnModel.autoConnect
+    readonly property bool waitForConnection: (!networkManager.connected
+                                               || (SettingsVpnModel.bestState <= VpnConnection.Association))
+                                              && SettingsVpnModel.autoConnect
 
     function _updateConnectionName() {
         var connectionName = ""
@@ -37,9 +39,11 @@ SettingsToggle {
 
     active: SettingsVpnModel.bestState == VpnConnection.Ready
     checked: (SettingsVpnModel.bestState != VpnConnection.Idle
-             && SettingsVpnModel.bestState != VpnConnection.Failure) || waitForConnection
+              && SettingsVpnModel.bestState != VpnConnection.Failure) || waitForConnection
 
-    busy: (SettingsVpnModel.bestState == VpnConnection.Configuration || SettingsVpnModel.bestState == VpnConnection.Disconnect)
+    busy: (SettingsVpnModel.bestState == VpnConnection.Association ||
+            SettingsVpnModel.bestState == VpnConnection.Configuration ||
+            SettingsVpnModel.bestState == VpnConnection.Disconnect)
           && !waitForConnection
 
     menu: ContextMenu {

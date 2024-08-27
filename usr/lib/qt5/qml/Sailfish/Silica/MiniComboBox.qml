@@ -64,6 +64,8 @@ Private.SilicaMouseArea {
     height: _menuOpen ? (menu.height + contentRow.height + Theme.paddingSmall) : contentRow.height
     implicitWidth: buttonText.implicitWidth + (3 * Theme.paddingSmall) + Theme.iconSizeSmall
     width: {
+        if (!parent) return 0
+
         var leftPadding = parent.leftPadding || parent.padding || 0
         var rightPadding = parent.rightPadding || parent.padding || 0
         var availableWidth = parent.width - leftPadding - rightPadding

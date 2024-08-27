@@ -12,10 +12,10 @@ import Sailfish.Messages 1.0
 import Sailfish.Telephony 1.0
 import Sailfish.Share 1.0
 import org.nemomobile.contacts 1.0
-import org.nemomobile.thumbnailer 1.0
+import Nemo.Thumbnailer 1.0
 import org.nemomobile.ofono 1.0
 import org.nemomobile.commhistory 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
 MessageComposerPage {
     id: newMessagePage

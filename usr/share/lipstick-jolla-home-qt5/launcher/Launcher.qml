@@ -5,13 +5,13 @@
  * License: Proprietary
  */
 
-import QtQuick 2.1
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0 as SilicaPrivate
 import Sailfish.Policy 1.0
 import Sailfish.AccessControl 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import Sailfish.Lipstick 1.0
 import Nemo.DBus 2.0
 import com.jolla.lipstick 0.1
@@ -19,10 +19,11 @@ import com.jolla.lipstick 0.1
 SilicaListView {
     id: launcherPager
 
-    property bool launcherActive: Lipstick.compositor.launcherLayer.active
-    onLauncherActiveChanged: if (!launcherActive) { resetPosition(400) }
+    onVisibleChanged: if (!visible) { resetPosition(400) }
 
     property bool editMode: launcher.launcherEditMode
+    property alias openedChildFolder: launcher.openedChildFolder
+
     onEditModeChanged: {
         if (editMode) {
             snapMode = ListView.NoSnap
@@ -47,7 +48,14 @@ SilicaListView {
     highlightMoveDuration: 300
     pressDelay: 0
     quickScroll: false
-    interactive: !launcher.openedChildFolder && launcherActive && !Lipstick.compositor.launcherLayer.pinned
+    interactive: {
+        var interactive = !launcher.openedChildFolder && !Lipstick.compositor.launcherLayer.hinting
+        if (Lipstick.compositor.multitaskingHome) {
+            return interactive && !Lipstick.compositor.launcherLayer.pinned
+        } else {
+            return interactive
+        }
+    }
 
     function resetPosition(delay) {
         resetPositionTimer.interval = delay === undefined ? 1 : delay
@@ -56,7 +64,7 @@ SilicaListView {
 
     Timer {
         id: resetPositionTimer
-        onTriggered: if (!launcherActive) { launcherPager.positionViewAtBeginning() }
+        onTriggered: if (!launcherPager.visible) { launcherPager.positionViewAtBeginning() }
     }
 
     function scroll(up) {
@@ -123,11 +131,12 @@ SilicaListView {
         anchors.horizontalCenter: parent.horizontalCenter
         source: "image://theme/graphic-edge-swipe-handle-bottom"
         highlighted: Lipstick.compositor.launcherLayer.pinned
+        visible: Lipstick.compositor.multitaskingHome
     }
 
     MouseArea {
         objectName: "Launcher"
-        y: launcherPager.originY
+        y: launcherPager.originY + launcher.statusBarHeight
         parent: launcherPager.contentItem
         width: launcherPager.width
         height: launcherPager.height * launcherPager.model.count
@@ -237,7 +246,7 @@ SilicaListView {
 
             rootFolder: true
             interactive: false
-            height: cellHeight * Math.ceil(count / columns)
+            height: cellHeight * Math.ceil(count / columns) + (headerItem ? headerItem.height : 0)
 
             Component.onCompleted: manageDummyPages()
             onContentHeightChanged: manageDummyPages()

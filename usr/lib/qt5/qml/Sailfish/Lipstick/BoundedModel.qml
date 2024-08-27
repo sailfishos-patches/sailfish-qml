@@ -5,7 +5,7 @@
  **
  ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQml.Models 2.1
 
 // Use a DelegateModel to only show the first N items from a source model

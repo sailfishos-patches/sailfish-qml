@@ -373,8 +373,8 @@ Private.Window {
 
             states: [
                 State {
-                    when:  stack.currentOrientation == Orientation.Portrait ||
-                           stack.currentOrientation == Orientation.None
+                    when: stack.currentOrientation == Orientation.Portrait
+                          || stack.currentOrientation == Orientation.None
 
                     AnchorChanges {
                         target: clippingItem
@@ -386,7 +386,7 @@ Private.Window {
                 },
 
                 State {
-                    when:  stack.currentOrientation == Orientation.PortraitInverted
+                    when: stack.currentOrientation == Orientation.PortraitInverted
 
                     AnchorChanges {
                         target: clippingItem
@@ -398,7 +398,7 @@ Private.Window {
                 },
 
                 State {
-                    when:  stack.currentOrientation == Orientation.Landscape
+                    when: stack.currentOrientation == Orientation.Landscape
 
                     AnchorChanges {
                         target: clippingItem
@@ -410,7 +410,7 @@ Private.Window {
                 },
 
                 State {
-                    when:  stack.currentOrientation == Orientation.LandscapeInverted
+                    when: stack.currentOrientation == Orientation.LandscapeInverted
 
                     AnchorChanges {
                         target: clippingItem
@@ -552,7 +552,7 @@ Private.Window {
 
                 PauseAnimation {
                     id: lowerAnimation
-                    duration:  1000
+                    duration: 1000
                     running: false
                 }
             }

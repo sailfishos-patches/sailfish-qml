@@ -5,12 +5,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 
 FocusScope {
     id: systemWindow
+
+    property int topmostWindowOrientation: Lipstick.compositor.topmostWindowOrientation
     property bool transpose: Lipstick.compositor.topmostWindowAngle % 180 != 0
     property real contentHeight: height
 

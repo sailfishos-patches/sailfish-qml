@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import Sailfish.Settings.Networking 1.0
 
 Column {
@@ -11,7 +11,7 @@ Column {
         checked: ims.registration > OfonoIpMultimediaSystem.RegistrationDisabled
 
         //: Text switch that controls whether the 4G voice calls are possible
-        //% "4G calling (beta)"
+        //% "4G calling (VoLTE)"
         text: qsTrId("settings_network-bt-4g_voicecall")
 
         //% "Registered"

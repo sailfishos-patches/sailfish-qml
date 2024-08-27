@@ -9,11 +9,17 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 import QtQuick 2.5
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 ContextMenu {
     id: root
 
     property QtObject person
     property var peopleModel
+    /*!
+      \internal
+    */
     property bool _favorite
 
     signal editContact()

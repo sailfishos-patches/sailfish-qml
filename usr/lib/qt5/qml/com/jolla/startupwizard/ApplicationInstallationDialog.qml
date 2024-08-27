@@ -135,9 +135,4 @@ Dialog {
         y: Math.max(root.height/2 - height/2, appGrid.headerItem.height)
         running: !root.applicationModel.populated
     }
-
-    ViewPlaceholder {
-        // Shown only if no selections are available
-        enabled: root.applicationModel.populated && root.applicationModel.count == 0
-    }
 }

@@ -7,9 +7,9 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Sailfish.Policy 1.0
-import org.nemomobile.systemsettings 1.0
+import Nemo.Connectivity 1.0
 import Sailfish.Settings.Networking.Vpn 1.0
 
 ListItem {
@@ -84,7 +84,7 @@ ListItem {
         automaticCheck: false
         checked: connection ? connection.autoConnect : false
         highlighted: root.highlighted
-        busy: connection ? (connection.state === VpnConnection.Configuration || connection.state === VpnConnection.Disconnect) : false
+        busy: connection ? (connection.state === VpnConnection.Configuration || connection.state === VpnConnection.Association || connection.state === VpnConnection.Disconnect) : false
         text: connection ? connection.name : ''
         description: {
             var state
@@ -99,7 +99,7 @@ ListItem {
                 } else if (connection.state == VpnConnection.Disconnect) {
                     //% "Disconnecting..."
                     state = qsTrId("settings_network-la-disconnecting_state")
-                } else if (connection.state == VpnConnection.Configuration) {
+                } else if (connection.state == VpnConnection.Configuration || connection.state == VpnConnection.Association) {
                     //% "Connecting..."
                     state = qsTrId("settings_network-la-connecting_state")
                 } else if (checked && !root.networkOnline) {

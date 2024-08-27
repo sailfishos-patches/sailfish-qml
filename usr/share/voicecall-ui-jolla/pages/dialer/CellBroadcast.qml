@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
 OfonoCellBroadcast {
     id: cellBroadcast

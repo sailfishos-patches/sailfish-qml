@@ -9,7 +9,6 @@ KeyboardLayout {
     id: main
 
     portraitMode: true
-    height: 4 * geometry.keyHeightPortrait
 
     layoutIndex: -1
     type: ""
@@ -37,7 +36,7 @@ KeyboardLayout {
         }
         NumberKey {
             separator: SeparatorState.HiddenSeparator
-            enabled: Silica.Clipboard.hasText
+            enabled: keyboard.pasteEnabled
             key: Qt.Key_Paste
             width: main.width / 4
             opacity: enabled ? (pressed ? 0.6 : 1.0)

@@ -40,8 +40,6 @@ import "private/FastScrollAnimation.js" as FastScroll
 Flickable {
     id: flick
 
-    // API same as in SilicaWebView see also that.
-
     // Property quickScrollEnabled deprecated. Use quickScroll instead.
     property alias quickScrollEnabled: quickScrollItem.quickScroll
     property alias quickScroll: quickScrollItem.quickScroll

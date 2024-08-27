@@ -5,7 +5,7 @@
  **
  ****************************************************************************/
 
-import QtQuick 2.2
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
@@ -27,7 +27,7 @@ Layer {
     }
 
     exposed: {
-        if (!hasNotifications) {
+        if (!hasNotifications || !Lipstick.compositor.multitaskingHome) {
             return false
         }
         return (Lipstick.compositor.lockScreenLayer.exposed || Lipstick.compositor.homeVisible || lipstickSettings.lowPowerMode)
@@ -176,6 +176,7 @@ Layer {
 
             anchors.verticalCenter: parent.verticalCenter
             showCount: Screen.sizeCategory >= Screen.Large || lockScreenLocked
+            maximumCount: Lipstick.compositor.experimentalFeatures.lockscreen_notification_count
 
             layer.enabled: lipstickSettings.lowPowerMode
             layer.effect: ShaderEffect {

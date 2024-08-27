@@ -10,10 +10,13 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Nemo.DBus 2.0
 import org.kde.bluezqt 1.0 as BluezQt
 
+/*!
+  \inqmlmodule Sailfish.Bluetooth 1.0
+*/
 Column {
     id: root
 
@@ -33,9 +36,13 @@ Column {
     property QtObject adapter: _bluetoothManager ? _bluetoothManager.usableAdapter : null
     property bool autoStartDiscovery    // automatically start discovery when powered
 
-    property QtObject _bluetoothManager : BluezQt.Manager
+    /*!
+      \internal
+    */
+    property QtObject _bluetoothManager: BluezQt.Manager
     readonly property bool _showDiscoveryProgress: adapter && adapter.discovering
-    readonly property bool _showPairedDevicesHeader: showPairedDevices && showPairedDevicesHeader && !_showDiscoveryProgress && pairedDevices.count > 0
+    readonly property bool _showPairedDevicesHeader: showPairedDevices && showPairedDevicesHeader
+                                                     && !_showDiscoveryProgress && pairedDevices.count > 0
     property QtObject _devicePendingPairing
     property bool _autoStartDiscoveryTriggered
 
@@ -80,6 +87,9 @@ Column {
         }
     }
 
+    /*!
+      \internal
+    */
     function _deviceClicked(address, paired) {
         _devicePendingPairing = null
         selectedDevice = address
@@ -104,6 +114,13 @@ Column {
         }
     }
 
+    function _deviceSettings(address) {
+        var device = root._bluetoothManager.deviceForAddress(address)
+        if (device) {
+            pageStack.animatorPush(Qt.resolvedUrl("PairedDeviceSettings.qml"), {"bluetoothDevice": device})
+        }
+    }
+
     width: parent.width
 
     Item {
@@ -114,6 +131,7 @@ Column {
 
         SectionHeader {
             id: pairedDevicesHeader
+
             height: discoveryProgressBar.height
             opacity: root._showPairedDevicesHeader ? 1.0 : 0
 
@@ -138,15 +156,9 @@ Column {
         }
     }
 
-    function _deviceSettings(address) {
-        var device = root._bluetoothManager.deviceForAddress(address)
-        if (device) {
-            pageStack.animatorPush(Qt.resolvedUrl("PairedDeviceSettings.qml"), {"bluetoothDevice": device})
-        }
-    }
-
     BluetoothDeviceColumnView {
         id: pairedDevices
+
         filters: BluezQt.DevicesModelPrivate.PairedDevices
         excludedDevices: root.excludedDevices
         visible: root.showPairedDevices ? 1.0 : 0
@@ -179,6 +191,7 @@ Column {
 
     BluetoothDeviceColumnView {
         id: nearbyDevices
+
         filters: BluezQt.DevicesModelPrivate.UnpairedDevices
         excludedDevices: root.excludedDevices
         highlightSelectedDevice: root.highlightSelectedDevice

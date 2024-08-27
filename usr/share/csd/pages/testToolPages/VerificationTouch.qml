@@ -16,10 +16,10 @@ CsdTestPage {
     backNavigation: false
 
     property int targetCellSize: 60 * Theme.pixelRatio
-    property int horizontalCells: Math.floor(Screen.width / targetCellSize)
-    property int verticalCells: Math.floor(Screen.height / targetCellSize)
-    property real cellWidth: Screen.width / horizontalCells
-    property real cellHeight: Screen.height / verticalCells
+    property int horizontalCells: Math.floor(width / targetCellSize)
+    property int verticalCells: Math.floor(height / targetCellSize)
+    property real cellWidth: width / horizontalCells
+    property real cellHeight: height / verticalCells
 
     Private.WindowGestureOverride {
         id: windowGestureOverride
@@ -98,7 +98,7 @@ CsdTestPage {
             Rectangle {
                 width: cellWidth
                 height: cellHeight
-                color: index % 2 == 0 ? "white" : "grey"
+                color: index % 2 == 0 ? "grey" : "white"
             }
         }
     }

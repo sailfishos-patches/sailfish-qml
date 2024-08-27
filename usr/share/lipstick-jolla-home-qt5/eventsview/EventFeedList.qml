@@ -5,13 +5,10 @@
  **
  ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
-import Sailfish.Ambience 1.0
-import Sailfish.Accounts 1.0
 import com.jolla.lipstick 0.1
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.socialcache 1.0
 
 Column {
     id: column
@@ -68,22 +65,28 @@ Column {
         showingRemovableContent = false
     }
 
-    EventFeedSocialSubviewModel {
+    Loader {
         id: eventFeedListModel
-        manager: accountManager
+
+        // EventFeedSocialSubviewModel requires EventFeedAccountManager
+        // which requires Sailfish.Accounts.
+        Component.onCompleted: {
+            setSource(Qt.resolvedUrl("EventFeedSocialSubviewModel.qml"), {
+                          "manager": Qt.binding(function() { return accountManager.item })
+                      })
+        }
     }
 
-    EventFeedAccountManager {
+    Loader {
         id: accountManager
-    }
 
-    SocialImageCache {
-        id: downloader
+        // Handle Sailfish.Accounts dependency during runtime.
+        Component.onCompleted: setSource(Qt.resolvedUrl("EventFeedAccountManager.qml"))
     }
 
     Repeater {
         id: eventFeedList
-        model: eventFeedListModel.model
+        model: eventFeedListModel.item ? eventFeedListModel.item.model : null
 
         Loader {
             id: loader
@@ -92,9 +95,9 @@ Column {
 
             Component.onCompleted: {
                 var props = {
-                    "downloader": downloader,
+                    "downloader": accountManager.item.downloader,
                     "providerName": providerName,
-                    "subviewModel": eventFeedListModel,
+                    "subviewModel": eventFeedListModel.item,
                     "viewVisible": Qt.binding(function() { return Desktop.eventsViewVisible }),
                     "eventsColumnMaxWidth": Math.min(Screen.width, Screen.height)
                 }

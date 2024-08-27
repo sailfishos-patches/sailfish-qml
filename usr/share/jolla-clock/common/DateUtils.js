@@ -56,15 +56,15 @@ function daysTo(hour, minute, weekdays, currentDate) {
 }
 
 function days(time) {
-    return Math.floor(time/oneday)
+    return Math.floor(time / oneday)
 }
 
 function hours(time) {
-    return Math.floor((time % oneday)/onehour)
+    return Math.floor((time % oneday) / onehour)
 }
 
 function minutes(time) {
-    return Math.round((time % onehour)/oneminute)
+    return Math.round((time % onehour) / oneminute)
 }
 
 function formatDuration(duration) {

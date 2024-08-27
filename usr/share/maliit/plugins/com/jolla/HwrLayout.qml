@@ -173,7 +173,7 @@ KeyboardLayout {
         }
 
         IconButton {
-            visible: hwrCanvas.visible
+            visible: hwrCanvas.visible && !MInputMethodQuick.extensions.keyboardClosingDisabled
             anchors {
                 right: parent.right
                 top: parent.top
@@ -297,7 +297,7 @@ KeyboardLayout {
 
             PasteButton {
                 previewWidthLimit: geometry.hwrPastePreviewWidth
-                visible: !keyboard.inSymView && Clipboard.hasText
+                visible: !keyboard.inSymView && keyboard.pasteEnabled
                 popupAnchor: 1 // = right
                 anchors {
                     right: parent.right

@@ -19,7 +19,7 @@ ContextMenu {
             // formatDate() is relative to the current time, so the time is padded by a half a second
             // to allow for the time between Date.now() and formatDate() executing.
             text: Format.formatDate(
-                      new Date(Date.now() + (modelData * 60 * 1000) + 500), Format.DurationElapsed)
+                      new Date(Date.now() + (modelData * 60 * 1000) + 500), Format.TimeElapsed)
             onClicked: {
                 var name = reminderMenu.person
                         ? reminderMenu.person.displayLabel

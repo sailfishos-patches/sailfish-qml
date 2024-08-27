@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
 /*
   This provides a pulley menu for activating flight mode, and also for

@@ -27,7 +27,8 @@ Private.AnimatedLoader {
             delayReload = true
         } else if (Lipstick.compositor) {
             delayReload = false
-            load(wallpaper, "", properties(sourceItem, Lipstick.compositor.wallpaper.ambience))
+            var ambience = Lipstick.compositor.wallpaper ? Lipstick.compositor.wallpaper.ambience : null
+            load(wallpaper, "", properties(sourceItem, ambience))
         }
     }
 

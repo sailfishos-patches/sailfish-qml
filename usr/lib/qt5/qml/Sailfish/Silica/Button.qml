@@ -67,8 +67,8 @@ SilicaMouseArea {
 
     height: implicitHeight
     implicitHeight: Theme.itemSizeExtraSmall
-    implicitWidth: image.progress !== 0.0 && text === "" ? Theme.buttonWidthTiny :
-                                                        Math.max(preferredWidth, content.fullWidth)
+    implicitWidth: image.progress !== 0.0 && text === ""
+                   ? Theme.buttonWidthTiny : Math.max(preferredWidth, content.fullWidth)
 
     highlighted: _showPress
 
@@ -96,8 +96,8 @@ SilicaMouseArea {
             id: content
 
             property bool alignLeft
-            readonly property real fullWidth: image.implicitWidth + spacing +
-                                     buttonText.implicitWidth + 2 * Theme.paddingMedium
+            readonly property real fullWidth: image.implicitWidth + spacing
+                                              + buttonText.implicitWidth + 2 * Theme.paddingMedium
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: alignLeft ? undefined : parent.horizontalCenter

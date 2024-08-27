@@ -143,6 +143,7 @@ NotificationGroupMember {
                 onClicked: {
                     if (expanded) {
                         expanded = false
+                        actionRow.replyTextActive = false
                     } else {
                         expand()
                     }
@@ -222,9 +223,11 @@ NotificationGroupMember {
 
         NotificationActionRow {
             id: actionRow
+
+            notification: root.notification
             active: expanded
-            onActionInvoked: notification.actionInvoked(actionName)
-            anchors.right: parent.right
+            onActionInvoked: notification.actionInvoked(actionName, actionText)
+            width: parent.width
         }
     }
 

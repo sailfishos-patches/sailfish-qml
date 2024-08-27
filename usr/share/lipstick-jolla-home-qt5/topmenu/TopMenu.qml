@@ -7,13 +7,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.5
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import Nemo.Notifications 1.0 as SystemNotifications
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.devicelock 1.0
 import org.nemomobile.systemsettings 1.0
 import "../backgrounds"
@@ -132,8 +132,15 @@ SilicaFlickable {
         id: column
         width: parent.width
         Item {
-            id: headerItem
+            id: topPadding
 
+            width: 1
+            height: Lipstick.compositor.topmostWindowOrientation === Qt.PortraitOrientation
+                    && Screen.topCutout.height > 0
+                    ? (Screen.topCutout.height + Theme.paddingSmall) : 0
+        }
+
+        Item {
             width: topMenu.width
             height: topMenu.itemSize
 
@@ -172,11 +179,12 @@ SilicaFlickable {
             Row {
                 id: shutdownOptions
 
-                y: Math.min(0, -height + topMenu.offset)
+                y: Math.min(0, -height - topPadding.height + topMenu.offset)
 
                 width: topMenu.width
                 height: topMenu.itemSize
                 visible: Lipstick.compositor.powerKeyPressed
+                         || Lipstick.compositor.experimentalFeatures.topmenu_shutdown_reboot_visible
                 PowerButton {
                     id: shutdownButton
 
@@ -213,8 +221,7 @@ SilicaFlickable {
             PowerButton {
                 id: lockButton
 
-                y: Math.min(0, -height + topMenu.offset)
-
+                y: Math.min(0, -height - topPadding.height + topMenu.offset)
                 width: topMenu.width
                 height: topMenu.itemSize
 
@@ -250,7 +257,7 @@ SilicaFlickable {
         Loader {
             id: shortcutsLoader
             width: parent.width
-            active: shortcutsEnabled.value || actionsEnabled.value ||  Desktop.showMultiSimSelector
+            active: shortcutsEnabled.value || actionsEnabled.value || Desktop.showMultiSimSelector
 
             ConfigurationValue {
                 id: shortcutsEnabled

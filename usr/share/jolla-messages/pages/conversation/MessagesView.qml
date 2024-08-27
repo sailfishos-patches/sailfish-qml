@@ -4,7 +4,7 @@ import Sailfish.Silica.private 1.0
 import Sailfish.Contacts 1.0
 import Sailfish.Messages 1.0
 import org.nemomobile.commhistory 1.0
-import org.nemomobile.time 1.0
+import Nemo.Time 1.0
 
 SilicaListView {
     id: messagesView
@@ -14,6 +14,18 @@ SilicaListView {
     currentIndex: -1
     _quickScrollItem.directionsEnabled: QuickScrollDirection.Down
 
+    function formatDate(date) {
+        var today = new Date
+        if (date.getDate() == today.getDate()
+                && date.getMonth() == today.getMonth()
+                && date.getFullYear() == today.getFullYear()) {
+            //% "Today"
+            return qsTrId("messages-la-today")
+        } else {
+            return Format.formatDate(date, Formatter.TimepointSectionRelative)
+        }
+    }
+
     BackgroundRectangle {
         width: parent.width
         height: stickyHeader.height
@@ -22,7 +34,7 @@ SilicaListView {
         SectionHeader {
             id: stickyHeader
             property var date: undefined
-            text: date !== undefined && Qt.application.active ? Format.formatDate(date, Formatter.TimepointSectionRelative) : ""
+            text: date !== undefined && Qt.application.active ? messagesView.formatDate(date) : ""
             horizontalAlignment: Text.AlignHCenter
             color: Theme.secondaryColor
         }
@@ -135,13 +147,7 @@ SilicaListView {
                         id: dateSection
                         horizontalAlignment: Text.AlignHCenter
                         color: Theme.secondaryColor
-                        text: {
-                            if (modelData && Qt.application.active) { // force refresh
-                                return Format.formatDate(modelData.startTime, Formatter.TimepointSectionRelative)
-                            } else {
-                                return ""
-                            }
-                        }
+                        text: (modelData && Qt.application.active) ? messagesView.formatDate(modelData.startTime) : ""
                     }
                 }
             }

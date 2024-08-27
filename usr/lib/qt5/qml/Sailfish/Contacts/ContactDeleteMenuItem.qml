@@ -8,6 +8,9 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 MenuItem {
     id: root
 

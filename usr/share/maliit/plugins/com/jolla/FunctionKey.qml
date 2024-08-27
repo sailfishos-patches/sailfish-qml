@@ -70,7 +70,7 @@ KeyBase {
         fontSizeMode: Text.HorizontalFit
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: Theme.fontSizeMedium
+        font.pixelSize: Theme.fontSizeSmall
         font.family: Theme.fontFamily
         text: parent.caption
     }

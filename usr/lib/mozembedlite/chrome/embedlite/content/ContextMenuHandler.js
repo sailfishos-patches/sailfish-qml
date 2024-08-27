@@ -94,6 +94,7 @@ var ContextMenuHandler = {
       if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
         state.types.push("image");
         state.label = state.mediaURL = popupNode.currentURI.spec;
+        state.linkTitle = popupNode.textContent || popupNode.title;
         imageUrl = state.mediaURL;
         this._target = popupNode;
 

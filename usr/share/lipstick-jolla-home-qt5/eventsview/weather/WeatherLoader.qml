@@ -5,9 +5,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import Nemo.DBus 2.0
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
@@ -15,7 +15,8 @@ import com.jolla.lipstick 0.1
 Loader {
     id: weatherLoader
 
-    property alias advertiseWeather: weatherAdvertisementConfiguration.value
+    // disable advertising as foreca isn't working now
+    property bool advertiseWeather: false && weatherAdvertisementConfiguration.value
     property bool eventsVisible: eventsViewVisible
 
     onItemChanged: {

@@ -38,11 +38,13 @@ Page {
         contentHeight: column.height
 
         PullDownMenu {
-            visible: (uninstallMenuItem.canShow
-                      || openMenuItem.canShow
-                      || updateMenuItem.canShow
-                      || installMenuItem.canShow)
-                     && appData.packageName !== ""
+            enabled: uninstallMenuItem.canShow
+                     || openMenuItem.canShow
+                     || updateMenuItem.canShow
+                     || installMenuItem.canShow
+            visible: appData.packageName !== "" && (enabled || busy)
+            busy: appData.state == ApplicationState.Installing
+                  || appData.state == ApplicationState.Uninstalling
 
             MenuItem {
                 id: uninstallMenuItem

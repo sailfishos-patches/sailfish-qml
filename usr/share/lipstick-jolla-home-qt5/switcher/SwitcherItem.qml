@@ -5,10 +5,10 @@
  **
  ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.1 as QtQuick
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.ngf 1.0
+import Nemo.Ngf 1.0
 import com.jolla.coveractions 0.1
 import Sailfish.Silica 1.0
 import Sailfish.Silica.Background 1.0
@@ -85,7 +85,7 @@ EditableGridDelegate {
         cancelAnimation()
         contentItem.opacity = 1.0
         contentItem.x = x
-        contentItem.y = offsetY
+        contentItem.y = targetY
         _oldY = y
         _viewWidth = manager.view.width
     }
@@ -167,7 +167,7 @@ EditableGridDelegate {
         opacity: wrapper.coverOpacity
         width: rotation % 180 == 0 ? wrapper.width : wrapper.height
         height: rotation % 180 == 0 ? wrapper.height : wrapper.width
-        windowId: wrapper.coverId?wrapper.coverId:wrapper.windowId
+        windowId: wrapper.coverId ? wrapper.coverId : wrapper.windowId
         radius: Theme.paddingMedium
         smooth: true
         anchors.centerIn: parent
@@ -413,6 +413,11 @@ EditableGridDelegate {
                 launcherItem.isLaunching = false
             }
         }
+    }
+
+    Connections {
+        target: wrapper.window
+        onClosed: wrapper.close()
     }
 
     SequentialAnimation {

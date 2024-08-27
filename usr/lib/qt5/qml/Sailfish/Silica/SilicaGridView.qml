@@ -55,7 +55,9 @@ GridView {
 
     property Item __silica_contextmenu_instance
     property Item __silica_remorse_item: null
-    property real __silica_menu_height: Math.max(__silica_contextmenu_instance ? __silica_contextmenu_instance.height : 0, __silica_remorse_height)
+    property real __silica_menu_height: Math.max(__silica_contextmenu_instance
+                                                 ? __silica_contextmenu_instance.height : 0,
+                                                 __silica_remorse_height)
     property real __silica_remorse_height
 
     NumberAnimation {
@@ -87,7 +89,8 @@ GridView {
     flickDeceleration: Theme.flickDeceleration
     maximumFlickVelocity: Theme.maximumFlickVelocity
     cacheBuffer: Theme.itemSizeMedium * 8
-    boundsBehavior: (pullDownMenu && pullDownMenu._activationPermitted) || (pushUpMenu && pushUpMenu._activationPermitted) ? Flickable.DragOverBounds : Flickable.StopAtBounds
+    boundsBehavior: (pullDownMenu && pullDownMenu._activationPermitted) || (pushUpMenu && pushUpMenu._activationPermitted)
+                    ? Flickable.DragOverBounds : Flickable.StopAtBounds
 
     BoundsBehavior { flickable: gridView }
     QuickScroll {

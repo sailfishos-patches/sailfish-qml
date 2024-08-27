@@ -3,7 +3,7 @@ import com.meego.maliitquick 1.0
 import com.jolla.keyboard 1.0
 import com.jolla.xt9cp 1.0
 import Sailfish.Silica 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 
 InputHandler {
     id: handler

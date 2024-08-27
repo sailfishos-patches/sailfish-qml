@@ -2,7 +2,7 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 import Sailfish.Telephony 1.0
-import org.nemomobile.time 1.0
+import Nemo.Time 1.0
 import org.nemomobile.contacts 1.0
 
 MouseArea {
@@ -30,7 +30,7 @@ MouseArea {
         // When pressing backspace or delete, make sure to always delete a dialable digit
         if (offset !== 0 && (selectionStart + leftEndOffset) != (selectionEnd + rightStartOffset)) {
             var erased = oldtext.substr(selectionStart + leftEndOffset, selectionEnd + rightStartOffset - selectionStart - leftEndOffset)
-            if (!(/[0-9\+\#\*]/.test(erased))) {
+            if (!(/[0-9\+\#\*,]/.test(erased))) {
                 if (backspace) {
                     leftEndOffset--
                 } else if (del) {

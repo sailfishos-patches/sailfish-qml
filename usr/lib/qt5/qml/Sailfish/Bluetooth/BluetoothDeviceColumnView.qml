@@ -3,6 +3,9 @@ import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
 import org.kde.bluezqt 1.0 as BluezQt
 
+/*!
+  \inqmlmodule Sailfish.Bluetooth
+*/
 ColumnView {
     id: columnView
 
@@ -16,14 +19,14 @@ ColumnView {
     signal removeDeviceClicked(string address)
 
     property var _connectingDevices: []
-    property string _selectedDevice: ""
+    property string _selectedDevice
 
     //width: parent.width
     itemHeight: Theme.itemSizeSmall
 
     function addConnectingDevice(addr) {
         addr = addr.toUpperCase()
-        for (var i=0; i<_connectingDevices.length; i++) {
+        for (var i = 0; i < _connectingDevices.length; i++) {
             if (_connectingDevices[i].toUpperCase() == addr) {
                 return
             }
@@ -36,7 +39,7 @@ ColumnView {
     function removeConnectingDevice(addr) {
         addr = addr.toUpperCase()
         var devices = _connectingDevices
-        for (var i=0; i<devices.length; i++) {
+        for (var i = 0; i < devices.length; i++) {
             if (devices[i].toUpperCase() == addr) {
                 devices.splice(i, 1)
                 _connectingDevices = devices
@@ -56,6 +59,7 @@ ColumnView {
 
     model: BluezQt.DevicesModel {
         id: devicesModel
+
         filters: columnView.filters
         hiddenAddresses: columnView.excludedDevices
     }
@@ -131,12 +135,14 @@ ColumnView {
 
         BluetoothDeviceInfo {
             id: deviceInfo
+
             address: model.Address
             deviceClass: model.Class
         }
 
         Image {
             id: icon
+
             x: Theme.horizontalPageMargin
             anchors.verticalCenter: parent.verticalCenter
             source: "image://theme/" + deviceInfo.icon + (deviceDelegate.useHighlight ? "?" + Theme.highlightColor : "")
@@ -145,6 +151,7 @@ ColumnView {
 
         Label {
             id: deviceNameLabel
+
             anchors {
                 left: icon.right
                 leftMargin: Theme.paddingMedium
@@ -164,6 +171,7 @@ ColumnView {
 
         Label {
             id: connectedLabel
+
             anchors {
                 left: deviceNameLabel.left
                 top: deviceNameLabel.bottom

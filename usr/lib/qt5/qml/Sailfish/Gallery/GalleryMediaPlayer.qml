@@ -1,21 +1,30 @@
 import QtQuick 2.0
 import QtMultimedia 5.0
 import Sailfish.Media 1.0
-import org.nemomobile.policy 1.0
+import Nemo.Policy 1.0
 import Nemo.KeepAlive 1.2
 import Nemo.Notifications 1.0
 
+/*!
+  \inqmlmodule Sailfish.Gallery
+*/
 MediaPlayer {
     id: root
 
     property bool busy
 
     onLoadedChanged: if (loaded) playerLoader.anchors.centerIn = currentItem
+    /*!
+      \internal
+    */
     property bool _minimizedPlaying
     property alias active: permissions.enabled
     readonly property bool playing: playbackState == MediaPlayer.PlayingState
     readonly property bool loaded: status >= MediaPlayer.Loaded && status <= MediaPlayer.EndOfMedia
     readonly property bool hasError: error !== MediaPlayer.NoError
+    /*!
+      \internal
+    */
     property bool _reseting
 
     signal displayError
@@ -64,12 +73,18 @@ MediaPlayer {
         _reseting = false
     }
 
+    /*!
+      \internal
+    */
     property QtObject _errorNotification: Notification {
         isTransient: true
         urgency: Notification.Critical
         icon: "icon-system-warning"
     }
 
+    /*!
+      \internal
+    */
     property Item _content: Item {
         Binding {
             target: root

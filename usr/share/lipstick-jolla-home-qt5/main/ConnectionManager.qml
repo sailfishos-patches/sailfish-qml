@@ -1,6 +1,6 @@
 pragma Singleton
-import QtQuick 2.2
-import MeeGo.Connman 0.2
+import QtQuick 2.6
+import Connman 0.2
 
 QtObject {
     property alias cellularPath: networkManager.CellularTechnology

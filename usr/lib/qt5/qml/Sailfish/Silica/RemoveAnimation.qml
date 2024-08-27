@@ -42,7 +42,7 @@ SequentialAnimation {
     function _delayRemove(delay) {
         if (target.ListView.view) {
             target.ListView.delayRemove = delay
-        } else if (target.GridView.view){
+        } else if (target.GridView.view) {
             target.GridView.delayRemove = delay
         }
     }

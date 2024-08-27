@@ -69,6 +69,7 @@ PredictionListView {
 
         IconButton {
             id: removeButton
+
             x: label.x + label.width
             height: delegate.height
             width: delegate.height

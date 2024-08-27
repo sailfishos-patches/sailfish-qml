@@ -28,6 +28,7 @@ CharacterKey {
 
     Rectangle {
         id: background
+
         color: parent.pressed ? characterKey.palette.highlightBackgroundColor : characterKey.palette.primaryColor
         opacity: parent.pressed ? _pressedOpacity : _normalOpacity
         radius: geometry.keyRadius
@@ -38,6 +39,7 @@ CharacterKey {
 
     Label {
         id: textField
+
         x: Theme.paddingMedium + 2
         width: parent.width - 2*x
         height: parent.height
@@ -127,7 +129,6 @@ CharacterKey {
                     destroy()
                 }
             }
-
         }
     }
 }

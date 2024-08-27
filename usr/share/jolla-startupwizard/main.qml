@@ -8,13 +8,13 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
+import Sailfish.Settings.Networking 1.0
 import com.jolla.startupwizard 1.0
 import com.jolla.settings.system 1.0
-import com.jolla.settings.accounts 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.devicelock 1.0
 
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import Sailfish.AccessControl 1.0
 import Sailfish.Policy 1.0
 
@@ -26,7 +26,8 @@ ApplicationWindow {
     property bool _internetConnectionSkipped
     property int _modemIndex
     property bool _pinRequested
-    property variant _fingerprintAuthenticationToken
+    property var _fingerprintAuthenticationToken
+    property bool _enteredTutorial
 
     property Component _firstPageAfterPinQuery: {
         if (reachedTutorialConf.value === true) {
@@ -46,8 +47,10 @@ ApplicationWindow {
     readonly property Component tutorialMainComponent: {
         var tutorial = Qt.createComponent(pageStack.resolveImportPage("Sailfish.Tutorial.TutorialEntryPage"))
         if (tutorial.status != Component.Ready) {
+            console.log("No Tutorial installed, skipping.")
             tutorial = noTutorialComponent
         }
+
         return tutorial
     }
 
@@ -55,21 +58,19 @@ ApplicationWindow {
         ofonoInitTimeout.stop()
         var pageComponent = showSimPinQuery ? pinQueryComponent : _firstPageAfterPinQuery
         var page = pageStack.replace(pageComponent, {}, PageStackAction.Immediate)
-        if (pageComponent == tutorialMainComponent) {
-            if (page.status === PageStatus.Active) {
-                // don't allow back navigation from the tutorial
-                page.backNavigation = false
-                tutorialExitConf()
-            }
-        }
     }
 
     function _accountSetupPage() {
         if (root._internetConnectionSkipped) {
             return root._pageAfterAccountSetup
-        } else if (accountFactory.jollaAccountExists()) { // Store exists for account (TODO JB#47405 : should be fixed for jolla-settings-account)
-            console.log("User already has a", _accountName, "account, skipping", _accountName, "account creation. (Ignore the upcoming 'Great, your", _accountName, "account was added' message.)")
-            return storeAccountAlreadyExistsComponent
+        } else if (accountFactory.item && accountFactory.item.jollaAccountExists()) {
+            // Store exists for account (TODO JB#47405 : should be fixed for jolla-settings-account)
+            console.log("User already has a", _accountName, "account, skipping", _accountName,
+                        "account creation. (Ignore the upcoming 'Great, your", _accountName,
+                        "account was added' message.)")
+            // This is only used if a store account already exists when the SUW is run; otherwise, the
+            // Settings account creation flow takes care of triggering this flow.
+            return Qt.createComponent(Qt.resolvedUrl("SUWWizardPostAccountCreationDialog.qml"))
         } else {
             return _createStoreAccountPage()
         }
@@ -80,7 +81,9 @@ ApplicationWindow {
             root._accountPage.destroy()
         }
         var props = { "wizardMode": true, "runningFromSettingsApp": false }
-        root._accountPage = accountCreator.accountCreationPageForProvider(_accountName.toLowerCase(), props)
+        root._accountPage = accountCreationManager.item
+                ? accountCreationManager.item.accountCreationPageForProvider(_accountName.toLowerCase(), props)
+                : null
         return root._accountPage || root._pageAfterAccountSetup
     }
 
@@ -99,6 +102,19 @@ ApplicationWindow {
 
     initialPage: busyWaitComponent
 
+    Connections {
+        target: pageStack
+        onCurrentPageChanged: {
+            // detect if we entered the tutorial
+            if (!root._enteredTutorial && pageStack.currentPage.hasOwnProperty("allowSystemGesturesBetweenLessons")) {
+                root._enteredTutorial = true
+                // don't allow back navigation from the tutorial
+                pageStack.currentPage.backNavigation = false
+                tutorialExitConf()
+            }
+        }
+    }
+
     Component {
         id: busyWaitComponent
         Page {
@@ -116,8 +132,16 @@ ApplicationWindow {
         id: wizardManager
     }
 
-    AccountFactory {
+    Loader {
+        id: accountCreationManager
+
+        source: Qt.resolvedUrl("SUWAccountCreationManager.qml")
+    }
+
+    Loader {
         id: accountFactory
+
+        source: Qt.resolvedUrl("SUWAccountFactory.qml")
     }
 
     ScreenBlank {
@@ -126,13 +150,6 @@ ApplicationWindow {
     ConfigurationValue {
         id: reachedTutorialConf
         key: "/apps/jolla-startupwizard/reached_tutorial"
-    }
-
-    AccountCreationManager {
-        id: accountCreator
-        endDestination: root._pageAfterAccountSetup
-        endDestinationAction: PageStackAction.Replace
-        endDestinationReplaceTarget: null
     }
 
     PersonalizedNamingSetup {
@@ -216,6 +233,7 @@ ApplicationWindow {
 
     Component {
         id: networkCheckComponent
+
         NetworkCheckDialog {
             readonly property bool dateTimeSettingsEnabled: AccessPolicy.dateTimeSettingsEnabled
                                                             && AccessControl.hasGroup(AccessControl.RealUid, "sailfish-datetime")
@@ -225,16 +243,19 @@ ApplicationWindow {
             //% "Setting up your internet connection at this point is highly recommended"
             headingText: qsTrId("startupwizard-he-internet_connection_heading")
 
-            //% "With an internet connection you can set up your Store account and download essential apps now. You'll also be able to access the Store and OS updates immediately after setting up your account."
+            //% "With an internet connection you can set up your Store account and download essential apps now. "
+            //% "You'll also be able to access the Store and OS updates immediately after setting up your account."
             bodyText: _accountPage ? qsTrId("startupwizard-la-internet_connection_body") : ""
 
-            skipText: (_accountPage ?
-                           //: Skip text if user doesn't want to set up the internet connection at the moment. (Text surrounded by %1 and %2 is underlined and colored differently)
-                           //% "%1Skip%2 internet connection setup and set up my Store account later"
-                           qsTrId("startupwizard-la-skip_internet_connection_account_specific") :
-                           //: Skip text if user doesn't want to set up the internet connection at the moment. (Text surrounded by %1 and %2 is underlined and colored differently)
-                           //% "%1Skip%2 internet connection setup"
-                           qsTrId("startupwizard-la-skip_internet_connection"))
+            skipText: (_accountPage
+                       ? //: Skip text if user doesn't want to set up the internet connection at the moment.
+                         //: (Text surrounded by %1 and %2 is underlined and colored differently)
+                         //% "%1Skip%2 internet connection setup and set up my Store account later"
+                         qsTrId("startupwizard-la-skip_internet_connection_account_specific")
+                       : //: Skip text if user doesn't want to set up the internet connection at the moment.
+                         //: (Text surrounded by %1 and %2 is underlined and colored differently)
+                         //% "%1Skip%2 internet connection setup"
+                         qsTrId("startupwizard-la-skip_internet_connection"))
                     .arg("<u><font color=\"" + (skipPressed ? Theme.highlightColor : Theme.primaryColor) + "\">")
                     .arg("</font></u>")
 
@@ -263,27 +284,6 @@ ApplicationWindow {
                     acceptDestination = root._accountSetupPage()
                 }
             }
-
-            onAccepted: {
-                if (acceptDestination == tutorialMainComponent) {
-                    // Entering tutorial so disable backNavigation
-                    acceptDestinationInstance.backNavigation = false
-                    tutorialExitConf()
-                }
-            }
-        }
-    }
-
-    // This is only used if a store account already exists when the SUW is run; otherwise, the
-    // Settings account creation flow takes care of triggering this flow.
-    Component {
-        id: storeAccountAlreadyExistsComponent
-
-        WizardPostAccountCreationDialog {
-            endDestination: root._pageAfterAccountSetup
-            endDestinationAction: PageStackAction.Replace
-            endDestinationReplaceTarget: null
-            backNavigation: false
         }
     }
 
@@ -334,7 +334,7 @@ ApplicationWindow {
 
         Page {
             onStatusChanged: {
-                if (status = PageStatus.Active) {
+                if (status == PageStatus.Active) {
                     tutorialExitConf()
                     // Tutorial not installed so just quit
                     Qt.quit()
@@ -342,19 +342,4 @@ ApplicationWindow {
             }
         }
     }
-
-    // ---- the strings below aren't used yet; they have been added to get the translations done in
-    // ----- in preparation for implementing JB#27908
-
-    //: Heading when user is asked to provide the current location
-    //% "Welcome! Where do you live?"
-    property string _countryPickerHeading: qsTrId("startupwizard-he-welcome_where_do_you_live")
-
-    //: Explains why user's location is being requested. It is used to define the WLAN frequences that can be used by the device.
-    //% "This information is needed to define the allowed WLAN frequencies."
-    property string _countryPickerIntro: qsTrId("startupwizard-la-country_requested_for_wlan")
-
-    //: Allows user to choose current location from a list of countries, regions etc. if the automatically-chosen location was incorrect.
-    //% "If we didn't guess correctly, please select your area below."
-    property string _countryPickerFallbackExplanation: qsTrId("startupwizard-la-didnt_guess_area_correctly")
 }

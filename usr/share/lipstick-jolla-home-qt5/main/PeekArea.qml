@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import org.nemomobile.lipstick 0.1
@@ -201,6 +201,7 @@ Item {
 
     ParallelAnimation {
         id: resetAnimation
+
         running: false
 
         NumberAnimation {
@@ -219,6 +220,7 @@ Item {
 
         FadeAnimation {
             id: fadeOut
+
             target: peekArea
             duration: clipEndAnimation.duration
             to: peekArea.closing ? 0 : 1

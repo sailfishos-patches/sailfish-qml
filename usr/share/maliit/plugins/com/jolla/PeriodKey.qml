@@ -7,7 +7,7 @@ CharacterKey {
     captionShifted: "."
     accents: "!.?"
     accentsShifted: "!.?"
-    implicitWidth: punctuationKeyWidthNarrow
+    implicitWidth: punctuationKeyWidth
     fixedWidth: !splitActive
     separator: SeparatorState.HiddenSeparator
 }

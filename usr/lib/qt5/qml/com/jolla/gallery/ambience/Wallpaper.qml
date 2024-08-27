@@ -10,8 +10,6 @@ import Sailfish.Silica 1.0
 import Sailfish.Silica.Background 1.0
 
 ThemeBackground {
-    id: wallpaper
-
     visible: sourceItem && sourceItem.status === Image.Ready
 
     patternItem: glassTextureImage

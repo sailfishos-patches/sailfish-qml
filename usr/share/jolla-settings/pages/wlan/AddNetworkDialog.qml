@@ -2,7 +2,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Pickers 1.0
 import Sailfish.Settings.Networking 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 Dialog {
     id: root
@@ -191,7 +191,6 @@ Dialog {
             AdvancedSettingsColumn {
                 id: advancedSettingsColumn
                 network: root.network
-                globalProxyButtonVisible: false
             }
         }
 

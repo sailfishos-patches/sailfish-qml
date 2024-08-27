@@ -183,7 +183,7 @@ Dialog {
     FileWatcher {
         id: startupWizardDoneWatcher
         Component.onCompleted: {
-            var markerFile = StandardPaths.home + "/.jolla-startupwizard-usersession-done"
+            var markerFile = StandardPaths.home + "/.config/jolla-startupwizard-usersession-done"
             if (!testFileExists(markerFile)) {
                 fileName = markerFile
             }
@@ -255,7 +255,7 @@ Dialog {
                 text: qsTrId("settings_accounts-la-have_jolla_account_heading")
 
                 //: User selects this option if he/she already has a Jolla account
-                //% "You probably have a Jolla account if you have used a Sailfish device, created an account at account.jolla.com or used our community platform at together.jolla.com."
+                //% "You probably have a Jolla account if you have used a Sailfish device, created an account at account.jolla.com or used our community platform at forum.sailfishos.org."
                 description: qsTrId("settings_accounts-la-have_jolla_account_description")
 
                 onClicked: {
@@ -410,6 +410,7 @@ Dialog {
 
     Component {
         id: accountCreationComponent
+
         JollaAccountCreationSecondDialog {
             acceptDestination: busyComponent
 
@@ -436,6 +437,7 @@ Dialog {
 
     Component {
         id: busyComponent
+
         AccountBusyPage {
             function showError(errorCode, errorMessage) {
                 if (errorCode != AccountFactory.UnknownError && errorCode != AccountFactory.InternalError) {
@@ -458,6 +460,7 @@ Dialog {
 
     Component {
         id: skipConfirmationComponent
+
         Dialog {
             acceptDestination: root.skipDestination
             acceptDestinationAction: root.skipDestinationAction

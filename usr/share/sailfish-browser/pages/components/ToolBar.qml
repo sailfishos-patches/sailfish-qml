@@ -241,6 +241,7 @@ Column {
                                                  Theme.errorColor.b, glow))
                                : Theme.primaryColor
             enabled: webView.security
+            visible: !(webView.url.indexOf("about:") === 0)
             onTapped: {
                 if (certOverlayActive) {
                     showChrome()
@@ -277,7 +278,7 @@ Column {
             }
         }
 
-        MouseArea {
+        BackgroundItem {
             id: touchArea
 
             readonly property bool down: pressed && containsMouse
@@ -285,6 +286,7 @@ Column {
             height: parent.height
             width: toolBarRow.width - (tabButton.width + stopButton.width + padlockIcon.width + backIcon.width + menuButton.width)
             enabled: !showFindButtons
+            _showPress: false
 
             onClicked: {
                 if (findInPageActive) {
@@ -294,10 +296,29 @@ Column {
                 }
             }
 
+            onPressAndHold: {
+                var url = webView.url
+                if (url) {
+                    // encode the string if it looks like it has query or fragment parts
+                    // FIXME: could be improved with *proper* matching.
+                    Clipboard.text = ( (url.indexOf('?') > -1) || (url.indexOf('#') > -1) ) ? encodeURI(url) : url
+                    urlCopyNotice.show()
+                }
+            }
+
+            Notice {
+                id: urlCopyNotice
+                duration: Notice.Short
+                verticalOffset: -Theme.itemSizeMedium
+                //: Url copied to clipboard from toolbar (long press).
+                //% "Url copied to clipboard"
+                text: qsTrId("sailfish_browser-la-url_copied_to_clipboard")
+            }
+
             Label {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width + Theme.paddingMedium
-                color: touchArea.down ? Theme.highlightColor : Theme.primaryColor
+                color: touchArea.highlighted ? Theme.highlightColor : Theme.primaryColor
 
                 text: {
                     if (findInPageActive) {

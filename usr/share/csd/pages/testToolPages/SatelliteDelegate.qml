@@ -8,7 +8,7 @@ import QtQuick 2.2
 import Sailfish.Silica 1.0
 
 Item {
-    height: Theme.itemSizeMedium
+    height: Math.max(Theme.itemSizeMedium, column.height)
 
     // http://www.catb.org/gpsd/NMEA.html#_satellite_ids
     function getSatelliteSystem() {

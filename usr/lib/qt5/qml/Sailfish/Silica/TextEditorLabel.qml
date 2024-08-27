@@ -9,9 +9,9 @@ Label {
     text: editor ? editor.label : ""
     font.pixelSize: Theme.fontSizeSmall
     truncationMode: TruncationMode.Fade
-    color: editor.errorHighlight ? palette.errorColor
-                                 : highlighted ? palette.secondaryHighlightColor
-                                               : palette.secondaryColor
+    color: editor && editor.errorHighlight ? palette.errorColor
+                                           : highlighted ? palette.secondaryHighlightColor
+                                                         : palette.secondaryColor
 
     horizontalAlignment: editor && editor.explicitHorizontalAlignment ? editor.horizontalAlignment : undefined
     opacity: editor && (editor._isEmpty && editor.hideLabelOnEmptyField) ? 0.0 : 1.0

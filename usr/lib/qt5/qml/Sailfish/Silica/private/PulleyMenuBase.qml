@@ -107,10 +107,12 @@ SilicaMouseArea {
     property real _finalPosition        // The position where the menu is at the limit of its extent
     property bool _atInitialPosition: Math.abs(flickable.contentY - _inactivePosition) < 1.0 && !active
     property bool _atFinalPosition: Math.abs(flickable.contentY - _finalPosition) < 1.0 && active
-    property bool _pullDown: _inactivePosition > _finalPosition
+    property real _contentEnd
     property real _menuIndicatorPosition // The position of the highlight when the menu is closed
     property real _menuItemHeight: screen.sizeCategory <= Screen.Medium ? Theme.itemSizeExtraSmall : Theme.itemSizeSmall
-
+    property real _menuItemActivationThreshold: _menuItemHeight
+                                                + ((_isPullDownMenu && Screen.hasCutouts && _page && _page.isPortrait)
+                                                   ? Screen.topCutout.height : 0)
 
     property bool _activationInhibited
     property bool _activationPermitted: visible && enabled && _atInitialPosition && !_activationInhibited
@@ -148,7 +150,9 @@ SilicaMouseArea {
 
     z: 10000 // we want the menu indicator and its dimmer to appear above content
     x: flickable.contentX + (flickable.width - width)/2
-    width: flickable.width ? Math.min(flickable.width, screen.sizeCategory > Screen.Medium ? Screen.width*0.7 : Screen.width) : Screen.width
+    width: flickable.width ? Math.min(flickable.width,
+                                      screen.sizeCategory > Screen.Medium ? Screen.width*0.7 : Screen.width)
+                           : Screen.width
     height: _activeHeight + spacing
 
     layer.enabled: active || (flickable.dragging && __silica_applicationwindow_instance._dimmingActive)
@@ -323,8 +327,8 @@ SilicaMouseArea {
             if (child) {
                 _quickSelected = true
                 var xPos = width/2
-                if ((_pullDown && parentItem.mapToItem(child, xPos, yPos).y <= _menuItemHeight)
-                        || (!_pullDown && parentItem.mapToItem(child, xPos, yPos).y >= 0)) {
+                if ((_isPullDownMenu && parentItem.mapToItem(child, xPos, yPos).y <= _menuItemHeight)
+                        || (!_isPullDownMenu && parentItem.mapToItem(child, xPos, yPos).y >= 0)) {
                     if (flickable.dragging) {
                         menuItem = child
                     }
@@ -347,7 +351,7 @@ SilicaMouseArea {
             return
         }
 
-        var xPos = width/2
+        var xPos = width / 2
 
         // Only try to highlight if we haven't dragged to the final position
         if (!flickable.dragging || !_atFinalPosition) {
@@ -366,11 +370,7 @@ SilicaMouseArea {
         }
         if (!child) {
             menuItem = null
-            var wasHighlighted = !!highlightItem.highlightedItem
             highlightItem.clearHighlight()
-            if (logic.dragDistance <= _contentEnd && wasHighlighted) {
-                highlightItem.moveTo(_highlightIndicatorPosition)
-            }
         }
     }
 
@@ -438,9 +438,14 @@ SilicaMouseArea {
         id: highlightItem
 
         y: {
-            if (!active) return _menuIndicatorPosition
-            if (highlightedItem || (!flickable.dragging && _atFinalPosition)
-                    || logic.dragDistance > _contentEnd) return _highlightedItemPosition
+            if (!active) {
+                return _menuIndicatorPosition
+            }
+
+            if (highlightedItem
+                    || (!flickable.dragging && _atFinalPosition)) {
+                return _highlightedItemPosition
+            }
             return _highlightIndicatorPosition
         }
 
@@ -456,10 +461,16 @@ SilicaMouseArea {
             } else if ((!active && !_hinting) || _bounceBackRunning) {
                 return _inactiveOpacity
             } else if (!_hasMenuItems(_contentColumn)) {
-                return Theme.highlightBackgroundOpacity * (1.0 - logic.dragDistance/Theme.paddingMedium)
+                return Theme.highlightBackgroundOpacity * (1.0 - logic.dragDistance / Theme.paddingMedium)
             } else {
-                return Theme.highlightBackgroundOpacity * Math.max(1.5 - logic.dragDistance/_menuItemHeight,
-                                                                   logic.dragDistance <= _contentEnd && !flickAnimation.running ? 0.5 : 0.0)
+                // opacity on starts with 1.5 multiplier (could use something cleaner?),
+                // goes downwards with drag until lower part takes over,
+                // finally ensuring item hidden when dragged beyond the menu items
+                return Theme.highlightBackgroundOpacity
+                        * Math.max(1.5 - logic.dragDistance / _menuItemHeight,
+                                   (logic.dragDistance <= (_contentEnd + _menuItemActivationThreshold)
+                                    && !flickAnimation.running)
+                                   ? 0.5 : 0.0)
             }
         }
 
@@ -467,6 +478,7 @@ SilicaMouseArea {
 
         Timer {
             id: busyTimer
+
             running: busy && !active && Qt.application.active
             interval: 500
             repeat: true
@@ -617,7 +629,7 @@ SilicaMouseArea {
         // Do not permit flicking inside the menu (unless it is a small flick that does not present
         // a danger of accidentally selecting the wrong item)
         if (active && !_quickSelected && (Math.abs(flickable.verticalVelocity) > Theme.dp(500))) {
-            var opening = _pullDown ? flickable.verticalVelocity < 0 : flickable.verticalVelocity > 0
+            var opening = _isPullDownMenu ? flickable.verticalVelocity < 0 : flickable.verticalVelocity > 0
             flickAnimation.to = opening ? _finalPosition : _inactivePosition
             flickAnimation.duration = 300
             flickAnimation.restart()
@@ -674,6 +686,7 @@ SilicaMouseArea {
 
     PulleyMenuLogic {
         id: logic
+
         flickable: pulleyBase.flickable
         onFinalPositionReached: {
             if (active && _ngfEffect && !menuItem && !quickSelect && !delayedBounceTimer.running && !bounceBackAnimation.running) {
@@ -706,8 +719,8 @@ SilicaMouseArea {
             } else if (flickable.height < flickable.contentHeight - _snapThreshold) {
                 // If we are close to the menu location, snap to the end
                 var dist = flickable.contentY - _inactivePosition
-                if (_pullDown && dist > 0 && dist < _snapThreshold
-                        || !_pullDown && dist < 0 && dist > -_snapThreshold) {
+                if (_isPullDownMenu && dist > 0 && dist < _snapThreshold
+                        || !_isPullDownMenu && dist < 0 && dist > -_snapThreshold) {
                     snapAnimation.restart()
                 }
             }
@@ -776,7 +789,7 @@ SilicaMouseArea {
 
     Component.onCompleted: {
         // avoid hard dependency to ngf module
-        _ngfEffect = Qt.createQmlObject("import org.nemomobile.ngf 1.0; NonGraphicalFeedback { event: 'pulldown_lock' }",
+        _ngfEffect = Qt.createQmlObject("import Nemo.Ngf 1.0; NonGraphicalFeedback { event: 'pulldown_lock' }",
                                         highlightItem, 'NonGraphicalFeedback')
     }
 

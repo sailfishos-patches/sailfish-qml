@@ -1,6 +1,6 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica.private 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 
 ConfigurationValue {
     // 0 - No hint showing
@@ -49,7 +49,7 @@ ConfigurationValue {
     }
 
     function getEpoch() {
-        var date = new Date();
+        var date = new Date()
         return Math.floor(date.getTime() / 1000)
     }
 

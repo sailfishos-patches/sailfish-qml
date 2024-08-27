@@ -6,6 +6,7 @@ Dialog {
 
     property alias accountId: settingsDisplay.accountId
     property Item connectionSettings
+    property bool oauthEnabled
 
     acceptDestination: accountCreationAgent.busyPageInstance
     acceptDestinationAction: PageStackAction.Push
@@ -30,6 +31,7 @@ Dialog {
 
         SailfishEasSettingsDisplay {
             id: settingsDisplay
+            oauthEnabled: root.oauthEnabled
             anchors.top: header.bottom
             isNewAccount: true
             accountManager: accountCreationAgent.accountManager

@@ -14,8 +14,9 @@ import Sailfish.Silica.Background 1.0
 import Sailfish.Telephony 1.0
 import Nemo.DBus 2.0
 import Nemo.FileManager 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.devicelock 1.0
+import org.nemomobile.systemsettings 1.0
 import com.jolla.lipstick 0.1
 
 QtObject {
@@ -67,7 +68,7 @@ QtObject {
 
     property var startupWizardDoneWatcher: FileWatcher {
         Component.onCompleted: {
-            var markerFile = StandardPaths.home + "/.jolla-startupwizard-usersession-done"
+            var markerFile = StandardPaths.home + "/.config/jolla-startupwizard-usersession-done"
             if (!testFileExists(markerFile)) {
                 fileName = markerFile
             }
@@ -105,6 +106,10 @@ QtObject {
         Component.onCompleted: getDeviceLockState()
     }
 
+    property QtObject deviceInfo: DeviceInfo {
+        readonly property bool hasCellularVoiceCallFeature: hasFeature(DeviceInfo.FeatureCellularVoice)
+    }
+
     property QtObject pendingWindowPrompt: ConfigurationValue {
         key: "/desktop/lipstick-jolla-home/windowprompt/pending"
         defaultValue: []
@@ -112,9 +117,19 @@ QtObject {
 
     property bool windowPromptPending: pendingWindowPrompt.value.length > 0
 
+    // allow forcing the loading while we have it otherwise disabled
+    property QtObject forceWeather: ConfigurationValue {
+        key: "/desktop/lipstick-jolla-home/force_weather_loading"
+        defaultValue: false
+    }
+
     property bool weatherAvailable
+    // some file of the app that ensures it's installed
+    readonly property string weatherAppFile: StandardPaths.qmlImportPath + "org/sailfishos/weather/settings/qmldir"
     function refreshWeatherAvailable() {
-        weatherAvailable = fileUtils.exists(StandardPaths.resolveImport("Sailfish.Weather.WeatherIndicator"))
+        // hide weather due to foreca not working
+        //weatherAvailable = fileUtils.exists(weatherAppFile)
+        weatherAvailable = forceWeather.value
     }
 
     property FileUtils fileUtils: FileUtils { }

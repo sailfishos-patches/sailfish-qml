@@ -65,7 +65,7 @@ SystemWindow {
 
                 //% "NFC tag detected"
                 title: qsTrId("lipstick-jolla-home-nfc_tag_detected")
-                topPadding: transpose ? Theme.paddingLarge : 2*Theme.paddingLarge
+                semiTight: true
             }
 
             Label {

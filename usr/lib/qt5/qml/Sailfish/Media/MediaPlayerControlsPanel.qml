@@ -2,12 +2,26 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Media 1.0
 
+/*!
+ * \inqmlmodule Sailfish.Media
+ * \inherits Sailfish.Silica.DockedPanel
+ */
 DockedPanel {
     id: panel
 
     property bool active
     property bool playing
+    /*!
+      \value MediaPlayerControls.NoRepeat (default)
+      \value MediaPlayerControls.RepeatTrack
+      \value MediaPlayerControls.RepeatPlayList
+     */
     property int repeat: MediaPlayerControls.NoRepeat
+    /*!
+      \value MediaPlayerControls.NoShuffle (default)
+      \value MediaPlayerControls.ShuffleTracks
+      \value MediaPlayerControls.ShufflePlaylists
+     */
     property int shuffle: MediaPlayerControls.NoShuffle
     property bool showAddToPlaylist: true
     property bool showMenu: true
@@ -19,6 +33,9 @@ DockedPanel {
     property int durationScalar: 1
     property alias forwardEnabled: forwardButton.enabled
 
+    /*!
+      \internal
+    */
     property bool _isLandscape: pageStack && pageStack.currentPage && pageStack.currentPage.isLandscape
 
     signal previousClicked()
@@ -27,6 +44,9 @@ DockedPanel {
 
     signal repeatClicked()
     signal shuffleClicked()
+    /*!
+      Emitted when \c AddToPlaylist button is clicked
+    */
     signal addToPlaylist()
 
     signal sliderReleased(int value)

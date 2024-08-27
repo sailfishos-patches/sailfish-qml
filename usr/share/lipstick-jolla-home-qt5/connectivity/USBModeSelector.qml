@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
@@ -13,6 +13,7 @@ import "../systemwindow"
 
 SystemWindow {
     id: usbDialog
+
     objectName: "usbDialog"
     property bool largeIcons: Screen.sizeCategory >= Screen.Large
 
@@ -106,6 +107,7 @@ SystemWindow {
 
         Column {
             id: content
+
             width: parent.width
 
             SystemDialogHeader {
@@ -117,7 +119,7 @@ SystemWindow {
                 //: Displayed above the available USB connection modes
                 //% "Switch to one of the following modes(s)"
                 description: qsTrId("lipstick-jolla-home-la-usb_connected_description", buttonModel.count)
-                topPadding: transpose ? Theme.paddingLarge : 2*Theme.paddingLarge
+                semiTight: true
             }
             Row {
                 id: buttonRow

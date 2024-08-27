@@ -38,20 +38,20 @@ import Sailfish.Silica 1.0
 Item {
     id: root
 
-    property bool active: !!item && item.width > 0 && item.height > 0 && item.opacity > 0.0
+    property bool active: width > 0
     property Item item
     property Item _oldItem: item
 
     onItemChanged: {
-        if (_oldItem) _oldItem.parent = null
+        if (_oldItem) {
+            _oldItem.parent = null
+        }
         if (item) {
-            item.parent = Qt.binding(function () {
-                return root.active ? root : null
-            })
+            item.parent = root
         }
         _oldItem = item
     }
 
-    width: item ? item.width : 0
-    height: item ? item.height : 0
+    width: item && item.visible && item.opacity > 0 ? item.width : 0
+    height: item && item.visible && item.opacity > 0 ? item.height : 0
 }

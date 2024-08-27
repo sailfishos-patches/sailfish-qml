@@ -23,7 +23,6 @@ Dialog {
         width: parent.width
 
         DialogHeader {
-            id: pageHeader
             title: importFailed ? failTitle : root.title
 
             acceptText: ''

@@ -11,7 +11,6 @@ KeyboardLayout {
     property real keyWidth: width / 4
 
     portraitMode: true
-    height: 4 * geometry.keyHeightPortrait
 
     layoutIndex: -1
     type: ""
@@ -33,7 +32,7 @@ KeyboardLayout {
         }
         NumberKey {
             width: main.keyWidth
-            enabled: Silica.Clipboard.hasText
+            enabled: keyboard.pasteEnabled
             separator: SeparatorState.HiddenSeparator
             opacity: enabled ? (pressed ? 0.6 : 1.0)
                              : 0.3

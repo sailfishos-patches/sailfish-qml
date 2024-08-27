@@ -12,7 +12,7 @@ import com.jolla.lipstick 0.1
 import Sailfish.Silica 1.0
 
 Icon {
-    source: "image://theme/icon-status-alarm" + iconSuffix
+    source: "image://theme/icon-status-alarm"
     visible: Desktop.timedStatus.alarmPresent
     height: visible ? implicitHeight : 0
 }

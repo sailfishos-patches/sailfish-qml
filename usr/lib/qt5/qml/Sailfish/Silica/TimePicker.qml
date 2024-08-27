@@ -100,11 +100,12 @@ SilicaItem {
 
     function _updateMinuteIndicator() {
         if (mouse.changingProperty == 0) {
+            var delta
             if (_hoursAndMinutes) {
-                var delta = (minute - outerIndicator.value)
+                delta = (minute - outerIndicator.value)
                 outerIndicator.value += (delta % 60)
             } else {
-                var delta = (minute - innerIndicator.value)
+                delta = (minute - innerIndicator.value)
                 innerIndicator.value += (delta % 60)
             }
         }
@@ -118,19 +119,20 @@ SilicaItem {
     }
 
     function _formatTime(hour, minute, _second) {
-        var date = new Date()
-        date.setSeconds(_second)
-        date.setHours(hour)
-        date.setMinutes(minute)
-        var format
         if (_hoursAndMinutes) {
+            var date = new Date()
+            date.setSeconds(_second)
+            date.setHours(hour)
+            date.setMinutes(minute)
+            var format
             format = (hourMode == DateTime.DefaultHours ? Formatter.TimeValue
                                                         : (hourMode == DateTime.TwentyFourHours ? Formatter.TimeValueTwentyFourHours
                                                                                                 : Formatter.TimeValueTwelveHours))
+            return Format.formatDate(date, format)
         } else {
-            format = Formatter.DurationShort
+            // minutes and seconds mode
+            return Format.formatDuration(minute * 60 + _second)
         }
-        return Format.formatDate(date, format)
     }
 
     ShaderEffect {

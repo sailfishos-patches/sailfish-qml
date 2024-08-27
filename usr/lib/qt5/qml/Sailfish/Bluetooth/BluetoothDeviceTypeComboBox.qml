@@ -1,8 +1,11 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 
+/*!
+  \inqmlmodule Sailfish.Bluetooth 1.0
+*/
 ComboBox {
     id: root
 
@@ -13,6 +16,9 @@ ComboBox {
     visible: deviceTypesModel.count > 0
     value: ""
 
+    /*!
+      \internal
+    */
     function _loadIndex(index) {
         if (index >= 0 && index < deviceTypesModel.count) {
             var data = deviceTypesModel.get(index)

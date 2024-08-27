@@ -1,5 +1,6 @@
 module Sailfish.Gallery
 plugin sailfishgalleryplugin
+typeinfo plugins.qmltypes
 DetailsPage 1.0 DetailsPage.qml
 ImageDetailsItem 1.0 ImageDetailsItem.qml
 GalleryMediaPlayer 1.0 GalleryMediaPlayer.qml

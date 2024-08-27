@@ -76,14 +76,14 @@ PathView {
     path: Path {
         id: path
         startX: orientation === Qt.Horizontal ? -(view.itemWidth * view._multiplier - view.width/2)
-                                              :  view.itemWidth / 2
+                                              : view.itemWidth / 2
         startY: orientation === Qt.Horizontal ? view.itemHeight / 2
                                               : -(view.itemHeight * view._multiplier - view.height/2)
 
         PathLine {
             x: orientation === Qt.Horizontal ? (view.pathItemCount * view.itemWidth) + path.startX
                                              : view.itemWidth / 2
-            y: orientation === Qt.Horizontal ?  view.itemHeight / 2
+            y: orientation === Qt.Horizontal ? view.itemHeight / 2
                                              : (view.pathItemCount * view.itemHeight) + path.startY
         }
     }

@@ -1,0 +1,5 @@
+module org.freedesktop.contextkit
+plugin contextkit
+typeinfo plugins.qmltypes
+ContextProperty 1.0 ContextProperty.qml
+ContextPropertyBase 1.0 ContextPropertyBase.qml

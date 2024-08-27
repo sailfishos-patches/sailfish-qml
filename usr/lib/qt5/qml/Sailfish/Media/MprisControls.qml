@@ -6,6 +6,8 @@ MouseArea {
 
     property bool isPlaying
     property alias artistAndSongText: artistAndSong.artistAndSongText
+    property alias applicationName: appName.text
+    property alias albumArtSource: albumArt.sourceUrl
     property bool nextEnabled
     property bool previousEnabled
     property bool playEnabled
@@ -19,7 +21,7 @@ MouseArea {
     signal nextRequested()
     signal previousRequested()
 
-    height: artistAndSong.height + playerButtons.height
+    height: playerButtons.y + playerButtons.height
 
     MouseArea {
         id: artistSongArea
@@ -37,7 +39,7 @@ MouseArea {
 
         property var artistAndSongText: { "artist": "", "song": "" }
 
-        width: parent.width
+        width: parent.width - (albumArt.width > 0 ? (albumArt.width + Theme.paddingMedium) : 0)
 
         onArtistAndSongTextChanged: {
             if (artistAndSongFadeAnimation.running) {
@@ -65,7 +67,6 @@ MouseArea {
             width: parent.width
             font.pixelSize: Theme.fontSizeMedium
             truncationMode: TruncationMode.Fade
-            horizontalAlignment: implicitWidth > width ? Text.AlignHLeft : Text.AlignHCenter
             color: artistSongArea.pressed ? Theme.highlightColor : mprisControls.textColor
             maximumLineCount: 1
         }
@@ -74,12 +75,51 @@ MouseArea {
             id: artistLabel
 
             width: parent.width
-            font.pixelSize: Theme.fontSizeMedium
+            font.pixelSize: Theme.fontSizeSmall
             truncationMode: TruncationMode.Fade
-            horizontalAlignment: implicitWidth > width ? Text.AlignHLeft : Text.AlignHCenter
             color: songLabel.color
             maximumLineCount: 1
         }
+        Label {
+            id: appName
+
+            visible: songLabel.text !== "" || artistLabel.text !== ""
+                     || mprisControls.previousEnabled || playPauseButton.enabled || mprisControls.nextEnabled
+            width: parent.width
+            font.pixelSize: Theme.fontSizeSmall
+            truncationMode: TruncationMode.Fade
+            maximumLineCount: 1
+            color: Theme.secondaryHighlightColor
+        }
+    }
+
+    Image {
+        id: albumArt
+
+        property url sourceUrl
+
+        anchors.right: parent.right
+        width: status == Image.Ready ? Theme.itemSizeLarge : 0
+        height: width
+        sourceSize.width: Theme.itemSizeLarge
+        sourceSize.height: Theme.itemSizeLarge
+
+        fillMode: Image.PreserveAspectCrop
+
+        onSourceUrlChanged: {
+            if (artFadeAnimation.running) {
+                artFadeAnimation.complete()
+            }
+            artFadeAnimation.running = true
+        }
+    }
+
+    SequentialAnimation {
+        id: artFadeAnimation
+
+        FadeAnimation { target: albumArt; properties: "opacity"; to: 0.0 }
+        ScriptAction { script: { albumArt.source = albumArt.sourceUrl } }
+        FadeAnimation { target: albumArt; properties: "opacity"; to: 1.0 }
     }
 
     Row {
@@ -87,7 +127,7 @@ MouseArea {
 
         spacing: mprisControls.width / 3 - mprisControls._squareSize
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: artistAndSong.bottom
+        y: Math.max(Theme.itemSizeLarge, artistAndSong.height)
 
         IconButton {
             enabled: mprisControls.previousEnabled
@@ -95,7 +135,7 @@ MouseArea {
             Behavior on opacity { FadeAnimation {} }
             width: mprisControls._squareSize
             height: width
-            icon.source: "image://theme/icon-m-previous"
+            icon.source: "image://theme/icon-m-simple-previous"
 
             onClicked: mprisControls.previousRequested()
         }
@@ -103,8 +143,8 @@ MouseArea {
         IconButton {
             id: playPauseButton
 
-            property string iconSource: enabled ? (mprisControls.isPlaying ? "image://theme/icon-m-pause"
-                                                                           : "image://theme/icon-m-play")
+            property string iconSource: enabled ? (mprisControls.isPlaying ? "image://theme/icon-m-simple-pause"
+                                                                           : "image://theme/icon-m-simple-play")
                                                 : ""
 
             enabled: mprisControls.isPlaying ? mprisControls.pauseEnabled : mprisControls.playEnabled
@@ -141,7 +181,7 @@ MouseArea {
             Behavior on opacity { FadeAnimation {} }
             width: mprisControls._squareSize
             height: width
-            icon.source: "image://theme/icon-m-next"
+            icon.source: "image://theme/icon-m-simple-next"
 
             onClicked: mprisControls.nextRequested()
         }

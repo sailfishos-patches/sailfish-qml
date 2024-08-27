@@ -12,7 +12,7 @@ SystemDialog {
 
     signal requestInstall
 
-    title: rpmInfo.name
+    title: packageName
     contentHeight: contentColumn.height
 
     Column {
@@ -21,22 +21,22 @@ SystemDialog {
 
         SystemDialogHeader {
             id: header
-
-            title: rpmInfo.name
-            description: rpmInfo.summary
+            title: packageName
+            description: packageSummary
         }
+        
 
         Label {
             width: header.width
             anchors.horizontalCenter: parent.horizontalCenter
-            visible: text != ""
+            visible: packageVersion != ""
             color: Theme.highlightColor
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             font.pixelSize: Theme.fontSizeExtraSmall
-            //: %1 replaced with package name
+            //: %1 replaced with package version
             //% "Version %1"
-            text: qsTrId("installation_handler-la-version").arg(rpmInfo.version)
+            text: qsTrId("installation_handler-la-version").arg(packageVersion)
         }
 
         SystemDialogIconButton {

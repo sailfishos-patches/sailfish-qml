@@ -12,10 +12,12 @@ BackgroundItem {
     property alias popupParent: popup.parent
 
     height: parent ? parent.height : 0
-    width: Clipboard.hasText ? (keyboard.expandedPaste ? pasteRow.width + 2*Theme.paddingMedium
-                                                       : pasteIcon.width + Theme.paddingMedium)
-                             : 0
+    width: keyboard.pasteEnabled
+           ? (keyboard.expandedPaste ? pasteRow.width + 2*Theme.paddingMedium
+                                     : pasteIcon.width + Theme.paddingMedium)
+           : 0
 
+    visible: keyboard.pasteEnabled
     preventStealing: popup.visible
     highlighted: down || popup.visible
 

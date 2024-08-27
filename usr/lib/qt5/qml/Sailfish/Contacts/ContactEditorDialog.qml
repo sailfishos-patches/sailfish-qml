@@ -12,11 +12,13 @@ import Sailfish.Silica.private 1.0 as Private
 import org.nemomobile.contacts 1.0
 import "detaileditors"
 
-/**
- * Main editor page that contains sections for each type of contact detail.
- * These sections and their names are populated on this page, but each section
- * populates its own data from the contact object that is passed from here to
- * them.
+/*!
+  \brief Main editor page that contains sections for each type of contact detail.
+  \inqmlmodule Sailfish.Contacts
+
+  These sections and their names are populated on this page, but each section
+  populates its own data from the contact object that is passed from here to
+  them.
  */
 Dialog {
     id: root
@@ -25,10 +27,25 @@ Dialog {
     property Person subject
     property var focusField: ({})
 
+    /*!
+      \internal
+    */
     property var _originalContactData
+    /*!
+      \internal
+    */
     property Person _contact: subject && subject.complete && !_readOnly ? subject : null
+    /*!
+      \internal
+    */
     property var _peopleModel: peopleModel || SailfishContacts.ContactModelCache.unfilteredModel()
+    /*!
+      \internal
+    */
     property var _editors: [name, company, phone, email, note, address, date, website, info]
+    /*!
+      \internal
+    */
     readonly property bool _readOnly: !subject
                                       || !subject.complete
                                       || !ContactsUtil.isWritableContact(subject)

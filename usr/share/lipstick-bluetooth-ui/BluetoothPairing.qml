@@ -5,11 +5,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
-import org.nemomobile.notifications 1.0 as Nemo
+import Nemo.Notifications 1.0 as Nemo
 import org.kde.bluezqt 1.0 as BluezQt
 
 ApplicationWindow {

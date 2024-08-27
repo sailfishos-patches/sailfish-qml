@@ -5,7 +5,7 @@
  **
  ****************************************************************************/
 
-import QtQuick 2.2
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import com.jolla.lipstick 0.1
@@ -16,6 +16,7 @@ import "../main"
 Column {
     id: root
     property bool showCount
+    property alias maximumCount: boundedModel.maximumCount
 
     readonly property bool hasNotifications: repeater.count > 0
 

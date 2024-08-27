@@ -11,6 +11,9 @@ import Sailfish.Contacts 1.0 as Contacts
 import org.nemomobile.contacts 1.0
 import Nemo.Thumbnailer 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 GridItem {
     id: favoriteItem
 
@@ -20,9 +23,15 @@ GridItem {
     readonly property int selectionModelIndex: selectionModel !== null ? (selectionModel.count > 0, selectionModel.findContactId(model.contactId)) : -1 // count to retrigger on change.
     property var propertyPicker
 
+    /*!
+      \internal
+    */
     property bool _hasAvatar: favoriteImage.status !== Thumbnail.Null
                               && favoriteImage.status !== Thumbnail.Error
 
+    /*!
+      \internal
+    */
     property bool _pendingDeletion: Contacts.ContactModelCache._deletingContactId === contactId
 
     property int symbolScrollBarWidth
@@ -57,7 +66,7 @@ GridItem {
 
     Image {
         anchors.fill: parent
-        source: _hasAvatar ? "" : "image://theme/graphic-avatar-text-back"
+        source: _hasAvatar ? "" : "image://theme/graphic-grid-item-background"
     }
 
     Thumbnail {

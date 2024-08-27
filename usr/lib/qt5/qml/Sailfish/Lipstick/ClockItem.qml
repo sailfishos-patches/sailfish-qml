@@ -5,10 +5,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
-import org.nemomobile.time 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Time 1.0
+import Nemo.Configuration 1.0
 
 
 Text {
@@ -84,6 +84,4 @@ Text {
         enabled: allowEnabled && timeText.updatesEnabled
         updateFrequency: WallClock.Minute
     }
-
-
 }

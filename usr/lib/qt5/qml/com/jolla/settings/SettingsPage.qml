@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.settings 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 
 Page {
     id: page

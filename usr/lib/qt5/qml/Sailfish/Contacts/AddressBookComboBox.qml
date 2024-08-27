@@ -10,6 +10,9 @@ import Sailfish.Accounts 1.0
 import Sailfish.Contacts 1.0 as SailfishContacts
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 IconComboBox {
     id: root
 

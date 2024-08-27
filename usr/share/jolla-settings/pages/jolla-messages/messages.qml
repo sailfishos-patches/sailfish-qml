@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import com.jolla.messages.settings.translations 1.0
 import org.nemomobile.ofono 1.0
 import com.jolla.settings 1.0

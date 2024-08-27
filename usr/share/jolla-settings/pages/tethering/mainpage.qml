@@ -2,11 +2,11 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
 import Sailfish.Policy 1.0
-import Nemo.Ssu 1.1 as Ssu
 import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 import Sailfish.Settings.Networking 1.0
 import com.jolla.settings.system 1.0
+import org.nemomobile.systemsettings 1.0
 
 Page {
     id: page
@@ -36,6 +36,10 @@ Page {
         return ok
     }
 
+    DeviceInfo {
+        id: deviceInfo
+    }
+
     SilicaFlickable {
         id: content
         anchors.fill: parent
@@ -49,6 +53,8 @@ Page {
 
         SimActivationPullDownMenu {
             id: pullDownMenu
+
+            showSimActivation: false // only for flight mode checking
         }
 
         SimViewPlaceholder {
@@ -73,9 +79,8 @@ Page {
                 active: !AccessPolicy.internetSharingEnabled
             }
 
-            // WLAN hotspot #/# users
             ListItem {
-                id: hotspotItem
+                id: wlanHotspotItem
                 contentHeight: wlanSwitch.height
                 openMenuOnPressAndHold: false
                 _backgroundColor: "transparent"
@@ -83,18 +88,16 @@ Page {
                 IconTextSwitch {
                     id: wlanSwitch
 
-                    property string entryPath: "system_settings/connectivity/tethering/wlan_hotspot_switch"
-
                     //% "WLAN hotspot"
                     text: qsTrId("settings_network-la-wlan-hotspot")
-                    //% "Share device's mobile connection through WLAN network others can join"
-                    description: qsTrId("settings_network-me-share_mobile_connection")
+                    //% "Share device's mobile connection via WLAN"
+                    description: qsTrId("settings_network-me-share_mobile_connection_wlan")
                     icon.source: "image://theme/icon-m-wlan-hotspot"
 
                     busy: wifiTethering.busy
                     automaticCheck: false
                     checked: wifiTethering.active
-                    highlighted: hotspotItem.highlighted
+                    highlighted: wlanHotspotItem.highlighted
                     enabled: content.enabled
                              && !wifiTethering.offlineMode && passwordInput.text.length > 0
                              && networkNameInput.text.length > 0 && !wlanSwitch.busy
@@ -153,7 +156,7 @@ Page {
                 opacity: content.enabled ? 1.0 : Theme.opacityLow
                 maximumLength: 32
 
-                text: wifiTethering.identifier.length === 0 ? Ssu.DeviceInfo.displayName(Ssu.DeviceInfo.DeviceModel) : wifiTethering.identifier
+                text: wifiTethering.identifier.length === 0 ? deviceInfo.prettyName : wifiTethering.identifier
                 //% "Network name (SSID)"
                 label: qsTrId("settings_network-la-tethering_network_name")
                 EnterKey.iconSource: "image://theme/icon-m-enter-next"
@@ -184,10 +187,57 @@ Page {
                 //% "Minimum length for passphrase is 8 characters"
                 description: errorHighlight ? qsTrId("settings-la-passphrase-length") : ""
             }
+
+            // BT hotspot
+            SectionHeader {
+                //% "Bluetooth"
+                text: qsTrId("settings_network-he-bluetooth")
+                visible: deviceInfo.hasFeature(DeviceInfo.FeatureBluetoothTethering)
+            }
+
+            ListItem {
+                id: btHotspotItem
+                contentHeight: btSwitch.height
+                openMenuOnPressAndHold: false
+                _backgroundColor: "transparent"
+                visible: deviceInfo.hasFeature(DeviceInfo.FeatureBluetoothTethering)
+
+                IconTextSwitch {
+                    id: btSwitch
+
+                    //% "Bluetooth network sharing"
+                    text: qsTrId("settings_network-la-bt-hotspot")
+                    //% "Allow paired devices to use the internet connection when Bluetooth is on"
+                    description: qsTrId("settings_network-me-share_network_connection_bt")
+                    icon.source: "image://theme/icon-m-bluetooth"
+
+                    busy: btTethering.busy
+                    automaticCheck: false
+                    checked: btTethering.active
+                    highlighted: btHotspotItem.highlighted
+                    enabled: content.enabled
+                             && !btSwitch.busy
+                    onClicked: {
+                        if (btTethering.busy) {
+                            return
+                        }
+
+                        if (btTethering.active) {
+                            btTethering.stopTethering()
+                        } else {
+                            btTethering.startTethering()
+                        }
+                    }
+                }
+            }
         }
     }
 
     MobileDataWifiTethering {
         id: wifiTethering
+    }
+
+    BluetoothTethering {
+    	id: btTethering
     }
 }

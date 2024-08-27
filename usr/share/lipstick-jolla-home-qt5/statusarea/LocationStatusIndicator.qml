@@ -5,14 +5,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import com.jolla.lipstick 0.1
 
 Icon {
     property bool recentlyOnDisplay
 
-    source: "image://theme/icon-status-gps" + iconSuffix
+    source: "image://theme/icon-status-gps"
 
     LocationStatus {
         id: locationStatus
