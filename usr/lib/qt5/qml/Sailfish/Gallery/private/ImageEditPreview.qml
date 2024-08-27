@@ -111,18 +111,6 @@ Item {
         onTriggered: root.resetZoom()
     }
 
-    Label {
-        visible: zoomableImage.error
-        //: Image to be edited can't be opened
-        //% "Oops, image error!"
-        text: qsTrId("sailfish-components-gallery-la_image-loading-error")
-        anchors.centerIn: zoomableImage
-        width: parent.width - 2 * Theme.paddingMedium
-        wrapMode: Text.Wrap
-        font.pixelSize: Theme.fontSizeLarge
-        horizontalAlignment: Text.AlignHCenter
-    }
-
     ImageEditor {
         id : editor
 
@@ -257,6 +245,6 @@ Item {
     BusyIndicator {
         anchors.centerIn: parent
         size: BusyIndicatorSize.Large
-        running: editInProgress || zoomableImage.error
+        running: editInProgress
     }
 }

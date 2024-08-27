@@ -10,6 +10,9 @@ import Sailfish.Contacts 1.0 as SailfishContacts
 import Sailfish.Accounts 1.0
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Item {
     id: root
 
@@ -21,6 +24,9 @@ Item {
     property int leftMargin: Theme.horizontalPageMargin
     property int rightMargin: Theme.horizontalPageMargin
 
+    /*!
+      \internal
+    */
     readonly property bool _highlighted: highlighted
 
     width: parent.width

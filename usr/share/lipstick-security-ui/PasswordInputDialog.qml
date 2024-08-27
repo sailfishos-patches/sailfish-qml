@@ -28,6 +28,9 @@ SystemDialog {
     property alias suggestionText: suggestionLabel.text
 
     property int inputMethodHints
+    // extra toggle control for alphanumeric or digit codes
+    property bool digitsOnly
+    property bool alphanumericToggleEnabled
 
     property bool inputEnabled: true
     property bool requirePassword: true
@@ -88,16 +91,32 @@ SystemDialog {
                 width: header.width
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                Label {
-                    id: descriptionLabel
-
+                Item {
                     x: (Screen.sizeCategory < Screen.Large) ? Theme.horizontalPageMargin : 0
                     width: header.width - 2*x
-                    color: Theme.highlightColor
-                    font.pixelSize: Theme.fontSizeMedium
-                    wrapMode: Text.Wrap
-                    horizontalAlignment: Text.AlignHCenter
-                    height: implicitHeight + (root.suggestionsEnabled ? Theme.paddingSmall : Theme.paddingLarge)
+                    height: alphanumericToggle.visible ? Math.max(alphanumericToggle.height, descriptionLabel.height)
+                                                       : descriptionLabel.height
+
+                    IconButton {
+                        id: alphanumericToggle
+
+                        visible: root.alphanumericToggleEnabled && passwordInput.visible
+                        icon.source: root.digitsOnly ? "image://theme/icon-m-keyboard"
+                                                     : "image://theme/icon-m-dialpad"
+                        onClicked: root.digitsOnly = !root.digitsOnly
+                    }
+
+                    Label {
+                        id: descriptionLabel
+
+                        width: parent.width - 2 * (alphanumericToggle.visible ? (alphanumericToggle.width + Theme.paddingMedium) : 0)
+                        color: Theme.highlightColor
+                        font.pixelSize: Theme.fontSizeMedium
+                        wrapMode: Text.Wrap
+                        horizontalAlignment: Text.AlignHCenter
+                        height: implicitHeight + (root.suggestionsEnabled ? Theme.paddingSmall : Theme.paddingLarge)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
                 }
 
                 BackgroundItem {
@@ -133,6 +152,7 @@ SystemDialog {
                                       | Qt.ImhNoAutoUppercase
                                       | Qt.ImhHiddenText
                                       | Qt.ImhMultiLine // This stops the text input hiding the keyboard when enter is pressed.
+                                      | (root.digitsOnly ? Qt.ImhDigitsOnly : 0)
 
                     _appWindow: undefined // suppresses warnings, TODO: fix password field magnifier
                     color: Theme.highlightColor
@@ -140,10 +160,10 @@ SystemDialog {
                     placeholderColor: Theme.secondaryHighlightColor
                     textMargin: 2*Theme.paddingLarge
                     textTopMargin: Theme.paddingLarge
-                    showEchoModeToggle: passwordEchoMode == TextInput.Normal
+                    showEchoModeToggle: passwordEchoMode !== TextInput.Normal
                     echoMode: (!showEchoModeToggle || _usePasswordEchoMode) && !root._showSuggestion
                               ? passwordEchoMode
-                              : TextInput.Password
+                              : TextInput.Normal
                     enabled: root.requirePassword && root.inputEnabled && !(root.suggestionsEnforced && root._showSuggestion)
                     visible: root.requirePassword
                     placeholderText: ""

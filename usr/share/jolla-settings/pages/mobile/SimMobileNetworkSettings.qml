@@ -1,6 +1,6 @@
 import QtQuick 2.0
-import MeeGo.QOfono 0.2
-import MeeGo.Connman 0.2
+import QOfono 0.2
+import Connman 0.2
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import Sailfish.Settings.Networking 1.0
@@ -240,6 +240,13 @@ Column {
 
         menu: ContextMenu {
             id: networkModeMenu
+            MenuItem {
+                readonly property string tech: "nr"
+                //: Network mode settings ComboBox item for preferring 5G
+                //% "Prefer 5G"
+                text: qsTrId("settings_network-me-network_mode_prefer_5G")
+                visible: radioSettings.availableTechnologies.indexOf(tech) >= 0
+            }
             MenuItem {
                 readonly property string tech: "lte"
                 //: Network mode settings ComboBox item for preferring 4G/LTE

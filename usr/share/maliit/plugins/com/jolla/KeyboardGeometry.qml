@@ -10,7 +10,23 @@ QtObject {
     property real scaleRatio: isLargeScreen ? screen.width / 580 : screen.width / 480
     property real verticalScale: isLargeScreen ? screen.width / 768 : scaleRatio
 
-    property int keyboardWidthLandscape: screen.height
+    // extra paddings horizontally or vertically to avoid overlapping rounded corners
+    // using the biggest to keep symmetry
+    property int cornerPadding: {
+        // assuming the roundings are simple with x and y detached the radius amount from edges.
+        var biggestCorner = Math.max(Screen.topLeftCorner.radius,
+                                     Screen.topRightCorner.radius,
+                                     Screen.bottomLeftCorner.radius,
+                                     Screen.bottomRightCorner.radius)
+        // 0.7 assumed being enough of the rounding to avoid
+        return biggestCorner * 0.7
+    }
+
+    property int keyboardWidthLandscape: {
+        var avoidance = Math.max(Screen.topCutout.height, cornerPadding)
+        // avoiding in both sides to keep symmetry
+        return screen.height - (avoidance * 2)
+    }
     property int keyboardWidthPortrait: screen.width
 
     property int keyHeightLandscape: isLargeScreen ? keyHeightPortrait : 58*verticalScale
@@ -21,17 +37,15 @@ QtObject {
     property int shiftKeyWidthLandscape: 110*scaleRatio
     property int shiftKeyWidthLandscapeNarrow: 98*scaleRatio
     property int shiftKeyWidthLandscapeSplit: 77*scaleRatio
-    property int punctuationKeyLandscape: 120*scaleRatio
-    property int punctuationKeyLandscapeNarrow: 80*scaleRatio
-    property int symbolKeyWidthLandscapeNarrow: 145*scaleRatio
+    property int punctuationKeyLandscape: 80*scaleRatio
+    property int symbolKeyWidthLandscapeNarrow: functionKeyWidthLandscape
     property int symbolKeyWidthLandscapeNarrowSplit: 100*scaleRatio
 
-    property int functionKeyWidthPortrait: 116*scaleRatio
+    property int functionKeyWidthPortrait: 95*scaleRatio
     property int shiftKeyWidthPortrait: 72*scaleRatio
     property int shiftKeyWidthPortraitNarrow: 60*scaleRatio
-    property int punctuationKeyPortait: 56*scaleRatio
-    property int punctuationKeyPortraitNarrow: 43*scaleRatio // 3*narrow + symbol narrow == 2*non-narrow + function key
-    property int symbolKeyWidthPortraitNarrow: 99*scaleRatio
+    property int punctuationKeyPortait: 43*scaleRatio
+    property int symbolKeyWidthPortraitNarrow: functionKeyWidthPortrait
 
     property int middleBarWidth: keyboardWidthLandscape / 4
 

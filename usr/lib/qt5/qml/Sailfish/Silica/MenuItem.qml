@@ -36,6 +36,7 @@ import Sailfish.Silica 1.0
 
 Label {
     id: menuItem
+
     property bool down
 
     signal earlyClick

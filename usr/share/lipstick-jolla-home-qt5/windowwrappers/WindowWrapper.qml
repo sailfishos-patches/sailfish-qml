@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0

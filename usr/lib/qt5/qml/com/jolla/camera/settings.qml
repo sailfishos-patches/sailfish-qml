@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtMultimedia 5.6
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import com.jolla.camera 1.0
 
 SettingsBase {

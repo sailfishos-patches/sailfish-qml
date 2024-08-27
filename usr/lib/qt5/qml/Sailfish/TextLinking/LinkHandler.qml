@@ -34,15 +34,9 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import org.nemomobile.contacts 1.0
 
 Item {
     id: root
-
-    Component {
-        id: personComponent
-        Person {}
-    }
 
     function handleLink(link) {
         if (typeof(link.indexOf) == "undefined") {
@@ -68,22 +62,27 @@ Item {
             return
         }
 
-        if (scheme == "tel" || scheme == "sms" || scheme == "mailto") {
-            var person = personComponent.createObject(root)
-            if (scheme == "mailto") {
-                person.emailDetails = [ {
-                    'type': Person.EmailAddressType,
-                    'address': address,
-                    'index': -1
-                } ]
+        if (scheme === "tel" || scheme === "sms" || scheme === "mailto") {
+            var personComponent = Qt.createComponent(Qt.resolvedUrl("Person.qml"))
+            if (personComponent.status === Component.Ready) {
+                var person = personComponent.createObject(root)
+                if (scheme === "mailto") {
+                    person.emailDetails = [ {
+                                               'type': person.emailAddressType,
+                                               'address': address,
+                                               'index': -1
+                                           } ]
+                } else {
+                    person.phoneDetails = [ {
+                                               'type': person.phoneNumberType,
+                                               'number': decodeURIComponent(address),
+                                               'index': -1
+                                           } ]
+                }
+                pageStack.animatorPush("Sailfish.Contacts.ContactCardPage", { contact: person })
             } else {
-                person.phoneDetails = [ {
-                    'type': Person.PhoneNumberType,
-                    'number': decodeURIComponent(address),
-                    'index': -1
-                } ]
+                Qt.openUrlExternally(link)
             }
-            pageStack.animatorPush("Sailfish.Contacts.ContactCardPage", { contact: person })
         } else {
             Qt.openUrlExternally(link)
         }

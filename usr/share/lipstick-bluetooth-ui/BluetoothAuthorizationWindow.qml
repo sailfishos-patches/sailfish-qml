@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
@@ -63,8 +63,6 @@ SystemDialog {
             width: parent.width
 
             SystemDialogHeader {
-                id: header
-
                 //: Another Bluetooth device has requested a connection to this device
                 //% "Connection request"
                 title: qsTrId("lipstick-jolla-home-he-connection_request")
@@ -99,8 +97,8 @@ SystemDialog {
 
                 SystemDialogTextButton {
                     id: cancelButton
-                    width: root.width / 2
 
+                    width: root.width / 2
                     //: Disallow the other Bluetooth device from connecting to this one
                     //% "No"
                     text: qsTrId("lipstick-jolla-home-la-service_connect_deny")
@@ -113,9 +111,9 @@ SystemDialog {
 
                 SystemDialogTextButton {
                     id: confirmButton
+
                     anchors.right: parent.right
                     width: root.width / 2
-
                     //: Allow the other Bluetooth device to connect to this one
                     //% "Yes"
                     text: qsTrId("lipstick-jolla-home-la-service_connect_allow")

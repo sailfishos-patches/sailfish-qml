@@ -1,11 +1,13 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 Column {
     id: root
 
     signal fromFileSelected()
+
+    property int horizontalMargin: Theme.horizontalPageMargin
     property QtObject network
     property bool immediateUpdate
     property alias labelColor: certComboBox.labelColor
@@ -26,6 +28,9 @@ Column {
 
     ComboBox {
         id: certComboBox
+
+        leftMargin: root.horizontalMargin
+        rightMargin: root.horizontalMargin
         //% "CA Certificate"
         label: qsTrId("settings_network-la-ca_cert")
 
@@ -77,12 +82,14 @@ Column {
         visible: certComboBox.currentIndex === 1
         color: Theme.errorColor
         wrapMode: Text.Wrap
-        x: Theme.horizontalPageMargin
-        width: parent.width - 2 * Theme.horizontalPageMargin
+        x: root.horizontalMargin
+        width: parent.width - 2 * x
     }
 
     TextField {
         id: domainSuffixField
+
+        textMargin: root.horizontalMargin
         text: network ? network.domainSuffixMatch : ""
         visible: root.visible && certComboBox.currentIndex === 0
 

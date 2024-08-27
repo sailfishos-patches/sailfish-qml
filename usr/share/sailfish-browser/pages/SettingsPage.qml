@@ -12,7 +12,7 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Browser 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import com.jolla.settings.system 1.0
 import Sailfish.WebEngine 1.0
 import Sailfish.Pickers 1.0
@@ -182,7 +182,7 @@ Page {
                 leftMargin: Theme.horizontalPageMargin + Theme.paddingLarge + _textSwitchIconCenter
                 _label.anchors.leftMargin: Theme.paddingMedium + _textSwitchIconCenter
 
-                onCheckedChanged: WebEngineSettings.javascriptEnabled = checked;
+                onCheckedChanged: WebEngineSettings.javascriptEnabled = checked
             }
 
             BackgroundItem {
@@ -304,6 +304,43 @@ Page {
                         //% "Always ask"
                         text: qsTrId("sailfish_browser-me-always_ask")
                         onClicked: WebEngineSettings.useDownloadDir = false
+                    }
+                }
+            }
+
+            SectionHeader {
+                //: Section Header for Appearance settings
+                //% "Appearance"
+                text: qsTrId("settings_browser-la-appearance")
+            }
+
+            BrowserComboBox {
+                //% "Preferred color scheme"
+                label: qsTrId("settings_browser-la-color_scheme")
+                iconSource: "image://theme/icon-m-night"
+                currentIndex: WebEngineSettings.colorScheme
+
+                //% "The website style to use when available"
+                description: qsTrId("sailfish_browser-me-website_color_scheme")
+
+                menu: ContextMenu {
+                    MenuItem {
+                        //: Option to prefer a website's light color scheme
+                        //% "Light"
+                        text: qsTrId("sailfish_browser-me-prefers_light_mode")
+                        onClicked: WebEngineSettings.colorScheme = WebEngineSettings.PrefersLightMode
+                    }
+                    MenuItem {
+                        //: Option to prefer a website's dark color scheme
+                        //% "Dark"
+                        text: qsTrId("sailfish_browser-me-prefers_dark_mode")
+                        onClicked: WebEngineSettings.colorScheme = WebEngineSettings.PrefersDarkMode
+                    }
+                    MenuItem {
+                        //: Option for the website's color scheme to match the ambience
+                        //% "Match ambience"
+                        text: qsTrId("sailfish_browser-me-follow_ambience")
+                        onClicked: WebEngineSettings.colorScheme = WebEngineSettings.FollowsAmbience
                     }
                 }
             }

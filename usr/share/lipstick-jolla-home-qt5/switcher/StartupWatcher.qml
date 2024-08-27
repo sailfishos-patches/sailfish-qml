@@ -1,4 +1,4 @@
-import QtQuick 2.2
+import QtQuick 2.6
 import com.jolla.lipstick 0.1
 
 Timer {

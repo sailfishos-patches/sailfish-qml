@@ -5,12 +5,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQuick.Window 2.1 as QtQuick
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 
 SystemDialogWindow {
     id: dialog
@@ -63,6 +63,8 @@ SystemDialogWindow {
     SystemDialogApplicationWindow {
         id: window
 
+        property var __systemDialogAppWindow // for children to search
+
         _backgroundVisible: false
         _opaque: false
         cover: null
@@ -70,7 +72,8 @@ SystemDialogWindow {
         focus: true
 
         _backgroundRect: {
-            switch (window._rotatingItem.rotation) {
+            var orientationOffset = window.QtQuick.Screen.angleBetween(Qt.PortraitOrientation, window.QtQuick.Screen.primaryOrientation)
+            switch (orientationOffset + window._rotatingItem.rotation) {
             case 90:
             case -270:
                 return Qt.rect(width - layout.contentHeight, 0, layout.contentHeight, height)

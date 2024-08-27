@@ -3,6 +3,9 @@ import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
 import org.kde.bluezqt 1.0 as BluezQt
 
+/*!
+  \inqmlmodule Sailfish.Bluetooth 1.0
+*/
 Page {
     id: root
 

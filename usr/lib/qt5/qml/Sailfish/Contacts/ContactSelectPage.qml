@@ -3,6 +3,9 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Page {
     id: root
     allowedOrientations: Orientation.All
@@ -26,6 +29,9 @@ Page {
 
     signal contactClicked(var contact, var property, string propertyType)
 
+    /*!
+      \internal
+    */
     function _propertySelected(contact, propertyData, contextMenu, propertyPicker) {
         root.contactClicked(contact, propertyData.property, propertyData.propertyType)
     }

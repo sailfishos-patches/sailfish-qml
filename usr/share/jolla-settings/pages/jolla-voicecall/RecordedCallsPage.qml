@@ -4,7 +4,7 @@ import Sailfish.Contacts 1.0
 import Sailfish.Share 1.0
 import org.nemomobile.voicecall 1.0
 import org.nemomobile.contacts 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
 Page {
     id: root
@@ -224,7 +224,7 @@ Page {
 
                 Label {
                     id: timeStampLabel
-                    text: Format.formatDate(model.modified, Formatter.TimepointRelativeCurrentDay)
+                    text: Format.formatDate(model.modified, Formatter.TimepointRelative)
                     font.pixelSize: Theme.fontSizeExtraSmall
                     anchors.right: parent.right
                     anchors.baseline: parent.baseline

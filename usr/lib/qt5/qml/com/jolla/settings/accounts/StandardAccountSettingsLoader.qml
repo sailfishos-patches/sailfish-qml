@@ -91,7 +91,7 @@ QtObject {
             for (var profileId in profiles) {
                 var syncOptions = profiles[profileId]
                 if (syncOptions.modified) {
-                    return true;
+                    return true
                 }
             }
         }

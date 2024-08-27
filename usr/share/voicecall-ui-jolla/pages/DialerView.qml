@@ -9,8 +9,8 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
 import Nemo.Configuration 1.0
-import MeeGo.QOfono 0.2
-import org.nemomobile.dbus 2.0
+import QOfono 0.2
+import Nemo.DBus 2.0
 import org.nemomobile.contacts 1.0
 import "../common"
 import "dialer"

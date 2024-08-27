@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0 as SilicaPrivate
 import Sailfish.Lipstick 1.0
@@ -13,7 +13,6 @@ SilicaControl {
     property alias updatesEnabled: statusArea.updatesEnabled
     property alias recentlyOnDisplay: statusArea.recentlyOnDisplay
     property alias lockscreenMode: statusArea.lockscreenMode
-    property alias iconSuffix: statusArea.iconSuffix
     property alias color: statusArea.color
     property alias backgroundVisible: background.visible
     property alias shadowVisible: statusArea.shadowVisible
@@ -25,12 +24,13 @@ SilicaControl {
 
     SilicaPrivate.OverlayGradient {
         id: background
+
         visible: false
         anchors {
             fill: parent
             bottomMargin: -2 * Theme.paddingLarge
         }
-        opacity: 1.0 - Math.abs(statusBar.y/Theme.paddingMedium)
+        opacity: 1.0 - Math.abs(statusBar.y / Theme.paddingMedium)
     }
 
     MouseArea {
@@ -47,11 +47,14 @@ SilicaControl {
 
     Item {
         id: statusAreaContainer
+
         height: parent.height
         width: parent.width
         clip: Lipstick.compositor.statusBarPushDownY > 0
+
         StatusArea {
             id: statusArea
+
             y: baseY + Lipstick.compositor.statusBarPushDownY
         }
     }

@@ -78,7 +78,7 @@ ListModel {
         {
             //% "Android™ apps"
             label: qsTrId("settings_about-li-disk_usage-android_apps"),
-            path: '/home/.android/data/app/',
+            path: ':apkd:app',
             storageType: 'user',
             position: 0,
             androidDataDirectory: true
@@ -86,7 +86,7 @@ ListModel {
         {
             //% "Android™ app data files"
             label: qsTrId("settings_about-li-disk_usage-android_app_data_files"),
-            path: ':apkd:',
+            path: ':apkd:data',
             storageType: 'user',
             position: 0,
             androidDataDirectory: true
@@ -97,7 +97,8 @@ ListModel {
             path: StandardPaths.home + '/android_storage/',
             storageType: 'user',
             position: 0,
-            androidDataDirectory: true
+            androidDataDirectory: true,
+            pathAllowed: true
         },
         {
             //: %1 is operating system name
@@ -111,10 +112,7 @@ ListModel {
         {
             //% "Android™ runtime"
             label: qsTrId("settings_about-li-disk_usage-android_runtime"),
-            // NOTE: We can not use /opt/alien/ as there is lots of bind mounts
-            // there that mess up the calculations, also the amount of data outside 
-            // system dir is not making much difference.
-            path: '/opt/alien/system/',
+            path: ':apkd:runtime',
             storageType: 'system',
             position: 0,
             androidDataDirectory: true

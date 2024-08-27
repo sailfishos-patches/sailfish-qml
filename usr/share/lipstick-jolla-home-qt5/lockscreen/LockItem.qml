@@ -7,13 +7,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
 import Sailfish.Media 1.0
 import Nemo.DBus 2.0
 import com.jolla.lipstick 0.1
-import com.jolla.settings.system 1.0
 import org.nemomobile.lipstick 0.1
 import "../backgrounds"
 import "../main"
@@ -27,7 +26,6 @@ SilicaFlickable {
     property alias mpris: mpris
     property alias leftIndicator: leftIndicator
     property alias rightIndicator: rightIndicator
-    property string iconSuffix
     property real contentTopMargin
     property int statusBarHeight
 
@@ -306,7 +304,13 @@ SilicaFlickable {
 
             width: bottomBackground.width
 
-            OngoingCall {
+            Loader {
+                active: Desktop.deviceInfo.hasCellularVoiceCallFeature
+                width: parent.width
+
+                sourceComponent: Component {
+                    OngoingCall {}
+                }
             }
 
             Row {

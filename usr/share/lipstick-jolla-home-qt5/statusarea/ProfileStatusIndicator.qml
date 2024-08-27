@@ -5,14 +5,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.systemsettings 1.0
 
 Icon {
     id: profileStatusIndicator
 
-    source: profileControl.isSilent ? ("image://theme/icon-status-silent" + iconSuffix)
+    source: profileControl.isSilent ? "image://theme/icon-status-silent"
                                     : ""
     width: source != "" ? implicitWidth : 0
     height: source != "" ? implicitHeight : 0

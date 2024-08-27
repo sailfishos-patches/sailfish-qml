@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2019 Jolla Ltd.
+ * Copyright (c) 2013 - 2023 Jolla Ltd.
  * Copyright (c) 2019 Open Mobile Platform LLC.
  *
  * License: Proprietary
@@ -7,11 +7,12 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import Sailfish.Store 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
 import org.nemomobile.devicelock 1.0
 import org.nemomobile.ofono 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
 Page {
     id: aboutPage
@@ -184,6 +185,12 @@ Page {
                     }
                 }
 
+                Loader {
+                    width: parent.width
+                    active: StoreClient.isAvailable
+                    source: "AddOnsField.qml"
+                }
+
                 DetailItem {
                     //: Label for the version of the device-specific software package (drivers)
                     //% "Device adaptation"
@@ -196,12 +203,14 @@ Page {
                     //% "WLAN MAC address"
                     label: qsTrId("settings_about-la-wlan_mac_address")
                     value: aboutSettings.wlanMacAddress
+                    visible: value !== ""
                 }
 
                 DetailItem {
                     //% "Bluetooth address"
                     label: qsTrId("settings_about-la-bluetooth_address")
                     value: bluetoothInfo.adapterAddress
+                    visible: value !== ""
 
                     // aboutSettings.bluetoothAddress may be 00:00:00:00:00 if the adapter could not
                     // be initialized at start-up, use BluetoothInfo instead (guarantees a valid address)
@@ -216,14 +225,16 @@ Page {
                     source: "HomeEncryption.qml"
                 }
 
-                DetailItem {
-                    visible: tohInfo.tohReady && value !== ""
-                    label: "The Other Half"
-                    value: tohInfo.tohId
+                Item {
+                    height: Theme.paddingMedium
+                    width: 1
+                }
 
-                    TohInfo {
-                        id: tohInfo
-                    }
+                Button {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    //% "Licenses"
+                    text: qsTrId("settings_about-la-licenses")
+                    onClicked: pageStack.animatorPush("com.jolla.settings.system.PackagesPage")
                 }
 
                 Snippets {

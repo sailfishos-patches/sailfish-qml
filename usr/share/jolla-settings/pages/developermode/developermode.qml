@@ -9,15 +9,13 @@ import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Nemo.DBus 2.0
 import com.jolla.settings.system 1.0
-import com.jolla.settings.accounts 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.devicelock 1.0
 import org.nemomobile.systemsettings 1.0
-import org.nemomobile.notifications 1.0
+import Nemo.Notifications 1.0
 import Sailfish.Policy 1.0
-import Sailfish.Accounts 1.0
 import Nemo.Ssu 1.1
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 Page {
     id: root
@@ -28,50 +26,13 @@ Page {
     property bool debugHomeRemorse
 
     property bool showDeveloperModeSettings: developerModeSettings.developerModeEnabled && !devAccountPrompt.active
-    readonly property bool hasDeveloperAccount: accountManager.hasAccountForProvider(accountManager.accountIdentifiers, developerAccountProvider)
+    property QtObject accountManager
+    readonly property bool hasDeveloperAccount: accountManager ? accountManager.hasAccountForProvider(accountManager.accountIdentifiers, developerAccountProvider) : true
     property string developerAccountProvider
 
 //    DummyDeveloperModeSettings {  // Replace for mock backend to test UI
     DeveloperModeSettings {
         id: developerModeSettings
-    }
-
-    AccountManager {
-        id: accountManager
-
-        function developerAccountProvider() {
-            var names = providerNames
-            for (var i = 0; i < names.length; ++i) {
-                var accountProvider = provider(names[i])
-                if (providerHasService(accountProvider, "developermode")) {
-                    return names[i]
-                }
-            }
-            return ""
-        }
-
-        function providerHasService(provider, serviceName) {
-            var serviceNames = provider.serviceNames
-            for (var i = 0; i < serviceNames.length; ++i) {
-                var accountService = service(serviceNames[i])
-                if (accountService.serviceType == serviceName) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        function hasAccountForProvider(accountIds, providerName) {
-            for (var i = 0; i < accountIds.length; ++i) {
-                if (account(accountIds[i]).providerName == providerName) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        Component.onCompleted: root.developerAccountProvider = developerAccountProvider()
-        onProviderNamesChanged: root.developerAccountProvider = developerAccountProvider()
     }
 
     NetworkManager {
@@ -977,6 +938,11 @@ Page {
     }
 
     Component.onCompleted: {
+        var accountManagerComponent = Qt.createComponent(Qt.resolvedUrl("AccountManager.qml"))
+        if (accountManagerComponent.status === Component.Ready) {
+            accountManager = accountManagerComponent.createObject(root)
+        }
+
         /* Request existing password from the password manager */
         passwordManager.passwordChanged()
         passwordManager.call('isLoginEnabled', [], passwordManager.loginEnabledChanged)

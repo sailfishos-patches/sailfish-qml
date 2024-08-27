@@ -5,11 +5,11 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 import Nemo.DBus 2.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import com.jolla.lipstick 0.1
 import Sailfish.Lipstick 1.0
 import "../compositor"
@@ -194,7 +194,8 @@ Pannable {
         SwitcherLayer {
             id: switcherLayer
 
-            readonly property real inactiveScale: Screen.sizeCategory >= Screen.Large ? 0.90 : 0.83
+            readonly property real inactiveScale: Lipstick.compositor.multitaskingHome ? (Screen.sizeCategory >= Screen.Large ? 0.90 : 0.83)
+                                                                                       : 1.0
             readonly property bool moving: homescreen.moving
                         || (Desktop.instance && Desktop.instance.switcher.moving)
             property bool inhibitScale

@@ -22,7 +22,9 @@ InputHandler {
     }
 
     onPaste: {
-        MInputMethodQuick.sendCommit(Clipboard.text)
+        if (keyboard.pasteEnabled) {
+            MInputMethodQuick.sendCommit(Clipboard.text)
+        }
     }
 
     topItem: Component {

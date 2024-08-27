@@ -41,10 +41,12 @@ PulleyMenuBase {
     id: pullDownMenu
 
     property real topMargin: Theme.itemSizeSmall
+    property real _effectiveTopMargin: topMargin
+                                       + ((Screen.hasCutouts && _page && _page.isPortrait)
+                                          ? Screen.topCutout.height : 0)
     property real bottomMargin: _menuLabel ? 0 : Theme.paddingLarge
-    property real _contentEnd: contentColumn.height + bottomMargin
     property Item _menuLabel: {
-        var lastChild = contentColumn.visible && Util.childAt(contentColumn, width/2, contentColumn.height-1)
+        var lastChild = contentColumn.visible && Util.childAt(contentColumn, width / 2, contentColumn.height - 1)
         if (lastChild && lastChild.hasOwnProperty("__silica_menulabel")) {
             return lastChild
         }
@@ -56,24 +58,41 @@ PulleyMenuBase {
     spacing: 0
     y: flickable.originY - height
 
+    _contentEnd: contentColumn.height + bottomMargin
     _contentColumn: contentColumn
     _isPullDownMenu: true
     _inactiveHeight: 0
-    _activeHeight: contentColumn.height + topMargin + bottomMargin
-    _inactivePosition: Math.round(flickable.originY - (_inactiveHeight + spacing))
+    _activeHeight: contentColumn.height + _effectiveTopMargin + bottomMargin
+    _inactivePosition: Math.round(flickable.originY - _inactiveHeight - spacing)
     _finalPosition: _inactivePosition - _activeHeight
     _menuIndicatorPosition: height - _menuItemHeight + Theme.paddingSmall - spacing
-    _highlightIndicatorPosition: Math.min(height - Math.min(_dragDistance, _contentEnd) - spacing,
-        _menuIndicatorPosition - (_dragDistance/(_menuItemHeight+_bottomDragMargin)*(Theme.paddingSmall+_bottomDragMargin)))
+    _highlightIndicatorPosition: {
+        if (_dragDistance <= (_effectiveTopMargin + _menuItemHeight)) {
+            // gradually getting closer to (or inside) the lowest menu item
+            return _menuIndicatorPosition
+                    - ((_dragDistance / (_menuItemActivationThreshold + _bottomDragMargin))
+                       * (Theme.paddingSmall + _bottomDragMargin))
+        } else {
+            // position to topmost item when dragged beyond the items. only briefly shown during fade out.
+            // or if there are disabled items in the menu, this ensures the highlight stays at the activation point
+            return height
+                    - Math.min(_dragDistance - _menuItemActivationThreshold + _menuItemHeight, _contentEnd)
+                    - spacing
+        }
+    }
 
     property Component background: Rectangle {
         id: bg
-        anchors { fill: parent; bottomMargin: (pullDownMenu.spacing - _shadowHeight) * Math.min(1, _dragDistance/Theme.itemSizeSmall) }
+
+        anchors {
+            fill: parent
+            bottomMargin: (pullDownMenu.spacing - _shadowHeight) * Math.min(1, _dragDistance / Theme.itemSizeSmall)
+        }
         opacity: pullDownMenu.active ? 1.0 : 0.0
         gradient: Gradient {
             GradientStop { position: 0.0; color: Theme.rgba(pullDownMenu.backgroundColor, Theme.highlightBackgroundOpacity + 0.1) }
             GradientStop {
-                position: (pullDownMenu.height-pullDownMenu.spacing)/bg.height
+                position: (pullDownMenu.height - pullDownMenu.spacing) / bg.height
                 color: Theme.rgba(pullDownMenu.backgroundColor, Theme.highlightBackgroundOpacity)
             }
             GradientStop { position: 1.0; color: Theme.rgba(pullDownMenu.backgroundColor, 0.0) }
@@ -86,7 +105,9 @@ PulleyMenuBase {
     on_AtInitialPositionChanged: {
         if (!_atInitialPosition && !flickable.moving && _page && _page.orientationTransitionRunning) {
             // If this flickable has a context menu open, the menu visibility takes precedence over initial position reset
-            if (('__silica_contextmenu_instance' in flickable) && flickable.__silica_contextmenu_instance && flickable.__silica_contextmenu_instance._open) {
+            if (('__silica_contextmenu_instance' in flickable)
+                    && flickable.__silica_contextmenu_instance
+                    && flickable.__silica_contextmenu_instance._open) {
                 return
             }
 
@@ -106,6 +127,20 @@ PulleyMenuBase {
         }
     }
 
+    on_EffectiveTopMarginChanged: {
+        if (_atFinalPosition) {
+            resetOpenPositionTimer.start() // using timer to ensure the position properties have updated
+        }
+    }
+
+    Timer {
+        id: resetOpenPositionTimer
+        interval: 0
+        onTriggered: {
+            flickable.contentY = _finalPosition
+        }
+    }
+
     Column {
         id: contentColumn
 
@@ -115,14 +150,14 @@ PulleyMenuBase {
         onMenuContentYChanged: {
             if (menuContentY >= 0) {
                 if (flickable.dragging && !_bounceBackRunning) {
-                    _highlightMenuItem(contentColumn, menuContentY - y + _menuItemHeight)
-                } else if (quickSelect){
+                    _highlightMenuItem(contentColumn, menuContentY - y + _menuItemActivationThreshold)
+                } else if (quickSelect) {
                     _quickSelectMenuItem(contentColumn, menuContentY - y + _menuItemHeight)
                 }
             }
         }
 
-        y: pullDownMenu.topMargin
+        y: pullDownMenu._effectiveTopMargin
         width: parent.width
         visible: active
     }

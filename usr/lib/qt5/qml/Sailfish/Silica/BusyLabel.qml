@@ -47,7 +47,7 @@ Column {
 
     y: Math.round(_portrait ? Screen.height/4 : Screen.width/4)
     spacing: Theme.paddingLarge
-    width: parent.width
+    width: parent && parent.width || 0
     opacity: running ? 1.0 : 0.0
     Behavior on opacity { FadeAnimator { duration: 400 } }
 
@@ -56,6 +56,7 @@ Column {
         running: parent.running
         size: BusyIndicatorSize.Large
         anchors.horizontalCenter: parent.horizontalCenter
+        visible: parent.opacity !== 0
     }
     InfoLabel {
         id: label

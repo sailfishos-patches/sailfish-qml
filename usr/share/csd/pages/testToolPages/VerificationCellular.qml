@@ -6,7 +6,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import org.nemomobile.ofono 1.0
 
 AllModemsPage {
@@ -88,7 +88,6 @@ AllModemsPage {
         id: modemTest
 
         Column {
-            id: column
             x: Theme.horizontalPageMargin
             width: parent.width - x*2
             spacing: Theme.paddingLarge
@@ -121,6 +120,7 @@ AllModemsPage {
 
             OfonoNetworkRegistration {
                 id: ofonoNetworkRegistration
+
                 modemPath: modelData
                 property bool registered: valid && (status === "registered" || status === "roaming")
                 onTechnologyChanged: updateTechCount()

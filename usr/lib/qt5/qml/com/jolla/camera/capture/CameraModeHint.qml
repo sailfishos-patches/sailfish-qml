@@ -19,9 +19,8 @@ Loader {
 
             anchors.fill: parent
             InteractionHintLabel {
-                //: Push up or down to change between photo and video mode
-                //% "Push up or down to change between photo and video mode"
-                text: qsTrId("camera-la-camera_mode_hint")
+                //% "Swipe down to access camera settings"
+                text: qsTrId("camera-la-camera_settings_hint")
                 anchors.bottom: parent.bottom
                 opacity: touchInteractionHint.running ? 1.0 : 0.0
                 Behavior on opacity { FadeAnimation { duration: 800 } }

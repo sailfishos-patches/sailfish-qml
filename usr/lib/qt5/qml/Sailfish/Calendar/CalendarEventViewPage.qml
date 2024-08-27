@@ -14,8 +14,7 @@ import Nemo.DBus 2.0
 Page {
     id: root
 
-    property alias uniqueId: query.uniqueId
-    property alias recurrenceId: query.recurrenceId
+    property alias instanceId: query.instanceId
     property alias startTime: query.startTimeString
     property alias cancellation: eventDetails.cancellation
 
@@ -54,7 +53,7 @@ Page {
                 //% "Show in Calendar"
                 text: qsTrId("sailfish_calendar-me-show_event_in_calendar")
                 onClicked: {
-                    calendarDBusInterface.call("viewEvent", [root.uniqueId, root.recurrenceId, root.startTime])
+                    calendarDBusInterface.call("viewEventByIdentifier", [root.instanceId, root.startTime])
                 }
             }
         }
@@ -67,7 +66,7 @@ Page {
 
             PageHeader {
                 width: parent.width
-                title: query.event ? query.event.displayLabel : ""
+                title: Calendar.CalendarTexts.ensureEventTitle(query.event ? query.event.displayLabel : "")
                 wrapMode: Text.Wrap
             }
 

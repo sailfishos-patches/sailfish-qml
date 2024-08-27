@@ -7,11 +7,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import com.jolla.lipstick 0.1
 import com.jolla.settings.system 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import "../sim"
 import "../main"
 

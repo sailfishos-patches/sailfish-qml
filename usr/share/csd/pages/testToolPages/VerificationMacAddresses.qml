@@ -13,8 +13,15 @@ import ".."
 CsdTestPage {
     id: page
 
-    property bool wlanValid: macValidator.isMacValid("wireless", aboutSettings.wlanMacAddress)
-    property bool bluetoothValid: macValidator.isMacValid("bluetooth", macValidator.getMac("bluetooth"))
+    property bool wlanSupported: Features.supported("Wifi")
+    property bool bluetoothSupported: Features.supported("Bluetooth")
+
+    property string wlanMac: wlanSupported ? aboutSettings.wlanMacAddress : ""
+    property string bluetoothMac: bluetoothSupported ? macValidator.getMac("bluetooth") : ""
+
+    property bool wlanValid: !wlanSupported || macValidator.isMacValid("wireless", wlanMac)
+    property bool bluetoothValid: !bluetoothSupported || macValidator.isMacValid("bluetooth", bluetoothMac)
+
     property bool allMacsOk: wlanValid && bluetoothValid
 
     Component.onDestruction: {
@@ -40,12 +47,14 @@ CsdTestPage {
         SectionHeader {
             //% "Wireless MAC"
             text: qsTrId("csd-he-wireless-mac")
+            visible: wlanSupported
         }
 
         Label {
             x: Theme.paddingLarge
             width: page.width - (2 * Theme.paddingLarge)
             wrapMode: Text.Wrap
+            visible: wlanSupported
 
             color: wlanValid
                    ? "green"
@@ -62,9 +71,10 @@ CsdTestPage {
             x: Theme.paddingLarge
             width: page.width - (2 * Theme.paddingLarge)
             wrapMode: Text.Wrap
+            visible: wlanSupported
 
             //% "Value: %1"
-            text: qsTrId("csd-la-value").arg(aboutSettings.wlanMacAddress)
+            text: qsTrId("csd-la-value").arg(wlanMac)
         }
 
         Label {
@@ -81,12 +91,14 @@ CsdTestPage {
         SectionHeader {
             //% "Bluetooth MAC"
             text: qsTrId("csd-he-bluetooth-mac")
+            visible: bluetoothSupported
         }
 
         Label {
             x: Theme.paddingLarge
             width: page.width - (2 * Theme.paddingLarge)
             wrapMode: Text.Wrap
+            visible: bluetoothSupported
 
             color: bluetoothValid
                    ? "green"
@@ -103,9 +115,10 @@ CsdTestPage {
             x: Theme.paddingLarge
             width: page.width - (2 * Theme.paddingLarge)
             wrapMode: Text.Wrap
+            visible: bluetoothSupported
 
             //% "Value: %1"
-            text: qsTrId("csd-la-value").arg(macValidator.getMac("bluetooth"))
+            text: qsTrId("csd-la-value").arg(bluetoothMac)
         }
 
         Label {

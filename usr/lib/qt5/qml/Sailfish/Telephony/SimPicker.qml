@@ -5,6 +5,9 @@ import Sailfish.Telephony 1.0
 
 // TODO: replace with standard component
 
+/*!
+  \inqmlmodule Sailfish.Telephony
+*/
 MouseArea {
     id: simPicker
 

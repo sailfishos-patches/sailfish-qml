@@ -7,14 +7,29 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 QtObject {
     id: root
 
     property var peopleModel
+    /*!
+      \internal
+    */
     readonly property bool lastStatus: _pendingStatus
+    /*!
+      \internal
+    */
     readonly property bool lastStatusValid: _wasSet
 
+    /*!
+      \internal
+    */
     property bool _pendingStatus
+    /*!
+      \internal
+    */
     property bool _wasSet
 
     function setFavoriteStatus(contact, favorite) {
@@ -36,6 +51,9 @@ QtObject {
         contact.fetchConstituents()
     }
 
+    /*!
+      \internal
+    */
     function _applyFavoriteStatus(constituents) {
         var people = []
         for (var i = 0; i < constituents.length; ++i) {
@@ -48,6 +66,9 @@ QtObject {
         }
     }
 
+    /*!
+      \internal
+    */
     property var _conn: Connections {
         target: null
         onConstituentsChanged: {

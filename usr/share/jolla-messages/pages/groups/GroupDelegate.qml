@@ -113,7 +113,7 @@ ListItem {
                         var daysDiff = (today - messageDate) / (24 * 60 * 60 * 1000)
 
                         if (daysDiff === 0) {
-                            label = Format.formatDate(model.startTime, Formatter.DurationElapsed)
+                            label = Format.formatDate(model.startTime, Formatter.TimeElapsed)
                         } else {
                             label = Format.formatDate(model.startTime, Formatter.TimeValue)
                         }

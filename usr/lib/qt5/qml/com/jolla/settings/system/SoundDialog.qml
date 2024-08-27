@@ -92,11 +92,14 @@ Dialog {
                 width: parent.width
                 enabled: !noSound
                 opacity: enabled ? 1.0 : Theme.opacityLow
-                onClicked: pageStack.animatorPush(musicPicker, {
-                                                      acceptDestination: soundDialog.acceptDestination
-                                                                         || pageStack.previousPage(soundDialog),
-                                                      acceptDestinationAction: PageStackAction.Pop
-                                                  })
+                onClicked: {
+                    previewPlayer.stop()
+                    pageStack.animatorPush(musicPicker, {
+                                               acceptDestination: soundDialog.acceptDestination
+                                                                  || pageStack.previousPage(soundDialog),
+                                               acceptDestinationAction: PageStackAction.Pop
+                                           })
+                }
 
                 Image {
                     id: musicIcon

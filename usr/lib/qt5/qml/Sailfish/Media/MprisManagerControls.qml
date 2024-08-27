@@ -1,47 +1,40 @@
 import QtQuick 2.0
 import Sailfish.Media 1.0
-import org.nemomobile.policy 1.0
-import org.nemomobile.mpris 1.0
+import Nemo.Policy 1.0
+import Amber.Mpris 1.0
 
 MprisControls {
     id: controls
 
-    property MprisManager mprisManager
+    property MprisController mprisController
     property int _playPauseClicks
 
     opacity: enabled ? 1.0 : 0.0
-    isPlaying: mprisManager.currentService && mprisManager.playbackStatus == Mpris.Playing
-    artistAndSongText: {
-        var artist = ""
-        var song = ""
+    isPlaying: mprisController.playbackStatus == Mpris.Playing
+    artistAndSongText: ({
+        "artist": (mprisController.metaData.contributingArtist || '').toString(),
+        "song": mprisController.metaData.title || '',
+    })
+    applicationName: mprisController.identity
+    albumArtSource: mprisController.metaData.artUrl || ''
 
-        if (mprisManager.currentService) {
-            var artistTag = Mpris.metadataToString(Mpris.Artist)
-            var titleTag = Mpris.metadataToString(Mpris.Title)
-
-            artist = (artistTag in mprisManager.metadata) ? mprisManager.metadata[artistTag].toString() : ""
-            song = (titleTag in mprisManager.metadata) ? mprisManager.metadata[titleTag].toString() : ""
-        }
-
-        return { "artist": artist, "song": song }
-    }
-    nextEnabled: mprisManager.currentService && mprisManager.canGoNext
-    previousEnabled: mprisManager.currentService && mprisManager.canGoPrevious
-    playEnabled: mprisManager.currentService && mprisManager.canPlay
-    pauseEnabled: mprisManager.currentService && mprisManager.canPause
+    nextEnabled: mprisController.canGoNext
+    previousEnabled: mprisController.canGoPrevious
+    playEnabled: mprisController.canPlay
+    pauseEnabled: mprisController.canPause
 
     onPlayPauseRequested: {
-        if (mprisManager.playbackStatus == Mpris.Playing && mprisManager.canPause) {
-            mprisManager.playPause()
-        } else if (mprisManager.playbackStatus != Mpris.Playing && mprisManager.canPlay) {
-            mprisManager.playPause()
+        if (mprisController.playbackStatus == Mpris.Playing && mprisController.canPause) {
+            mprisController.playPause()
+        } else if (mprisController.playbackStatus != Mpris.Playing && mprisController.canPlay) {
+            mprisController.playPause()
         }
     }
-    onNextRequested: if (mprisManager.canGoNext) mprisManager.next()
-    onPreviousRequested: if (mprisManager.canGoPrevious) mprisManager.previous()
+    onNextRequested: if (mprisController.canGoNext) mprisController.next()
+    onPreviousRequested: if (mprisController.canGoPrevious) mprisController.previous()
 
     Permissions {
-        enabled: !!mprisManager.currentService
+        enabled: !!mprisController.currentService
         applicationClass: "player"
 
         Resource {
@@ -52,24 +45,24 @@ MprisControls {
     }
 
     MediaKey {
-        enabled: keysResource.acquired && (controls.playEnabled || controls.pauseEnabled)
+        enabled: keysResource.acquired && controls.playEnabled
         key: Qt.Key_MediaTogglePlayPause
         onReleased: controls.playPauseRequested()
     }
     MediaKey {
         enabled: keysResource.acquired && controls.playEnabled
         key: Qt.Key_MediaPlay
-        onReleased: controls.mprisManager.play()
+        onReleased: controls.mprisController.play()
     }
     MediaKey {
         enabled: keysResource.acquired && controls.pauseEnabled
         key: Qt.Key_MediaPause
-        onReleased: controls.mprisManager.pause()
+        onReleased: controls.mprisController.pause()
     }
     MediaKey {
-        enabled: keysResource.acquired && !!controls.mprisManager
+        enabled: keysResource.acquired && !!controls.mprisController
         key: Qt.Key_MediaStop
-        onReleased: controls.mprisManager.stop()
+        onReleased: controls.mprisController.stop()
     }
     MediaKey {
         enabled: keysResource.acquired && controls.nextEnabled

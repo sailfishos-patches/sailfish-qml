@@ -3,7 +3,7 @@ import Sailfish.Silica 1.0
 import com.jolla.settings 1.0
 import com.jolla.settings.system 1.0
 import com.jolla.voicecall.settings.translations 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 
 Page {
     id: root

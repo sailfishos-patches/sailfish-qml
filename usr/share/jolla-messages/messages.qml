@@ -219,6 +219,13 @@ ApplicationWindow {
         }
     }
 
+    function sendMessage(localUid, remoteUid, message) {
+        groupManager.createOutgoingMessageEvent(-1 /*groupId*/, localUid, remoteUid, message, function(eventId) {
+            var channel = channelManager.getConversation(localUid, remoteUid)
+            channel.sendMessage(message, eventId)
+        })
+    }
+
     function loadAndShowSMSConversation(remoteUids, body) {
         loadAndShowConversation(MessageUtils.telepathyAccounts.ringAccountPath, remoteUids, body, true)
     }

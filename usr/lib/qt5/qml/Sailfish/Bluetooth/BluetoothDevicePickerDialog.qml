@@ -10,9 +10,12 @@ import Sailfish.Silica 1.0
 import Sailfish.Bluetooth 1.0
 import Sailfish.Policy 1.0
 import com.jolla.settings.system 1.0
-import org.nemomobile.notifications 1.0
+import Nemo.Notifications 1.0
 import org.kde.bluezqt 1.0 as BluezQt
 
+/*!
+  \inqmlmodule Sailfish.Bluetooth 1.0
+*/
 Dialog {
     id: root
 
@@ -22,11 +25,20 @@ Dialog {
     property alias preferredProfileHint: picker.preferredProfileHint
     property alias showPairedDevices: picker.showPairedDevices
 
+    /*!
+      \internal
+    */
     readonly property bool _adapterPoweredOn: BluezQt.Manager.usableAdapter
                                               && BluezQt.Manager.usableAdapter.powered
+    /*!
+      \internal
+    */
     readonly property bool _bluetoothToggleActive: AccessPolicy.bluetoothToggleEnabled
                                                   || _adapterPoweredOn
 
+    /*!
+      \internal
+    */
     function _tryAccept(address) {
         if (!_adapterPoweredOn) {
             adapterOffNotification.publish()

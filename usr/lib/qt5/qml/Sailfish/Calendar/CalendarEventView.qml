@@ -10,7 +10,7 @@ import Sailfish.Silica 1.0
 import Sailfish.TextLinking 1.0
 import org.nemomobile.calendar 1.0
 import Sailfish.Calendar 1.0 as Calendar
-import org.nemomobile.notifications 1.0 as SystemNotifications
+import Nemo.Notifications 1.0 as SystemNotifications
 
 Column {
     id: root
@@ -58,7 +58,7 @@ Column {
             font.pixelSize: Theme.fontSizeLarge
             maximumLineCount: 5
             wrapMode: Text.Wrap
-            text: root.event ? root.event.displayLabel : ""
+            text: Calendar.CalendarTexts.ensureEventTitle(root.event ? event.displayLabel : "")
             truncationMode: TruncationMode.Fade
         }
     }
@@ -93,6 +93,7 @@ Column {
                 showTime: parent.multiDay && (root.event && !root.event.allDay)
                 timeContinued: parent.multiDay
                 useTwoLines: timeColumn.twoLineDates
+                cancelled: root.event && root.event.status == CalendarEvent.StatusCancelled
             }
 
             CalendarEventDate {
@@ -102,11 +103,13 @@ Column {
                 eventDate: root.occurrence ? root.occurrence.endTime : new Date(-1)
                 showTime: root.event && !root.event.allDay
                 useTwoLines: timeColumn.twoLineDates
+                cancelled: root.event && root.event.status == CalendarEvent.StatusCancelled
             }
 
             Text {
                 color: Theme.highlightColor
                 font.pixelSize: Theme.fontSizeMedium
+                font.strikeout: root.event && root.event.status == CalendarEvent.StatusCancelled
                 visible: !parent.multiDay
                 //% "All day"
                 text: root.event && root.occurrence ? (root.event.allDay ? qsTrId("sailfish_calendar-la-all_day")
@@ -115,6 +118,24 @@ Column {
                                                          + Format.formatDate(root.occurrence.endTime, Formatter.TimeValue))
                                     )
                                  : ""
+            }
+
+            Text {
+                color: Theme.highlightColor
+                font.pixelSize: Theme.fontSizeMedium
+                visible: recurrenceIcon.visible
+                    && root.event && !isNaN(root.event.recurEndDate.getTime())
+                //: %1 is a localized date string, giving the end of the recurring series.
+                //% "Until %1"
+                text: root.event ? qsTrId("sailfish_calendar-la-recurrence_end").arg(Qt.formatDate(root.event.recurEndDate)) : ""
+            }
+
+            Text {
+                color: Theme.highlightColor
+                font.pixelSize: Theme.fontSizeMedium
+                visible: root.event && root.event.status == CalendarEvent.StatusCancelled
+                //% "The event is cancelled."
+                text: qsTrId("sailfish_calendar-la-event-cancelled")
             }
         }
         Image {
@@ -146,7 +167,8 @@ Column {
                     //: %1 gets replaced with reminder time, e.g. "15 minutes before"
                     //% "Reminder %1"
                     return qsTrId("sailfish_calendar-view-reminder")
-                               .arg(Calendar.CommonCalendarTranslations.getReminderText(root.event.reminder))
+                        .arg(Calendar.CalendarTexts.getReminderText(root.event.reminder,
+                             root.event.allDay ? root.event.startTime : undefined))
                 } else if (root.event && !isNaN(root.event.reminderDateTime.getTime())) {
                     //: %1 is replaced by the date in format like Monday 2nd November 2020
                     //: %2 is replaced by the time.
@@ -169,35 +191,38 @@ Column {
         }
     }
 
+    BackgroundItem {
+        // locationRow
+        visible: root.event && root.event.location !== ""
+        width: parent.width - 2*Theme.horizontalPageMargin
+        height: Math.max(locationIcon.height, locationText.height)
+        x: Theme.horizontalPageMargin
+        onClicked: Qt.openUrlExternally("geo:?q=" + encodeURIComponent(locationText.text))
+
+        Image {
+            id: locationIcon
+            source: "image://theme/icon-m-location"
+        }
+
+        Label {
+            id: locationText
+
+            width: parent.width - locationIcon.width - Theme.paddingMedium
+            height: contentHeight
+            x: locationIcon.width + Theme.paddingMedium
+            anchors.top: lineCount > 1 ? parent.top : undefined
+            anchors.verticalCenter: lineCount > 1 ? undefined : locationIcon.verticalCenter
+            color: Theme.highlightColor
+            font.pixelSize: Theme.fontSizeSmall
+            wrapMode: Text.Wrap
+            text: root.event ? root.event.location : ""
+        }
+    }
+
     Column {
+        // attendeeColumn
         width: parent.width
         spacing: Theme.paddingMedium
-
-        Item {
-            visible: root.event && root.event.location !== ""
-            width: parent.width - 2*Theme.horizontalPageMargin
-            height: Math.max(locationIcon.height, locationText.height)
-            x: Theme.horizontalPageMargin
-
-            Image {
-                id: locationIcon
-                source: "image://theme/icon-m-location"
-            }
-
-            Label {
-                id: locationText
-
-                width: parent.width - locationIcon.width - Theme.paddingMedium
-                height: contentHeight
-                x: locationIcon.width + Theme.paddingMedium
-                anchors.top: lineCount > 1 ? parent.top : undefined
-                anchors.verticalCenter: lineCount > 1 ? undefined : locationIcon.verticalCenter
-                color: Theme.highlightColor
-                font.pixelSize: Theme.fontSizeSmall
-                wrapMode: Text.Wrap
-                text: root.event ? root.event.location : ""
-            }
-        }
 
         Loader {
             active: cancellation
@@ -351,6 +376,31 @@ Column {
                 }
             }
         }
+    }
+
+    Column {
+        width: parent.width
+        spacing: Theme.paddingMedium
+
+        SectionHeader {
+            visible: syncWarning.visible
+            //% "Sync status"
+            text: qsTrId("sailfish_calendar-he-event_sync_status")
+        }
+
+        SyncWarningItem {
+            id: syncWarning
+            width: parent.width - 2 * Theme.horizontalPageMargin
+            x: Theme.horizontalPageMargin
+            visible: syncFailure != CalendarEvent.NoSyncFailure
+            syncFailure: root.event ? root.event.syncFailure : CalendarEvent.NoSyncFailure
+            color: Theme.errorColor
+        }
+
+        SyncFailureResolver {
+            event: root.event
+            visible: syncWarning.visible
+        }
 
         SectionHeader {
             visible: descriptionText.visible && descriptionText.text != ""
@@ -383,15 +433,6 @@ Column {
             id: query
             targetUid: (root.event && root.event.calendarUid) ? root.event.calendarUid : ""
         }
-    }
-
-    SyncWarningItem {
-        width: parent.width - 2 * Theme.horizontalPageMargin
-        x: Theme.horizontalPageMargin
-        syncFailure: root.event ? root.event.syncFailure : CalendarEvent.NoSyncFailure
-        visible: syncFailure != CalendarEvent.NoSyncFailure
-        withDetails: true
-        color: Theme.highlightColor
     }
 }
 

@@ -8,8 +8,7 @@ import com.jolla.keyboard 1.0
 KeyboardLayout {
     id: main
 
-    width: geometry.keyboardWidthLandscape
-    height: 2 * geometry.keyHeightPortrait
+    property real keyWidth: width / 10
 
     layoutIndex: -1
     type: ""
@@ -20,80 +19,80 @@ KeyboardLayout {
         CharacterKey {
             caption: "1"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             showPopper: false
         }
         PhoneKey {
             caption: "2"
             secondaryLabel: "abc"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         PhoneKey {
             caption: "3"
             secondaryLabel: "def"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         PhoneKey {
             caption: "4"
             secondaryLabel: "ghi"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         PhoneKey {
             caption: "5"
             secondaryLabel: "jkl"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         PhoneKey {
             caption: "6"
             secondaryLabel: "mno"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         PhoneKey {
             caption: "7"
             secondaryLabel: "pqrs"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         PhoneKey {
             caption: "8"
             secondaryLabel: "tuv"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         PhoneKey {
             caption: "9"
             secondaryLabel: "wxyz"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             landscape: true
         }
         CharacterKey {
             caption: "0"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             showPopper: false
             separator: SeparatorState.HiddenSeparator
         }
     }
 
     Row {
-        x: 3 * (main.width / 10)
+        x: 3 * main.keyWidth
 
         NumberKey {
-            width: main.width / 10
-            enabled: Silica.Clipboard.hasText
+            width: main.keyWidth
+            enabled: keyboard.pasteEnabled
             key: Qt.Key_Paste
             opacity: enabled ? (pressed ? 0.6 : 1.0)
                              : 0.3
@@ -107,24 +106,24 @@ KeyboardLayout {
             text: "*p"
             caption: "*p"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             showPopper: false
         }
         CharacterKey {
             caption: "+"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             showPopper: false
         }
         CharacterKey {
             caption: "#"
             height: geometry.keyHeightPortrait
-            width: main.width / 10
+            width: main.keyWidth
             showPopper: false
             separator: SeparatorState.HiddenSeparator
         }
         BackspaceKey {
-            width: main.width / 10
+            width: main.keyWidth
             height: geometry.keyHeightPortrait
         }
         EnterKey {

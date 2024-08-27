@@ -33,12 +33,12 @@ import QtQuick 2.0
 import com.jolla 1.0
 import QtFeedback 5.0
 import com.meego.maliitquick 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import com.jolla.keyboard 1.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.Background 1.0
 import com.jolla.keyboard.translations 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 import org.nemomobile.systemsettings 1.0
 
 SilicaControl {
@@ -50,9 +50,9 @@ SilicaControl {
     height: MInputMethodQuick.screenHeight
 
     property bool portraitRotated: width > height
-    property bool portraitLayout: portraitRotated ?
-                                      (MInputMethodQuick.appOrientation == 90 || MInputMethodQuick.appOrientation == 270) :
-                                      (MInputMethodQuick.appOrientation == 0 || MInputMethodQuick.appOrientation == 180)
+    property bool portraitLayout: portraitRotated
+                                  ? (MInputMethodQuick.appOrientation == 90 || MInputMethodQuick.appOrientation == 270)
+                                  : (MInputMethodQuick.appOrientation == 0 || MInputMethodQuick.appOrientation == 180)
 
     property alias activeIndex: keyboard.currentIndex
     property alias layoutModel: _layoutModel
@@ -93,7 +93,7 @@ SilicaControl {
         if (!MInputMethodQuick.active)
             return
 
-        var x = 0, y = 0, width = 0, height = 0;
+        var x = 0, y = 0, width = 0, height = 0
         var angle = MInputMethodQuick.appOrientation
 
         var layoutHeight = keyboard.currentLayoutHeight
@@ -337,6 +337,9 @@ SilicaControl {
         property alias splitEnabled: splitConfig.value
         property alias pasteInputHandler: pasteInputHandler
 
+        // has extra padding to avoid covering screen cutouts or roundings, can exist in landscape
+        readonly property bool hasHorizontalPadding: !portraitMode && geometry.keyboardWidthLandscape < screen.height
+
         x: (canvas.width - width) / 2
         y: (canvas.height - height) / 2
 
@@ -354,11 +357,11 @@ SilicaControl {
         portraitMode: portraitLayout
         layout: {
             if (mode === "common") {
-                return currentItem ? currentItem.item : null
+                return currentItem ? currentItem.loadedLayout : null
             } else if (mode === "number") {
-                return number_portrait.visible ? number_portrait : number_landscape.item
+                return numberPortrait.visible ? numberPortrait : numberLandscape.item
             } else {
-                return phone_portrait.visible ? phone_portrait : phone_landscape.item
+                return phonePortrait.visible ? phonePortrait : phoneLandscape.item
             }
         }
         layoutChangeAllowed: mode === "common"
@@ -505,7 +508,8 @@ SilicaControl {
         }
 
         NumberLayoutPortrait {
-            id: number_portrait
+            id: numberPortrait
+
             x: (keyboard.width - width) / 2
             y: keyboard.height - height
             width: geometry.isLargeScreen ? 0.6 * geometry.keyboardWidthPortrait
@@ -514,7 +518,7 @@ SilicaControl {
         }
 
         Loader {
-            id: number_landscape
+            id: numberLandscape
             sourceComponent: (keyboard.mode === "number" && !geometry.isLargeScreen)
                              ? landscapeNumberComponent : undefined
         }
@@ -523,12 +527,15 @@ SilicaControl {
             id: landscapeNumberComponent
             NumberLayoutLandscape {
                 y: keyboard.height - height
-                visible: keyboard.mode === "number" && !number_portrait.visible
+                x: Math.round((keyboard.width - width) / 2)
+                width: geometry.keyboardWidthLandscape
+                visible: keyboard.mode === "number" && !numberPortrait.visible
             }
         }
 
         PhoneNumberLayoutPortrait {
-            id: phone_portrait
+            id: phonePortrait
+
             x: (keyboard.width - width) / 2
             y: keyboard.height - height
             width: geometry.isLargeScreen ? 0.6 * geometry.keyboardWidthPortrait
@@ -537,7 +544,7 @@ SilicaControl {
         }
 
         Loader {
-            id: phone_landscape
+            id: phoneLandscape
             sourceComponent: (keyboard.mode === "phone" && !geometry.isLargeScreen)
                              ? phoneLandscapeComponent : undefined
         }
@@ -546,7 +553,9 @@ SilicaControl {
             id: phoneLandscapeComponent
             PhoneNumberLayoutLandscape {
                 y: keyboard.height - height
-                visible: keyboard.mode === "phone" && !phone_portrait.visible
+                x: Math.round((keyboard.width - width) / 2)
+                width: geometry.keyboardWidthLandscape
+                visible: keyboard.mode === "phone" && !phonePortrait.visible
             }
         }
 
@@ -572,6 +581,7 @@ SilicaControl {
 
         KeyboardLayoutSwitchHint {
             id: switchHint
+
             y: keyboard.height - height
             width: keyboard.width
             height: keyboard.currentLayoutHeight
@@ -668,6 +678,7 @@ SilicaControl {
 
     Timer {
         id: areaUpdater
+
         interval: 1
         onTriggered: canvas.updateIMArea()
     }

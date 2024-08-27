@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 Open Mobile Platform LLC
- * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2016 - 2023 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -32,9 +32,9 @@ ListModel {
         "VerificationHeadsetDetect", "VerificationHeadsetButtons", "VerificationHeadset", "AudioPlayMusicHeadset",
         "VerificationVideoPlayback", "VerificationVideoPlaybackVibrator",
         "VerificationFrontCamera", "VerificationFrontCameraReboot", "VerificationBackCamera", "VerificationFrontBackCamera",
-        "VerificationWifi", "VerificationBluetooth", "VerificationToh", "VerificationNfc", "VerificationGpsRadio", "VerificationGpsLock", "VerificationCellInfo",
+        "VerificationWifi", "VerificationBluetooth", "VerificationNfc", "VerificationGpsRadio", "VerificationGpsLock", "VerificationCellInfo",
         "VerificationFmRadio",
-        "Verification2G", "Verification3G", "Verification4G",
+        "Verification2G", "Verification3G", "Verification4G", "Verification5G",
         "VerificationBattery", "VerificationUsbCharging",
         "VerificationDischarging", "VerificationBatteryResistance", "VerificationLED",
         "VerificationButtonBacklight",
@@ -230,9 +230,6 @@ ListModel {
         case "VerificationBluetooth":
             //% "Bluetooth"
             return qsTrId("csd-li-bluetooth")
-        case "VerificationToh":
-            //% "TOH"
-            return qsTrId("csd-li-toh")
         case "VerificationNfc":
             //% "NFC"
             return qsTrId("csd-li-nfc")
@@ -252,15 +249,16 @@ ListModel {
             //% "Front camera with reboot"
             return qsTrId("csd-li-front_camera_reboot")
         case "VerificationBackCamera":
-            //% "Main camera and flash"
-            return CsdHwSettings.backCameraFlash ? qsTrId("csd-li-back_camera_and_flash_light") :
-                 //% "Main camera"
-                 qsTrId("csd-li-back_camera")
+            return CsdHwSettings.backCameraFlash
+                    ? //% "Main camera and flash"
+                      qsTrId("csd-li-back_camera_and_flash_light")
+                    : //% "Main camera"
+                      qsTrId("csd-li-back_camera")
         case "VerificationFrontBackCamera":
-            //% "Front and back camera with flash"
-            return CsdHwSettings.backCameraFlash ? qsTrId("csd-li-front_and_back_camera_with_flash_light") :
-                                                //% "Back and front camera"
-                                                qsTrId("csd-li-front_and_back_camera")
+            return CsdHwSettings.backCameraFlash ? //% "Front and back camera with flash"
+                                                   qsTrId("csd-li-front_and_back_camera_with_flash_light")
+                                                 : //% "Back and front camera"
+                                                   qsTrId("csd-li-front_and_back_camera")
         case "VerificationBattery":
             //% "Battery"
             return qsTrId("csd-li-battery")
@@ -327,6 +325,8 @@ ListModel {
             return "3G"
         case "Verification4G":
             return "4G"
+        case "Verification5G":
+            return "5G"
         case "VerificationCalibration":
             //% "Calibration check"
             return qsTrId("csd-li-calibration")
@@ -376,7 +376,6 @@ ListModel {
             return qsTrId("csd-he-camera")
         case "VerificationWifi":
         case "VerificationBluetooth":
-        case "VerificationToh":
         case "VerificationNfc":
         case "VerificationGpsRadio":
         case "VerificationGpsLock":
@@ -387,6 +386,7 @@ ListModel {
         case "Verification2G":
         case "Verification3G":
         case "Verification4G":
+        case "Verification5G":
             //: Radio frequency function check
             //% "RF Function Check"
             return qsTrId("csd-la-he-rf-function")
@@ -430,63 +430,63 @@ ListModel {
     }
 
     property var mapping: {
-        "TouchSelfTest": ["TouchAuto"],
-        "VerificationTouch": ["Touch"],
-        "VerificationMultiTouch": ["Touch"],
-        "VerificationLcd": ["LCD"],
-        "VerificationLcdBacklight": ["Backlight"],
-        "VerificationLightSensor": ["LightSensor"],
-        "VerificationProxSensor": ["ProxSensor"],
-        "VerificationGyroAndGSensor": ["Gyro", "GSensor"],
-        "VerificationEcompass": ["ECompass"],
-        "VerificationAudio1Mic": ["AudioMic1"],
-        "VerificationAudio2Mic": ["AudioMic2"],
-        "AudioPlayMusicLoudspeaker": ["Loudspeaker"],
-        "AudioPlayMusicReceiver": ["Receiver"],
-        "VerificationHeadset": ["Headset"],
-        "AudioPlayStereoLoudspeaker": ["StereoLoudspeaker"],
-        "AudioPlayMusicHeadset": ["Headset"],
-        "VerificationHeadsetDetect": ["Headset"],
-        "VerificationHeadsetButtons": ["Headset"],
-        "VerificationWifi": ["Wifi"],
-        "VerificationBluetooth": ["Bluetooth"],
-        "VerificationToh": ["TOH"],
-        "VerificationNfc": ["NFC"],
-        "VerificationGpsRadio": ["GPS"],
-        "VerificationGpsLock": ["GPS"],
-        "VerificationCellInfo": ["CellInfo"],
-        "VerificationFrontCamera": ["FrontCamera"],
-        "VerificationBackCamera": ["BackCamera"],
-        "VerificationBattery": ["Battery"],
-        "VerificationDischarging": ["Battery"],
-        "VerificationBatteryResistance": ["Battery"],
-        "VerificationUsbCharging": ["UsbCharging"],
-        "VerificationLED": ["LED"],
-        "VerificationButtonBacklight": ["ButtonBacklight"],
-        "VerificationVibrator": ["Vibrator"],
-        "VerificationSim": ["SIM"],
-        "VerificationSdCard": ["SDCard"],
-        "VerificationKey": ["Key"],
-        "VerificationUsbOtg": ["UsbOtg"],
-        "VerificationHallDetect": ["Hall"],
-        "VerificationFingerprint": ["Fingerprint"],
-        "VerificationFmRadio" : ["FmRadio"],
-        "VerificationSuspend": ["Suspend"],
-        "VerificationReboot": ["Reboot"],
-        "VerificationVideoPlayback": ["VideoPlayback"],
-        "VerificationVideoPlaybackVibrator": ["VideoPlayback", "Vibrator"],
-        "Verification2G": ["CellularData"],
-        "Verification3G": ["CellularData"],
-        "Verification4G": ["CellularData"],
-        "VerificationCalibration": ["Calibration"],
-        "VerificationMacAddresses": ["MacAddresses"]
+        "TouchSelfTest": [["TouchAuto"]],
+        "VerificationTouch": [["Touch"]],
+        "VerificationMultiTouch": [["Touch"]],
+        "VerificationLcd": [["LCD"]],
+        "VerificationLcdBacklight": [["Backlight"]],
+        "VerificationLightSensor": [["LightSensor"]],
+        "VerificationProxSensor": [["ProxSensor"]],
+        "VerificationGyroAndGSensor": [undefined, ["Gyro", "GSensor"]],
+        "VerificationEcompass": [["ECompass"]],
+        "VerificationAudio1Mic": [["AudioMic1"]],
+        "VerificationAudio2Mic": [["AudioMic2"]],
+        "AudioPlayMusicLoudspeaker": [["Loudspeaker"]],
+        "AudioPlayMusicReceiver": [["Receiver"]],
+        "VerificationHeadset": [["Headset"]],
+        "AudioPlayStereoLoudspeaker": [["StereoLoudspeaker"]],
+        "AudioPlayMusicHeadset": [["Headset"]],
+        "VerificationHeadsetDetect": [["Headset"]],
+        "VerificationHeadsetButtons": [["Headset"]],
+        "VerificationWifi": [["Wifi"]],
+        "VerificationBluetooth": [["Bluetooth"]],
+        "VerificationNfc": [["NFC"]],
+        "VerificationGpsRadio": [["GPS"]],
+        "VerificationGpsLock": [["GPS"]],
+        "VerificationCellInfo": [["CellInfo"]],
+        "VerificationFrontCamera": [["FrontCamera"]],
+        "VerificationBackCamera": [["BackCamera"]],
+        "VerificationBattery": [["Battery"]],
+        "VerificationDischarging": [["Battery"]],
+        "VerificationBatteryResistance": [["Battery"]],
+        "VerificationUsbCharging": [["UsbCharging"]],
+        "VerificationLED": [["LED"]],
+        "VerificationButtonBacklight": [["ButtonBacklight"]],
+        "VerificationVibrator": [["Vibrator"]],
+        "VerificationSim": [["SIM"]],
+        "VerificationSdCard": [["SDCard"]],
+        "VerificationKey": [["Key"]],
+        "VerificationUsbOtg": [["UsbOtg"]],
+        "VerificationHallDetect": [["Hall"]],
+        "VerificationFingerprint": [["Fingerprint"]],
+        "VerificationFmRadio" : [["FmRadio"]],
+        "VerificationSuspend": [["Suspend"]],
+        "VerificationReboot": [["Reboot"]],
+        "VerificationVideoPlayback": [["VideoPlayback"]],
+        "VerificationVideoPlaybackVibrator": [["VideoPlayback", "Vibrator"]],
+        "Verification2G": [["CellularData"]],
+        "Verification3G": [["CellularData"]],
+        "Verification4G": [["CellularData"]],
+        "Verification5G": [["CellularData", "Cellular5G"]],
+        "VerificationCalibration": [["Calibration"]],
+        "VerificationMacAddresses": [undefined, ["Bluetooth", "Wifi"]],
     }
 
     // Alternative mappings used for some run-in tests
     property var alternativeMapping: {
-        "AudioPlayMusicLoudspeaker": ["StereoLoudspeaker"],
-        "VerificationFrontBackCamera": ["FrontCamera", "BackCamera"],
-        "VerificationFrontCameraReboot": ["FrontCamera"]
+        "AudioPlayMusicLoudspeaker": [["StereoLoudspeaker"]],
+        "VerificationFrontBackCamera": [["FrontCamera", "BackCamera"]],
+        "VerificationFrontCameraReboot": [["FrontCamera"]],
     }
 
     function feature(url) {
@@ -516,15 +516,32 @@ ListModel {
 
     // a test is supported if *any* of its listed features are supported
     function testSupported(featureMapping, url) {
-        var testFeatures = featureMapping[url]
-        if (testFeatures == undefined)
+        var features = featureMapping[url]
+        if (features === undefined) {
             return false
-        for (var i=0; i<testFeatures.length; i++) {
-            if (Features.supported(testFeatures[i], url)) {
-                return true
+        }
+        var allOf = features[0]
+        var anyOf = features[1]
+        if (allOf !== undefined) {
+            // all of the listed features must be supported
+            for (var i = 0; i < allOf.length; i++) {
+                if (!Features.supported(allOf[i], url)) {
+                    return false
+                }
             }
         }
-        return false
+        if (anyOf !== undefined) {
+            // at least of the listed features must be supported
+            for (var i = 0; ; i++) {
+                if (i == anyOf.length) {
+                    return false
+                }
+                if (Features.supported(anyOf[i], url)) {
+                    break;
+                }
+            }
+        }
+        return true
     }
 
     property var auto_mapping: {

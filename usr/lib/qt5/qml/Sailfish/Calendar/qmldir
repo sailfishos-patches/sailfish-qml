@@ -11,4 +11,5 @@ InvitationResponseButtons 1.0 InvitationResponseButtons.qml
 TimeRangeSelector 1.0 TimeRangeSelector.qml
 CalendarSelector 1.0 CalendarSelector.qml
 SyncWarningItem 1.0 SyncWarningItem.qml
-CommonCalendarTranslations 1.0 CommonCalendarTranslations.js
+SyncFailureResolver 1.0 SyncFailureResolver.qml
+CalendarTexts 1.0 CalendarTexts.js

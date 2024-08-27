@@ -4,6 +4,7 @@ import Sailfish.Ambience 1.0
 import Sailfish.Media 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
+import Nemo.FileManager 1.0
 
 AmbienceAction {
     id: action
@@ -18,7 +19,14 @@ AmbienceAction {
             if (displayName.length > 0) {
                 return displayName
             }
-            return metadataReader.getTitle(tone.url)
+
+            if (tone.url == "") {
+                return ""
+            } else if (fileInfo.exists) {
+                return metadataReader.getTitle(tone.url)
+            } else {
+                return fileInfo.fileName
+            }
         } else {
             //% "No sound"
             return qsTrId("jolla-gallery-ambience-sound-la-no-alarm-sound")
@@ -36,14 +44,21 @@ AmbienceAction {
     property list<QtObject> _resources: [
         MetadataReader {
             id: metadataReader
+        },
+        FileInfo {
+            id: fileInfo
+
+            url: tone.url
         }
     ]
 
     editor: ValueButton {
-        id: toneEditor
-
         label: action.label
         value: action.title
+        descriptionColor: Theme.errorColor
+        //% "Error: file not found"
+        description: (tone.url != "" && !fileInfo.exists)
+                     ? qsTrId("jolla-gallery-ambience-sound-la-file_not_found") : ""
 
         rightMargin: Theme.horizontalPageMargin + Theme.itemSizeSmall + Theme.paddingMedium
 
@@ -51,8 +66,6 @@ AmbienceAction {
     }
 
     dialog: Component {
-        id: soundDialog
-
         SoundDialog {
             activeFilename: tone.url
             activeSoundTitle: action.title

@@ -22,6 +22,7 @@ Column {
     property alias sslCertificatePath: certificateHelper.certificatePath
     property alias sslCertificatePassword: certificateHelper.certificatePassphrase
     property alias sslCredentialsId: certificateHelper.credentialsId
+    property bool oauthEnabled
 
     signal certificateDataSaved(int credentialsId)
     signal certificateDataSaveError(string errorMessage)
@@ -48,12 +49,20 @@ Column {
         //% "Email address is required"
         description: errorHighlight ? qsTrId("components_accounts-la-activesync_emailaddress_required") : ""
 
-        EnterKey.iconSource: "image://theme/icon-m-enter-next"
+        EnterKey.iconSource: usernameField.visible || passwordField.visible || domainField.visible || editMode
+            ? "image://theme/icon-m-enter-next"
+            : "image://theme/icon-m-enter-close"
         EnterKey.onClicked: {
             if (usernameField.visible) {
                 usernameField.focus = true
-            } else {
+            } else if (passwordField.visible) {
                 passwordField.focus = true
+            } else if (domainField.visible) {
+                domainField.focus = true
+            } else if (editMode) {
+                serverField.focus = true
+            } else {
+                emailaddressField.focus = false
             }
         }
     }
@@ -71,7 +80,7 @@ Column {
 
         EnterKey.iconSource: "image://theme/icon-m-enter-next"
         EnterKey.onClicked: passwordField.focus = true
-        visible: !limitedMode
+        visible: !limitedMode && !oauthEnabled
     }
 
     PasswordField {
@@ -86,6 +95,8 @@ Column {
 
         //% "Password is required"
         description: errorHighlight ? qsTrId("components_accounts-la-activesync_password_required") : ""
+
+        visible: !oauthEnabled
 
         EnterKey.iconSource: domainField.visible ? "image://theme/icon-m-enter-next"
                                                  : "image://theme/icon-m-enter-close"
@@ -119,7 +130,7 @@ Column {
                 domainField.focus = false
             }
         }
-        visible: !limitedMode
+        visible: !limitedMode && !oauthEnabled
     }
 
     Column {

@@ -17,8 +17,6 @@ ApplicationWindow {
     property int appGridIconSize: Screen.sizeCategory > Screen.Medium ? Theme.iconSizeLauncher : Theme.iconSizeMedium
     property int maxAppGridColumns: 3
 
-    property string _tohId
-    property var _tohDialog
     property string _packageName
     property bool _signInPending
 
@@ -32,9 +30,6 @@ ApplicationWindow {
     signal uiClosed
     signal showApp(string packageName)
     signal openInstalled
-    signal otherHalfConnected(string id)
-    signal otherHalfDisconnected
-    signal otherHalfInstallationFailed(string reason)
     signal enterStore
     signal systemDialogCreated
     signal systemDialogDestroyed
@@ -96,13 +91,6 @@ ApplicationWindow {
                        PageStackAction.Immediate)
     }
 
-    function showOtherHalfNotification(id) {
-        if (!_tohDialog) {
-            _tohDialog = otherHalfNotification.createObject(win)
-            _tohDialog.installOtherHalf(id)
-        }
-    }
-
     function pushSignIn() {
         if (pageStack.busy) {
             // we might notice that the credentials are lost in the middle of push/pop operation
@@ -138,34 +126,10 @@ ApplicationWindow {
         return (idx === -1) ? version : version.substring(0, idx)
     }
 
-    function tohAccountCheck() {
-        if (jollaStore.accountState === AccountState.NoAccount) {
-            console.log("TOH couldn't be installed. No account.")
-            //: The second row for error notification shown when the Other Half installation failed
-            //: because Jolla account was not defined.
-            //% "Jolla account required"
-            otherHalfInstallationFailed(qsTrId("jolla-store-no-toh_failed_no_account"))
-            return false
-        } else if (jollaStore.accountState === AccountState.NeedsUpdate) {
-            console.log("TOH couldn't be installed. Account needs update.")
-            //: The second row for error notification shown when the Other Half installation failed
-            //: because Jolla account credentials have expired and need to be updated.
-            //% "Jolla account needs update"
-            otherHalfInstallationFailed(qsTrId("jolla-store-no-toh_failed_account_error"))
-            return false
-        } else {
-            return true
-        }
-    }
-
     on_StoreAvailableChanged: {
         if (_storeAvailable) {
             if (_uiEntryPoint !== "") {
                 showEntryPoint(_uiEntryPoint)
-            }
-            if (_tohId !== "") {
-                showOtherHalfNotification(_tohId)
-                _tohId = ""
             }
         }
     }
@@ -189,43 +153,8 @@ ApplicationWindow {
         showEntryPoint("myapps")
     }
 
-    onOtherHalfConnected: {
-        if (tohAccountCheck()) {
-            tohTimeoutTimer.restart()
-            if (_storeAvailable) {
-                showOtherHalfNotification(id)
-            } else {
-                _tohId = id
-                jollaStore.tryConnect()
-            }
-        }
-    }
-
-    onOtherHalfDisconnected: {
-        _tohId = ""
-        if (_tohDialog) {
-            _tohDialog.cancelOtherHalfInstallation()
-        }
-    }
-
     onEnterStore: {
         showEntryPoint("store")
-    }
-
-    Timer {
-        id: tohTimeoutTimer
-        interval: 60000 // Has to be shorter than INACTIVITY_TIMEOUT, see storeclient.cpp
-        onTriggered: {
-            if (_tohId !== "") {
-                // Clear the TOH id if we didn't manage to handle it by now
-                _tohId  = ""
-                console.log("TOH couldn't be installed. Connection failed.")
-                //: The second row for error notification shown when the Other Half installation failed
-                //: because there was a connection error with Store server.
-                //% "Connection error"
-                otherHalfInstallationFailed(qsTrId("jolla-store-no-toh_failed_connection_error"))
-            }
-        }
     }
 
     AppGridItem {
@@ -329,13 +258,6 @@ ApplicationWindow {
             }
             pushSignIn()
         }
-
-        onAccountStateChanged: {
-            if (_tohId !== "" && !tohAccountCheck()) {
-                _tohId = ""
-                tohTimeoutTimer.stop()
-            }
-        }
     }
 
     Connections {
@@ -367,22 +289,6 @@ ApplicationWindow {
         onSearchActionTriggered: {
             win.activate()
             navigationState.openSearch(true)
-        }
-    }
-
-    // Create OtherHalfNotification system dialog dynamically
-    // At this point this is the only way to prevent ghost
-    // covers to appear on home when e.g. closing the app.
-    // This dialog will be destroyed after it's been dismissed
-    // or the installation ends.
-    Component {
-        id: otherHalfNotification
-        OtherHalfNotification {
-            Component.onCompleted: win.systemDialogCreated()
-            Component.onDestruction: {
-                win.systemDialogDestroyed()
-                win._tohDialog = null
-            }
         }
     }
 }

@@ -14,8 +14,8 @@ import com.jolla.voicecall.settings.translations 1.0
 import Nemo.Configuration 1.0
 import org.nemomobile.ofono 1.0
 import org.nemomobile.systemsettings 1.0
-import MeeGo.QOfono 0.2
-import MeeGo.Connman 0.2
+import QOfono 0.2
+import Connman 0.2
 import com.jolla.settings 1.0
 
 ApplicationSettings {

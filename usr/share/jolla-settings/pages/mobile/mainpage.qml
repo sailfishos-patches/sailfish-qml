@@ -1,12 +1,12 @@
 import QtQuick 2.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import Sailfish.Silica 1.0
 import Sailfish.Policy 1.0
 import Sailfish.Telephony 1.0
 import com.jolla.settings.system 1.0
 import org.nemomobile.ofono 1.0
 import Sailfish.Settings.Networking 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 Page {
     id: root
@@ -45,7 +45,7 @@ Page {
 
         SimActivationPullDownMenu {
             id: pullDownMenu
-            multiSimManager: sailfishSimManager
+
             enabled: !disabledByMdmBanner.active
             visible: true
 

@@ -28,7 +28,6 @@ Page {
     allowedOrientations: Orientation.All
 
     Wallpaper {
-        id: wallpaper
         width: parent.width
         height: Math.max(0, -view.contentY +  view.backgroundHeight)
         sourceItem: view.applicationWallpaper

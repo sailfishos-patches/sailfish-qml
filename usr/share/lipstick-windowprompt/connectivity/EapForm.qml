@@ -5,10 +5,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Settings.Networking 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Nemo.DBus 2.0
 
 Column {
@@ -100,7 +100,7 @@ Column {
                             "clientCertFile": network.clientCertFile,
                             "hidden": network.hidden
                         })
-            settingsDBus.call("showAddNetworkDialog");
+            settingsDBus.call("showAddNetworkDialog")
             root.closeDialog()
         }
     }
@@ -122,7 +122,7 @@ Column {
                             "clientCertFile": network.clientCertFile,
                             "hidden": network.hidden
                         })
-            settingsDBus.call("showAddNetworkDialog");
+            settingsDBus.call("showAddNetworkDialog")
             root.closeDialog()
         }
 
@@ -141,7 +141,7 @@ Column {
                             "clientCertFile": "custom",
                             "hidden": network.hidden
                         })
-            settingsDBus.call("showAddNetworkDialog");
+            settingsDBus.call("showAddNetworkDialog")
             root.closeDialog()
         }
     }

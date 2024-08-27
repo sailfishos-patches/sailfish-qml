@@ -1,9 +1,12 @@
 import QtQuick 2.2
 import Sailfish.Telephony 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import org.nemomobile.ofono 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
+/*!
+  \inqmlmodule Sailfish.Telephony
+*/
 Item {
     readonly property alias valid: modemManager.valid
     readonly property alias ready: modemManager.ready
@@ -31,10 +34,12 @@ Item {
     property string simDescriptionSeparator: " | "
     property alias availableSimCount: simListModel.count // no. of SIMs that are not currently locked or otherwise unavailable
 
-    // The control type of the SimManager
-    // SimManagerType.Auto - default both voice and data SIM / modem
-    // SimManagerType.Voice - controlling voice SIM / modem (takes care of SMSes as well)
-    // SimManagerType.Data - controlling data SIM / modem
+    /*!
+      The control type of the SimManager
+      \value SimManagerType.Auto default both voice and data SIM / modem
+      \value SimManagerType.Voice controlling voice SIM / modem (takes care of SMSes as well)
+      \value SimManagerType.Data controlling data SIM / modem
+    */
     property int controlType: SimManagerType.Auto
 
     property alias presentModemCount: modemManager.presentSimCount
@@ -128,6 +133,9 @@ Item {
         return -1
     }
 
+    /*!
+      \internal
+    */
     function _updateSimData() {
         var names = []
         var activeModems = []

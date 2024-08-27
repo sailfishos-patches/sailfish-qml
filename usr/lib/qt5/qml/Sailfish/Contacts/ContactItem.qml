@@ -9,6 +9,9 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 ListItem {
     id: root
 
@@ -27,9 +30,15 @@ ListItem {
     // Same as: SearchField.textLeftMargin
     property real searchLeftMargin: Theme.itemSizeSmall + Theme.paddingMedium
 
+    /*!
+      \internal
+    */
     property bool _matchTextVisible: searchString.length > 0 && matchText.length > 0 && firstText != matchText
     contentHeight: _matchTextVisible ? Theme.itemSizeMedium : Theme.itemSizeSmall
 
+    /*!
+      \internal
+    */
     function _regExpFor(term) {
         // Escape any significant chars in the search term
         term = term.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1")

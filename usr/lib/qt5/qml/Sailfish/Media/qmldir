@@ -1,5 +1,6 @@
 module Sailfish.Media
 plugin sailfishmediaplugin
+typeinfo plugins.qmltypes
 MediaListItem 1.0 MediaListItem.qml
 MediaPlayerControlsPanel 1.0 MediaPlayerControlsPanel.qml
 MprisPlayerControls 1.0 MprisPlayerControls.qml

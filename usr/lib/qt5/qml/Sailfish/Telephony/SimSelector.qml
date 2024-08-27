@@ -1,14 +1,19 @@
 import QtQuick 2.2
 import Sailfish.Silica 1.0
 import Sailfish.Telephony 1.0
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
+/*!
+  \inqmlmodule Sailfish.Telephony
+*/
 SimSelectorBase {
     id: root
 
     property bool updateSelectedSim: true
     property bool restrictToActive
-    // A margin that is applied between sim indicators
+    /*!
+      A margin that is applied between sim indicators
+    */
     property int innerMargin: Theme.paddingLarge * 2
 
     signal simSelected(int sim, string modemPath)

@@ -1,0 +1,3 @@
+module Sailfish.WindowManager
+plugin SailfishWindowManagerPlugin
+classname SailfishWindowManagerPlugin

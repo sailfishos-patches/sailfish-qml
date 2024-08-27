@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import com.jolla.settings.system 1.0
 
 Column {
@@ -8,6 +8,8 @@ Column {
 
     signal certFromFileSelected()
     signal keyFromFileSelected()
+
+    property int horizontalMargin: Theme.horizontalPageMargin
     property QtObject network
     property bool immediateUpdate
     property alias labelColor: keyComboBox.labelColor
@@ -34,6 +36,8 @@ Column {
         label: qsTrId("settings_network-la-client_key")
 
         currentIndex: network && network.privateKeyFile ? 1 : 0
+        leftMargin: root.horizontalMargin
+        rightMargin: root.horizontalMargin
 
         Binding on currentIndex {
             when: network
@@ -61,6 +65,9 @@ Column {
     }
     ComboBox {
         id: certComboBox
+
+        leftMargin: root.horizontalMargin
+        rightMargin: root.horizontalMargin
         //% "Client certificate"
         label: qsTrId("settings_network-la-client_cert")
         visible: !isPkcs12
@@ -96,6 +103,7 @@ Column {
     SystemPasswordField {
         id: privateKeyPassphraseField
 
+        textMargin: root.horizontalMargin
         visible: root.visible && network.privateKeyFile !== ''
         text: network && network.privateKeyPassphrase
         onTextChanged: {

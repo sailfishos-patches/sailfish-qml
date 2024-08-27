@@ -4,9 +4,9 @@ import QtMultimedia 5.4
 import QtPositioning 5.1
 import Sailfish.Silica 1.0
 import com.jolla.camera 1.0
-import org.nemomobile.time 1.0
-import org.nemomobile.configuration 1.0
-import org.nemomobile.notifications 1.0
+import Nemo.Time 1.0
+import Nemo.Configuration 1.0
+import Nemo.Notifications 1.0
 import org.nemomobile.systemsettings 1.0
 import QtSensors 5.0
 
@@ -32,9 +32,27 @@ SettingsOverlay {
     width: captureView.width
     height: captureView.height
 
-    property int _pictureRotation: Screen.primaryOrientation == Qt.PortraitOrientation ? 0 : 90
+    property int _pictureRotation: {
+        if (orientationSensor.connectedToBackend) {
+            return Screen.primaryOrientation == Qt.PortraitOrientation ? 0 : 90
+        } else {
+            switch (Screen.orientation) {
+            case Qt.PortraitOrientation:
+                return 0
+            case Qt.LandscapeOrientation:
+                return 90
+            case Qt.InvertedPortraitOrientation:
+                return 180
+            case Qt.InvertedLandscapeOrientation:
+                return 270
+            default:
+                return 0
+            }
+        }
+    }
 
     OrientationSensor {
+        id: orientationSensor
         active: captureView.effectiveActive
 
         onReadingChanged: {

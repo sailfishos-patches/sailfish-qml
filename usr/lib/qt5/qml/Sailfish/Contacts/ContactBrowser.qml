@@ -4,61 +4,90 @@ import Sailfish.Contacts 1.0 as SailfishContacts
 import org.nemomobile.commhistory 1.0
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Item {
     id: root
 
     //--- Searching and selection properties ---
 
-    // Whether the search bar is shown
+    /*! Whether the search bar is shown */
     property bool searchActive
 
-    // Whether the search bar can be hidden by the user
+    /*! Whether the search bar can be hidden by the user */
     property bool canHideSearchField
 
-    // Whether contacts can be highlighted and added to the selection model
+    /*! Whether contacts can be highlighted and added to the selection model */
     property bool canSelect
 
-    // Filter to apply to the recent contacts list
+    /*! Filter to apply to the recent contacts list */
     property alias recentContactsCategoryMask: _recentContactsModel.eventCategoryMask
 
-    // If set, then only contacts with this property can be selected or found in a search.
-    // Supported properties is a combination of: PeopleModel.EmailAddressRequired, AccountUriRequired, PhoneNumberRequired
+    /*!
+      If set, then only contacts with this property can be selected or found in a search.
+
+      Supported values are a combination of the following constants defined in PeopleModel:
+      \value EmailAddressRequired
+      \value AccountUriRequired
+      \value PhoneNumberRequired
+    */
     property int requiredContactProperty: PeopleModel.NoPropertyRequired
 
-    // If true, once a contact is selected, the browser will only show other contacts that also
-    // have the same type.
+    /*!
+      If true, once a contact is selected, the browser will only show other contacts that also
+      have the same type.
+    */
     property bool uniformSelectionTypes: true
 
-    // Properties to be made searchable as part of a search query
+    /*!
+      Properties to be made searchable as part of a search query
+    */
     property int searchableContactProperty
 
-    // Model of the selected contacts
+    /*!
+      Model of the selected contacts
+    */
     readonly property alias selectedContacts: contactSelectionModel
 
 
     //--- UI configuration: ---
 
-    // Reference to the main flickable item that presents the list of contacts.
+    /*!
+      Reference to the main flickable item that presents the list of contacts.
+    */
     readonly property alias contactView: mainContactsList
 
-    // Page or dialog header component
+    /*!
+      Page or dialog header component
+    */
     property Component pageHeader
 
-    // Page or dialog header object, instantiated from the component
+    /*!
+      Page or dialog header object, instantiated from the component
+    */
     readonly property var pageHeaderItem: mainContactsList.headerItem ? mainContactsList.headerItem.pageHeaderLoader.item : null
 
-    // Margin above the view (defaults to DialogHeader height if inside a dialog)
+    /*!
+      Margin above the view (defaults to DialogHeader height if inside a dialog)
+    */
     property real topMargin: _dialogHeaderHeight
 
-    // Full-page placeholder text to be shown when no contacts are available
+    /*!
+      Full-page placeholder text to be shown when no contacts are available
+    */
     //: Displayed when there are no contacts
     //%  "No people"
     property string placeholderText: qsTrId("components_contacts-la-no_people")
 
-    // Placeholder component shown when no contacts are available. Override to customize shown placeholder labels and actions.
+    /*!
+      Placeholder component shown when no contacts are available. Override to customize shown placeholder labels and actions.
+    */
     property alias placeholder: placeholder.sourceComponent
 
-    // Configuration of the symbol scrollbar.
+    /*!
+      Configuration of the symbol scrollbar.
+    */
     property alias symbolScroller: symbolScrollConfiguration
     SymbolScrollConfiguration {
         id: symbolScrollConfiguration
@@ -87,7 +116,10 @@ Item {
        We don't simply use one model and pass it around, as that
        will cause delegates of the list view to be recreated, and
        possible save failures when editing contacts.
-     */
+    */
+    /*!
+      \internal
+    */
     property var _dynamicContactsModel: PeopleModel {
         filterType: PeopleModel.FilterNone
         filterPattern: root._searchPattern
@@ -121,30 +153,31 @@ Item {
         symbolScrollBar.resetScrollPosition()
     }
 
-    // Opens a menu to allow the user to select from a list of property values for the last contact
-    // that was clicked (or pressed+held) in the list. E.g. if requiredProperty==PeopleModel.PhoneNumberRequired,
-    // then a list of the contact's phone numbers is displayed. If a context menu is already
-    // open within the contact list, the new menu will be embedded within that instead of opening a
-    // separate menu.
-    //
-    // When the user makes the selection, propertySelectedCallback is called with these arguments:
-    //  - 'contact' - the SeasidePerson* object
-    //  - 'propertyData' - a JavaScript object describing the selected property. E.g. if a phone
-    //    number is selected, this map contains {"property": { "number": <selected-phone-number> }}.
-    //    See common.js selectableProperties() for the possible property values.
-    //  - 'contextMenu' - the context menu showing the list of properties, if applicable
-    //  - 'propertyPicker' the property picker object
-    //
-    // If the contact only has one property of the required type, no menu is shown, and the callback
-    // function is invoked immediately with that single property value. If the contact has no
-    // properties of the required type, propertySelectedCallback is invoked immediately with an
-    // empty propertyData map.
-    //
-    // The contactId parameter ensures that the menu is shown for the intended contact - i.e. the
-    // last clicked/held contact. If it does not match the last clicked/held contact, this does nothing.
-    //
-    // This does nothing if requiredProperty==PeopleModel.NoPropertyRequired.
-    //
+    /*!
+      Opens a menu to allow the user to select from a list of property values for the last contact
+      that was clicked (or pressed+held) in the list. E.g. if requiredProperty==PeopleModel.PhoneNumberRequired,
+      then a list of the contact's phone numbers is displayed. If a context menu is already
+      open within the contact list, the new menu will be embedded within that instead of opening a
+      separate menu.
+
+      When the user makes the selection, propertySelectedCallback is called with these arguments:
+       - 'contact' - the SeasidePerson* object
+       - 'propertyData' - a JavaScript object describing the selected property. E.g. if a phone
+         number is selected, this map contains {"property": { "number": <selected-phone-number> }}.
+         See common.js selectableProperties() for the possible property values.
+       - 'contextMenu' - the context menu showing the list of properties, if applicable
+       - 'propertyPicker' the property picker object
+
+      If the contact only has one property of the required type, no menu is shown, and the callback
+      function is invoked immediately with that single property value. If the contact has no
+      properties of the required type, propertySelectedCallback is invoked immediately with an
+      empty propertyData map.
+
+      The contactId parameter ensures that the menu is shown for the intended contact - i.e. the
+      last clicked/held contact. If it does not match the last clicked/held contact, this does nothing.
+
+      This does nothing if requiredProperty==PeopleModel.NoPropertyRequired.
+    */
     function selectContactProperty(contactId, requiredProperty, propertySelectedCallback) {
         if (!_verifyActiveDelegateContact(contactId)) {
             return
@@ -175,16 +208,17 @@ Item {
         _activeDelegate.propertyPicker.openMenu()
     }
 
-    // Opens a context menu for the last contact that was clicked (or pressed+held) in the list.
-    // Or, if selectContactProperty() has opened a page with a list of contact properties for
-    // the matching contact, and that page is still active, the context menu is opened for the
-    // last selected property.
-    //
-    // The given menu must be a Component.
-    //
-    // The contactId parameter ensures that the menu is shown for the intended contact - i.e. the
-    // last clicked/held contact. If it does not match the last clicked/held contact, this does nothing.
-    //
+    /*!
+      Opens a context menu for the last contact that was clicked (or pressed+held) in the list.
+      Or, if selectContactProperty() has opened a page with a list of contact properties for
+      the matching contact, and that page is still active, the context menu is opened for the
+      last selected property.
+
+      The given menu must be a Component.
+
+      The contactId parameter ensures that the menu is shown for the intended contact - i.e. the
+      last clicked/held contact. If it does not match the last clicked/held contact, this does nothing.
+    */
     function openContextMenu(contactId, menu, menuProperties) {
         if (!_verifyActiveDelegateContact(contactId)) {
             return
@@ -198,19 +232,45 @@ Item {
     }
 
     //--- Internal properties and functions: ---
-
+    /*!
+      \internal
+    */
     readonly property var _selectionModel: canSelect ? contactSelectionModel : null
+    /*!
+      \internal
+    */
     property string _searchPattern
+    /*!
+      \internal
+    */
     readonly property bool _searchFiltered: searchActive && _searchPattern.length > 0
+    /*!
+      \internal
+    */
     property int _filterProperty: requiredContactProperty
+    /*!
+      \internal
+    */
     property var _activeDelegate
 
+    /*!
+      \internal
+    */
     readonly property int _dialogHeaderHeight: (_isDialog && !!mainContactsList.headerItem) ? mainContactsList.headerItem.pageHeaderLoader.height : 0
+    /*!
+      \internal
+    */
     readonly property int _sectionHeaderHeight: Theme.itemSizeExtraSmall
+    /*!
+      \internal
+    */
     readonly property bool _showInitialContent: favoriteContactsModel.populated
                                                 && allContactsModel.populated
                                                 && _recentContactsModel.ready
 
+    /*!
+      \internal
+    */
     readonly property real _scrollIgnoredContentHeight: {
         // Ignore heights of search field and context menus so that the scrollbar doesn't
         // appear/disappear depending on whether these are visible.
@@ -218,6 +278,9 @@ Item {
                 + (mainContactsList.__silica_contextmenu_instance ? mainContactsList.__silica_contextmenu_instance.height : 0)
     }
 
+    /*!
+      \internal
+    */
     readonly property var _page: {
         var parentItem = root.parent
         while (parentItem) {
@@ -228,8 +291,17 @@ Item {
         }
         return null
     }
+    /*!
+      \internal
+    */
     readonly property bool _isLandscape: _page && _page.isLandscape
+    /*!
+      \internal
+    */
     readonly property bool _isDialog: _page && _page.hasOwnProperty('__silica_dialog')
+    /*!
+      \internal
+    */
     readonly property int _pageStatus: _page ? _page.status : PageStatus.Inactive
     on_PageStatusChanged: {
         if (_pageStatus === PageStatus.Activating) {
@@ -239,13 +311,22 @@ Item {
     }
 
     // Place any default content inside the flickable to make it easy to e.g. add pulley menus
+    /*!
+      \internal
+    */
     default property alias _content: mainContactsList.data
 
+    /*!
+      \internal
+    */
     function _closeVirtualKeyboard() {
         root.focus = true
     }
 
     // Returns the section header y for an item currently in view.
+    /*!
+      \internal
+    */
     function _sectionHeaderY(index) {
         // Find the y of the desired index and return the y of the section header above it.
         var yPos = mainContactsList.contentY
@@ -265,10 +346,16 @@ Item {
         return null
     }
 
+    /*!
+      \internal
+    */
     function _clampYPos(yPos) {
         return Math.max(mainContactsList.originY, Math.min(yPos, mainContactsList.contentY))
     }
 
+    /*!
+      \internal
+    */
     function _scrollContactsTo(indexOrItem) {
         // Prevent the pulley menu from running its snap-back animations that automatically return
         // the contentY to the flickable start if movement stops within 80px of the start.
@@ -316,11 +403,17 @@ Item {
         }
     }
 
+    /*!
+      \internal
+    */
     function _favoriteContactsEndY() {
         return mainContactsList.originY + mainContactsList.headerItem.favoriteContactsSection.y
                 + mainContactsList.headerItem.favoriteContactsSection.height
     }
 
+    /*!
+      \internal
+    */
     function _recentContactsEndY() {
         return mainContactsList.originY + mainContactsList.headerItem.recentContactsSection.y
                 + mainContactsList.headerItem.recentContactsSection.height
@@ -329,6 +422,9 @@ Item {
     // Find the section of the first contact currently seen at the top of the view. If only half of
     // this contact delegate is visible, and it is also the last entry for its section, return the
     // following section instead.
+    /*!
+      \internal
+    */
     function _findFirstVisibleSection() {
         if (!mainContactsList.headerItem) {
             return "" // not yet fully loaded.
@@ -374,6 +470,9 @@ Item {
         return allContactsModel.get(contactIndex, PeopleModel.SectionBucketRole)
     }
 
+    /*!
+      \internal
+    */
     function _resetHighlightedSymbol() {
         if (!_showInitialContent || displayLabelGroupModel.count === 0) {
             return
@@ -391,6 +490,9 @@ Item {
         }
     }
 
+    /*!
+      \internal
+    */
     function _setMenuOpen(menuOpen, menuItem) {
         symbolScrollBar.enabled = !menuOpen
         if (menuOpen) {
@@ -400,6 +502,9 @@ Item {
         }
     }
 
+    /*!
+      \internal
+    */
     function _contactClicked(contactDelegateItem, contact) {
         if (!contactDelegateItem) {
             console.log("Contact clicked but no delegate specified!")
@@ -423,6 +528,9 @@ Item {
         contactClicked(ContactsUtil.ensureContactComplete(contact, allContactsModel))
     }
 
+    /*!
+      \internal
+    */
     function _contactPressAndHold(contactDelegateItem, contact) {
         if (!contactDelegateItem) {
             console.log("Contact press+hold but no delegate specified!")
@@ -432,6 +540,9 @@ Item {
         contactPressAndHold(ContactsUtil.ensureContactComplete(contact, allContactsModel))
     }
 
+    /*!
+      \internal
+    */
     function _verifyActiveDelegateContact(contactId) {
         if (!contactId) {
             console.warn("Invalid contact ID")

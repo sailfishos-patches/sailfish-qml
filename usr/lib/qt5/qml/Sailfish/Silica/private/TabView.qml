@@ -130,9 +130,10 @@ PagedView {
         BusyIndicator {
             running: !delayBusy.running && loading
 
-            x: (tabLoader.width - width) / 2
+            // Avoid flicker when tab container gets repositioned
+            parent: tabLoader.parent
+            x: (tabLoader.width - width) / 2 + tabLoader.x
             y: root.height/3 - height/2 - tabBarLoader.height
-
             size: BusyIndicatorSize.Large
 
             Timer {

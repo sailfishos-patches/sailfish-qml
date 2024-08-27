@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2016 - 2023 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -15,73 +15,92 @@ Item {
     property bool done
     property bool testPassed
 
-    property double gsensorX
-    property double gsensorY
-    property double gsensorZ
-    property double averageGsensorX
-    property double averageGsensorY
-    property double averageGsensorZ
-    property int sleeptime: 500
-    property int times: 5
+    // Actual sampling rate might vary from one device to another
+    // Normalize ui visuals by doing timer based subsampling
+    readonly property int subsampleRate: 2
+    readonly property int sampleRate: subsampleRate * 2 + 1
+    readonly property int samplesNeeded: 5
+    property int samplesAcquired
 
-    property double minX: CsdHwSettings.gSensorMinX
-    property double maxX: CsdHwSettings.gSensorMaxX
-    property double minY: CsdHwSettings.gSensorMinY
-    property double maxY: CsdHwSettings.gSensorMaxY
-    property double minZ: CsdHwSettings.gSensorMinZ
-    property double maxZ: CsdHwSettings.gSensorMaxZ
+    // The latest sensor values seen
+    property real rawX
+    property real rawY
+    property real rawZ
+
+    // The latest sensor values picked for use
+    property real curX
+    property real curY
+    property real curZ
+
+    // Average of the first samplesNeeded picked values
+    property real avgX
+    property real avgY
+    property real avgZ
+
+    // Pass/Fail limits from config
+    readonly property real minX: CsdHwSettings.gSensorMinX
+    readonly property real maxX: CsdHwSettings.gSensorMaxX
+    readonly property real minY: CsdHwSettings.gSensorMinY
+    readonly property real maxY: CsdHwSettings.gSensorMaxY
+    readonly property real minZ: CsdHwSettings.gSensorMinZ
+    readonly property real maxZ: CsdHwSettings.gSensorMaxZ
 
     function start() {
-        testPassed = false
-        done = false
-        running = true
-
-        timer.start()
+        if (!running) {
+            testPassed = false
+            done = false
+            running = true
+            subsampleTimer.start()
+        }
     }
 
-    function _getValues() {
-        averageGsensorX = averageGsensorX + gsensorX
-        averageGsensorY = averageGsensorY + gsensorY
-        averageGsensorZ = averageGsensorZ + gsensorZ
+    function _subsample() {
+        curX = rawX
+        curY = rawY
+        curZ = rawZ
+        _accumulate()
     }
 
-    function _checkRange() {
-        averageGsensorX = averageGsensorX/5
-        averageGsensorY = averageGsensorY/5
-        averageGsensorZ = averageGsensorZ/5
+    function _accumulate() {
+        if (samplesAcquired < samplesNeeded) {
+            avgX += curX
+            avgY += curY
+            avgZ += curZ
+            if (++samplesAcquired == samplesNeeded) {
+                _average()
+            }
+        }
+    }
 
-        testPassed = averageGsensorX > minX && averageGsensorX < maxX
-                      && averageGsensorY > minY && averageGsensorY < maxY
-                      && averageGsensorZ > minZ && averageGsensorZ < maxZ
+    function _average() {
+        avgX /= samplesAcquired
+        avgY /= samplesAcquired
+        avgZ /= samplesAcquired
+
+        testPassed = (avgX || avgY || avgZ)
+                     && minX < avgX && avgX < maxX
+                     && minY < avgY && avgY < maxY
+                     && minZ < avgZ && avgZ < maxZ
         done = true
         running = false
     }
 
     Accelerometer {
-        id: accelerometer
-        dataRate: 5000
+        dataRate: sampleRate
         active: true
         onReadingChanged: {
             if (reading) {
-                gsensorX = reading.x
-                gsensorY = reading.y
-                gsensorZ = reading.z
+                rawX = reading.x
+                rawY = reading.y
+                rawZ = reading.z
             }
         }
     }
 
     Timer {
-        id: timer
-        interval: sleeptime
+        id: subsampleTimer
+        interval: 1000 / subsampleRate
         repeat: true
-        onTriggered: {
-            if (times > 0) {
-                times--
-                _getValues()
-            } else {
-                timer.stop()
-                _checkRange()
-            }
-        }
+        onTriggered: _subsample()
     }
 }

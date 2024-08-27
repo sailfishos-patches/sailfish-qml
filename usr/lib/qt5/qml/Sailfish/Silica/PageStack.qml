@@ -1118,7 +1118,7 @@ PageStackBase {
 
                         // Ensure we are fully opaque
                         opacity = 1.0
-                    } else if (status === PageStatus.Deactivating){
+                    } else if (status === PageStatus.Deactivating) {
                         setStatus(PageStatus.Inactive)
                         hide()
                         if (expired) {

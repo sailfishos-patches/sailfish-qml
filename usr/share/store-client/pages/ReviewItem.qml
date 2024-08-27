@@ -97,7 +97,7 @@ ListItem {
         text: {
             var txt = authorName + " • " + reviewItem.version + " • "
             var timestamp = Format.formatDate(reviewItem.updatedOn,
-                                              Formatter.DurationElapsed)
+                                              Formatter.TimeElapsed)
             if (reviewItem.updatedOn > reviewItem.createdOn) {
                 //: Timestamp label for edited comments. Takes the timestamp as a
                 //: parameter (in format 'N minutes/hours/days ago').

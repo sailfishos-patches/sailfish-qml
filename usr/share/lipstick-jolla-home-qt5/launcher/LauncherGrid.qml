@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.4
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
 import Sailfish.Silica 1.0
@@ -13,6 +13,7 @@ import Sailfish.Silica.private 1.0
 import Sailfish.Policy 1.0
 import Sailfish.AccessControl 1.0
 import Sailfish.Lipstick 1.0
+import Nemo.Configuration 1.0
 import "../main"
 
 IconGridViewBase {
@@ -26,6 +27,22 @@ IconGridViewBase {
     property alias reorderItem: gridManager.reorderItem
     property alias gridManager: gridManager
     property bool canUninstall: AccessControl.hasGroup(AccessControl.RealUid, "sailfish-system")
+    property int topMargin: Math.max(_page.orientation === Orientation.Portrait
+                                     ? Screen.topCutout.height : 0,
+                                     largeScreen ? Theme.paddingLarge : Theme.paddingSmall)
+    property int bottomMargin: Math.max(_page.orientation === Orientation.InvertedPortrait
+                                        ? Screen.topCutout.height : 0,
+                                        largeScreen ? Theme.paddingLarge : Theme.paddingSmall)
+    property int realCellHeight: Math.floor(pageHeight / rows) // cell height after page's vertical paddings
+    property int statusBarHeight: {
+        if (Lipstick.compositor.multitaskingHome) {
+            return 0
+        } else {
+            var statusBar = Lipstick.compositor.homeLayer.statusBar
+            return statusBar.baseY + statusBar.height
+        }
+    }
+
     signal itemLaunched
 
     function categoryQsTrIds() {
@@ -78,8 +95,95 @@ IconGridViewBase {
         removeApplicationEnabled = enabled
     }
 
-    pageHeight: launcherPager.height
+    onVisibleChanged: if (!visible) setEditMode(false)
 
+    // base class uses pageHeight to calculate how man rows fit with minimum size,
+    // we then make the delegates fit full height of the page and finally in delegate
+    // itself position them according to margins
+    pageHeight: launcherPager.height - topMargin - bottomMargin
+    cellHeight: Math.floor(launcherPager.height / rows)
+    header: launcherClockConfig.launcher_clock_visible ? clockHeader : null
+
+    ConfigurationGroup {
+        id: launcherClockConfig
+
+        path: "/desktop/sailfish/experimental"
+
+        property bool launcher_clock_visible: false
+        property int launcher_clock_size: 1.5*Theme.fontSizeHuge
+    }
+
+    Component {
+        id: clockHeader
+
+        Item {
+            width: gridview.width
+            height: Math.ceil((clockColumn.height + gridview.statusBarHeight) / gridview.cellHeight) * gridview.cellHeight
+                    - gridview.statusBarHeight
+
+            Column {
+                id: clockColumn
+
+                // left-align with the launcher icons on the first column
+                x: (gridview.cellWidth - Theme.iconSizeLauncher)/2
+                y: parent.height - height
+                width: parent.width - 2*x
+                height: implicitHeight
+                bottomPadding: Theme.paddingMedium
+
+                Row {
+                    id: clockRow
+
+                    width: parent.width
+                    spacing: Theme.paddingMedium
+
+                    ClockItem {
+                        id: clockItem
+
+                        color: Theme.highlightColor
+                        font.pixelSize: launcherClockConfig.launcher_clock_size
+                        updatesEnabled: visible
+                    }
+
+                    Label {
+                        id: dateLabel
+
+                        property string dateText: Format.formatDate(clockItem.time, Formatter.DateLong)
+                        property string weekdayText: Format.formatDate(clockItem.time, Format.WeekdayNameStandalone)
+
+                        text: {
+                            //: Date and weekday shown together, e.g. "20 December 2021, Monday"
+                            //% "%1, %2"
+                            var text = qsTrId("lipstick-jolla-home-date_and_weekday").arg(dateText).arg(weekdayText)
+                            if (fontMetrics.advanceWidth(text) > width) {
+                                return dateText + "<br>" + weekdayText[0].toUpperCase() + weekdayText.substring(1)
+                            } else {
+                                return text
+                            }
+                        }
+
+                        anchors.baseline: clockItem.baseline
+                        truncationMode: TruncationMode.Fade
+                        width: parent.width - parent.spacing - clockItem.width
+                        anchors.baselineOffset: lineCount > 1 ? -height/2 : 0
+                        color: Theme.highlightColor
+
+                        FontMetrics {
+                            id: fontMetrics
+                            font: dateLabel.font
+                        }
+                    }
+                }
+
+                Separator {
+                    id: dateTimeSeparator
+
+                    anchors { left: parent.left; right: parent.right }
+                    color: Theme.highlightColor
+                }
+            }
+        }
+    }
     EditableGridManager {
         id: gridManager
         supportsFolders: rootFolder
@@ -99,7 +203,7 @@ IconGridViewBase {
         source: "image://theme/" + iconId
         opacity: show ? 1.0 : 0.0
         Behavior on opacity { FadeAnimation {} }
-        y: target ? target.offsetY + target.iconOffset : -20000
+        y: target ? target.targetY + target.iconOffset : -20000
         anchors.horizontalCenter: target ? target.horizontalCenter : gridview.contentItem.horizontalCenter
         scale: 1.3
         parent: gridview.contentItem
@@ -114,10 +218,6 @@ IconGridViewBase {
     Connections {
         target: Lipstick.compositor
         onDisplayOff: setEditMode(false)
-    }
-    Connections {
-        target: Lipstick.compositor.launcherLayer
-        onActiveChanged: if (!Lipstick.compositor.launcherLayer.active) setEditMode(false)
     }
 
     PolicyValue {
@@ -137,25 +237,24 @@ IconGridViewBase {
         }
 
         width: cellWidth
-        height: cellHeight
+        height: gridview.realCellHeight
         manager: gridManager
         isFolder: model.object.type == LauncherModel.Folder
         folderItemCount: isFolder && model.object ? model.object.itemCount : 0
         editMode: gridview.launcherEditMode
 
-        // This compresses the icons toward the center of the screen, leaving extra margin at the top and bottom
-        offsetY: y - (((y-gridview.originY+height/2)%launcherPager.height)/launcherPager.height - 0.5) *
-                 (largeScreen && rootFolder ? Theme.paddingLarge*4 : Theme._homePageMargin - Theme.paddingLarge)
+        // the grid view lays out item for full screen, this overrides the layouting so that
+        // the page has top and bottom margins
+        targetY: {
+            var rowInPage = Math.floor(index % (gridview.columns * gridview.rows) / gridview.columns)
+            var pageNumber = Math.floor(model.index / (gridview.columns * gridview.rows))
+            var pageStart = pageNumber * launcherPager.height
+            return gridview.originY + pageStart + gridview.topMargin + rowInPage * gridview.realCellHeight
+        }
 
         onEditModeChanged: {
             if (editMode && !uninstallButton && canUninstall && policy.value) {
                 uninstallButton = uninstallButtonComponent.createObject(contentItem)
-            }
-        }
-
-        onIsUpdatingChanged: {
-            if (isUpdating && !updatingItem) {
-                updatingItem = updatingComponent.createObject(contentItem)
             }
         }
 
@@ -200,8 +299,10 @@ IconGridViewBase {
             } else if (isFolder) {
                 setEditMode(false)
                 showFolder(model.object)
-                // Ensure the launcher is visible - could be peeking from bottom due to hint.
-                Lipstick.compositor.setCurrentWindow(Lipstick.compositor.launcherLayer.window)
+                if (Lipstick.compositor.multitaskingHome) {
+                    // Ensure the launcher is visible - could be peeking from bottom due to hint.
+                    Lipstick.compositor.setCurrentWindow(Lipstick.compositor.launcherLayer.window)
+                }
             } else if (launcherEditMode) {
                 setEditMode(false)
             } else {
@@ -212,14 +313,18 @@ IconGridViewBase {
                 } else {
                     Desktop.instance.switcher.activateWindowFor(object)
                 }
-                Lipstick.compositor.launcherLayer.hide()
+
+                if (Lipstick.compositor.multitaskingHome) {
+                    Lipstick.compositor.launcherLayer.hide()
+                }
+
                 gridview.itemLaunched()
             }
             Lipstick.compositor.launcherLayer.pinned = false
         }
 
         onPressAndHold: {
-            if (Lipstick.compositor.launcherLayer.active && !launcherEditMode) {
+            if (!launcherEditMode) {
                 setEditMode(true)
                 wrapper.startReordering(true)
             }
@@ -302,19 +407,20 @@ IconGridViewBase {
             visible: !launcherEditMode || isFolder
         }
 
-        Component {
-            id: updatingComponent
-            BusyIndicator {
-                anchors.centerIn: launcherIcon
-                running: model.object.isUpdating
-                opacity: running
-                Behavior on opacity { FadeAnimation {} }
-                Label {
-                    anchors.centerIn: parent
-                    text: model.object.updatingProgress + '%'
-                    visible: model.object.isUpdating && model.object.updatingProgress >= 0 && model.object.updatingProgress <= 100
-                    font.pixelSize: Theme.fontSizeSmall
-                }
+        BusyIndicator {
+            anchors.centerIn: launcherIcon
+            running: model.object.isUpdating
+                     || (!Lipstick.compositor.multitaskingHome && model.object.isLaunching)
+            opacity: running
+            Behavior on opacity { FadeAnimation {} }
+
+            // If the launcher icons use custom size scale the busy indicator accordingly to align dimensions
+            scale: (Theme.iconSizeLauncher / Theme.pixelRatio) / 86
+            Label {
+                anchors.centerIn: parent
+                text: model.object.updatingProgress + '%'
+                visible: model.object.isUpdating && model.object.updatingProgress >= 0 && model.object.updatingProgress <= 100
+                font.pixelSize: Theme.fontSizeSmall
             }
         }
 

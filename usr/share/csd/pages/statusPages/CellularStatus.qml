@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2016 - 2023 Jolla Ltd.
  * Copyright (c) 2019 Open Mobile Platform LLC.
  *
  * License: Proprietary
@@ -8,7 +8,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Settings.Networking 1.0
-import MeeGo.QOfono 0.2
+import QOfono 0.2
 import Nemo.Connectivity 1.0
 
 Column {
@@ -61,7 +61,7 @@ Column {
                 text: {
                     var val = networkStatusIndicator.networkRegistration.technology
                     if (val.length && val !== 'unknown') {
-                        var techToG = {gsm: "2", edge: "2.5", umts: "3", hspa: "3.5", lte: "4"}
+                        var techToG = {gsm: "2", edge: "2.5", umts: "3", hspa: "3.5", lte: "4", nr: "5"}
                         return techToG[val] + "G"
                     }
                     return ""

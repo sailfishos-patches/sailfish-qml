@@ -5,7 +5,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import Nemo.DBus 2.0
 import Sailfish.Silica 1.0
@@ -53,14 +53,15 @@ SystemWindow {
                         ? qsTrId("lipstick-jolla-home-la-sim_removal_restart")
                           //% "Without restarting the device, SIM card might not work reliably."
                         : qsTrId("lipstick-jolla-home-la-sim_reboot")
-                topPadding: transpose ? Theme.paddingLarge : 2*Theme.paddingLarge
+                semiTight: true
             }
 
             SystemDialogIconButton {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: Theme.itemSizeHuge*1.5
-                iconSource: (Screen.sizeCategory >= Screen.Large) ? (isRemovalWarning ? "image://theme/icon-l-acknowledge" : "image://theme/icon-l-reboot")
-                                                                  : (isRemovalWarning ? "image://theme/icon-m-acknowledge" : "image://theme/icon-m-reboot")
+                iconSource: (Screen.sizeCategory >= Screen.Large)
+                            ? (isRemovalWarning ? "image://theme/icon-l-acknowledge" : "image://theme/icon-l-reboot")
+                            : (isRemovalWarning ? "image://theme/icon-m-acknowledge" : "image://theme/icon-m-reboot")
                 text: isRemovalWarning
                           //% "Got it"
                         ? qsTrId("lipstick-jolla-home-bt-ok")

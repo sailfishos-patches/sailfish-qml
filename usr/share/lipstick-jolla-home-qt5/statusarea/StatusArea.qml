@@ -7,7 +7,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Telephony 1.0
@@ -15,23 +15,32 @@ import Sailfish.Settings.Networking 1.0
 import com.jolla.lipstick 0.1
 import org.nemomobile.devicelock 1.0
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.time 1.0
+import Nemo.Time 1.0
+import Nemo.Configuration 1.0
 import "../lockscreen"
 import "../main"
 import "../backgrounds"
 
 ContrastBackground {
     id: statusArea
+
     property bool updatesEnabled: true
     property bool recentlyOnDisplay: true
     property bool lockscreenMode
-    property string iconSuffix: lipstickSettings.lowPowerMode ? ('?' + Theme.highlightColor) : ''
-    property string mobileDataIconSuffix: '?' + (lipstickSettings.lowPowerMode ? Theme.highlightColor : mobileDataIconColor)
-    property alias mobileDataIconColor: cellularStatusLoader.mobileDataColor
-    property color color: lipstickSettings.lowPowerMode ? Theme.highlightColor : Theme.primaryColor
+    property color color: Theme.primaryColor
+    property int cornerPadding: {
+        // assuming the roundings are simple with x and y detached the radius amount from edges.
+        // for simplicity using just one padding (they are likely same anyway)
+        var biggestCorner = Math.max(Screen.topLeftCorner.radius,
+                                     Screen.topRightCorner.radius,
+                                     Screen.bottomLeftCorner.radius,
+                                     Screen.bottomRightCorner.radius)
+        // 0.7 assumed being enough of the rounding to avoid
+        return Math.max(biggestCorner * 0.7, Theme.paddingMedium)
+    }
 
     onUpdatesEnabledChanged: if (updatesEnabled) recentlyOnDisplay = updatesEnabled
-    height: batteryStatusIndicator.totalHeight
+    height: iconBar.height
     width: parent.width
 
     Timer {
@@ -42,19 +51,25 @@ ContrastBackground {
 
     Item {
         id: iconBar
-        width: parent.width
-        height: batteryStatusIndicator.height
 
-        // Left side status indicators
+        width: parent.width
+        // assuming the cutout case doesn't need padding due to clock item text not drawing full height
+        height: batteryStatusIndicator.height
+                + (Screen.hasCutouts && Lipstick.compositor.topmostWindowOrientation === Qt.PortraitOrientation
+                   ? Screen.topCutout.height : 0)
+
         Row {
             id: leftIndicators
+
+            x: statusArea.cornerPadding
             height: batteryStatusIndicator.height
             spacing: Theme.paddingSmall
+
             BatteryStatusIndicator {
                 id: batteryStatusIndicator
+
                 color: statusArea.color
                 usbPreparingMode: usbModeSelector.preparingMode != ""
-                iconSuffix: statusArea.iconSuffix
             }
 
             ProfileStatusIndicator {
@@ -71,35 +86,15 @@ ContrastBackground {
 
             //XXX Headset indicator
             //XXX Call forwarding indicator
-
-            Loader {
-                active: Desktop.showDualSim
-                visible: active
-                sourceComponent: floatingIndicators
-            }
-        }
-
-        // These indicators could be on either side, depending upon dual sim
-        Component {
-            id: floatingIndicators
-            Row {
-                spacing: Theme.paddingSmall
-                BluetoothStatusIndicator {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: opacity > 0.0
-                }
-                LocationStatusIndicator {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: opacity > 0.0
-                    recentlyOnDisplay: statusArea.recentlyOnDisplay
-                }
-            }
         }
 
         Item {
             id: centralArea
+
             anchors {
                 top: iconBar.top
+                topMargin: Screen.hasCutouts && Lipstick.compositor.topmostWindowOrientation === Qt.PortraitOrientation
+                           ? (Screen.topCutout.height) : 0
                 bottom: iconBar.bottom
                 left: leftIndicators.right
                 leftMargin: Theme.paddingMedium
@@ -109,8 +104,18 @@ ContrastBackground {
             Loader {
                 // If possible position this item centrally within the iconBar
                 x: Math.max((iconBar.width - width)/2 - parent.x, 0)
-                y: (parent.height - height)/2
-                sourceComponent: lockscreenMode ? lockIcon : timeText
+                y: (parent.height - height) / 2
+                sourceComponent: lockscreenMode ? lockIcon
+                                                : displayClockOnLauncher.value ? undefined // clock already shown on the launcher header
+                                                                               : timeText
+
+
+                ConfigurationValue {
+                    id: displayClockOnLauncher
+
+                    key: "/desktop/sailfish/experimental/display_clock_on_launcher"
+                    defaultValue: false
+                }
             }
         }
 
@@ -141,23 +146,30 @@ ContrastBackground {
             }
         }
 
-        // Right side status indicators
         Row {
             id: rightIndicators
-            height: parent.height
+
+            height: leftIndicators.height
             spacing: Theme.paddingSmall
             anchors {
                 right: parent.right
-                rightMargin: Theme.paddingMedium
+                rightMargin: statusArea.cornerPadding
+            }
+
+            // Location status indicator positioned to leftmost on right side
+            // due to JB#58226 to avoid abrupt movement of the other indicators.
+            LocationStatusIndicator {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: opacity > 0.0
+                recentlyOnDisplay: statusArea.recentlyOnDisplay
             }
             VpnStatusIndicator {
                 id: vpnStatusIndicator
                 anchors.verticalCenter: parent.verticalCenter
             }
-            Loader {
-                active: !Desktop.showDualSim
-                visible: active
-                sourceComponent: floatingIndicators
+            BluetoothStatusIndicator {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: opacity > 0.0
             }
             ConnectionStatusIndicator {
                 id: connStatusIndicator
@@ -166,7 +178,7 @@ ContrastBackground {
             }
             Item {
                 width: flightModeStatusIndicator.offline ? flightModeStatusIndicator.width : cellularStatusLoader.width
-                height: iconBar.height
+                height: parent.height
                 visible: Desktop.simManager.enabledModems.length > 0 || flightModeStatusIndicator.offline
 
                 FlightModeStatusIndicator {
@@ -176,22 +188,21 @@ ContrastBackground {
 
                 Loader {
                     id: cellularStatusLoader
+
                     height: parent.height
                     active: Desktop.simManager.availableModemCount > 0
-                    readonly property color mobileDataColor: item ? item.mobileDataColor : statusArea.color
                     sourceComponent: Row {
-                        property alias mobileDataColor: cellularNetworkTypeStatusIndicator.color
                         height: parent.height
                         opacity: 1.0 - flightModeStatusIndicator.opacity
 
                         CellularNetworkTypeStatusIndicator {
-                            id: cellularNetworkTypeStatusIndicator
                             anchors.verticalCenter: parent.verticalCenter
                             color: {
-                                var repeaterItem = Desktop.simManager.indexOfModem(Desktop.simManager.defaultDataModem) === 1 && networkStatusRepeater.count > 1
+                                var repeaterItem = (Desktop.simManager.indexOfModem(Desktop.simManager.defaultDataModem) === 1
+                                                    && networkStatusRepeater.count > 1)
                                         ? networkStatusRepeater.itemAt(1)
                                         : networkStatusRepeater.itemAt(0)
-                                return !!repeaterItem ? repeaterItem.iconColor : statusArea.color
+                                return !!repeaterItem && repeaterItem.highlighted ? Theme.highlightColor : statusArea.color
                             }
                         }
 
@@ -201,9 +212,8 @@ ContrastBackground {
                             model: Desktop.simManager.enabledModems
 
                             MobileNetworkStatusIndicator {
-                                readonly property color iconColor: _highlight ? Theme.highlightColor : statusArea.color
-                                readonly property bool _highlight: Telephony.promptForVoiceSim
-                                                                   || (Desktop.showDualSim && Desktop.simManager.activeModem !== modemPath)
+                                highlighted: Telephony.promptForVoiceSim
+                                             || (Desktop.showDualSim && Desktop.simManager.activeModem !== modemPath)
 
                                 visible: Desktop.showDualSim || Desktop.simManager.activeModem === modemPath
                                 modemPath: modelData
@@ -211,7 +221,6 @@ ContrastBackground {
 
                                 showMaximumStrength: fakeOperator !== ""
                                 showRoamingStatus: !Desktop.showDualSim
-                                iconSuffix: _highlight ? ('?' + Theme.highlightColor) : statusArea.iconSuffix
                             }
                         }
                     }

@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2020 - 2022 Jolla Ltd.
+ *
+ * License: Proprietary
+ */
+
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
@@ -37,6 +43,7 @@ TabItem {
                         applications: LauncherFolderModel {
                             scope: "partnerspace"
                             categories: "X-SailfishPartnerSpace"
+                            iconDirectories: Theme.launcherIconDirectories
                         }
                     }
                     BackgroundItem {

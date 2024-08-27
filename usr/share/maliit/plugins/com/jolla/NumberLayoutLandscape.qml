@@ -10,9 +10,6 @@ KeyboardLayout {
 
     property real keyWidth: width / 10
 
-    width: geometry.keyboardWidthLandscape
-    height: 2 * geometry.keyHeightPortrait
-
     layoutIndex: -1
     type: ""
     handler: null
@@ -68,7 +65,7 @@ KeyboardLayout {
 
         NumberKey {
             width: main.keyWidth
-            enabled: Silica.Clipboard.hasText
+            enabled: keyboard.pasteEnabled
             opacity: enabled ? (pressed ? 0.6 : 1.0)
                              : 0.3
             key: Qt.Key_Paste

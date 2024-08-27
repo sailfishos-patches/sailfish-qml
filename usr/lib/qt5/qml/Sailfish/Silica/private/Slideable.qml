@@ -146,7 +146,7 @@ Private.SlideableBase {
                 createAdjacentItem(currentItem, Private.Slide.Backward)
             }
 
-            if (currentItem.Private.Slide.backward){
+            if (currentItem.Private.Slide.backward) {
                 _alternateItem = currentItem.Private.Slide.backward
                 _anchorToBackwardSide(_alternateItem.anchors, currentItem)
                 _alternateItem.visible = true

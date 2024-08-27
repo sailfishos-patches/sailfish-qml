@@ -26,6 +26,8 @@ Column {
     property int _credentialsUpdateCounter
     property bool _saving
     property bool _triggerSyncWhenAccountSaved
+    property bool oauthEnabled
+    readonly property string _easPrefix: "sailfisheas" + (oauthEnabled ? "-oauth" :  "")
 
     signal accountSaveCompleted(var success)
 
@@ -37,8 +39,8 @@ Column {
         easSettings.setSyncPolicy(accountGlobalSettings["folderSyncPolicy"])
 
         // Email
-        var accountEmailSettings = account.configurationValues("sailfisheas-email")
-        easSettings.mail = accountEmailSettings["enabled"]
+        var accountEmailSettings = account.configurationValues(root._easPrefix + "-email")
+        easSettings.mail = accountEmailSettings["enabled"] || root.autoEnableAccount
         easSettings.pastTimeEmailIndex = parseInt(accountEmailSettings["sync_past_time"]) - 1
 
         // Email details
@@ -51,14 +53,14 @@ Column {
         easSettings.isNewAccount = root.isNewAccount
 
         // Calendar
-        var accountCalendarSettings = account.configurationValues("sailfisheas-calendars")
-        easSettings.calendar = accountCalendarSettings["enabled"]
+        var accountCalendarSettings = account.configurationValues(root._easPrefix + "-calendars")
+        easSettings.calendar = accountCalendarSettings["enabled"] || root.autoEnableAccount
         var pastTimeCal = parseInt(accountCalendarSettings["sync_past_time"])
         easSettings.pastTimeCalendarIndex = pastTimeCal > 3 ? pastTimeCal - 4 : 4
 
         // Contacts
-        var accountContatcsSettings = account.configurationValues("sailfisheas-contacts")
-        easSettings.contacts = accountContatcsSettings["enabled"]
+        var accountContatcsSettings = account.configurationValues(root._easPrefix + "-contacts")
+        easSettings.contacts = accountContatcsSettings["enabled"] || root.autoEnableAccount
         easSettings.contacts2WaySync = accountContatcsSettings["sync_local"]
 
         // Avoid to update credentials if user modifies username but ends up with same as saved
@@ -95,7 +97,7 @@ Column {
         account.displayName = mainAccountSettings.accountDisplayName
 
         if (saveConnectionSettings) {
-            ServiceSettings.saveConnectionSettings(connectionSettings)
+            ServiceSettings.saveConnectionSettings(connectionSettings, root._easPrefix)
         }
 
         if (!root.isNewAccount) {
@@ -132,25 +134,25 @@ Column {
     function saveSettings() {
         console.log("[jsa-eas] Saving account settings")
         _saveScheduleProfile()
-        ServiceSettings.saveSettings(easSettings)
+        ServiceSettings.saveSettings(easSettings, root._easPrefix)
         if (root.isNewAccount) {
             // Save service here, since settings loader can overwrite those for new accounts
             if (easSettings.mail) {
-                account.enableWithService("sailfisheas-email")
+                account.enableWithService(root._easPrefix + "-email")
             } else {
-                account.disableWithService("sailfisheas-email")
+                account.disableWithService(root._easPrefix + "-email")
             }
 
             if (easSettings.calendar) {
-                account.enableWithService("sailfisheas-calendars")
+                account.enableWithService(root._easPrefix + "-calendars")
             } else {
-                account.disableWithService("sailfisheas-calendars")
+                account.disableWithService(root._easPrefix + "-calendars")
             }
 
             if (easSettings.contacts) {
-                account.enableWithService("sailfisheas-contacts")
+                account.enableWithService(root._easPrefix + "-contacts")
             } else {
-                account.disableWithService("sailfisheas-contacts")
+                account.disableWithService(root._easPrefix + "-contacts")
             }
         }
     }
@@ -197,7 +199,7 @@ Column {
     function increaseCredentialsCounter() {
         _credentialsUpdateCounter++
         // Save a string since double is not supported in c++ side:  'Account::setConfigurationValues(): variant type  QVariant::double'
-        account.setConfigurationValue("sailfisheas-email", "credentials_update_counter", _credentialsUpdateCounter.toString())
+        account.setConfigurationValue(root._easPrefix + "-email", "credentials_update_counter", _credentialsUpdateCounter.toString())
     }
 
     CheckProvision {
@@ -274,26 +276,26 @@ Column {
             // Load the initial settings. Each of these services only have one sync profile.
             var profileId = 0
             // Email profile contains the main sync settings
-            var syncOptions = allSyncOptionsForService("sailfisheas-email")
+            var syncOptions = allSyncOptionsForService(root._easPrefix + "-email")
             for (profileId in syncOptions) {
                 easSettings.syncScheduleOptions = syncOptions[profileId]
                 break
             }
             // Getting email sync profile
             var emailProfileIds = accountSyncManager.profileIds(account.identifier,
-                                                                "sailfisheas-email")
+                                                                root._easPrefix + "-email")
             if (emailProfileIds.length > 0 && emailProfileIds[0] !== "") {
                 root._emailProfileId = emailProfileIds[0]
             }
             // Getting calendars sync profile
             var calendarsProfileIds = accountSyncManager.profileIds(account.identifier,
-                                                                    "sailfisheas-calendars")
+                                                                    root._easPrefix + "-calendars")
             if (calendarsProfileIds.length > 0 && calendarsProfileIds[0] !== "") {
                 root._calendarProfileId = calendarsProfileIds[0]
             }
             // Getting contacts sync profile
             var _contactsProfileIds = accountSyncManager.profileIds(account.identifier,
-                                                                   "sailfisheas-contacts")
+                                                                   root._easPrefix + "-contacts")
             if (_contactsProfileIds.length > 0 && _contactsProfileIds[0] !== "") {
                 root._contactsProfileId = _contactsProfileIds[0]
             }

@@ -1,11 +1,15 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import Sailfish.Pickers 1.0
 import Sailfish.Settings.Networking 1.0
+import "../netproxy"
 
-Page {
+Dialog {
     id: root
+
+    forwardNavigation: false
+    canNavigateForward: false
 
     property QtObject network
 
@@ -21,12 +25,6 @@ Page {
         contentHeight: content.height + Theme.paddingLarge
 
         PullDownMenu {
-            MenuItem {
-                //% "Details"
-                text: qsTrId("settings_network-me-details")
-                onClicked: pageStack.animatorPush("NetworkDetailsPage.qml", {network: network})
-
-            }
             MenuItem {
                 //% "Forget network"
                 text: qsTrId("settings_network-me-forget_network")
@@ -45,7 +43,32 @@ Page {
 
             width: parent.width
 
-            PageHeader { title: root.network ? root.network.name : "" }
+            DialogHeader {
+                id: dialogHeader
+                acceptText: ""
+
+                //% "Save"
+                cancelText: qsTrId("settings_network-he-save")
+
+                Label {
+                    parent: dialogHeader.extraContent
+                    text: root.network ? root.network.name : ""
+                    color: Theme.highlightColor
+                    width: parent.width
+                    truncationMode: TruncationMode.Fade
+                    font {
+                        pixelSize: Theme.fontSizeLarge
+                        family: Theme.fontFamilyHeading
+                    }
+                    anchors {
+                        right: parent.right
+                        rightMargin: -Theme.horizontalPageMargin
+                        verticalCenter: parent.verticalCenter
+                    }
+
+                    horizontalAlignment: Qt.AlignRight
+                }
+            }
 
             EncryptionComboBox {
                 network: root.network
@@ -116,6 +139,7 @@ Page {
             AdvancedSettingsColumn {
                 id: advancedSettingsColumn
                 network: root.network
+                globalProxyConfigPage: Qt.resolvedUrl("../advanced-networking/mainpage.qml")
             }
         }
         VerticalScrollDecorator {}

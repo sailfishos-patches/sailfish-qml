@@ -10,6 +10,9 @@ import Sailfish.Silica 1.0
 import Sailfish.Contacts 1.0 as SailfishContacts
 import org.nemomobile.contacts 1.0
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Page {
     id: root
 
@@ -21,6 +24,9 @@ Page {
 
     property alias activeDetail: contactCard.activeDetail
 
+    /*!
+      \internal
+    */
     property var _unsavedContact
 
     function showError(errorText) {

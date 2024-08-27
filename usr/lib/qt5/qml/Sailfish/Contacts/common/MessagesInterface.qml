@@ -1,4 +1,4 @@
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
 DBusInterface {
     service: "org.sailfishos.Messages"

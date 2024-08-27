@@ -7,9 +7,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import org.nemomobile.lipstick 0.1
 import com.jolla.lipstick 0.1
 
@@ -104,11 +104,11 @@ Item {
         opacity: blinkIconTimer.primaryIconVisible ? 1 : 0
         source: {
             if (wlanStatus.connected && _wlanIconId !== "")
-                return "image://theme/" + _wlanIconId + iconSuffix
+                return "image://theme/" + _wlanIconId
             else if (_cellularIconId !== "")
-                return "image://theme/" + _cellularIconId + mobileDataIconSuffix
+                return "image://theme/" + _cellularIconId
             else if (_wlanIconId !== "")
-                return "image://theme/" + _wlanIconId + iconSuffix
+                return "image://theme/" + _wlanIconId
             else
                 return ""
         }
@@ -121,9 +121,9 @@ Item {
         id: secondaryIcon
         source: {
             if (wlanStatus.connected && _cellularIconId !== "")
-                return "image://theme/" + _cellularIconId + mobileDataIconSuffix
+                return "image://theme/" + _cellularIconId
             else if (mobileDataStatus.connected && _wlanIconId !== "")
-                return "image://theme/" + _wlanIconId + iconSuffix
+                return "image://theme/" + _wlanIconId
             else
                 return ""
         }
@@ -134,7 +134,7 @@ Item {
 
     Icon {
         id: tetheringOverlay
-        source: "image://theme/icon-status-data-share" + mobileDataIconSuffix
+        source: "image://theme/icon-status-data-share"
         visible: tethering.enabled
         anchors.bottom: parent.bottom
     }

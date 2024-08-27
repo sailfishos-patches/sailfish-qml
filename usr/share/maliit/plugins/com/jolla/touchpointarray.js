@@ -48,8 +48,16 @@ function addPoint(touchEvent) {
     point.pointId = touchEvent.pointId
     point.x = touchEvent.x
     point.y = touchEvent.y
-    point.startX = touchEvent.startX
-    point.startY = touchEvent.startY
+
+    // Workaround: if synthesized from the mouse events the startPosition is invalid (0, 0)
+    if (touchEvent.startX === 0 && touchEvent.startY === 0) {
+        point.startX = touchEvent.x
+        point.startY = touchEvent.y
+    } else {
+        point.startX = touchEvent.startX
+        point.startY = touchEvent.startY
+    }
+
     point.pressedKey = null
     point.initialKey = null
 

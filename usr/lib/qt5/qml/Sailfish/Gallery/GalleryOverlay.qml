@@ -7,6 +7,9 @@ import Sailfish.Ambience 1.0
 import Sailfish.Share 1.0
 import Nemo.FileManager 1.0
 
+/*!
+  \inqmlmodule Sailfish.Gallery
+*/
 Item {
     id: overlay
 
@@ -33,6 +36,9 @@ Item {
     property bool isImage
     property bool error
     property int duration: 1
+    /*!
+      \internal
+    */
     readonly property int _duration: {
         if (player && player.loaded) {
             return player.duration / 1000
@@ -40,6 +46,9 @@ Item {
             return duration
         }
     }
+    /*!
+      \internal
+    */
     property Item _remorsePopup
 
     function remorseAction(text, action) {

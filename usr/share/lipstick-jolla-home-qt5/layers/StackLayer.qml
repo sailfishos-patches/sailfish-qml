@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import org.nemomobile.lipstick 0.1
 import "../backgrounds"
@@ -153,7 +153,8 @@ Layer {
     }
 
     function show(w, quick) {
-        if (quick === undefined) quick = false
+        if (quick === undefined)
+            quick = false
         if (Lipstick.compositor.debug) {
             console.log("StackLayer: Show window: \"", w, "\" current window: \"", window, "\"")
             console.log("StackLayer: Show active layer: \"", layer, "\" is active: ", active)

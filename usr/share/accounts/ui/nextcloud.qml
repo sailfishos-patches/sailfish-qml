@@ -23,6 +23,13 @@ OnlineSyncAccountCreationAgent {
         accountManager.service("nextcloud-sharing")
     ]
 
+    sharedScheduleServices: [
+        accountManager.service("nextcloud-carddav"),
+        accountManager.service("nextcloud-caldav"),
+        accountManager.service("nextcloud-images"),
+        accountManager.service("nextcloud-posts"),
+    ]
+
     webdavPath: AccountsUtil.joinServerPathInAddress(serverAddress, "/remote.php/dav/files/" + username)
     imagesPath: AccountsUtil.joinServerPathInAddress(serverAddress, "/remote.php/dav/files/" + username + "/Photos")
     backupsPath: AccountsUtil.joinServerPathInAddress(serverAddress, "/remote.php/dav/files/" + username + "/Sailfish OS/Backups")

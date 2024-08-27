@@ -1,23 +1,23 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 - 2019 Jolla Ltd.
+** Copyright (C) 2013 - 2022 Jolla Ltd.
 ** Copyright (C) 2020 Open Mobile Platform LLC.
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
 import Sailfish.Telephony 1.0
 import Sailfish.Settings.Networking 1.0
 import Sailfish.Homescreen.UserAgent 1.0
-import MeeGo.Connman 0.2
-import MeeGo.QOfono 0.2
+import Connman 0.2
+import QOfono 0.2
 import Nemo.Connectivity 1.0
 import Nemo.DBus 2.0
 import Nemo.Notifications 1.0 as SystemNotifications
 import org.nemomobile.ofono 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import org.nemomobile.systemsettings 1.0
 import Sailfish.Policy 1.0
 
@@ -33,6 +33,9 @@ SystemDialog {
     property real keyboardHeight: transpose ? Qt.inputMethod.keyboardRectangle.width : Qt.inputMethod.keyboardRectangle.height
     readonly property real reservedHeight: Math.max(
                 (Screen.sizeCategory < Screen.Large ? 0.2 : 0.4)  * screenHeight, keyboardHeight) - 1
+    property int horizontalMargin: Math.max(Theme.paddingLarge,
+                                            (transpose && Screen.topCutout.height > 0)
+                                            ? Screen.topCutout.height + Theme.paddingSmall : 0)
 
     property var delayedFields: ({})
     property string delayedServicePath
@@ -148,14 +151,16 @@ SystemDialog {
         property bool disablingTethering
         property string cellularErrorText
 
-        property bool busy: (connectingService || disablingTethering || wifiListModel.scanning || delayedScanRequest.running ||
-                             (wifiMode && (wifiListModel.count == 0 && (!_wifiTechnology || !_wifiTechnology.tethering))) ) &&
-                            !(invalidCredentials || errorCondition) && (!wifiMode || wifiListModel.powered)
+        property bool busy: (connectingService || disablingTethering || delayedScanRequest.running
+                             || (wifiMode && (wifiListModel.count == 0
+                                              && (!_wifiTechnology || !_wifiTechnology.tethering))))
+                            && !(invalidCredentials || errorCondition)
+                            && (!wifiMode || wifiListModel.powered)
 
-        property bool stateInformation: (!wifiMode && networkManager.offlineMode) ||
-                                        (wifiMode && (!wifiListModel.powered ||
-                                                      (_wifiTechnology && _wifiTechnology.tethering))) ||
-                                        busy || invalidCredentials || errorCondition || cellularErrorText.length > 0
+        property bool stateInformation: (!wifiMode && networkManager.offlineMode)
+                                        || (wifiMode && (!wifiListModel.powered
+                                                         || (_wifiTechnology && _wifiTechnology.tethering)))
+                                        || busy || invalidCredentials || errorCondition || cellularErrorText.length > 0
         property bool showStatus: expanded && stateInformation && !networkListWrapper.visible
         property bool showList: expanded && wifiMode && wifiListModel.powered && !stateInformation && !statusArea.visible
         property bool addingNetwork
@@ -169,9 +174,10 @@ SystemDialog {
         }
 
         width: parent.width
-        height: (connectionDialog.visible && expanded) ? (showStatus ? listView.headerHeight + statusArea.height
-                                       : (addingNetwork ? Math.min(contentHeight, expandedHeight) : expandedHeight))
-                         : listView.headerHeight
+        height: (connectionDialog.visible && expanded)
+                ? (showStatus ? listView.headerHeight + statusArea.height
+                              : (addingNetwork ? Math.min(contentHeight, expandedHeight) : expandedHeight))
+                : listView.headerHeight
         contentHeight: addingNetwork ? addNetworkView.height : listView.height
 
         clip: true
@@ -332,17 +338,25 @@ SystemDialog {
             property bool waitingPropertiesReady
             property bool waitingAutoConnect
             property bool provisioningEap
+            property bool wasAvailable
 
             property Timer outOfRangeTimer: Timer {
                 interval: 5000
                 onTriggered: connections.connectingService = false
             }
 
+            // FIXME: This exists to workaround a shortcoming with libconnman-qt
+            // as that sends sometimes extra signals causing onAvailableChanged
+            // to fire even if the value was the same as on previous call.
+            // JB#57750
+            Component.onCompleted: wasAvailable = available
+
             onAvailableChanged: {
-                if (available && !waitingPropertiesReady && connections.connectingService) {
+                if (!wasAvailable && available && !waitingPropertiesReady && connections.connectingService) {
                     outOfRangeTimer.stop()
                     connections.connectService(selectedService)
                 }
+                wasAvailable = available
             }
 
             onPropertiesReady: {
@@ -395,6 +409,7 @@ SystemDialog {
             active: connections.addingNetwork || opacity > 0.0
             width: parent.width
             sourceComponent: AddNetworkView {
+                horizontalMargin: connectionDialog.horizontalMargin
                 onAccepted: {
                     connections.provision(config)
                     selectedService.provisioningEap = false
@@ -437,7 +452,7 @@ SystemDialog {
                     id: header
                     //% "Select internet connection"
                     title: qsTrId("lipstick-jolla-home-he-connection_select")
-                    topPadding: Screen.sizeCategory >= Screen.Large ? 2*Theme.paddingLarge : Theme.paddingLarge
+                    tight: true
                 }
 
                 Row {
@@ -571,7 +586,8 @@ SystemDialog {
                     anchors.horizontalCenter: parent.horizontalCenter
                     Image {
                         id: addIcon
-                        x: Theme.paddingLarge
+
+                        x: connectionDialog.horizontalMargin
                         anchors.verticalCenter: parent.verticalCenter
                         source: "image://theme/icon-m-add" + (addNetworkItem.highlighted ? "?" + Theme.highlightColor : "")
                     }
@@ -601,10 +617,9 @@ SystemDialog {
                     model: connections.wifiMode ? wifiListModel : null
 
                     delegate: WlanItem {
-                        id: item
-
                         width: header.width
                         anchors.horizontalCenter: parent.horizontalCenter
+                        horizontalMargin: connectionDialog.horizontalMargin
                         onClicked: {
                             if (selectedService.path !== networkService.path) {
                                 connections.resetState()
@@ -626,8 +641,9 @@ SystemDialog {
 
                                 onSend: {
                                     if (eap) {
-                                        if (!formData['Name'])
-                                            formData['Name'] = selectedService.name;
+                                        if (!formData['Name']) {
+                                            formData['Name'] = selectedService.name
+                                        }
                                         connections.provision(formData)
                                         selectedService.provisioningEap = true
                                     } else {
@@ -761,7 +777,7 @@ SystemDialog {
                                 text: qsTrId("lipstick-jolla-home-bt-disable_internet_sharing")
                                 onClicked: {
                                     connections.disablingTethering = true
-                                    connectionAgent.stopTethering()
+                                    connectionAgent.stopTethering("wifi")
                                 }
                             }
                         },
@@ -914,8 +930,10 @@ SystemDialog {
         name: "wifi"
         changesInhibited: networkList.contextMenuOpen || !connectionDialog.visible
         onPoweredChanged: {
-            if (powered)
-                delayedScanRequest.start()
+            if (powered) {
+                delayedScanRequest.stop()
+                requestScan()
+            }
         }
         onScanRequestFinished: {
             if (delayedServicePath.length > 0) {

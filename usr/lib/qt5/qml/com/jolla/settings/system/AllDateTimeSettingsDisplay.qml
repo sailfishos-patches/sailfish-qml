@@ -47,6 +47,17 @@ Column {
         }
     }
 
+    TextSwitch {
+        //% "Automatic timezone update"
+        text: qsTrId("settings_datetime-la-automatic_timezone_update")
+        automaticCheck: false
+        checked: dateTimeSettings.automaticTimezoneUpdate
+        onClicked: {
+            var newValue = !checked
+            dateTimeSettings.automaticTimezoneUpdate = newValue
+        }
+    }
+
     CurrentTimeZoneSettingDisplay {
         enabled: !disabledByMdmBanner.active
                  && (!dateTimeSettings.automaticTimezoneUpdate || root.overrideAutoUpdatedValues)

@@ -6,20 +6,26 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
+import org.nemomobile.socialcache 1.0
 
 Item {
     id: container
 
     property var eventFeedAccounts
+    property alias downloader: downloader
 
     property var _autoSyncConfs: ({})
 
     signal refreshed
     signal accountEnabledChanged
+
+    SocialImageCache {
+        id: downloader
+    }
 
     Timer {
         id: accountRefreshTimer

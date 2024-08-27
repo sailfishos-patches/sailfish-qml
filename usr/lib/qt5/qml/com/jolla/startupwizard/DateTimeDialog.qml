@@ -8,7 +8,7 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import com.jolla.startupwizard 1.0
 import org.nemomobile.systemsettings 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 import com.jolla.settings.system 1.0
 
 Dialog {

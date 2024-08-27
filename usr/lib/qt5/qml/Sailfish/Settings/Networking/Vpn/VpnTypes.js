@@ -8,7 +8,7 @@
 .pragma library
 .import org.nemomobile.systemsettings 1.0 as SystemSettings
 .import Sailfish.Silica 1.0 as Silica
-.import MeeGo.Connman 0.2 as Connman
+.import Connman 0.2 as Connman
 
 var settingsPath = "/usr/share/sailfish-vpn/"
 
@@ -40,6 +40,10 @@ function stateName(state) {
     case Connman.VpnConnection.Failure:
         //% "Failure"
         return qsTrId("settings_network-me-vpn_state_failure")
+    case Connman.VpnConnection.Association:
+        //: Shown during the time the system is waiting for user to input credentials.
+        //% "Association"
+        return qsTrId("settings_network-me-vpn_state_association")
     case Connman.VpnConnection.Configuration:
         //% "Configuration"
         return qsTrId("settings_network-me-vpn_state_configuration")
@@ -184,9 +188,9 @@ function importFile(pageStack, mainPage, path, vpnType, parser) {
     if (Object.keys(props).length == 0) {
         var failureDialog = importDialogPath(vpnType)
         if (pageStack.currentPage != mainPage) {
-            pageStack.animatorReplaceAbove(mainPage, failureDialog, { mainPage: mainPage, vpnType: vpnType, importFailed: true })
+            pageStack.animatorReplaceAbove(mainPage, failureDialog, { _mainPage: mainPage, _vpnType: vpnType, importFailed: true })
         } else {
-            pageStack.push(failureDialog, { mainPage: mainPage }, Silica.PageStackAction.Immediate)
+            pageStack.push(failureDialog, { _mainPage: mainPage }, Silica.PageStackAction.Immediate)
         }
     } else {
         var connectionProperties = {}

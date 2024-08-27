@@ -6,7 +6,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 import org.nemomobile.lipstick 0.1
 
 Item {
@@ -22,11 +22,11 @@ Item {
     property string _wlanIconId: {
         // WLAN off
         if (!wlanNetworkTechnology.powered)
-            return "";
+            return ""
 
         // WLAN tethering
         if (wlanNetworkTechnology.tethering)
-            return "";
+            return ""
 
         // WLAN connected
         if (wlanNetworkTechnology.connected) {
@@ -155,18 +155,14 @@ Item {
         property bool technologyPathsValid: wlanNetworkTechnology.path !== "" && mobileNetworkTechnology.path !== ""
 
         function updateTechnologies() {
-            if (available && technologiesEnabled) {
+            if (available) {
                 wlanNetworkTechnology.path = networkManager.technologyPathForType("wifi")
                 mobileNetworkTechnology.path = networkManager.technologyPathForType("cellular")
             }
         }
 
         onAvailableChanged: updateTechnologies()
-        onTechnologiesEnabledChanged: updateTechnologies()
         onTechnologiesChanged: updateTechnologies()
-
-        servicesEnabled: !technologyPathsValid || connectionStatusIndicator.enabled
-        technologiesEnabled: !technologyPathsValid || connectionStatusIndicator.enabled
     }
 
     NetworkTechnology {
@@ -176,8 +172,8 @@ Item {
     NetworkTechnology {
         id: mobileNetworkTechnology
 
-        property bool uploading: false
-        property bool downloading: false
+        property bool uploading
+        property bool downloading
     }
 
     Timer {

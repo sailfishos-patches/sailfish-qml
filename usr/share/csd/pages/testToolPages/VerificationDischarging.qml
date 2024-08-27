@@ -9,8 +9,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Csd 1.0
 import ".."
-import MeeGo.Connman 0.2
-import MeeGo.QOfono 0.2
+import Connman 0.2
+import QOfono 0.2
 import com.jolla.settings.system 1.0
 import org.nemomobile.systemsettings 1.0
 import Nemo.KeepAlive 1.2
@@ -20,8 +20,33 @@ CsdTestPage {
     id: page
 
     property string currentModem: manager.modems.length > 0 ? manager.modems[0] : ""
-    property int brightness
-    property bool ambientLightSensorEnabled
+    property int savedBrightness
+    property bool savedAmbientLightSensorEnabled
+    property bool savedOfflineMode
+    property bool settingsSaved
+    property bool blockedByCharger: testController.chargerAttached && !testController.testFinished && !testController.testRunning
+
+    function applyTestingSettings() {
+        if (!settingsSaved) {
+            savedAmbientLightSensorEnabled = displaySettings.ambientLightSensorEnabled
+            savedBrightness = displaySettings.brightness
+            savedOfflineMode = connMgr.instance.offlineMode
+            settingsSaved = true
+        }
+
+        displaySettings.ambientLightSensorEnabled = false
+        displayBlanking.preventBlanking = true
+    }
+
+    function restoreOriginalSettings() {
+        if (settingsSaved) {
+            displaySettings.ambientLightSensorEnabled = savedAmbientLightSensorEnabled
+            displaySettings.brightness = savedBrightness
+            setFlightMode(savedOfflineMode)
+        }
+
+        displayBlanking.preventBlanking = false
+    }
 
     function setFlightMode(offline) {
         if (connMgr.instance.offlineMode === offline)
@@ -42,7 +67,7 @@ CsdTestPage {
 
         anchors.fill: parent
         spacing: Theme.paddingLarge
-        model: !testController.chargerAttached ? testcases : null
+        model: page.blockedByCharger ? null : testcases
 
         header: Column {
             anchors {
@@ -64,14 +89,15 @@ CsdTestPage {
                 wrapMode: Text.Wrap
                 font.pixelSize: Theme.fontSizeSmall
                 height: implicitHeight + Theme.paddingMedium
+
                 text: {
-                    if (testController.chargerAttached) {
+                    if (page.blockedByCharger) {
                         //% "Device is currently charging, disconnect charger to complete test."
                         return qsTrId("csd-la-device_is_currently_charging")
                     } else {
                         //% "Tests battery discharge rate under different scenarios. %0 battery state samples are collected per test at %1 second intervals. "
                         //% "Running applications may cause the test to fail due to application activity triggered by network connections being established during the test."
-                        return qsTrId("csd-la-tests_battery_discharge_rate").arg(testController._SAMPLES_PER_TEST).arg(refreshTimer.interval / 1000)
+                        return qsTrId("csd-la-tests_battery_discharge_rate").arg(testController._SAMPLES_TO_CAPTURE).arg(testController._SAMPLE_TIME / 1000)
                     }
                 }
             }
@@ -139,14 +165,17 @@ CsdTestPage {
                 }
 
                 Label {
+                    property bool currentDirectionFailure: positiveCurrentSeen && negativeCurrentSeen
+                    property bool currentLimitFailure: averageCurrent < minimumCurrent || averageCurrent > maximumCurrent
+                    property bool testSuccessfullyCompleted: completed && !currentDirectionFailure && !currentLimitFailure
+
                     visible: completed
-                    property bool _passed: minimumCurrent <= averageCurrent && averageCurrent <= maximumCurrent
-                    color: _passed ? "green" : "red"
+                    color: testSuccessfullyCompleted ? "green" : "red"
                     text: {
-                        if (_passed)
+                        if (testSuccessfullyCompleted)
                             //% "Pass"
                             return qsTrId("csd-la-pass")
-                        else if (charging)
+                        else if (currentDirectionFailure)
                             //% "Failed (charging)"
                             return qsTrId("csd-la-failed_charing")
                         else
@@ -158,16 +187,14 @@ CsdTestPage {
         }
 
         footer: Text {
-            property double currentNow
-
             font.pixelSize: Theme.fontSizeLarge
             anchors.horizontalCenter: parent.horizontalCenter
-            visible: !testController.chargerAttached
+            visible: testController.testRunning || testController.testFinished
             height: implicitHeight + Theme.paddingLarge
             verticalAlignment: Text.AlignVCenter
 
             color: {
-                if (!testController.testCompleted)
+                if (!testController.testFinished)
                     return "white"
 
                 if (testController.testPassed)
@@ -176,7 +203,7 @@ CsdTestPage {
                     return "red"
             }
             text: {
-                if (testController.testCompleted) {
+                if (testController.testFinished) {
                     if (testController.testPassed)
                         //% "All tests passed"
                         return qsTrId("csd-la-all_tests_passed")
@@ -197,19 +224,21 @@ CsdTestPage {
 
     Timer {
         id: refreshTimer
-        interval: 3000
+        interval: testController._SAMPLE_TIME
         repeat: true
+        running: testController.testRunning
         onTriggered: testController.recordBatteryStats()
     }
 
     Battery { id: battery }
 
+    Connections {
+        target: Qt.application
+        onAboutToQuit: testController.stopTest()
+    }
+
     Component.onDestruction: {
         testController.stopTest()
-
-        setFlightMode(false)
-        displaySettings.ambientLightSensorEnabled = ambientLightSensorEnabled
-        displaySettings.brightness = brightness
     }
 
     DisplayBlanking {
@@ -229,85 +258,77 @@ CsdTestPage {
 
     DisplaySettings {
         id: displaySettings
-        onPopulatedChanged: {
-            // Save existing backlight settings
-            page.ambientLightSensorEnabled = displaySettings.ambientLightSensorEnabled
-            page.brightness = displaySettings.brightness
-            // Max out the brightness before test
-            displaySettings.brightness = displaySettings.maximumBrightness
-            // Also disable the ambient light sensor.
-            displaySettings.ambientLightSensorEnabled = false
-            testController.startTest()
-        }
+        onPopulatedChanged: testController.startTest()
     }
 
     MceChargerState {
         id: mceChargerState
+        onValidChanged: testController.startTest()
     }
 
     Item {
         id: testController
 
-        property int currentTest: -1
-        property int settleCounter
-        property bool testCompleted
         property bool testPassed
-        property bool chargerAttached: mceChargerState.charging
+        property bool testFinished
+        property bool testStopped
+        property bool testStarted
+        property bool testRunning: testStarted && !testStopped
         property double currentNow: Number.NaN
-
-        onChargerAttachedChanged: {
-            if (chargerAttached)
-                stopTest()
-            else
-                startTest()
-        }
-
-        property int _SAMPLES_PER_TEST: 10
-
-        property var _samples: []
+        property int currentTest: -1
+        readonly property int _SAMPLE_TIME: 2000
+        readonly property int _SAMPLES_TO_IGNORE: 30 // e.g. L500D needs >50s settle time
+        readonly property int _SAMPLES_TO_CAPTURE: 15
+        property var sampleData: null
+        property int settleCounter
+        property bool chargerAttached: mceChargerState.charging
 
         function startTest() {
-            if (chargerAttached || !displaySettings.populated) {
+            if (!displaySettings.populated || !mceChargerState.valid)
                 return
-            }
 
-            displayBlanking.preventBlanking = true
-            currentTest = 0
-            testCompleted = false
+            if (testFinished || (testStarted && !testStopped) || chargerAttached)
+                return
+
+            applyTestingSettings()
+
             testPassed = false
+            testFinished = false
+            testStopped = false
+            testStarted = true
             currentNow = Number.NaN
-            refreshTimer.start()
+            currentTest = 0
         }
 
         function stopTest() {
-            currentTest = -1
-            currentNow = Number.NaN
-            refreshTimer.stop()
-
-            if (!testCompleted)
+            if (testStopped || !testStarted)
                 return
 
+            testStopped = true
+            currentTest = -1
+            currentNow = Number.NaN
+
+            restoreOriginalSettings()
+        }
+
+        function finishTest() {
+            stopTest()
+
+            if (testFinished)
+                return
+
+            testFinished = true
+
             var passed = true
-            for (var i = 0; i < testcases.count; ++i) {
+            for (var i = 0; passed && i < testcases.count; ++i) {
                 var testData = testcases.get(i)
-
-                if (!testData.completed) {
+                if (!testSuccessfullyCompleted(testData))
                     passed = false
-                    break
-                }
-
-                if (testData.minimumCurrent <= testData.averageCurrent &&
-                    testData.averageCurrent <= testData.maximumCurrent) {
-                    passed &= true
-                } else {
-                    passed = false
-                    break
-                }
             }
 
             testPassed = passed
             setTestResult(passed)
-            testCompleted(true)
+            testCompleted(false)
         }
 
         function average(samples) {
@@ -316,6 +337,18 @@ CsdTestPage {
                 sum += samples[i]
 
             return sum/samples.length
+        }
+
+        function currentDirectionFailure(testData) {
+            return testData.negativeCurrentSeen && testData.positiveCurrentSeen
+        }
+
+        function currentLimitFailure(testData) {
+            return testData.averageCurrent < testData.minimumCurrent || testData.averageCurrent > testData.maximumCurrent
+        }
+
+        function testSuccessfullyCompleted(testData) {
+            return testData.completed && !currentDirectionFailure(testData) && !currentLimitFailure(testData)
         }
 
         function recordBatteryStats() {
@@ -327,22 +360,32 @@ CsdTestPage {
                 return
             }
 
-            var sample = []
-            if (currentTest < _samples.length)
-                sample = _samples[currentTest]
-
+            // Note: Current sign got flipped at Android base 10
+            // Normalize to "discharging is positive" expected by CSD
+            // Fail test if current sign changes during measurement
             currentNow = battery.currentNow()
-            sample[sample.length] = currentNow
-            _samples[currentTest] = sample
+            if (currentNow < 0) {
+                testcases.setProperty(currentTest, "negativeCurrentSeen", true)
+                currentNow = -currentNow
+            } else if (currentNow > 0) {
+                testcases.setProperty(currentTest, "positiveCurrentSeen", true)
+            }
 
-            testcases.setProperty(currentTest, "averageCurrent", average(sample))
-            testcases.setProperty(currentTest, "charging", chargerAttached)
+            sampleData[sampleData.length] = currentNow
 
-            if (sample.length >= _SAMPLES_PER_TEST) {
+            testcases.setProperty(currentTest, "averageCurrent", average(sampleData))
+
+            if (sampleData.length >= _SAMPLES_TO_CAPTURE) {
                 testcases.setProperty(currentTest, "completed", true)
-
                 currentTest += 1
             }
+        }
+
+        onChargerAttachedChanged: {
+            if (chargerAttached)
+                stopTest()
+            else
+                startTest()
         }
 
         onCurrentTestChanged: {
@@ -350,16 +393,21 @@ CsdTestPage {
                 return
 
             if (currentTest >= testcases.count) {
-                testCompleted = true
-                stopTest()
+                finishTest()
                 return
             }
 
-            settleCounter = 4
+            testcases.setProperty(currentTest, "completed", false)
+            testcases.setProperty(currentTest, "averageCurrent", 0)
+            testcases.setProperty(currentTest, "positiveCurrentSeen", false)
+            testcases.setProperty(currentTest, "negativeCurrentSeen", false)
+
+            sampleData = []
+            settleCounter = _SAMPLES_TO_IGNORE
             currentNow = Number.NaN
             listView.positionViewAtIndex(currentTest, ListView.Contain)
-            var testData = testcases.get(currentTest)
 
+            var testData = testcases.get(currentTest)
             setFlightMode(testData.flightMode)
             displaySettings.ambientLightSensorEnabled = testData.ambientLightSensorEnabled
             displaySettings.brightness = testData.brightness
@@ -368,22 +416,6 @@ CsdTestPage {
         ListModel {
             id: testcases
 
-            ListElement {
-                type: "low"
-
-                flightMode: true
-                ambientLightSensorEnabled: false
-                brightness: 0
-
-                // Expected current range (µA)
-                minimumCurrent: 0
-                maximumCurrent: 485000
-
-                averageCurrent: 0
-                charging: false
-
-                completed: false
-            }
             ListElement {
                 type: "high"
 
@@ -396,8 +428,24 @@ CsdTestPage {
                 maximumCurrent: 800000
 
                 averageCurrent: 0
-                charging: false
+                positiveCurrentSeen: false
+                negativeCurrentSeen: false
+                completed: false
+            }
+            ListElement {
+                type: "low"
 
+                flightMode: true
+                ambientLightSensorEnabled: false
+                brightness: 0
+
+                // Expected current range (µA)
+                minimumCurrent: 0
+                maximumCurrent: 485000
+
+                averageCurrent: 0
+                positiveCurrentSeen: false
+                negativeCurrentSeen: false
                 completed: false
             }
         }

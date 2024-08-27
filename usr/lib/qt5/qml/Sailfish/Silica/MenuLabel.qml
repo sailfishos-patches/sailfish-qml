@@ -42,8 +42,10 @@ SilicaItem {
     property real verticalOffset
     property int __silica_menulabel
 
-    height: Math.max(text.height + Theme.paddingSmall*2, Theme.itemSizeExtraSmall - (screen.sizeCategory <= Screen.Medium ? Theme.paddingLarge : Theme.paddingMedium))
+    height: Math.max(text.height + Theme.paddingSmall*2,
+                     Theme.itemSizeExtraSmall - (screen.sizeCategory <= Screen.Medium ? Theme.paddingLarge : Theme.paddingMedium))
     width: parent ? parent.width : Screen.width
+
     Label {
         id: text
         color: palette.secondaryHighlightColor

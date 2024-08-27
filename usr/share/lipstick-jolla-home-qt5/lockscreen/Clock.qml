@@ -5,10 +5,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
-import org.nemomobile.time 1.0
+import Nemo.Time 1.0
 import org.nemomobile.lipstick 0.1
 import "../main"
 

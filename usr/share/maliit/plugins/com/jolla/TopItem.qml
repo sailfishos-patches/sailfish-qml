@@ -35,5 +35,9 @@ import com.meego.maliitquick 1.0
 CloseGestureArea {
     height: Theme.itemSizeSmall
     threshold: Math.max(keyboard.height*.3, Theme.itemSizeSmall)
-    onTriggered: MInputMethodQuick.userHide()
+    onTriggered: {
+        if (!MInputMethodQuick.extensions.keyboardClosingDisabled) {
+            MInputMethodQuick.userHide()
+        }
+    }
 }

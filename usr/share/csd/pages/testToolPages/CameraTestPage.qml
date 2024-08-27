@@ -10,7 +10,7 @@ import QtMultimedia 5.4
 import Sailfish.Policy 1.0
 import Csd 1.0
 import com.jolla.settings.system 1.0
-import org.nemomobile.time 1.0
+import Nemo.Time 1.0
 import ".."
 
 CsdTestPage {
@@ -21,9 +21,6 @@ CsdTestPage {
     property alias imagePreview: photoPreview
     property bool focusBeforeCapture
     readonly property bool autoCapture: runInTests && !paused
-
-    property size viewfinderResolution: Qt.size(width, height)
-    property size imageCaptureResolution: Qt.size(width, height)
 
     readonly property bool backFaceCameraActive: camera.position === Camera.BackFace
     property bool switchBetweenFrontAndBack
@@ -83,6 +80,7 @@ CsdTestPage {
         }
     }
 
+    allowedOrientations: Orientation.Portrait
     onStatusChanged: {
         // Activating the camera may cause the UI to block for a short time. This is currently
         // unavoidable. The page is static so maybe the user won't notice :)
@@ -131,7 +129,6 @@ CsdTestPage {
             captureMode: Camera.CaptureStillImage
             focus.focusMode: backFaceCameraActive ? CsdHwSettings.intValue("BackCamera/FocusMode", Camera.FocusAuto)
                                                   : CsdHwSettings.intValue("FrontCamera/FocusMode", Camera.FocusHyperfocal)
-            viewfinder.resolution: page.viewfinderResolution
 
             onCameraStateChanged: {
                 if (autoCapture && _focusEnabled && cameraState === Camera.ActiveState && policy.value) {
@@ -140,8 +137,6 @@ CsdTestPage {
             }
 
             imageCapture {
-                resolution: page.imageCaptureResolution
-
                 onImageSaved: {
                     if (paused) {
                         camera.unlock()
@@ -318,17 +313,19 @@ CsdTestPage {
             font.bold: true
             //: Resolution of camera viewfinder. %1 = width, %2 = height
             //% "Viewfinder: %1 x %2"
-            text: qsTrId("csd-la-camera_viewfinder_resolution").arg(viewfinderResolution.width).arg(viewfinderResolution.height)
+            text: qsTrId("csd-la-camera_viewfinder_resolution").arg(camera.viewfinder.resolution.width).arg(camera.viewfinder.resolution.height)
         }
 
+        /* TODO: redo with either Qt 5.9 supported resolutions or C++. JB#58957
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignHCenter
             font.bold: true
             //: Resolution of captured camera image. %1 = width, %2 = height
             //% "Image: %1 x %2"
-            text: qsTrId("csd-la-camera_image_resolution").arg(imageCaptureResolution.width).arg(imageCaptureResolution.height)
+            text: qsTrId("csd-la-camera_image_resolution").arg(camera.imageCapture.resolution.width).arg(camera.imageCapture.resolution.height)
         }
+        */
 
         Label {
             visible: autoCapture

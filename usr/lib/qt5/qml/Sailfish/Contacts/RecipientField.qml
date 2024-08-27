@@ -11,6 +11,9 @@ import org.nemomobile.contacts 1.0
 import "recipientfield"
 import Sailfish.Contacts 1.0 as Contacts
 
+/*!
+  \inqmlmodule Sailfish.Contacts
+*/
 Item {
     id: root
     property int actionType
@@ -23,18 +26,35 @@ Item {
     property alias onlineSearchModel: namesList.onlineSearchModel
     property alias onlineSearchDisplayName: namesList.onlineSearchDisplayName
     property bool empty: namesList.summary == ""
-    // Supported properties is a combination of: PeopleModel.EmailAddressRequired, AccountUriRequired, PhoneNumberRequired
+    /*!
+      Supported values are a combination of the following constants defined in PeopleModel:
+      \value EmailAddressRequired (default)
+      \value AccountUriRequired
+      \value PhoneNumberRequired
+    */
     property int requiredProperty: PeopleModel.EmailAddressRequired
     property alias multipleAllowed: namesList.multipleAllowed
     property alias inputMethodHints: namesList.inputMethodHints
     property alias recentContactsCategoryMask: namesList.recentContactsCategoryMask
 
-    // A model with the following roles:
-    // "property" - an object containing the value of the property that the user chose:
-    //              a phone number { 'number' }, an email address { 'address' }, or IM account { 'uri', 'path' }
-    // "propertyType" - the type of property that the user chose. Either "phoneNumber", "emailAddress" or "accountUri"
-    // "formattedNameText" - the name of the contact
-    // "person" - the Person object if the user chose from the known contacts
+    /*!
+      A model with the following roles:
+      \table
+      \row
+        \li property
+        \li an object containing the value of the property that the user chose:
+            a phone number { 'number' }, an email address { 'address' }, or IM account { 'uri', 'path' }
+      \row
+        \li propertyType
+        \li the type of property that the user chose. Either "phoneNumber", "emailAddress" or "accountUri"
+      \row
+        \li formattedNameText
+        \li the name of the contact
+      \row
+        \li person
+        \li the \l Person object if the user chose from the known contacts
+      \endtable
+    */
     property QtObject selectedContacts: namesList.recipientsModel
 
     property QtObject addressesModel: addressesModelId
@@ -55,6 +75,9 @@ Item {
         namesList.setEmailRecipients(addresses)
     }
 
+    /*!
+      \internal
+    */
     function _addressList(contact) {
         return ContactsUtil.selectableProperties(contact, requiredProperty, Person)
     }

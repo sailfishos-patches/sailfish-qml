@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import MeeGo.Connman 0.2
+import Connman 0.2
 
 // Matches networkservice.h
 QtObject {

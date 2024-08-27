@@ -59,30 +59,44 @@ TextField {
         onActiveChanged: if (!Qt.application.active && text.length > 0) _usePasswordEchoMode = true
     }
 
-    rightItem: IconButton {
-        id: passwordVisibilityButton
+    rightItem: Row {
+        visible: root.errorHighlight || showEchoModeToggle
+        height: Math.max(passwordVisibilityButton.height, errorIconContainer.height)
 
-        width: icon.width + 2*Theme.paddingMedium
-        height: icon.height
+        Item {
+            id: errorIconContainer
 
-        enabled: showEchoModeToggle
-        opacity: showEchoModeToggle ? 1.0 : 0.0
-        Behavior on opacity { FadeAnimation {}}
-
-        onClicked: {
-            if (_automaticEchoModeToggle) {
-                root._usePasswordEchoMode = !root._usePasswordEchoMode
-            }
-            _echoModeToggleClicked()
+            visible: root.errorHighlight
+            width: root._errorIcon.width
+            height: root._errorIcon.height
         }
 
-        icon.source: "image://theme/icon-splus-" + (root.echoMode == TextInput.Password ? "show-password"
-                                                                                        : "hide-password")
+        IconButton {
+            id: passwordVisibilityButton
+
+            width: icon.width + 2*Theme.paddingMedium
+            height: icon.height
+
+            enabled: showEchoModeToggle
+            opacity: showEchoModeToggle ? 1.0 : 0.0
+            Behavior on opacity { FadeAnimation {}}
+            visible: opacity > 0
+
+            onClicked: {
+                if (_automaticEchoModeToggle) {
+                    root._usePasswordEchoMode = !root._usePasswordEchoMode
+                }
+                _echoModeToggleClicked()
+            }
+
+            icon.source: "image://theme/icon-splus-" + (root.echoMode == TextInput.Password ? "show-password"
+                                                                                            : "hide-password")
+        }
         states: State {
             when: root.errorHighlight
             PropertyChanges {
-                target: root
-                rightItem: root._errorIcon
+                target: root._errorIcon
+                parent: errorIconContainer
             }
         }
     }

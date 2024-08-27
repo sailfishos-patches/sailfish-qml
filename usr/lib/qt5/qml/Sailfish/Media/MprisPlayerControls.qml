@@ -1,14 +1,18 @@
 import QtQuick 2.0
-import org.nemomobile.mpris 1.0
+import Amber.Mpris 1.0
 
+/*!
+  \qmltype MprisPlayerControls
+  \inqmlmodule Sailfish.Media
+*/
 Loader {
     id: controlsLoader
 
-    active: mprisManager.availableServices.length > 0
+    active: mprisController.availableServices.length > 0
 
-    Component.onCompleted: setSource("MprisManagerControls.qml", { "mprisManager": mprisManager, "parent": Qt.binding(function() { return controlsLoader.parent }) })
+    Component.onCompleted: setSource("MprisManagerControls.qml", { "mprisController": mprisController, "parent": Qt.binding(function() { return controlsLoader.parent }) })
 
-    MprisManager {
-        id: mprisManager
+    MprisController {
+        id: mprisController
     }
 }

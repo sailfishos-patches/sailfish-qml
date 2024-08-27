@@ -7,11 +7,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import org.nemomobile.ngf 1.0
+import QtQuick 2.6
+import Nemo.Ngf 1.0
 import com.jolla.lipstick 0.1
 import org.nemomobile.lipstick 0.1
-import org.nemomobile.notifications 1.0
+import Nemo.Notifications 1.0
 import org.nemomobile.systemsettings 1.0
 import Sailfish.Silica 1.0
 import Sailfish.Share 1.0
@@ -38,9 +38,7 @@ Item {
             fileUtils.mkdir(folderPath)
         }
 
-        //: Filename of a captured screenshot, e.g. "Screenshot_1"
-        //% "Screenshot_%1"
-        var filename = fileUtils.uniqueFileName(folderPath, qsTrId("lipstick-jolla-home-la-screenshot") + ".png")
+        var filename = fileUtils.uniqueFileName(folderPath, "Screenshot_%1" + ".png")
         var filePath = folderPath + filename
 
         shareAction.resources = [ filePath ]

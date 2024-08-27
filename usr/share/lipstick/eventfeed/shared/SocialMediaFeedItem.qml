@@ -45,7 +45,7 @@ NotificationGroupMember {
         }
     }
 
-    onRefreshTimeCountChanged: formattedTime = Format.formatDate(timestamp, Format.DurationElapsed)
+    onRefreshTimeCountChanged: formattedTime = Format.formatDate(timestamp, Format.TimeElapsed)
 
     SocialAvatar {
         id: _avatar

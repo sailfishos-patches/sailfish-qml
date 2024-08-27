@@ -36,14 +36,23 @@ CsdTestPage {
     BottomButton {
         //% "Start"
         text: qsTrId("csd-la-start")
-        visible: !page.started
-        enabled: !route.wiredOutputConnected
+        visible: !page.started && !route.wiredOutputConnected
         onClicked: {
             // Change play path to Receiver
             previousPort = changePath.primarySinkActivePort()
             changePath.setPrimarySinkPort("output-earpiece")
             playMusic.play()
             page.started = true
+        }
+    }
+
+    FailBottomButton {
+        visible: !page.started && route.wiredOutputConnected
+        //% "Headset detected - test can't be executed"
+        reason: qsTrId("csd-la-disabled_headset_detected")
+        onClicked: {
+            setTestResult(false)
+            testCompleted(true)
         }
     }
 

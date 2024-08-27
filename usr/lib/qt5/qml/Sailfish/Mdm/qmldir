@@ -1,0 +1,4 @@
+module Sailfish.Mdm
+plugin sailfishmdmplugin
+typeinfo plugins.qmltypes
+MdmTermsOfUse 1.0 MdmTermsOfUse.qml

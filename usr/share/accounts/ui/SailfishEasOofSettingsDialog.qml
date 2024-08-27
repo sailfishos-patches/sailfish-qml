@@ -1,7 +1,7 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 import Sailfish.Calendar 1.0
-import org.nemomobile.notifications 1.0 as SystemNotifications
+import Nemo.Notifications 1.0 as SystemNotifications
 import com.jolla.sailfisheas 1.0
 
 Dialog {

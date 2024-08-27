@@ -9,8 +9,8 @@ import QtQuick 2.1
 import QtQuick.Window 2.1
 import Sailfish.Silica 1.0
 import Sailfish.Lipstick 1.0
-import org.nemomobile.dbus 2.0
-import org.nemomobile.notifications 1.0
+import Nemo.DBus 2.0
+import Nemo.Notifications 1.0
 
 SystemDialog {
     id: root

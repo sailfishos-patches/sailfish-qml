@@ -1,9 +1,9 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
-import org.nemomobile.alarms 1.0
-import org.nemomobile.time 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Alarms 1.0
+import Nemo.Time 1.0
+import Nemo.Configuration 1.0
 import "main"
 
 TabItem {

@@ -1,5 +1,6 @@
 module Sailfish.Contacts
 plugin sailfishcontactsplugin
+typeinfo plugins.qmltypes
 singleton ContactCreator 1.0 ContactCreator.qml
 singleton ContactModelCache 1.0 ContactModelCache.qml
 singleton ContactAccountCache 1.0 ContactAccountCache.qml

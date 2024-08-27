@@ -23,12 +23,14 @@ Rectangle {
 
     Column {
         id: contentColumn
+
         width: parent.width
         anchors.verticalCenter: parent.verticalCenter
     }
 
     NumberAnimation on height {
         id: openAnimation
+
         duration: 100
         easing.type: Easing.OutQuad
         to: popup.targetHeight + Theme.paddingLarge
@@ -44,6 +46,7 @@ Rectangle {
 
     SequentialAnimation {
         id: fadeAnimation
+
         NumberAnimation {
             duration: 100
             to: 0

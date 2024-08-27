@@ -4,12 +4,18 @@ import Sailfish.Silica.private 1.0
 import Sailfish.Gallery 1.0
 import Sailfish.Gallery.private 1.0
 
+/*!
+  \inqmlmodule Sailfish.Gallery
+*/
 ZoomableFlickable {
     id: flickable
 
     property alias source: photo.source
 
     property bool active: true
+    /*!
+      \internal
+    */
     readonly property bool _active: active || viewMoving
     readonly property bool error: photo.status == Image.Error
     readonly property alias imageMetaData: metadata
@@ -131,8 +137,8 @@ ZoomableFlickable {
         id: errorLabelComponent
         InfoLabel {
             //: Image loading failed
-            //% "Oops, can't display the image"
-            text: qsTrId("components_gallery-la-image-loading-failed")
+            //% "Couldn't load the image. It could have been deleted or become inaccessible."
+            text: qsTrId("components_gallery-la-image-loading-failed-inaccessible")
             anchors.verticalCenter: parent.verticalCenter
             opacity: photo.status == Image.Error ? 1.0 : 0.0
             Behavior on opacity { FadeAnimator {}}

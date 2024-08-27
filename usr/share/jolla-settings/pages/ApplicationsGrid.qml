@@ -35,6 +35,11 @@ Item {
         pageStack.animatorPush(page, { "applicationName": name, "applicationIcon": icon, "_desktopFile": filePath })
     }
 
+    function openAndroidSettings(name, treeItem, icon, appPkg, appVer) {
+        pageStack.animatorPush("/usr/share/jolla-settings/pages/apk-configuration/apkConfigurationPage.qml", 
+            { "applicationName": name, "applicationIcon": icon, "packageName": appPkg, "packageVersion": appVer })
+    }
+
     function openSettings(name, treeItem, icon) {
         var objdata = treeItem.data()
         var entryPath = treeItem.location().join("/")
@@ -100,7 +105,7 @@ Item {
 
                 width: gridView.cellWidth
                 height: gridView.cellHeight
-                enabled: configurable || model.sandboxed
+                enabled: configurable || model.sandboxed || model.androidApp
                 icon: model.iconId
                 text: model.name
 
@@ -109,6 +114,8 @@ Item {
                         root.openSandboxed(text, model.section, model.iconId, model.filePath)
                     } else if (configurable) {
                         root.openSettings(text, model.section, model.iconId)
+                    } else if (model.androidApp) {
+                        root.openAndroidSettings(text, model.section, model.iconId, model.androidAppPkg, model.androidAppVer)
                     }
                 }
             }

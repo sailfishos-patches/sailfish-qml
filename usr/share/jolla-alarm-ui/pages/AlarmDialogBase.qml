@@ -1,7 +1,8 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import org.nemomobile.ngf 1.0
-import org.nemomobile.alarms 1.0
+import Nemo.Ngf 1.0
+import Nemo.Alarms 1.0
+import Nemo.Configuration 1.0
 import com.jolla.alarmui 1.0
 
 SilicaFlickable {
@@ -31,7 +32,9 @@ SilicaFlickable {
         alarmDialogBase.alarm = alarm
         status = AlarmDialogStatus.Open
         opacity = 1.0
-        feedback.play()
+        if (alarm.type !== Alarm.Calendar || !doNotDisturb.value) {
+            feedback.play()
+        }
         timeoutTimer.start()
     }
 
@@ -49,7 +52,7 @@ SilicaFlickable {
         if (fadeOut.running || opacity == 0) {
             return // Dialog is fading out or is already hidden
         }
-        fadeOut.start();
+        fadeOut.start()
     }
 
     function hideImmediatedly() {
@@ -65,6 +68,7 @@ SilicaFlickable {
 
     QtObject {
         id: dummy
+
         property string title
         property date startDate
         property date endDate
@@ -72,6 +76,7 @@ SilicaFlickable {
         property int hour
         property int minute
         property int second
+        property string notebookUid
         property string calendarEventUid
         property string calendarEventRecurrenceId
         property int type
@@ -79,6 +84,7 @@ SilicaFlickable {
 
     PulleyAnimationHint {
         id: pulleyAnimationHint
+
         anchors.fill: parent
         pushUpHint: true
         pullDownDistance: Theme.itemSizeLarge + (pushUpHint ? Theme.itemSizeExtraSmall : 0)
@@ -86,17 +92,27 @@ SilicaFlickable {
 
     NonGraphicalFeedback {
         id: feedback
+
         event: alarm.type === Alarm.Calendar ? "calendar" : "clock"
+    }
+
+    ConfigurationValue {
+        id: doNotDisturb
+
+        defaultValue: false
+        key: "/lipstick/do_not_disturb"
     }
 
     Image {
         id: topIcon
+
         anchors.horizontalCenter: parent.horizontalCenter
         y: Theme.paddingLarge
     }
 
     Column {
         id: content
+
         anchors {
             left: parent.left
             right: parent.right
@@ -157,4 +173,3 @@ SilicaFlickable {
         ScriptAction { script: { dialogHiddenDelayer.start() } }
     }
 }
-

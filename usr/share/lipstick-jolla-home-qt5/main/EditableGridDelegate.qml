@@ -5,7 +5,7 @@
  * License: Proprietary
  */
 
-import QtQuick 2.1
+import QtQuick 2.6
 import org.nemomobile.lipstick 0.1
 import Sailfish.Silica 1.0
 import Sailfish.Silica.private 1.0
@@ -29,7 +29,7 @@ Item {
     property bool dragged
     property bool animateMovement: true
 
-    property real offsetY: y
+    property real targetY: y
 
     property alias contentItem: delegateContentItem
     default property alias _content: delegateContentItem.data
@@ -95,7 +95,7 @@ Item {
             if (_viewWidth !== manager.view.width) {
                 // Don't animate when created or view is resized
                 delegateContentItem.x = wrapper.x
-                delegateContentItem.y = wrapper.offsetY
+                delegateContentItem.y = wrapper.targetY
                 _viewWidth = manager.view.width
                 _oldY = y
             } else if (!reordering) {
@@ -169,7 +169,7 @@ Item {
             }
 
             if (item && item !== wrapper && item.y !== wrapper.y) {
-                var yDist = item.y - offsetY
+                var yDist = item.y - targetY
                 if (Math.abs(yDist) <= item.height - height/2) {
                     // Our items have differing heights and we don't have enough overlap yet
                     return
@@ -188,12 +188,12 @@ Item {
                     var folderThreshold = manager.supportsFolders && !isFolder ?
                                 item.width / 4 : item.width / 2
                     if (offset < folderThreshold) {
-                        if (Math.abs(index - item.modelIndex) > 1 || index > item.modelIndex || item.y !== wrapper.offsetY) {
+                        if (Math.abs(index - item.modelIndex) > 1 || index > item.modelIndex || item.y !== wrapper.targetY) {
                             idx = index < item.modelIndex ? item.modelIndex - 1 : item.modelIndex
                             manager.folderItem = null
                         }
                     } else if (offset >= item.width - folderThreshold) {
-                        if (Math.abs(index - item.modelIndex) > 1 || index < item.modelIndex || item.y !== wrapper.offsetY) {
+                        if (Math.abs(index - item.modelIndex) > 1 || index < item.modelIndex || item.y !== wrapper.targetY) {
                             idx = index > item.modelIndex ? item.modelIndex + 1 : item.modelIndex
                             manager.folderItem = null
                         }
@@ -242,7 +242,7 @@ Item {
 
         objectName: "EditableGridDelegate_contentItem"
         x: wrapper.x
-        y: wrapper.offsetY
+        y: wrapper.targetY
         width: wrapper.width
         height: wrapper.height
         parent: manager.contentContainer
@@ -306,7 +306,7 @@ Item {
                     moveTimer.running = true
                     manager.reorderTimer.stop()
                 }
-                onOffsetYChanged: {
+                onTargetYChanged: {
                     moveTimer.running = true
                 }
             }
@@ -319,25 +319,25 @@ Item {
         ParallelAnimation {
             id: slideMoveAnim
             NumberAnimation { target: delegateContentItem; property: "x"; to: wrapper.x; duration: 150; easing.type: Easing.InOutQuad }
-            NumberAnimation { target: delegateContentItem; property: "y"; to: wrapper.offsetY; duration: 150; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: delegateContentItem; property: "y"; to: wrapper.targetY; duration: 150; easing.type: Easing.InOutQuad }
             onStopped: {
                 // This is a safeguard. If the animation is canceled make sure the icon is left in
                 // the correct state.
                 delegateContentItem.x = wrapper.x
-                delegateContentItem.y = wrapper.offsetY
+                delegateContentItem.y = wrapper.targetY
             }
         }
 
         SequentialAnimation {
             id: fadeMoveAnim
             NumberAnimation { target: delegateContentItem; property: "opacity"; to: 0; duration: 75 }
-            ScriptAction { script: { delegateContentItem.x = wrapper.x; delegateContentItem.y = wrapper.offsetY } }
+            ScriptAction { script: { delegateContentItem.x = wrapper.x; delegateContentItem.y = wrapper.targetY } }
             NumberAnimation { target: delegateContentItem; property: "opacity"; to: 1.0; duration: 75 }
             onStopped: {
                 // This is a safeguard. If the animation is canceled make sure the icon is left in
                 // the correct state.
                 delegateContentItem.x = wrapper.x
-                delegateContentItem.y = wrapper.offsetY
+                delegateContentItem.y = wrapper.targetY
                 delegateContentItem.opacity = 1.0
             }
         }

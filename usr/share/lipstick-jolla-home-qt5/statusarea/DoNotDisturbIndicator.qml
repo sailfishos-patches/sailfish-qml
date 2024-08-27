@@ -8,7 +8,7 @@
 
 import QtQuick 2.6
 import Sailfish.Silica 1.0
-import org.nemomobile.configuration 1.0
+import Nemo.Configuration 1.0
 
 Icon {
     source: "image://theme/icon-status-do-not-disturb"

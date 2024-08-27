@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2019 Jolla Ltd.
+ * Copyright (c) 2016 - 2022 Jolla Ltd.
  *
  * License: Proprietary
  */
@@ -14,20 +14,52 @@ CsdTestPage {
 
     property bool ambientLightSensorEnabled
     property int originalBrightness
+    property bool originalValuesSaved
+    property bool testStarted
+    property bool testStopped
+    readonly property bool testRunning: testStarted && !testStopped
 
     function resetOriginalValues() {
-        displaySettings.ambientLightSensorEnabled = ambientLightSensorEnabled
-        displaySettings.brightness = originalBrightness
+        if (originalValuesSaved) {
+            displaySettings.ambientLightSensorEnabled = ambientLightSensorEnabled
+            displaySettings.brightness = originalBrightness
+        }
+    }
+
+    function setupTest() {
+        // Save original backlight settings
+        if (!originalValuesSaved) {
+            ambientLightSensorEnabled = displaySettings.ambientLightSensorEnabled
+            originalBrightness = displaySettings.brightness
+            originalValuesSaved = true
+        }
+
+        // Max out the brightness before test
+        displaySettings.brightness = displaySettings.maximumBrightness
+        // Also disable the ambient light sensor.
+        displaySettings.ambientLightSensorEnabled = false
+
+        if (runInTests) {
+            startTest()
+        }
     }
 
     function startTest() {
-        hintText.visible = false
-        okButton.visible = false
-        rect.color = "white"
+        testStarted = true
+        testStartTimer.start()
+    }
 
-        displaySettings.brightness = 1
+    function stopTest() {
+        testStopped = true
+        resetOriginalValues()
+        if (runInTests) {
+            completeTest(true)
+        }
+    }
 
-        testTimer.start()
+    function completeTest(result) {
+        setTestResult(result)
+        testCompleted(true)
     }
 
     onStatusChanged: {
@@ -41,10 +73,8 @@ CsdTestPage {
     }
 
     Rectangle {
-        id: rect
-
         anchors.fill: parent
-        color: Theme.overlayBackgroundColor
+        color: testRunning ? "white" : Theme.overlayBackgroundColor
     }
 
     Column {
@@ -55,14 +85,15 @@ CsdTestPage {
             title: qsTrId("csd-he-lcd_backlight")
         }
         DescriptionItem {
-            id: hintText
+            visible: !testStarted
 
             //% "This test will display a white screen, after which the screen should become visibly dimmer. Press 'Start' to test."
             text: qsTrId("csd-la-verification_lcd_backglight_operation_hint_description")
         }
     }
     BottomButton {
-        id: okButton
+        visible: !testStarted
+        enabled: originalValuesSaved
         //% "Start"
         text: qsTrId("csd-la-start")
         onClicked: startTest()
@@ -71,7 +102,7 @@ CsdTestPage {
     Label {
         id: buttonText
 
-        visible: false
+        visible: testStopped
         font.pixelSize: Theme.fontSizeLarge
         x: Theme.paddingLarge
         width: parent.width - 2*x
@@ -83,58 +114,47 @@ CsdTestPage {
     }
 
     ButtonLayout {
-        id: buttonRow
         anchors {
             top: buttonText.bottom
             topMargin: Theme.paddingLarge
             horizontalCenter: parent.horizontalCenter
         }
         rowSpacing: Theme.paddingMedium
-        visible: false
+        visible: testStopped
 
         PassButton {
-            onClicked: {
-                setTestResult(true)
-                testCompleted(true)
-            }
+            onClicked: completeTest(true)
         }
         FailButton {
-            onClicked: {
-                setTestResult(false)
-                testCompleted(true)
-            }
+            onClicked: completeTest(false)
         }
     }
 
     Timer {
-        id: testTimer
-        interval: 4000
+        // Hold white screen at maximum brightness for a while to
+        // calm things down and thus highlight the dimming when it
+        // actually commences.
+        id: testStartTimer
+        interval: 1000
         onTriggered: {
-            rect.color = Theme.overlayBackgroundColor
-            buttonText.visible = true
-            buttonRow.visible = true
-            resetOriginalValues()
-            if (runInTests) {
-                setTestResult(true)
-                testCompleted(true)
-            }
+            displaySettings.brightness = 1
+            testStopTimer.start()
         }
+    }
+
+    Timer {
+        // When there are brightness setting changes (like what we have
+        // here), mce drives the fade in/out through in 600 ms.
+        //
+        // Waiting a bit longer than that yields stable state also at
+        // the minimum brightness end.
+        id: testStopTimer
+        interval: 600 + 1000
+        onTriggered: stopTest()
     }
 
     DisplaySettings {
         id: displaySettings
-        onPopulatedChanged: {
-            // Save existing backlight settings
-            page.ambientLightSensorEnabled = displaySettings.ambientLightSensorEnabled
-            originalBrightness = displaySettings.brightness
-            // Max out the brightness before test
-            displaySettings.brightness = displaySettings.maximumBrightness
-            // Also disable the ambient light sensor.
-            displaySettings.ambientLightSensorEnabled = false
-
-            if (runInTests) {
-                startTest()
-            }
-        }
+        onPopulatedChanged: setupTest()
     }
 }

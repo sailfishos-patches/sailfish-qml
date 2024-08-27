@@ -176,7 +176,7 @@ TutorialPage {
 
             y: Theme.paddingMedium + Theme.paddingSmall
             width: parent.width
-            height: batteryIndicator.totalHeight
+            height: batteryIndicator.height
 
             BatteryStatusIndicator {
                 id: batteryIndicator
@@ -223,7 +223,8 @@ TutorialPage {
         id: launcherLayout
 
         // from Home LauncherGrid
-        property real topMargin: Screen.sizeCategory >= Screen.Large ? Theme.paddingLarge*4 : Theme._homePageMargin - Theme.paddingLarge
+        property real topMargin: Screen.sizeCategory >= Screen.Large ? Theme.paddingLarge*4
+                                                                     : Theme.paddingSmall
         height: parent.height
     }
 

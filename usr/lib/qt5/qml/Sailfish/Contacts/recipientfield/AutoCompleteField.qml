@@ -79,7 +79,7 @@ Item {
 
         function updateModelText() {
             addressesModel.contact = null
-            if (model.index != -1 && !readOnly) {
+            if (model.index != -1 && model.formattedNameText == "") {
                 text = trimmedText
                 recipientsModel.updateRecipientAddress(model.index, text)
             }
@@ -90,7 +90,6 @@ Item {
         width: parent.width - actionButton.width
         textRightMargin: Theme.horizontalPageMargin - Theme.paddingLarge + 2 * Theme.paddingSmall
         label: placeholderText
-        readOnly: model.formattedNameText != ""
         onReadOnlyChanged: {
             if (readOnly) {
                 focus = false
@@ -109,6 +108,7 @@ Item {
                                             contact ? contact.displayLabel : '', contact)
             text = model.formattedNameText
             recipientsModel.nextRecipient(model.index)
+            readOnly = true
         }
 
         function updateFromKnownContact(item, name, email) {
@@ -158,6 +158,9 @@ Item {
 
         Component.onCompleted: {
             text = textValue()
+            if (model.formattedNameText != "") {
+                readOnly = true
+            }
             // TODO: Replace with "Keys.onPressed" once JB#16601 is implemented.
             inputField._editor.Keys.pressed.connect(function(event) {
                 if (event.key === Qt.Key_Backspace) {

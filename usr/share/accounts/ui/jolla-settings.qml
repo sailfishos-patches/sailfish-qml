@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import Sailfish.Accounts 1.0
+import Sailfish.Store 1.0
 import com.jolla.settings.accounts 1.0
 
 AccountSettingsAgent {
@@ -115,6 +116,17 @@ AccountSettingsAgent {
                         //% "Account web page"
                         text: qsTrId("settings_accounts-he-account_jolla_com_webpage")
                         onClicked: Qt.openUrlExternally("https://account.jolla.com/")
+                    }
+
+                    Button {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        preferredWidth: Theme.buttonWidthLarge
+                        visible: StoreClient.isAvailable
+
+                        //% "My Add-Ons"
+                        text: qsTrId("settings_accounts-he-add_ons")
+                        enabled: settingsDisplay.accountValid
+                        onClicked: pageStack.animatorPush("com.jolla.settings.accounts.JollaAccountAddOnsPage")
                     }
                 }
             }

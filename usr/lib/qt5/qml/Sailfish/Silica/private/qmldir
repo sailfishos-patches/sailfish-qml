@@ -31,3 +31,4 @@ WindowGestureOverride 1.0 WindowGestureOverride.qml
 ZoomableFlickable 1.0 ZoomableFlickable.qml
 PageHeaderMouseArea 1.0 PageHeaderMouseArea.qml
 ButtonBorderColors 1.0 ButtonBorderColors.qml
+YearMonthMenu 1.0 YearMonthMenu.qml
