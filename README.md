@@ -8,7 +8,7 @@ Workplace repo for creating diff patches
 - Create diff: `git diff master  -- . ':!.github' > unified_diff.patch`
 - Publish it on Patchmanager's Web Catalog!
 
-## How-to (semi-automated)?
+## How-to (semi-automatic)?
 - Fork repo or request addition to organization
 - Create branch with your Patch name: `git checkout -b my-patch-name`<br />
   Alternatively this can be done by GitHub's web-frontend.
