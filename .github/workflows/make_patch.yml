@@ -5,7 +5,8 @@ on:
     branches:
       - master
 
-permissions: write-all
+permissions:
+   contents: write
 
 jobs:
   make_patch:
@@ -28,12 +29,8 @@ jobs:
           name: ${{ github.head_ref }}
           path: .github/patch_data
 
-      - name: View context attributes
+      - name: Comment artifact link
         uses: actions/github-script@v7
-        with:
-          script: console.log(context)
-
-      - uses: actions/github-script@v7
         with:
           script: |
             github.rest.issues.createComment({
