@@ -109,7 +109,7 @@ SilicaMouseArea {
                 id: image
 
                 anchors.verticalCenter: parent.verticalCenter
-                objectName: "image"
+                objectName: "testimage"
             }
 
             Label {
